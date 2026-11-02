@@ -497,7 +497,7 @@ P266_0858:
     pl_CallIf 1, P266_0884
     pl_CompareVarToValue PVAR_800C, 0
     pl_CallIf 5, P266_088C
-    pl_AmitySquareBerryOnly PVAR_409B, PVAR_409C  // Pearl 0x217 PVAR_409C, PVAR_409A: every find is a Berry
+    pl_AmityAccessory PVAR_409C, PVAR_409A  // Pearl 0x217
     pl_GoTo P266_0894
 
 P266_0884:
@@ -592,7 +592,7 @@ P266_0992:
 P266_09AD:
     pl_SetVarFromVar PVAR_8004, PVAR_409C
     pl_SetVarFromValue PVAR_8005, 1
-    WorkSetConst PVAR_800C, 0  // CanFitAccessory PVAR_8004, PVAR_8005: no Accessories in Black 2 (the finds are Berries)
+    pl_CanFitAccessory PVAR_8004, PVAR_8005, PVAR_800C  // Pearl 0x1D3
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P266_07E4
     pl_GoTo P266_09F5
@@ -600,7 +600,7 @@ P266_09AD:
 P266_09D4:
     pl_SetVarFromVar PVAR_8004, PVAR_409C
     pl_SetVarFromValue PVAR_8005, 1
-    WorkSetConst PVAR_800C, 0  // CanFitAccessory PVAR_8004, PVAR_8005: no Accessories in Black 2 (the finds are Berries)
+    pl_CanFitAccessory PVAR_8004, PVAR_8005, PVAR_800C  // Pearl 0x1D3
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P266_0A10
 
@@ -1144,20 +1144,20 @@ C205_16_S16:
 C205_16_0906:
     pl_Call C205_16_0922
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 42  // Pearl bank 199 line 31 (the Accessory from PVAR_8004: not known here)
+    pl_msg_sys 42  // Pearl bank 199 line 31, an Accessory by word
     pl_WaitButton
     pl_ReturnCommonScript
     VMReturn  // End: the sub-script ends
 
 C205_16_0922:
     pl_PlayFanfare SEQ_ME_ACCE  // Pearl SEQ_ACCE
-// AddAccessory 32772, 32773: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
-// BufferAccessoryName 0, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_AddAccessory PVAR_8004, PVAR_8005  // Pearl AddAccessory (the Fashion Case)
+    pl_BufferAccessoryWord 0, PVAR_8004  // Pearl BufferAccessoryName
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 33  // Pearl bank 199 line 25 (the Accessory from PVAR_8004: not known here)
+    pl_msg_sys 43  // Pearl bank 199 line 25, an Accessory by word
     pl_WaitFanfare
     pl_BufferPlayerName 0
-// BufferAccessoryName 1, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_BufferAccessoryWord 1, PVAR_8004  // Pearl BufferAccessoryName
     pl_Return
 
 PearlNoScript:

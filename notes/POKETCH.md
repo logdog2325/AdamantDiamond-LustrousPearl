@@ -122,8 +122,10 @@ delay) are kept.
 | Move Tester | Pearl's own 17-type chart (hard-coded), type names (bank 565) | none: Pearl's table; Black 2's type names (see question 7) |
 | Pokémon History | a list of the last 12 Pokémon obtained | hooks: battle catch, hatch, evolution, NPC trade, script gift, Pal Park (the Pal Park agent's code) |
 | Marking Map | the player's map cell (Pearl's matrix 0, 30 x 30, 32-tile cells; indoors: the last outdoor spot), roamers' Pearl map ids, Pearl's hidden places (vars 0x4036+) | PearlB2's matrix 0 IS Pearl's matrix 0 (notes/WORLD.md), so cell = tile / 32; indoors: Black 2's escape/special location; **roamers: not built yet** (OPEN_CONTENT); hidden places: not built yet (SetHiddenLocation is a no-op): until then the map shows only the player and the markers |
-| Dowsing Machine | hidden items in a 15 x 14 window around the player, their flags and range | **hidden items not placed yet** (OPEN_CONTENT "Item balls and hidden items"): reads Black 2's hidden-item events once the item pass places them; shows nothing meanwhile |
+| Dowsing Machine | hidden items in a 15 x 14 window around the player, their flags and range | reads the zone's sign events of Black 2's hidden-item kind (poketch_map.c, 2026-11-01); Pearl's ranges by script |
 | Berry Searcher | Pearl's 118 berry patches and their growth | **Black 2 has no berry patches and PearlB2 has not built them** (not on OPEN_CONTENT yet): an empty map until they exist |
+| Dowsing Machine | hidden items in a 15 x 14 window around the player, their flags and range | **hidden items not placed yet** (OPEN_CONTENT "Item balls and hidden items"): reads Black 2's hidden-item events once the item pass places them; shows nothing meanwhile |
+| Berry Searcher | Pearl's 118 berry patches and their growth | built 2026-11-01 (notes/ENCOUNTERS.md "Berry patches"; `PearlB2_Berry_HasFruit`) |
 | Trainer Counter | Poké Radar chain and its 3 records | **no Poké Radar** (not planned): its empty screen, as in Pearl before the radar |
 | Link Searcher | DS wireless beacon scan by link type | see question 6 |
 
@@ -396,7 +398,7 @@ every one (`sAppEntries`; Pearl's placeholder app stays as the fallback of an em
 | App (id) | Pearl overlay | Size | Black 2's side |
 |---|---|---|---|
 | Friendship Checker (5) | 28 | 5.2 KB | the party (eggs left out), friendship, icons (both frames), the no-flip flag of the species' first form; cry by species |
-| Dowsing Machine (6) | 29 | 2.2 KB | hidden items: `PoketchMap_GetNearbyHiddenItems` (none yet, below) |
+| Dowsing Machine (6) | 29 | 2.2 KB | hidden items: `PoketchMap_GetNearbyHiddenItems` |
 | Berry Searcher (7) | 43 | 2.3 KB | berry patches: `PoketchMap_BerryPatchHasFruit` (none, below); the title from the text file |
 | Day-Care Checker (8) | 35 | 2.4 KB | Black 2's Day Care save block (below) |
 | Pokémon History (9) | 49 | 1.4 KB | the save's 12 entries (Pearl's {species, form}), icons by species and form, cry by species; the title from the text file |
@@ -430,11 +432,10 @@ Sizes with data. The biggest app is still the Calculator (6.2 KB).
   as PearlB2's battles do with the option on; with it off the list and chart are Pearl's 17 types byte for byte. A
   Fairy choice saved while the option was on resets to Pearl's start when the option is off. **Lead's call to
   confirm**: the Steel change with Fairy.
-- **Dowsing Machine and Berry Searcher**: their world data goes through two functions of the system's map module,
-  which answer "none" today: hidden items (Pearl's BG events of type hidden item; PearlB2 leaves Pearl's 8000+ scripts
-  out until the item pass, DECISIONS 2026-10-25; Black 2's own hidden-item table lists Unova zones) and berry patches
-  (Black 2 has no soil; pearl_events.py leaves Pearl's soil objects out). The world pass fills them; the apps need no
-  change. Both are on OPEN_CONTENT.
+- **Dowsing Machine and Berry Searcher**: their world data goes through two functions of the system's map module.
+  Hidden items: the zone's sign events of condition 2, Pearl's ranges by script (2026-11-01, b2tools/pearl_items.py).
+  Berry patches answer "none" today (Black 2 has no soil; pearl_events.py leaves Pearl's soil objects out): on
+  OPEN_CONTENT; the app needs no change.
 - **The Dot Artist's save (event 4) now has its sender**: a same-size hook in Black 2's `GameData_SaveBackup` (the
   function every save goes through: the menu's, a script's, the extra blocks'): its first store
   `bl TrainerDataSave_StorePlayerInfo` becomes `bl PearlB2_Poketch_StorePlayerInfo` (ITCM, poketch_itcm.c), which

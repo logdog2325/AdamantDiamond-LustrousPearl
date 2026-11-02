@@ -94,11 +94,11 @@ P144_0119:
     pl_stub GetGameCornerPrizeData  // Pearl 0x2A6 GetPrizeItemIdAndCost 32776, 32768, 32769: not translated yet
     pl_BufferItemName 0, PVAR_8000
     pl_stub BufferVarPaddingDigits  // Pearl 0x280 Unk0280 1, 32769, 1, 5: not translated yet
-    ListMenuAdd 10, 65535, 255  // Pearl AddListMenuEntry 168, 255
+    ListMenuAdd 10, 65535, PVAR_8008  // Pearl AddListMenuEntry 168, PVAR_8008
     pl_AddVar PVAR_8008, 1
     pl_CompareVarToVar PVAR_8008, PVAR_4001
     pl_GoToIf 0, P144_0119
-    ListMenuAdd 11, 65535, 255  // Pearl AddListMenuEntry 169, 255
+    ListMenuAdd 11, 65535, PVAR_8008  // Pearl AddListMenuEntry 169, PVAR_8008
     ListMenuShow
     pl_Return
 

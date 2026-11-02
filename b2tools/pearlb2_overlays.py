@@ -1,5 +1,5 @@
 """PearlB2's own overlays (the decomp's tools/pearlb2/link_overlays.py: 371 the resident section, 344 the Pokétch's
-system, 345-370 its apps, 372 Pal Park's migration screen), linked after overlay 290 but not in dsd's config: build_rom puts them into the ROM's
+system, 345-370 its apps, 372 Pal Park's migration screen, 373 Super Contests), not in dsd's config: build_rom puts them into the ROM's
 overlay table right after it copies the decomp's code binaries, before any patch, so they are in every build of a
 decomp that has them (the resident section is read at boot and its code is called from Black 2's).
 
@@ -8,7 +8,7 @@ decomp that has them (the resident section is read at boot and its code is calle
 """
 import os, re, struct
 
-FIRST, RESIDENT, LAST = 344, 371, 372
+FIRST, RESIDENT, PALPARK, CONTEST, LAST = 344, 371, 372, 373, 373
 
 
 def _elf_symbols(path):
@@ -73,7 +73,9 @@ def install(code):
         os.unlink(yml)
     open(yml, 'w').write(text.rstrip('\n') + '\n' + ''.join(entries))
     res = next(m for m in mods if m[0] == RESIDENT)
-    pp = [m for m in mods if m[0] == LAST]
+    pp = [m for m in mods if m[0] == PALPARK]
+    con = [m for m in mods if m[0] == CONTEST]
     return (f'PearlB2 overlays {FIRST}-{mods[-1][0]}: the resident section {res[2] + res[3]} B at {res[1]:#x}, the '
             f'Pokétch {FIRST}-{RESIDENT - 1}' + (f', Pal Park\'s screen {pp[0][2] + pp[0][3]} B at {pp[0][1]:#x}'
-                                                  if pp else ''))
+                                                  if pp else '') +
+            (f', Super Contests {con[0][2] + con[0][3]} B at {con[0][1]:#x}' if con else ''))

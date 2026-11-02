@@ -104,7 +104,7 @@ save, then the GBA flash, the last sectors last), so a power cut never leaves a 
   points, the "Pal Park" met location (sinnoh_names' Pal Park line) when they go to the PC.
 
 ### 3.7 The Diamond version
-Nothing here depends on the version: the GBA games, rules and conversion are the same in Diamond and Pearl. Pearl's
+The GBA games, rules and conversion are the same in Diamond and Pearl. Only the lines that name the game differ: a Diamond build puts Diamond's words on the line numbers migrate_app.c shows (patches/pal_park.py VERSION_LINES), so the C has no version in it. Pearl's
 "dual-slot" wild Pokémon (routes that change with a GBA game inserted: CheckGBACartridge 0x26E) are a separate
 feature, a later extra (decided; notes/OPEN_CONTENT.md), version-specific when built (Pearl's / Diamond's lists in data).
 

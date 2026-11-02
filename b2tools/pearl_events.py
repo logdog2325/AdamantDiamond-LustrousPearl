@@ -17,19 +17,23 @@ Rules:
   sign event running the object's script, readable from any side (direction 4). They are not in the NPC list (until
   2026-10-20 each was an NPC with Black 2's notice-board sprite, code 200), so later people's indices shift
   (pearl_story object_index comes from kept_objects too).
-- Objects Black 2 cannot show (berry soil, book, the cave painting, the Elite Four doors; the Galactic HQ door is a
-  person since 2026-10-25, code 292 with Pearl's own picture: patches/pearl_npc_sprites) and
-  Pearl's item balls (7000+) and hidden items (8000+: BG events), whose Black 2 systems are not set up yet, are left
-  out and listed (skipped()), except the item balls data/pearl_item_balls.json installs (Pearl's HM and key-item
-  balls since 2026-10-25: item_ball, item_ball_flag), people running Pearl's own item-ball script.
-- Global scripts (Pearl 2000+, other than trainers, items, hidden items) run through a proxy entry of the zone's
-  own script file (pearl_story proxies): the NPC's script is that entry.
+- Pearl's berry soil (graphics 100, movement 47) is a person since 2026-11-01: is_berry_patch.
+- Objects Black 2 cannot show (book, the cave painting, the Elite Four doors; the Galactic HQ door is a
+  person since 2026-10-25, code 292 with Pearl's own picture: patches/pearl_npc_sprites) are left out and listed
+  (skipped()).
+- Pearl's item balls (7000+) are people with Black 2's item-ball sprite, after all of Pearl's other people (so no
+  index in the zone's scripts moves), whose script is the same global id: Black 2's file 1240 holds Pearl's item-ball
+  scripts (b2tools/pearl_items.py); their hide flag is the ball's Pearl flag (item_ball_flag). Pearl's hidden items
+  (8000+: BG events) are sign events of Black 2's hidden-item kind (cond 2) with the same global id (file 1241).
+- Other global scripts (Pearl 2000+, other than trainers) run through a proxy entry of the zone's own script file
+  (pearl_story proxies): the NPC's script is that entry.
 - Heights: the converted map's tile height (work/world/heights_*.json, units: 16 a tile); NPC y = units * 0x1000.
 """
 import json, os
 
 import pearl_gimmicks
 import pearl_hidden_paths
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
@@ -143,6 +147,8 @@ def proxies(events, pd=None, zone=None):
         out.add(ROCKY_WALL)                       # (the Rock Climb walls' sign events: rock_climb_ends)
     if zone is not None and town_map_tiles(zone):
         out.add(TOWN_MAP)                         # (the wall maps' sign events: town_map_tiles)
+    if zone is not None and honey_tree_tiles(zone):
+        out.add(HONEY_TREE)                       # (the honey trees' sign events: honey_tree_tiles)
     return sorted(out)
 
 
@@ -184,7 +190,7 @@ class Heights:
         if c is None:
             return True
         if c not in self.lands:
-            self.lands[c] = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.json')))
+            self.lands[c] = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))
         return bool(self.lands[c]['collision'][z % 32][x % 32])
 
     def sign_y(self, zone, x, z, facing, blocked=False):
@@ -215,8 +221,13 @@ ROCKY_WALL = 10003          # Pearl's global script facing a Rock Climb wall (sc
 _CLIMB = None
 TOWN_MAP = 2508             # Pearl's wall map: tile behaviour 0x85 (TOWN_MAP) runs BG_EVENTS 8 = scr_seq 1 entry 9 (fade,
 TOWN_MAP_BEHAVIOUR = 0x85   # OpenRegionMap, fade back: pokeplatinum Field_TileBehaviorToScript), not a BG event
+HONEY_TREE = 2008           # Pearl's honey tree: pressing A facing north at the tree's prop runs this global script
+HONEY_TREE_MODEL = 26       # (pokediamond ov05_021F4D2C: script 0x7D8, prop model 0x1A), not a BG event
+# Pearl's trees in its order (pokediamond ov05_021FC650: map ids); the same list as patches/wild.py
+HONEY_TREE_MAPS = (0x15B, 0x15D, 0x15E, 0x161, 0x162, 0x164, 0x16A, 0x16B, 0x16E, 0x16F, 0x173, 0x175, 0x17C, 0x17E,
+                   0x184, 0x188, 0x18B, 0xC8, 0xCA, 0xCC, 0x100)
 # global scripts the project's own events add (pearl_story PearlData.proxy_ids numbers them after Pearl's, in this order)
-ADDED_PROXIES = [ROCKY_WALL, TOWN_MAP]
+ADDED_PROXIES = [ROCKY_WALL, TOWN_MAP, HONEY_TREE]
 _TOWN_MAPS = {}
 
 
@@ -235,7 +246,7 @@ def town_map_tiles(zone):
             for cx, c in enumerate(row):
                 if c == 0xffff:
                     continue
-                land = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.json')))
+                land = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))
                 b, col = land['behaviour'], land['collision']
                 for z in range(31):
                     for x in range(32):
@@ -243,6 +254,28 @@ def town_map_tiles(zone):
                             out.append((32 * cx + x, 32 * cz + z))
         _TOWN_MAPS[mid] = out
     return _TOWN_MAPS[mid]
+
+
+def honey_tree_tiles(zone):
+    """The tiles of a zone's honey tree, read facing north from the row south of it (Pearl: prop model 26 in front of
+    a player facing north; Black 2 has no such check), each a sign event running HONEY_TREE (entities). The tree's prop
+    stands on a corner between tiles: it fills 2 x 2 tiles, of which the south row is read. -> [(x, z)] in the zone's
+    tile coordinates, [] for a zone without a tree."""
+    if zone['id'] not in HONEY_TREE_MAPS:
+        return []
+    mid = zone['matrix']
+    m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f'{mid:03d}.json')))
+    out = []
+    for cz, row in enumerate(m['maps']):
+        for cx, c in enumerate(row):
+            if c == 0xffff or (m.get('headers') and m['headers'][cz][cx] != zone['id']):
+                continue
+            land = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))
+            for p in land['props']:
+                if p['model'] == HONEY_TREE_MODEL:
+                    x, z = int(p['pos'][0] // 16) + 16, int(round(p['pos'][2] / 16)) + 16
+                    out += [(32 * cx + x - 1, 32 * cz + z), (32 * cx + x, 32 * cz + z)]
+    return out
 
 
 def rock_climb_ends(zone_name):
@@ -255,55 +288,49 @@ def rock_climb_ends(zone_name):
     return _CLIMB.get(zone_name, [])
 
 
-ITEM_BALLS = os.path.join(ROOT, 'data', 'pearl_item_balls.json')
 ITEM_BALL_GFX = 87          # Pearl's item ball (data/pearl_sprite_map.json: Black 2's item-ball sprite, code 110)
-_BALLS = None
-
-
-def installed_item_balls():
-    """{(Pearl map name, object id): row} of the item balls installed as people (data/pearl_item_balls.json)."""
-    global _BALLS
-    if _BALLS is None:
-        _BALLS = {(r['zone'], r['obj']): r for r in json.load(open(ITEM_BALLS))['installed']} \
-            if os.path.exists(ITEM_BALLS) else {}
-    return _BALLS
 
 
 def item_ball(zone, o):
-    """The row of data/pearl_item_balls.json that installs object o of the zone (a zone dict or None), or None."""
-    if zone is None or script_kind(o['script']) != 'item':
-        return None
-    return installed_item_balls().get((zone['name'], o['id']))
+    """Whether object o is one of Pearl's item balls (a script of 7000+; copies of a neighbour's ball have script
+    0xFFFF and stay plain copies)."""
+    return script_kind(o['script']) == 'item'
 
 
 def item_ball_flag(ids, o):
-    """The Black 2 flag of an installed item ball, the one rule for them (data/pearl_item_balls.json _doc): its Pearl
+    """The Black 2 flag of an item ball, the one rule for them (notes/OPEN_CONTENT.md, b2tools/pearl_items.py): its Pearl
     flag (Pearl's item-ball flags 986+n, the object's hidden_flag) through the id registry. The person hides by it, and
     Pearl's RemoveEvent of the talked-to ball sets it (pearl_story h_remove: pl_RemoveTalkedObject)."""
     return ids.flag_value(o['hidden_flag']) if o['hidden_flag'] else 0
 
 
+BERRY_SOIL_MOVE = 47        # Pearl's movement type of its berry soil objects (graphics 100)
+BERRY_ACTOR_CODE = 0x0F00   # + the patch's number: the person's model, resolved to today's picture (decomp resident/berry.c)
+
+
+def is_berry_patch(o):
+    """A Pearl berry patch: a person of the patch's picture, its number in param 0 (Pearl's data[0])."""
+    return o['movement_type'] == BERRY_SOIL_MOVE
+
+
 def object_skipped(o, zone=None):
-    """Why a Pearl object is not installed (None: it is, as a Black 2 person, or as a sign: is_sign). zone: the Pearl
-    zone dict, for the item balls data/pearl_item_balls.json installs (item_ball)."""
-    if script_kind(o['script']) in ('item', 'hidden'):
-        if item_ball(zone, o):
-            return None
-        return f'object {o["id"]}: item ball (script {o["script"]}): Black 2 item balls not set up yet'
-    if is_sign(o):
+    """Why a Pearl object is not installed (None: it is, as a Black 2 person, or as a sign: is_sign)."""
+    if script_kind(o['script']) == 'item':
+        return None
+    if is_sign(o) or is_berry_patch(o):
         return None
     if sprite_code(o['graphics_id']) is None:
         return (f'object {o["id"]}: graphics {o["graphics_id"]} ({sprite_table().get(o["graphics_id"], {}).get("pearl_name")}) '
                 f'has no Black 2 actor')
-    if o['movement_type'] == 47:
-        return f'object {o["id"]}: berry soil'
     return None
 
 
 def kept_objects(pd, zone):
     """Pearl objects installed as Black 2 people, in the order of the zone's NPC list (entities()); copies included
-    (they take places in the list; no script addresses them); signs are sign events, not in the list."""
-    return [o for o in pd.events(zone)['object_events'] if not object_skipped(o, zone) and not is_sign(o)]
+    (they take places in the list; no script addresses them); signs are sign events, not in the list. The item balls
+    come after the others, so installing them moves nobody's index in the zone's scripts."""
+    objs = [o for o in pd.events(zone)['object_events'] if not object_skipped(o, zone) and not is_sign(o)]
+    return [o for o in objs if not item_ball(zone, o)] + [o for o in objs if item_ball(zone, o)]
 
 
 COPY_SCRIPT = 0xFFFF
@@ -341,7 +368,6 @@ def entities(pd, zone, ids, heights, script_ids):
     closed = list(zip(pd.closed_ids(zone['id']), pd.closed(zone)))
     talk_obj = {r['obj']: k for k, r in closed if r.get('talk') and 'obj' in r}
     talk_bg = {r['bg']: k for k, r in closed if r.get('talk') and 'bg' in r}
-    balls = pd.item_ball_ids(zone['id']) if hasattr(pd, 'item_ball_ids') else {}   # installed item balls: their entry
     # Ramanas Park in Pal Park (b2tools/ramanas.py): a person whose talk script an extra entry runs first, and new
     # people after Pearl's (no index of Pearl's moves): the slate clerk
     rids = pd.ramanas_ids(zone['id']) if hasattr(pd, 'ramanas_ids') else {}
@@ -350,35 +376,30 @@ def entities(pd, zone, ids, heights, script_ids):
         import ramanas
         talk_obj.update(ramanas.talk_override(zone['name'], rids))
         added = ramanas.extra_people(zone['name'], rids)
-    for o in ev['object_events'] + added:
-        why = object_skipped(o, zone)
+    for why in (object_skipped(o, zone) for o in ev['object_events']):
         if why:
             skipped.append(why)
-            continue
-        if is_sign(o):
-            continue                               # (a sign event, below)
-        code = sprite_code(o['graphics_id'], zone['name'])
+    for o in [o for o in kept_objects(pd, zone)] + added:
+        code = BERRY_ACTOR_CODE + o['data'][0] if is_berry_patch(o) else sprite_code(o['graphics_id'], zone['name'])
         y = heights.at(zone, o['x'], o['z'], near=o['y'] * 16)   # (under or on a bridge: Pearl's y says)
         y = pearl_gimmicks.object_y(zone['name'], o, y)   # (on a floor Pearl's code builds: the Canalave Gym's)
         y = pearl_hidden_paths.object_y(zone['name'], o, y)   # (on a path Pearl reveals: Route 224's Shaymin)
-        move, facing = fit_move(o, code)
+        move, facing = (0, 1) if is_berry_patch(o) else fit_move(o, code)
         npcs.append(dict(uid=o['id'], model=code, move=move,
                          evtype=0 if o['trainer_type'] == 3 else o['trainer_type'],
-                         flag=item_ball_flag(ids, o) if o['id'] in balls else
+                         flag=item_ball_flag(ids, o) if item_ball(zone, o) else
                          ids.flag_value(hide_flag(pd, o)) if hide_flag(pd, o) else 0,
-                         script=o['script'] if any(o is a for a in added) else
-                         talk_obj.get(o['id']) or balls.get(o['id']) or script_ids(o['script']), dir=facing,
+                         script=o['script'] if any(o is a for a in added) or item_ball(zone, o) else
+                         talk_obj.get(o['id']) or script_ids(o['script']), dir=facing,
                          p0=o['data'][0], p1=o['data'][1], p2=o['data'][2],
                          areaw=o['movement_range_x'] & 0xFFFF, areah=o['movement_range_z'] & 0xFFFF, rail=0,
                          x=o['x'], z=o['z'], y=(y * 0x1000) if y is not None else (o['y'] << 16),
                          clone=o['script'] == 0xFFFF))      # (a copy of a neighbouring zone's object)
     for bi, b in enumerate(ev['bg_events']):
-        kind = script_kind(b['script'])
-        if (kind == 'hidden' or b['type'] == 2) and bi not in talk_bg:
-            skipped.append(f'hidden item at ({b["x"]},{b["z"]}) (script {b["script"]}): Black 2 hidden items not set up yet')
-            continue
         y = heights.sign_y(zone, b['x'], b['z'], b['player_facing_dir'])
-        signs.append(dict(script=talk_bg.get(bi) or script_ids(b['script']), cond=0 if bi in talk_bg else b['type'],
+        hidden = script_kind(b['script']) == 'hidden'      # Pearl's type 2: Black 2's hidden item (the same id: file 1241)
+        signs.append(dict(script=talk_bg.get(bi) or (b['script'] if hidden else script_ids(b['script'])),
+                          cond=0 if bi in talk_bg else b['type'],
                           dir=b['player_facing_dir'], rail=0,
                           x=b['x'], z=b['z'], y=y if y is not None else b['y']))
     for o in ev['object_events']:
@@ -403,6 +424,11 @@ def entities(pd, zone, ids, heights, script_ids):
         # (patches/town_map.py: CallPlaceSelect in a zone without Fly)
         y = heights.sign_y(zone, x, z, 0)
         signs.append(dict(script=script_ids(TOWN_MAP), cond=0, dir=SIGN_DIR[0], rail=0,
+                          x=x, z=z, y=y if y is not None else 0))
+    for x, z in honey_tree_tiles(zone):
+        # a honey tree: read facing it from the south, at that tile's height (Pearl's rule: only from below)
+        y = heights.sign_y(zone, x, z, 0)
+        signs.append(dict(script=script_ids(HONEY_TREE), cond=0, dir=SIGN_DIR[0], rail=0,
                           x=x, z=z, y=y if y is not None else 0))
     for c in ev['coord_events']:
         # Black 2 fires a trigger only within 2 units of its y (ov012 CheckTriggerPositionMatchXYZ): the height of most

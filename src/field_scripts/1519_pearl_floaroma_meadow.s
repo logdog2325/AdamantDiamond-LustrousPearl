@@ -1,6 +1,6 @@
 // MAP_FLOAROMA_MEADOW: Pearl script file 269, text bank 238. Written by b2tools/pearl_story.py:
 // do not edit; rerun `python3 b2tools/pearl_story.py zones ...` (notes/STORY.md).
-// Scripts 1-7: Pearl's; no warp continuations; 8: PearlArrive
+// Scripts 1-7: Pearl's; no warp continuations; 8: PearlArrive; 108: Pearl 2008
 #include "asm/field_script.inc"
 #include "pearl.h"
 #include "pearl_story.inc"
@@ -13,6 +13,106 @@
     ScriptEntry P269_S6
     ScriptEntry P269_S7
     ScriptEntry PearlArrive
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlProxy_2008
     ScriptEntriesEnd
 
 P269_S1:
@@ -212,6 +312,10 @@ P269_00A0:
     Move 63, 3  // DELAY_8
     Move 33, 1  // WALK_ON_SPOT_NORMAL_SOUTH
     MoveEnd
+
+PearlProxy_2008:                  // Pearl global script 2008 (run by this zone's events)
+    VMCall C205_9_S9
+    VMHalt
 
 // ---- Pearl global script 205:45 (a subroutine here)
 C205_45_0336:
@@ -446,6 +550,100 @@ C205_18_0B6A:
     pl_msg_sys 27  // Pearl bank 199 line 27
     pl_WaitButton
     pl_Return
+
+// ---- Pearl global script 205:9 (a subroutine here)
+C205_9_S9:
+C205_9_0571:
+    pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
+    pl_LockAll
+    pl_CheckItem 94, 1, PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 0
+    pl_GoToIf 5, C205_9_05B9
+    pl_GetHoneyTreeStatus PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 1
+    pl_GoToIf 1, C205_9_05E6
+    pl_CompareVarToValue PVAR_800C, 2
+    pl_GoToIf 1, C205_9_05F1
+    pl_CompareVarToValue PVAR_800C, 3
+    pl_GoToIf 1, C205_9_067B
+    VMReturn  // End: the sub-script ends
+
+C205_9_05B9:
+    pl_GetHoneyTreeStatus PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 1
+    pl_GoToIf 1, C205_9_05FC
+    pl_CompareVarToValue PVAR_800C, 2
+    pl_GoToIf 1, C205_9_0605
+    pl_CompareVarToValue PVAR_800C, 3
+    pl_GoToIf 1, C205_9_067B
+    VMReturn  // End: the sub-script ends
+
+C205_9_05E6:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 28  // Pearl bank 199 line 46
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_05F1:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 29  // Pearl bank 199 line 48
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_05FC:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 30  // Pearl bank 199 line 47
+    pl_GoTo C205_9_0642
+
+C205_9_0605:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 31  // Pearl bank 199 line 49
+    pl_GoTo C205_9_0642
+
+C205_9_0629:
+    pl_CheckItem 94, 1, PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 0
+    pl_GoToIf 5, C205_9_0642
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_0642:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 32  // Pearl bank 199 line 50
+    pl_ShowYesNoMenu PVAR_800C
+    pl_CloseMessage
+    pl_CompareVarToValue PVAR_800C, 0
+    pl_GoToIf 1, C205_9_065C
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_065C:
+    pl_RemoveItem 94, 1, PVAR_800C
+// IncrementTrainerScore2 1: nothing in Black 2 (Pearl's trainer-card score (Black 2 keeps its own records))
+    pl_SlatherHoneyTree
+    pl_WaitTime 10, PVAR_800C
+    pl_msg_sys 33  // Pearl bank 199 line 51
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_067B:
+    pl_StartHoneyTreeBattle
+    pl_CheckWonBattle PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 0
+    pl_GoToIf 1, C205_9_0696
+    pl_StopHoneyTreeShaking
+    pl_GoTo C205_9_0629
+
+C205_9_0696:
+    pl_BlackOutFromBattle
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
 
 PearlNoScript:
     VMHalt

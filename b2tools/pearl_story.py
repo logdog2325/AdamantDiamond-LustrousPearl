@@ -33,6 +33,7 @@ How (details in notes/STORY.md):
   ({"MAP_X": {"<pearl line>": uid}}).
 """
 import collections, json, os, re, struct, sys
+import b2font
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
@@ -53,6 +54,8 @@ SPEAKERS = os.path.join(ROOT, 'data', 'pearl_speakers.json')
 #                                            2 left, 3 right): pl_closed_facility line, dir
 #   {"talk": true, "obj": id, "text"}        the person with that Pearl object id shows text instead of its script
 #   {"talk": true, "bg": index, "text"}      the same for the sign (bg event) with that index in Pearl's bg_events
+#   {"talk": true, "obj": id, "contest": n, "text"}   (2026-11-01) that person runs global script 10785 + n, a Super Contest
+#                                            counter: 0 official, 1 link (closed), 2 practice, 3 Poffin cooking. text is unused but kept.
 #   {"talk": true, "obj": id, "musical": true, "text"}   (2026-10-25, the user: "for contests use musicals") that
 #                                            person is a Pokémon Musical receptionist (src/include/pearl_musical.inc:
 #                                            pl_musical_reception greeting, first): text is the greeting, in Pearl
@@ -315,18 +318,6 @@ class PearlData:
         k, = self._extra_ids(pearl_map, 1, skip=len(self.closed(self.zones[pearl_map])))
         return k, lines + ['    VMHalt']
 
-    def item_ball_ids(self, pearl_map):
-        """{Pearl object id: script id} of the zone's installed item balls (data/pearl_item_balls.json, pearl_events
-        item_ball), in object order: entries after its closed places and elevator entry. Each runs Pearl's own
-        item-ball script (ITEM_BALL_FILE) as a sub-script (translate: PearlItemBall_<obj>)."""
-        import pearl_events
-        zone = self.zones[pearl_map]
-        balls = [o['id'] for o in self.events(zone)['object_events'] if pearl_events.item_ball(zone, o)]
-        if not balls:
-            return {}
-        skip = len(self.closed(zone)) + (1 if self.elevator_init(pearl_map) else 0)
-        return dict(zip(balls, self._extra_ids(pearl_map, len(balls), skip=skip)))
-
     def ramanas_ids(self, pearl_map):
         """{extra name: script id} of Ramanas Park's entries in Pal Park's gate and park (b2tools/ramanas.py
         zone_extras: the slate clerk, the walk-out after a visit, the park attendant), after the zone's closed places,
@@ -336,7 +327,7 @@ class PearlData:
         names = ramanas.zone_extras(zone['name'])
         if not names:
             return {}
-        skip = len(self.closed(zone)) + (1 if self.elevator_init(pearl_map) else 0) + len(self.item_ball_ids(pearl_map))
+        skip = len(self.closed(zone)) + (1 if self.elevator_init(pearl_map) else 0)
         return dict(zip(names, self._extra_ids(pearl_map, len(names), skip=skip)))
 
     def game_clear_ids(self, pearl_map):
@@ -346,7 +337,7 @@ class PearlData:
         if self.zones[pearl_map]['name'] != GAME_CLEAR_ZONE:
             return None
         zone = self.zones[pearl_map]
-        skip = len(self.closed(zone)) + (1 if self.elevator_init(pearl_map) else 0) + len(self.item_ball_ids(pearl_map))
+        skip = len(self.closed(zone)) + (1 if self.elevator_init(pearl_map) else 0)
         return tuple(self._extra_ids(pearl_map, 2, skip=skip))
 
     def turnback_doors(self, pearl_map):
@@ -357,7 +348,7 @@ class PearlData:
             return None
         zone = self.zones[pearl_map]
         skip = len(self.closed(zone)) + (1 if self.elevator_init(pearl_map) else 0) + \
-            len(self.item_ball_ids(pearl_map)) + len(self.ramanas_ids(pearl_map)) + \
+            len(self.ramanas_ids(pearl_map)) + \
             (2 if self.game_clear_ids(pearl_map) else 0)
         k, = self._extra_ids(pearl_map, 1, skip=skip)
         return k
@@ -854,6 +845,14 @@ class FileTr:
         ks = self.reach_from.get(a, set())
         return bool(ks) and all(self.kind_of(k) == 'talk' for k in ks)
 
+    def talks_to_thing(self, a):
+        """Whether every object whose talk script reaches a is a thing (THING_GFX), not a person."""
+        if not self.zone_file:
+            return False
+        ks = self.reach_from.get(a, set())
+        objs = [o for o in self.job.events['object_events'] if o['script'] in ks]
+        return bool(objs) and all(o['graphics_id'] in THING_GFX for o in objs)
+
     def label(self, a):
         return f'{self.prefix}_{a:04X}'
 
@@ -921,6 +920,8 @@ class FileTr:
     def translate(self, a, end, op, args):
         name = self.job.pd.cmd_name(op)
         h = HANDLERS.get(name)
+        if name in TOWER_ONLY_HANDLERS and self.job.zone['name'] not in TOWER_ZONES:
+            h = None                                   # (b2tools/tower_script.py: these stay stubs elsewhere)
         vals = [v for ty, v in args]
         patch = script_patches().get((self.f, a))      # (data/pearl_script_patches.json: one command changed)
         if patch is not None:
@@ -938,6 +939,8 @@ class FileTr:
                     f': not translated yet']
         before = sum(self.job.stubs.values())
         r = h(self, a, vals, name)
+        if (self.f, a) in SCENE_AFTER:
+            r = r + SCENE_AFTER[(self.f, a)](self)
         self.job.done[name] += 1
         self.job.insn_status[(self.f, a)] = (name, 'stub' if sum(self.job.stubs.values()) > before else 'done')
         return r
@@ -947,6 +950,37 @@ class FileTr:
 # Underground Man's missions that need digging, traps or Secret Bases)
 SCRIPT_PATCHES = os.path.join(ROOT, 'data', 'pearl_script_patches.json')
 _SCRIPT_PATCHES = None
+
+
+def windworks_door_opens(tr):
+    """The Works Key (the user, 2026-11-01: "the door doesn't open automatically"): after "Ker-chunk! The door to Valley
+    Windworks opened!" the door opens by itself and the player walks in, as the door grunt did before (Pearl only moves
+    the warp back and leaves the walking to the player, with the door still shut on screen). Then the warp the door
+    has, onto the interior's mat."""
+    pd = tr.job.pd
+    m = pd.by_name['MAP_VALLEY_WINDWORKS_INTERIOR']['id']
+    _, arrive = pd.arrival_ids(m)
+    return ['pl_LoadDoorAnimation 77, 243, 654  // the door opens by itself',
+            'pl_PlayDoorOpenAnimation 77',
+            'pl_WaitForAnimation 77',
+            'pl_ApplyMovement PL_PLAYER, P210_door_walk',
+            'pl_WaitMovement',
+            'pl_fade_out_black',
+            'pl_WaitFadeScreen',
+            'pl_UnloadAnimation 77',
+            f'RTReserveScript {arrive}  // PearlArrive: fade in, release',
+            f'pl_Warp {pd.b2_zone[m]}, 12, 16, 0  // Pearl map {m} (MAP_VALLEY_WINDWORKS_INTERIOR), its mat',
+            'pl_ReleaseAll',
+            'pl_End',
+            '.balign 4, 0',
+            'P210_door_walk:',
+            '    Move 12, 1  // WALK_NORMAL_NORTH',
+            '    MoveEnd']
+
+
+# Lines added after one translated command, for a Pearl scene that needs more than Pearl has: {(script file, command
+# address): function(tr) -> lines}
+SCENE_AFTER = {(210, 0x198): windworks_door_opens}
 
 
 def script_patches():
@@ -992,6 +1026,11 @@ def movement_steps(pd, f, addr):
     return [(c, n) for c, n in pd.disasm(f).movement.get(addr, []) if c != 0xFE]
 
 
+OBJECT_LINE_BANKS = {334: None, 199: {67}}   # speaker(): {Pearl text bank: its lines, None = all}
+# Pearl graphics of things, not people or Pokémon (pokediamond sprites.h; data/pearl_sprite_map.json): Poké Ball 87, snowball
+# 118, air vent 182, book 183, Moss Rock 190, Ice Rock 191, Galactic door 202, wall painting 203, Elite Four door 209
+# and the legendary Pokémon met on the map (151-161, 184): Pearl's narration around them, whose object is gone by then
+THING_GFX = {87, 118, 182, 183, 190, 191, 202, 203, 209, 184} | set(range(151, 162))
 UNKNOWN = ('unknown',)               # FileTr.open_speaker: some window may be open (see lines())
 
 BUFFER_CMDS = {'BufferPlayerName', 'BufferRivalName', 'BufferCounterpartName', 'BufferPartyMonSpecies',
@@ -1001,6 +1040,12 @@ BUFFER_CMDS = {'BufferPlayerName', 'BufferRivalName', 'BufferCounterpartName', '
                'BufferPlayerCounterpartStarterSpeciesName', 'BufferMapName'}
 
 HANDLERS = {}
+# Handlers only the Battle Tower's zones use: other zones' scripts keep these commands as they were
+TOWER_ONLY_HANDLERS = {'CheckSaveType', 'OpenSaveInfo', 'CloseSaveInfo', 'GetCurNetID', 'Unk02C9', '1DF', '1E0',
+                       'BufferVarPaddingDigits', 'MessageSeenBanlistSpecies'}
+TOWER_ZONES = ('MAP_BATTLE_TOWER_LOBBY', 'MAP_BATTLE_TOWER_ELEVATOR', 'MAP_BATTLE_TOWER_CORRIDOR_MULTI',
+               'MAP_BATTLE_TOWER_CORRIDOR_WIFI', 'MAP_BATTLE_TOWER_ARENA_MULTI', 'MAP_BATTLE_TOWER_ARENA_WIFI',
+               'MAP_BATTLE_TOWER_PARTNER_ROOM', 'MAP_BATTLE_PARK_EXCHANGE_SERVICE_CORNER')
 
 
 def handler(*names):
@@ -1177,7 +1222,16 @@ def speaker(tr, a, line):
     if tr.zone_file and line in tr.job.speakers:
         who = tr.job.speakers[line]
         return ('sys', None) if who == 'sys' else ('actor', who)   # 'sys': a narration line (the plain window)
-    return ('talk', None) if tr.is_talk(a) else ('sys', None)
+    if not tr.is_talk(a):
+        return ('sys', None)
+    # Pearl has one window, no balloons: Black 2's balloon is for people. The field-object lines of Pearl's common
+    # banks (rocks, trees, boulders, water, walls: bank 334; the vents: bank 199 line 67) and a talk script of a thing
+    # (THING_GFX) use the plain window (2026-11-01, the user: the "big boulder" line had a tail)
+    if tr.bank in OBJECT_LINE_BANKS and (OBJECT_LINE_BANKS[tr.bank] is None or line in OBJECT_LINE_BANKS[tr.bank]):
+        return ('sys', None)
+    if tr.talks_to_thing(a):
+        return ('sys', None)
+    return ('talk', None)
 
 
 def switch_window(tr, kind, uid):
@@ -1294,6 +1348,7 @@ def h_counterpart(tr, a, vals, name):
 # GetFashionNameWithArticle; 2026-10-25, chapter 4a: Keira's "Obtained the Glitter Powder!" in the Contest Hall).
 NAME_SOURCES = {'BufferPoketchAppName': (406, True), 'BufferAccessoryName': (338, False),
                 'GetFashionNameWithArticle': (339, False)}
+ACCESSORY_NAMES = {'BufferAccessoryName': 'pl_BufferAccessoryWord', 'GetFashionNameWithArticle': 'pl_BufferAccessoryArticle'}
 NAME_WHAT = {'BufferPoketchAppName': 'the app', 'BufferAccessoryName': 'the Accessory',
              'GetFashionNameWithArticle': 'the Accessory'}
 
@@ -1311,7 +1366,13 @@ def poketch_app_name(app):
     return source_name('BufferPoketchAppName', app)
 
 
-@handler('BufferPoketchAppName', 'BufferAccessoryName', 'GetFashionNameWithArticle')
+@handler('BufferAccessoryName', 'GetFashionNameWithArticle')
+def h_accessory_name(tr, a, vals, name):
+    # (Super Contests, 2026-11-01): a real word now, at run time, for the lines to take: h_app_message's {0102:n}
+    return [f'{ACCESSORY_NAMES[name]} {vals[0]}, {tr.var(vals[1]) if vals[1] >= 0x4000 else vals[1]}  // Pearl {name}']
+
+
+@handler('BufferPoketchAppName')
 def h_source_name(tr, a, vals, name):
     return [f'// {name} {vals[0]}, {tr.var(vals[1]) if vals[1] >= 0x4000 else vals[1]}: the lines naming '
             f'{NAME_WHAT[name]} have its name written in (Black 2 has no word for it: NAME_SOURCES)']
@@ -1320,6 +1381,11 @@ def h_source_name(tr, a, vals, name):
 def h_app_message(tr, a, n, src, apps, kind, uid):
     """A Message whose buffers hold a name Black 2 has no word for (FileTr.app_bufs, NAME_SOURCES): a copy of the
     line per name."""
+    # Accessories are words at run time: their buffers keep a plain word tag (Black 2 prints any word for it)
+    words = {i for i, (c, v) in apps.items() if c in ACCESSORY_NAMES}
+    apps = {i: x for i, x in apps.items() if i not in words}
+    src = tr.job.gen4_text._STRVAR.sub(lambda m: '{STRVAR_1 1, %d, 0}' % int(m.group(2)) if int(m.group(2)) in words else m.group(0), src)
+
     def line(binding):
         text = tr.job.gen4_text._STRVAR.sub(lambda m: source_name(*binding[int(m.group(2))])
                                             if int(m.group(2)) in binding else m.group(0), src)
@@ -1329,6 +1395,8 @@ def h_app_message(tr, a, n, src, apps, kind, uid):
         return (f'pl_msg_actor {m}, {uid}' if kind == 'actor' else f'pl_msg_{kind} {m}') + f'  // {note}'
     fixed = {i: (c, v) for i, (c, v) in apps.items() if not isinstance(v, tuple)}
     var = [(i, c, v[1]) for i, (c, v) in apps.items() if isinstance(v, tuple)]
+    if not var and not fixed:
+        return [msg(line({}), f'Pearl bank {tr.bank} line {n}, an Accessory by word')]
     if not var:
         return [msg(line(fixed), f'Pearl bank {tr.bank} line {n}, naming '
                                  f'{", ".join(source_name(c, v) for c, v in fixed.values())}')]
@@ -1386,6 +1454,9 @@ def h_sign_input(tr, a, vals, name):
 # ---- common scripts
 NATIVE_COMMON = {
     2000: ['// CallCommonScript 2000 (Pearl closes the sign; X opens the menu): done by pl_sign'],
+    # Pearl's Mart greeting: Black 2's Mart menu (global 10110, its text here a/0/0/3 1302: b2tools/pearl_items.py) says
+    # Pearl's line with the menu open
+    2019: ['// CallCommonScript 2019 (Pearl\'s Mart greeting): Black 2\'s Mart menu says it'],
 }
 
 
@@ -1474,7 +1545,7 @@ def h_orb_flag(tr, a, vals, name):
 def h_remove(tr, a, vals, name):
     if tr.f == ITEM_BALL_FILE and vals[0] == LAST_TALKED:
         # Pearl's item-ball script removes the talked-to ball and its RemoveEvent sets the ball's flag: Black 2's
-        # ActorDelete does not, so the ball's own flag (data/pearl_item_balls.json, pearl_events.item_ball_flag) is
+        # ActorDelete does not, so the ball's own flag (pearl_events.item_ball_flag) is
         # set as Black 2's item script does it (2026-10-25, chapter 4b)
         return ['pl_RemoveTalkedObject  // RemoveEvent VAR_LAST_TALKED: the ball, and its flag']
     o = tr.job.objects.get(vals[0]) if tr.mode != 'common' else None
@@ -1628,6 +1699,98 @@ def h_setwarp(tr, a, vals, name):
     return [f'pl_SetWarpEventPos {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[2])}, {y}']
 
 
+@handler('CallBattleTowerFunction')
+def h_tower_function(tr, a, vals, name):
+    """Pearl's Battle Tower on Black 2's Battle Subway (b2tools/tower_script.py, notes/BATTLE_ZONE.md)."""
+    import tower_script
+    return tower_script.h_function(tr, vals)
+
+
+@handler('InitBattleTower')
+def h_tower_init(tr, a, vals, name):
+    import tower_script
+    return tower_script.h_init(tr, vals)
+
+
+@handler('FreeBattleTower')
+def h_tower_free(tr, a, vals, name):
+    return ['Plugin1_Cmd1002  // FreeBattleTower']
+
+
+@handler('SetBattleTowerNull')
+def h_tower_null(tr, a, vals, name):
+    return ['Plugin1_Cmd1000  // SetBattleTowerNull']
+
+
+@handler('PrintBattleTowerIntroMessage')
+def h_tower_intro(tr, a, vals, name):
+    import tower_script
+    return tower_script.h_intro(tr, vals)
+
+
+@handler('OpenBattleTowerRecordsApp')
+def h_tower_records(tr, a, vals, name):
+    return ['BSubwayCmd_Tool 111, 0, 0, 0  // OpenBattleTowerRecordsApp: Black 2\'s records screen']
+
+
+@handler('GetBattleTowerPartnerSpeciesAndMove')
+def h_tower_partner_mon(tr, a, vals, name):
+    return [f'pl_TowerPartnerMon {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[2])}, {tr.var(vals[3])}']
+
+
+@handler('ShowBattlePoints', 'HideBattlePoints', 'UpdateBPDisplay', 'GetBattlePoints', 'GiveBattlePoints',
+         'RemoveBattlePoints', 'CheckBattlePoints')
+def h_battle_points(tr, a, vals, name):
+    import tower_script
+    return tower_script.h_battle_points(name, tr, vals)
+
+
+@handler('GetExchangeServiceCornerItemAndCost')
+def h_exchange(tr, a, vals, name):
+    return [f'pl_TowerExchange {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[2])}, {tr.var(vals[3])}']
+
+
+@handler('BufferVarPaddingDigits')
+def h_buffer_padded(tr, a, vals, name):
+    return [f'pl_BufferNumber {vals[0]}, {tr.var(vals[1])}, {vals[3]}  // BufferVarPaddingDigits']
+
+
+@handler('1DF', '1E0')
+def h_tower_none(tr, a, vals, name):
+    """Pearl's tower trophies and the Wi-Fi history: Black 2 has neither, and the scripts read the var."""
+    return [f'pl_SetVarFromValue {tr.var(vals[0])}, 0  // Pearl 0x{name}: none here']
+
+
+@handler('MessageSeenBanlistSpecies')
+def h_banlist(tr, a, vals, name):
+    """Pearl's "you don't have N eligible Pokémon" with the banned species seen: the line without that list."""
+    tr.job.approx['MessageSeenBanlistSpecies (the line without the list of banned species)'] += 1
+    return [f'pl_BufferNumber 0, {vals[1]}, 1  // MessageSeenBanlistSpecies line {vals[0]}, {vals[1]} Pokémon'] + \
+        h_message(tr, a, [vals[0]], 'Message')
+
+
+@handler('CheckSaveType')
+def h_save_type(tr, a, vals, name):
+    """Pearl's save-state check: Black 2's save has one state, the plain save."""
+    return [f'pl_SetVarFromValue {tr.var(vals[0])}, 1  // CheckSaveType: a plain save']
+
+
+@handler('OpenSaveInfo', 'CloseSaveInfo')
+def h_save_info(tr, a, vals, name):
+    return [f'// {name}: no save details window here']
+
+
+@handler('GetCurNetID')
+def h_net_id(tr, a, vals, name):
+    """No link here: always the first player."""
+    return [f'pl_SetVarFromValue {tr.var(vals[0])}, 0  // GetCurNetID: no link']
+
+
+@handler('Unk02C9')
+def h_species_article(tr, a, vals, name):
+    return [f'pl_BufferSpeciesName {vals[0]}, {tr.var(vals[1])}  // Pearl 0x2C9']
+
+
 @handler('InitTurnbackCave')
 def h_turnback(tr, a, vals, name):
     """Pearl 0x285 (pokediamond ScrCmd_Unk0285, pokeplatinum ScrCmd_InitTurnbackCave): Turnback Cave's maze sets the
@@ -1747,6 +1910,8 @@ def h_fade(tr, a, vals, name):
     trans, frames, typ, color = vals
     if a in poke_select_fades(tr):
         return [f'// FadeScreen {trans}, {frames}, {typ}, {color:#x}: Black 2\'s party select fades itself']
+    if typ == 1 and getattr(tr, 'after_diploma', False):      # (not the starter screen's white: the diploma ends black)
+        tr.after_diploma = tr.after_starter = False
     if typ == 1 and tr.after_starter:
         tr.after_starter = False
         return [f'pl_fade_in_after_starter  // FadeScreen {trans}, {frames}, {typ}, {color:#x} (the starter screen ends '
@@ -1801,6 +1966,9 @@ def h_elevator_anim(tr, a, vals, name):
     return [f'pl_elevator_ride  // PlayElevatorAnimation {tr.var(vals[0])}, {tr.var(vals[1])}']
 
 
+HALL_OF_ORIGIN, HALL_OF_ORIGIN_TILE = 510, (31, 52)
+
+
 @handler('Warp')
 def h_warp(tr, a, vals, name):
     m, _, x, z, d = vals
@@ -1834,6 +2002,10 @@ def h_warp(tr, a, vals, name):
             if i < len(places) - 1:
                 out.append(f'{nxt}:')
         return [l for l in out if l]
+    if x >= 0x4000 and z >= 0x4000 and m == HALL_OF_ORIGIN:
+        # MapChangeCore takes numbers (above). Pearl's common script 2039 warps to where the player stands, and its one
+        # trigger is Spear Pillar's (31, 52) (2026-11-01, found in game: the player landed at (0x8004, 0x8005))
+        x, z = HALL_OF_ORIGIN_TILE
     return end_free_camera(tr, 'a Warp', a) + [f'RTReserveScript {sid}  // the rest of this Pearl script runs there (continuation {sid})',
             f'pl_Warp {b2}, {tr.var(x)}, {tr.var(z)}, {d}  // Pearl map {m} ({pd.zones[m]["name"]})',
             'pl_ReleaseAll', 'pl_End']
@@ -1907,6 +2079,15 @@ def h_sunyshore_init(tr, a, vals, name):
     frame by the player's tile, so the script has nothing to do (2026-10-26, chapter 8)."""
     tr.job.approx['InitSunyshoreGym (gimmick 62 does it)'] += 1
     return [f'// InitSunyshoreGym {vals[0]}: gimmick 62 sets the gears by the player\'s way in (sunyshore_gym_itcm.c)']
+
+
+@handler('InitPersistedMapFeaturesForVeilstoneGym')
+def h_veilstone_init(tr, a, vals, name):
+    """Pearl 0x174 InitVeilstoneGym (the Gym's zone script; pokediamond arm9 0x02064D4C): the 12 panels at their start
+    states. Gimmick 60 (decomp src/pearlb2/resident/veilstone_gym.c, patches/veilstone_gym.py) starts them there on
+    each entry, since Black 2 clears the gimmick's saved work on a zone change, so the script has nothing to do."""
+    tr.job.approx['InitVeilstoneGym (gimmick 60 does it)'] += 1
+    return ['// InitVeilstoneGym: gimmick 60 starts the panels at their places (resident/veilstone_gym.c)']
 
 
 @handler('PressSunyshoreGymButton')
@@ -2216,6 +2397,18 @@ def poke_select_fades(tr):
                                                                   'CheckLearnedTutorMove', 'ReturnToField',
                                                                   'FadeScreen'):
                 tr._psel |= {f0, r, f1}
+        # the Move Reminder's (2026-11-01: Pastoria): FadeScreen, WaitFadeScreen, OpenMoveReminderMenu,
+        # CheckLearnedReminderMove, ReturnToField, FadeScreen: Black 2's screen fades and reopens the field itself
+        for c, (e, op, args) in d.insns.items():
+            if name(c) != 'OpenMoveReminderMenu':
+                continue
+            w0, k = prv.get(c), nxt.get(c)
+            f0, r = prv.get(w0), nxt.get(k)
+            f1 = nxt.get(r)
+            if (name(f0), name(w0), name(k), name(r), name(f1)) == ('FadeScreen', 'WaitFadeScreen',
+                                                                  'CheckLearnedReminderMove', 'ReturnToField',
+                                                                  'FadeScreen'):
+                tr._psel |= {f0, r, f1}
     return tr._psel
 
 
@@ -2252,6 +2445,76 @@ def h_move_tutor(tr, a, vals, name):
 def h_move_tutor_result(tr, a, vals, name):
     """Pearl 0x225 CheckLearnedTutorMove var: 0 learned, 0xFF not (pl_OpenMoveTutorMenu's answer)."""
     return [f'pl_CheckLearnedTutorMove {tr.var(vals[0])}']
+
+
+@handler('CheckHasLearnableReminderMoves')
+def h_reminder_check(tr, a, vals, name):
+    """Pearl 0x21F: var = what the Pokémon in a slot can remember, 0 = nothing (Black 2's own check)."""
+    return [f'pl_MoveReminderCheck {tr.var(vals[0])}, {tr.var(vals[1])}']
+
+
+@handler('OpenMoveReminderMenu')
+def h_reminder_menu(tr, a, vals, name):
+    return [f'pl_OpenMoveReminderMenu {tr.var(vals[0])}  // Black 2\'s remembering screen (it fades by itself)']
+
+
+@handler('CheckLearnedReminderMove')
+def h_reminder_result(tr, a, vals, name):
+    return [f'pl_CheckLearnedReminderMove {tr.var(vals[0])}']
+
+
+@handler('GetUnownFormsSeenCount')
+def h_unown_forms(tr, a, vals, name):
+    return [f'pl_GetUnownFormsSeenCount {tr.var(vals[0])}']
+
+
+@handler('ShowDiplomaSinnoh')
+def h_diploma_sinnoh(tr, a, vals, name):
+    tr.after_diploma = True
+    return ['FieldClose', 'CallPokedexDiploma 0, 0  // Pearl\'s Sinnoh diploma: Black 2\'s, its words Pearl\'s '
+            '(data/script_text_overrides.json)']
+
+
+@handler('ShowDiplomaNationalDex')
+def h_diploma_national(tr, a, vals, name):
+    tr.after_diploma = True
+    return ['FieldClose', 'CallPokedexDiploma 1, 0  // Pearl\'s National Pokédex diploma: Black 2\'s']
+
+
+def preview_waits(tr):
+    """The WaitABPress right after a ShowPokemonPic: Black 2's preview waits for A or B itself."""
+    if getattr(tr, '_pview', None) is None:
+        d, pd = tr.d, tr.job.pd
+        name = lambda x: pd.cmd_name(d.insns[x][1]) if x in d.insns else None
+        tr._pview = {e for c, (e, op, args) in d.insns.items() if name(c) == 'DrawPokemonPreview' and name(e) == 'WaitABPress'}
+    return tr._pview
+
+
+@handler('DrawPokemonPreview')
+def h_pokemon_preview(tr, a, vals, name):
+    """Pearl 0x208 ShowPokemonPic species, gender: Black 2's own Pokémon window (scrcmd_poke_disp.c), Black 2's picture of
+    the Pokémon; it stays until A or B, so a message Pearl prints over the picture comes after it."""
+    tr.job.approx['DrawPokemonPreview (Black 2\'s window and picture; it closes on A or B before any line)'] += 1
+    return ['MsgWinCloseAll  // (as Black 2\'s own uses: its window needs the message window gone)',
+            f'CallPokemonPreview {tr.var(vals[0])}, 0, {tr.var(vals[1])}, 0  // ShowPokemonPic']
+
+
+@handler('RemovePokemonPreview')
+def h_pokemon_preview_off(tr, a, vals, name):
+    return ['// RemovePokemonPreview: Black 2\'s window closed itself']
+
+
+@handler('WaitABPress')
+def h_wait_ab(tr, a, vals, name):
+    if a in preview_waits(tr):
+        return ['// WaitABPress: Black 2\'s Pokémon window waits itself']
+    return ['pl_WaitABPress']
+
+
+@handler('FlickerObject')
+def h_flicker(tr, a, vals, name):
+    """Pearl 0x26A BlinkEvent uid, times, delay (pokeplatinum Task_FlickerMapObject): hidden and shown in turn."""
+    return [f'pl_FlickerObject {vals[0]}, {vals[1]}, {vals[2]}']
 
 
 @handler('SelectMoveTutorPokemon')
@@ -2340,10 +2603,28 @@ def h_add_friendship(tr, a, vals, name):
 
 @handler('TryGetRandomMassageGirlAccessory')
 def h_massage_accessory(tr, a, vals, name):
-    """Pearl Unk026C var: a random Contest Accessory the massage girl finds, or 0xFFFF; no Super Contests here
-    (DECISIONS 2026-10-18: closed), so never one: her "found an Accessory" line would give nothing."""
-    tr.job.approx['TryGetRandomMassageGirlAccessory (no Accessory: no Super Contests)'] += 1
-    return [f'WorkSetConst {tr.var(vals[0])}, 65535  // Unk026C: no Accessory (no Super Contests)']
+    """Pearl Unk026C var: a random Contest Accessory the massage girl finds, or 0xFFFF (decomp resident/contest.c)."""
+    return [f'pl_MassageGirlAccessory {tr.var(vals[0])}  // Pearl 0x26C']
+
+
+@handler('GivePoffin')
+def h_give_poffin(tr, a, vals, name):
+    return [f'pl_PoffinGive {tr.var(vals[0])}, {", ".join(str(v) for v in vals[1:])}  // Pearl 0x289 (spicy .. sour, smoothness)']
+
+
+@handler('CheckHasEmptyPoffinCaseSlot')
+def h_poffin_room(tr, a, vals, name):
+    return [f'pl_PoffinHasRoom {tr.var(vals[0])}  // Pearl 0x28A']
+
+
+@handler('AddAccessory')
+def h_add_accessory(tr, a, vals, name):
+    return [f'pl_AddAccessory {tr.var(vals[0])}, {tr.var(vals[1])}  // Pearl AddAccessory (the Fashion Case)']
+
+
+@handler('AddContestBackdrop')
+def h_add_backdrop(tr, a, vals, name):
+    return [f'pl_AddContestBackdrop {tr.var(vals[0])}  // Pearl AddContestBackdrop (the Fashion Case)']
 
 
 @handler('GetPartyMonNature')
@@ -2400,8 +2681,8 @@ def h_remove_money_var(tr, a, vals, name):
 
 @handler('StartFirstBattle')
 def h_first_battle(tr, a, vals, name):
-    tr.job.approx['StartFirstBattle (a wild battle; a loss heals and the scene goes on: no first-battle rules in '
-                  'Black 2)'] += 1
+    tr.job.approx['StartFirstBattle (a wild battle with Pearl\'s first-battle rules: no critical hits, FIGHT only; a '
+                  'loss heals and the scene goes on)'] += 1
     return [f'pl_StartFirstBattle {tr.var(vals[0])}, {tr.var(vals[1])}']
 
 
@@ -2521,6 +2802,9 @@ def h_trainer_bgm(tr, a, vals, name):
 
 @handler('CheckWonBattle')
 def h_won(tr, a, vals, name):
+    import tower_script
+    if tower_script.is_tower(tr):               # the Battle Subway keeps its own battle's setup: 1 = won
+        return [f'BSubwayCmd_Tool 332, 0, 0, {tr.var(vals[0])}', 'BSubwayCmd_Tool 347, 0, 0, 0']
     return [f'pl_CheckWon{"Wild" if tr.last_battle == "wild" else ""}Battle {tr.var(vals[0])}']
 
 
@@ -2574,15 +2858,48 @@ for _pl, _macro, _fmt in [
     HANDLERS[_pl] = simple(_macro, *_fmt)
 
 
-@handler('PokeMartSpecialties', 'PokeMartDecor')
-def h_special_mart(tr, a, vals, name):
-    """Pearl's specialty clerks (SpecialMart n: a Mart's second counter, the Herb Shop, the Veilstone Dept Store) and
-    decoration clerks (GoodsMart n: the Dept Store 4F): Pearl's own stock is not built (notes/OPEN_CONTENT.md, the
-    specialty-mart port); meanwhile the clerk opens Black 2's normal Mart, its stock by badges (decision 2026-10-19,
-    "Black 2's stock where a clerk exists"; lead 2026-10-25, chapter 4b: world-wide)."""
-    tr.job.approx[f'{name} (Black 2\'s normal Mart: Pearl\'s specialty stock is not built)'] += 1
-    return [f'pl_PokeMartCommon {tr.var(vals[0])}  // Pearl {"SpecialMart" if name == "PokeMartSpecialties" else "GoodsMart"} '
-            f'{tr.var(vals[0])}: Black 2\'s normal Mart for now']
+@handler('PokeMartSpecialties')
+def h_mart_special(tr, a, vals, name):
+    """Pearl's SpecialMart n (a Mart's second counter, the Herb Shop, the Veilstone Dept. Store's counters): Black 2's
+    shop list n (patches/pearl_shops.py: list file n + 6 = Pearl's list n), through Black 2's Mart menu."""
+    return [f'pl_PokeMartSpecial {tr.var(vals[0])}  // Pearl SpecialMart {tr.var(vals[0])}']
+
+
+SEALS_LINE = ('Our Seals haven’t arrived.\\nPlease come again!')          # nor Ball Capsules (notes/OPEN_CONTENT.md)
+
+
+@handler('PokeMartDecor', 'PokeMartSeal')
+def h_mart_goods(tr, a, vals, name):
+    """Pearl's GoodsMart n (decorations: Veilstone 4F): the Secret Bases' shop (notes/SECRET_BASES.md). SealsMart n (Seals:
+    Sunyshore's market): Black 2 has no Seals, so the clerk says so (notes/OPEN_CONTENT.md) rather than sell a Mart's stock."""
+    if name == 'PokeMartDecor':
+        return [f'pl_GoodsMart {vals[0]}  // Pearl GoodsMart']
+    tr.job.approx[f'{name} (Black 2 has no such goods: a closed line)'] += 1
+    line = tr.job.line_text(('seals',), SEALS_LINE)
+    return ['MsgWinCloseAll', f'pl_msg_talk {line}  // Pearl SealsMart {tr.var(vals[0])}: not built', 'pl_WaitButton',
+            'pl_CloseMessage']
+
+
+@handler('SendGoodToPC')
+def h_send_good(tr, a, vals, name):
+    """Pearl's GiveSecretBaseDecoration good, count, result (decomp resident/secret_base.c): a count of 1 everywhere."""
+    return [f'pl_SendGoodToPC {tr.var(vals[0])}, {tr.var(vals[2])}']
+
+
+@handler('CheckHasRoomForGoodsInPC')
+def h_room_good(tr, a, vals, name):
+    return [f'pl_CheckHasRoomForGoodsInPC {tr.var(vals[0])}, {tr.var(vals[2])}']
+
+
+@handler('GetCapturedFlagCount')
+def h_flag_count(tr, a, vals, name):
+    return [f'pl_GetCapturedFlagCount {tr.var(vals[0])}']
+
+
+@handler('BufferUndergroundGoodsName', 'GetDecorationNameWithArticle')
+def h_good_word(tr, a, vals, name):
+    return [f'pl_{name} {vals[0]}, {tr.var(vals[1])}']
+
 
 # commands with nothing to do in Black 2 (each listed as approximated in the report, with why)
 NOOP = {
@@ -2594,13 +2911,9 @@ NOOP = {
     'Dummy1F9': 'a debug command',
     'SetPlayerState': 'the player\'s avatar state (the Pokemon Center bow): Black 2 does its own',
     'ChangePlayerState': 'the player\'s avatar state (the Pokemon Center bow): Black 2 does its own',
-    'EnableSwarms': 'no Sinnoh swarms yet (notes/ENCOUNTERS.md)',
     'SetHasPartner': 'Pearl\'s "partner walks along" flag 0x961: Black 2 pairs at SetMovementType 0x30',
     'CreateJournalEvent': 'Black 2 has no journal',
     'IncrementTrainerScore2': 'Pearl\'s trainer-card score (Black 2 keeps its own records)',
-    'AddAccessory': 'no Super Contests (closed at first: DECISIONS.md)',
-    'AddContestBackdrop': 'no Super Contests (closed at first: DECISIONS.md)',
-    'PlayHMCutIn': 'the field-move cut-in (with the HM work: Black 2\'s PlayHMCutInEffect needs its player sequence)',
 }
 
 
@@ -2621,19 +2934,28 @@ def h_has_partner(tr, a, vals, name):
     return [f'FlagGet PL_FOLLOW_FLAG, {tr.var(vals[0])}  // CheckHasPartner: 1 while a partner follows']
 
 
+@handler('PlayHMCutIn')
+def h_hm_cut_in(tr, a, vals, name):
+    """Pearl's field-move cut-in (Rock Smash, Strength, ...) = Black 2's own steps round PlayHMCutInEffect (its global
+    10000 L_005C, L_006C). The slot var comes from FindPartySlotWithMove: the Pokémon that knows the move, or with the HM
+    rule the party's first that isn't an Egg (the decomp's resident/field_moves.c)."""
+    return [f'pl_PlayHMCutIn {tr.var(vals[0])}']
+
+
 @handler('UseRockClimb')
 def h_rock_climb(tr, a, vals, name):
     """Pearl UseRockClimb slot (pokeplatinum ScrCmd_UseRockClimb -> ov5 FieldTask_StartUseRockClimb, the same in
     Pearl): the Pokemon's cut-in, then the player hops onto the wall ahead, walks fast across it and hops off (Pearl's
     task: JUMP_NEAR_FAST, WALK_FAST while the tile ahead is a climb tile, JUMP_NEAR_FAST). Black 2 has no climb tiles:
     the zone's climb starts (data/pearl_rock_climb.json, b2tools/rock_climb.py) are compared with the player's tile and
-    facing, and the matching one's moves run (no cut-in: Black 2's needs its own player sequence, as Cut's and Rock
-    Smash's here). Nowhere else (the sign read sideways) nothing moves."""
+    facing, and the matching one's moves run, after Black 2's cut-in (pl_PlayHMCutIn). Nowhere else (the sign read
+    sideways) nothing moves."""
     import pearl_events
     ends = pearl_events.rock_climb_ends(tr.job.zone['name'])
-    tr.job.approx['UseRockClimb (the climb: hop, fast walks, hop, by data/pearl_rock_climb.json; no cut-in)'] += 1
+    tr.job.approx['UseRockClimb (the climb: hop, fast walks, hop, by data/pearl_rock_climb.json)'] += 1
     base = f'{tr.label(a)}_rc'
     out = [f'// UseRockClimb {tr.var(vals[0])}: {len(ends)} climb starts in this zone',
+           f'pl_PlayHMCutIn {tr.var(vals[0])}',
            'pl_GetPlayerMapPos PL_TMP, PL_TMP2', 'pl_GetPlayerDir PL_TMP3']
     for k, r in enumerate(ends):
         (x, z), d = r['stand'], r['dir']
@@ -2700,16 +3022,27 @@ def h_clear_partner(tr, a, vals, name):
     return ['pl_follow_leave  // ClearHasPartner: the follower stays behind']
 
 
+MOVEMENT_TYPE_ZONES = {'MAP_CANALAVE_SAILOR_ELDRITCH_HOUSE'}   # where pl_SetObjectEventMovementType is used so far
+
+
 @handler('SetObjectEventMovementType')
 def h_set_obj_move(tr, a, vals, name):
     import pearl_events
     uid, t = vals
     o = tr.job.objects.get(uid) if tr.mode != 'common' else None
     same = o is not None and t < 0x4000 and pearl_events.b2_move(o['movement_type']) == pearl_events.b2_move(t)
-    tr.job.approx['SetObjectEventMovementType (Black 2 cannot change an NPC\'s movement before it appears: it keeps '
-                  'its own' + (')' if not same else '; here the same anyway)')] += 1
-    return [f'// SetObjectEventMovementType {uid}, {tr.var(t)}: Black 2 has no command for it (the NPC keeps its own'
-            f'{", the same" if same else ""})']
+    if same or tr.job.zone['name'] not in MOVEMENT_TYPE_ZONES:
+        tr.job.approx['SetObjectEventMovementType (Black 2 cannot change an NPC\'s movement before it appears: it keeps '
+                      'its own' + (')' if not same else '; here the same anyway)')] += 1
+        return [f'// SetObjectEventMovementType {uid}, {tr.var(t)}: Black 2 has no command for it (the NPC keeps its own'
+                f'{", the same" if same else ""})']
+    # The person's template, before the zone's people appear (the zone init), as Pearl's: decomp resident/leftovers.c
+    # (2026-11-01: Eldritch's boy lay on his bed turning on the spot, with Pearl's wander on a tile he can't leave)
+    move = pearl_events.b2_move(t) if t < 0x4000 else None
+    if move is None:
+        tr.job.approx['SetObjectEventMovementType (a movement Black 2 lacks or in a var: the NPC keeps its own)'] += 1
+        return [f'// SetObjectEventMovementType {uid}, {tr.var(t)}: no Black 2 movement (the NPC keeps its own)']
+    return [f'pl_SetObjectEventMovementType {tr.var(uid)}, {move}  // Pearl movement {t}']
 
 
 @handler('FindPartySlotWithMove')
@@ -2787,7 +3120,7 @@ def h_gba_cartridge(tr, a, vals, name):
 
 @handler('GetGameVersion')
 def h_version(tr, a, vals, name):
-    return [f'WorkSetConst {tr.var(vals[0])}, 11  // GetGameVersion: Pearl (pokediamond VERSION_PEARL 11)']
+    return [f'WorkSetConst {tr.var(vals[0])}, PEARLB2_GAME_VERSION  // GetGameVersion: the build\'s (patches/scripts.py)']
 
 
 @handler('CheckNationalDexCompleted')
@@ -2849,8 +3182,17 @@ def h_item_plural(tr, a, vals, name):
     return [f'pl_BufferItemName {vals[0]}, {tr.var(vals[1])}  // GetItemNamePlural']
 
 
+@handler('SaveTVSegmentHiddenItem')
+def h_tv_hidden(tr, a, vals, name):
+    """Pearl 0x236 (file 374): a TV segment about the hidden item. No TV here; Black 2's own hidden items count the find
+    in its record instead (global 2811: RecordAdd 44, the Medal Box's counter)."""
+    return ['RecordAdd 44, 1  // SaveTVSegmentHiddenItem: Black 2\'s record of hidden items found']
+
+
 @handler('CheckItemIsPlate')
 def h_plate(tr, a, vals, name):
+    if tr.job.name == 'GLOBAL_ITEMS':                # (b2tools/pearl_items.py: balls and hidden items give Plates)
+        return [f'pl_CheckItemIsPlate {tr.var(vals[0])}, {tr.var(vals[1])}']
     tr.job.approx['CheckItemIsPlate (0: the item-get line of a non-plate)'] += 1
     return [f'WorkSetConst {tr.var(vals[1])}, 0  // CheckItemIsPlate {tr.var(vals[0])}']
 
@@ -2901,8 +3243,97 @@ def h_dex_rating(tr, a, vals, name):
 
 @handler('GetSwarmMapAndSpecies')
 def h_swarm(tr, a, vals, name):
-    tr.job.approx['GetSwarmMapAndSpecies (no swarms yet: map 0, species 0)'] += 1
-    return [f'WorkSetConst {tr.var(vals[0])}, 0', f'WorkSetConst {tr.var(vals[1])}, 0  // GetSwarmMapAndSpecies']
+    """Pearl's daily swarm (decomp resident/wild.c): the map var gets the Black 2 zone (h_mapname)."""
+    tr.job.swarm_map_var = vals[0]
+    return [f'pl_GetSwarmInfo {tr.var(vals[0])}, {tr.var(vals[1])}']
+
+
+@handler('EnableSwarms')
+def h_enable_swarms(tr, a, vals, name):
+    return ['pl_EnableSwarms']
+
+
+# ---- Pearl's honey trees (common script 2008, the sign events of pearl_events.honey_tree_tiles; decomp resident/wild.c)
+@handler('GetHoneyTreeStatus')
+def h_honey_status(tr, a, vals, name):
+    return [f'pl_GetHoneyTreeStatus {tr.var(vals[0])}']
+
+
+@handler('SlatherHoneyTree')
+def h_honey_slather(tr, a, vals, name):
+    return ['pl_SlatherHoneyTree']
+
+
+@handler('StartHoneyTreeBattle')
+def h_honey_battle(tr, a, vals, name):
+    return end_free_camera(tr, 'a battle', a) + ['pl_StartHoneyTreeBattle']
+
+
+@handler('StopHoneyTreeShaking')
+def h_honey_stop(tr, a, vals, name):
+    return ['pl_StopHoneyTreeShaking']
+
+
+# ---- Pearl's berry patches (global script 2800, the soil people of pearl_events.is_berry_patch; decomp resident/berry.c)
+BERRY_FIELDS = {'GetBerryGrowthStage': 0, 'GetBerryItemID': 1, 'GetBerryMulchType': 2, 'GetBerryMoisture': 3,
+                'GetBerryYield': 4}
+
+
+@handler(*BERRY_FIELDS)
+def h_berry_get(tr, a, vals, name):
+    return [f'pl_GetBerry {BERRY_FIELDS[name]}, {tr.var(vals[0])}  // {name}']
+
+
+@handler('SetBerryMulch')
+def h_berry_mulch(tr, a, vals, name):
+    return [f'pl_SetBerryMulch {tr.var(vals[0])}']
+
+
+@handler('PlantBerry')
+def h_berry_plant(tr, a, vals, name):
+    return [f'pl_PlantBerry {tr.var(vals[0])}']
+
+
+@handler('SetBerryWateringState')
+def h_berry_water(tr, a, vals, name):
+    """0: Pearl's watering starts (the player's pose and walking along the row: Black 2 has neither, the patch in front
+    is watered); 1: it ends."""
+    if vals[0] == 0:
+        tr.job.approx['SetBerryWateringState (the patch in front is watered: no pose, no walking along the row)'] += 1
+        return ['pl_WaterBerry']
+    return ['// SetBerryWateringState 1: nothing to end']
+
+
+@handler('HarvestBerry')
+def h_berry_harvest(tr, a, vals, name):
+    return ['pl_HarvestBerry']
+
+
+@handler('BufferBerryName')
+def h_berry_name(tr, a, vals, name):
+    return [f'pl_BufferBerryName {vals[0]}, {tr.var(vals[1])}  // Pearl\'s count {tr.var(vals[2])}: its name has one form']
+
+
+@handler('CheckPocketHasItems')
+def h_pocket_items(tr, a, vals, name):
+    if vals[0] != 4:
+        tr.job.stubs['CheckPocketHasItems (a pocket other than the Berries)'] += 1
+        return [f'pl_stub CheckPocketHasItems  // Pearl pocket {vals[0]}']
+    return [f'pl_CheckBerriesInBag {tr.var(vals[1])}']
+
+
+@handler('OpenBag')
+def h_open_bag(tr, a, vals, name):
+    """Pearl 0x178 ShowBagScreen 0 (Mulch) / 1 (Berries). Black 2's Bag in its returning mode: every pocket, opened on
+    the one Pearl's lists; pl_GetBagSelection throws away what doesn't fit (Pearl's list has only those)."""
+    tr.after_region_map = True                 # (the macro reopens the field: h_return_field)
+    tr.job.approx['OpenBag (Black 2\'s Bag shows every pocket, opened on Pearl\'s)'] += 1
+    return [f'pl_OpenBerryBag {3 if vals[0] else 0}']
+
+
+@handler('GetSelectedItem')
+def h_selected_item(tr, a, vals, name):
+    return [f'pl_GetBagSelection {tr.var(vals[0])}']
 
 
 @handler('BufferMapName')
@@ -2912,6 +3343,8 @@ def h_mapname(tr, a, vals, name):
         b2 = tr.job.pd.b2_zone.get(m)
         if b2 is not None:
             return [f'pl_BufferMapName {n}, {b2}  // Pearl map {m}']
+    if m == getattr(tr.job, 'swarm_map_var', None):   # (pl_GetSwarmInfo: already a Black 2 zone)
+        return [f'pl_BufferMapName {n}, {tr.var(m)}  // the swarm\'s place']
     tr.job.approx['BufferMapName (a Pearl map from a var: this zone\'s name)'] += 1
     return [f'WordSetPlaceName {n}, {tr.job.pd.b2_zone.get(tr.job.zone["id"], 0)}  // BufferMapName {n}, {tr.var(m)}']
 
@@ -2937,23 +3370,15 @@ def h_amity_steps(tr, a, vals, name):
 
 @handler('CalcAmitySquareFoundAccessory')
 def h_amity_accessory(tr, a, vals, name):
-    """Pearl's Accessory for the next find (by species). Black 2 has no Accessories: the user chose Pearl's Berries
-    only (2026-10-25), so the find's kind becomes a Berry; the Berry is Pearl's own pick right after (P266_0894)."""
-    tr.job.approx['CalcAmitySquareFoundAccessory (no Accessories: every find is one of Pearl\'s Berries, user '
-                  '2026-10-25)'] += 1
-    return [f'pl_AmitySquareBerryOnly {tr.var(AMITY_FIND_KIND)}, {tr.var(vals[0])}  // Pearl 0x217 '
-            f'{tr.var(vals[0])}, {tr.var(vals[1])}: every find is a Berry']
+    """Pearl's Accessory for the next find (by species): Pearl's table and chances (the user, 2026-11-01, replacing the
+    Berries-only decision of 2026-10-25)."""
+    return [f'pl_AmityAccessory {tr.var(vals[0])}, {tr.var(vals[1])}  // Pearl 0x217']
 
 
 @handler('CanFitAccessory')
 def h_can_fit_accessory(tr, a, vals, name):
-    """In Amity Square the Accessory never fits (there are none: Berries only), so a Berry that does not fit into the
-    Bag gives one of the follower's lines, as Pearl does when neither fits. Elsewhere: still a stub."""
-    if tr.mode == 'common' or tr.job.zone['name'] != AMITY:
-        tr.job.stubs[name] += 1
-        return [f'pl_stub CanFitAccessory  // Pearl 0x1D3 Unk01D3 {", ".join(map(str, vals))}: not translated yet']
-    return [f'WorkSetConst {tr.var(vals[2])}, 0  // CanFitAccessory {tr.var(vals[0])}, {tr.var(vals[1])}: no '
-            f'Accessories in Black 2 (the finds are Berries)']
+    """Whether the Fashion Case takes it (Amity Square's find, gifts)."""
+    return [f'pl_CanFitAccessory {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[2])}  // Pearl 0x1D3']
 
 
 @handler('27C')
@@ -3242,7 +3667,8 @@ def h_menu_init(tr, a, vals, name):
 
 @handler('AddMenuEntryImm', 'AddMenuEntry', 'AddListMenuEntry')
 def h_menu_add(tr, a, vals, name):
-    msg, value = vals[0], vals[1]
+    # Pearl's AddListMenuEntry is line, alt text (255: none), index (pokeplatinum scrcmd.inc): the index is the third
+    msg, value = vals[0], vals[2] if name == 'AddListMenuEntry' else vals[1]
     if msg >= 0x4000:
         tr.job.stubs[f'{name} (the line from a var)'] += 1
         return [f'pl_stub {name}  // line from {tr.var(msg)}: Black 2 menus take a fixed line']
@@ -3265,7 +3691,17 @@ def h_menu_add(tr, a, vals, name):
                     f'ListMenuAdd {tr.job.line_text(("menu_sex", bank, msg, k), src.replace(mark, sym))}, 65535, '
                     f'{tr.var(value)}  // ({sym})', f'VMJump {end}']
         return out + [f'{end}:']
-    line = tr.job.line_for(bank, msg)
+    cursor = re.search(r'\{CURSOR_X (\d+)\}', src)
+    if cursor:
+        # Black 2's list menu sizes its window by the text and ignores a cursor move, so the column after it was cut
+        # off (the Exchange's "16B", seen in game 2026-11-01): spaces before the move count and draw nothing
+        font = b2font.load(0)
+        left = re.sub(r'\{STRVAR_1 [^}]*\}', 'Power Bracer', src[:cursor.start()])    # the longest buffered prize name
+        pad = max(0, int(cursor.group(1)) - font.width(left))
+        src = src[:cursor.start()] + ' ' * -(-pad // font.width(' ')) + src[cursor.start():]
+        line = tr.job.line_text(('menu_column', bank, msg), src)
+    else:
+        line = tr.job.line_for(bank, msg)
     return [f'ListMenuAdd {line}, 65535, {tr.var(value)}  // Pearl {name} {msg}, {tr.var(value)}']
 
 
@@ -3473,6 +3909,10 @@ def h_hide_show(tr, a, vals, name):
     (Spear Pillar hides Palkia's place and the player during the vistas). Black 2 moves no actor in a map script (a
     field-load or zone-init script: ActorCmdExec hangs there, b2_script_check): there it is left out (the GTS's
     on-resume script hides the player coming back from the trade machine)."""
+    import tower_script
+    if tower_script.is_tower(tr) and tr.levels(a) - {0}:    # the tower's rooms hide the player and the entrants
+        return [f'pl_TowerActorVisible {actor(tr, vals[0])}, {1 if name == "ShowObject" else 0}  // Pearl {name} '
+                f'{vals[0]} (no actor command)']
     if tr.levels(a) - {0}:
         tr.job.approx[f'{name} in a map script (Black 2 moves no actor there)'] += 1
         return [f'// Pearl {name} {vals[0]} in a map script: Black 2 moves no actor there (left out)']
@@ -3663,6 +4103,11 @@ def translate(pd, zone, ids):
         entry_label[k] = f'PearlClosed_{i}'
         what = (f'object {row["obj"]}' if 'obj' in row else f'sign {row["bg"]}') if row.get('talk') else \
             f'trigger ({row["x"]}, {row["z"]}) {row["w"]}x{row["h"]}'
+        if row.get('contest') is not None:
+            assert row.get('talk') and 'obj' in row, f'{zone["name"]}: a Contest row is a person: {row}'
+            closed += ['', f'PearlClosed_{i}:                  // a Super Contest counter (src/field_scripts/'
+                           f'1282_global_contests.s): {what}', f'    RTCallGlobal {10785 + row["contest"]}', '    VMHalt']
+            continue
         if row.get('musical'):
             assert row.get('talk') and 'obj' in row, f'{zone["name"]}: a Musical row is a person: {row}'
             if musical is None:
@@ -3678,17 +4123,6 @@ def translate(pd, zone, ids):
         entry_label[elev[0]] = 'PearlElevatorInit'
         closed += ['', 'PearlElevatorInit:                // zone init (after Pearl\'s): an elevator (ELEVATOR_FLOORS_ABOVE)']\
             + elev[1]
-    objs = {o['id']: o for o in ev['object_events']}
-    for uid, k in pd.item_ball_ids(pid).items():   # data/pearl_item_balls.json: Pearl's own item-ball script
-        o = objs[uid]
-        row = pearl_events.item_ball(zone, o)
-        item = item_ball_item(pd, o['script'])
-        assert item == row['item'], f'{zone["name"]} object {uid}: Pearl\'s script {o["script"]} gives item {item}, ' \
-                                    f'data/pearl_item_balls.json says {row["item"]}'
-        label = job.label_common(o['script'])
-        entry_label[k] = f'PearlItemBall_{uid}'
-        closed += ['', f'PearlItemBall_{uid}:                // item ball (data/pearl_item_balls.json): object {uid}, '
-                       f'Pearl script {o["script"]} (item {item})', f'    VMCall {label}', '    VMHalt']
     rids = pd.ramanas_ids(pid)                      # Ramanas Park in Pal Park (b2tools/ramanas.py): the gate's
     if rids:                                        # slate clerk and walk-out, the park attendant's line in a visit
         import ramanas
@@ -3709,7 +4143,7 @@ def translate(pd, zone, ids):
                        'is not installed)', '    VMHalt',
                    '', 'PearlEndingAfterCredits:           // Black 2\'s game clear, after the credits: nothing (THE END '
                        'follows)', '    VMHalt']
-    while job.common_queue:                         # (the item balls' sub-scripts, queued just above)
+    while job.common_queue:                         # (sub-scripts queued by the extra entries just above)
         cf, bank, entry, mode = job.common_queue.pop(0)
         if (cf, entry, mode) in done:
             continue

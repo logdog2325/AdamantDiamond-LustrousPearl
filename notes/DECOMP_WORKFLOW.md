@@ -81,7 +81,7 @@ applying (they assert, so the build stops). So:
    the decomp: the decomp tree is shared by every agent's build. The C reads it through a pointer
    (`#pragma explicit_zero_data on`, `Type *gPearlB2Name = NULL;`: the pointer must be in .data, which is in the
    binary's file; an overlay's .bss is cleared when it loads); the patch puts the data in the resident section's
-   pool (`resident.install(code, build_fn)`, the same call as `itcm.install`: 16 KB, PEARLB2_RESIDENT_POOL in the
+   pool (`resident.install(code, build_fn)`, the same call as `itcm.install`: 18 KB, PEARLB2_RESIDENT_POOL in the
    linker script) and its address in the pointer (`decomp.symbol('gPearlB2Name', code)`; `resident.write(code,
    addr, bytes)` finds the binary that holds an address: ITCM, ARM9, the resident section). NULL = the game's
    behaviour, so a build without the patch is Black 2's.

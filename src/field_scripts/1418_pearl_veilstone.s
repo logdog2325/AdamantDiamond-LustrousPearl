@@ -36,7 +36,7 @@
     ScriptEntry P131_S29
     ScriptEntry P131_S30
     ScriptEntry PearlArrive
-    ScriptEntry PearlItemBall_23
+    ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
@@ -1148,10 +1148,6 @@ PearlProxy_10003:                  // Pearl global script 10003 (run by this zon
     VMCall C375_4_S4
     VMHalt
 
-PearlItemBall_23:                // item ball (data/pearl_item_balls.json): object 23, Pearl script 7121 (item 463)
-    VMCall C370_122_S122
-    VMHalt
-
 // ---- Pearl global script 205:41 (a subroutine here)
 C205_41_S41:
 C205_41_14CD:
@@ -1430,7 +1426,7 @@ T205_28_1222:
     pl_LockAll
     pl_FacePlayer
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 61  // Pearl bank 199 line 67
+    pl_msg_sys 61  // Pearl bank 199 line 67
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -1479,6 +1475,7 @@ C375_4_039D:
     pl_msg_sys 65  // Pearl bank 334 line 19
     pl_CloseMessage
 // UseRockClimb PVAR_8004: 2 climb starts in this zone
+    pl_PlayHMCutIn PVAR_8004
     pl_GetPlayerMapPos PL_TMP, PL_TMP2
     pl_GetPlayerDir PL_TMP3
     WorkCmpConst PL_TMP, 691
@@ -1522,269 +1519,6 @@ C375_4_03B3_rc_end:
 C375_4_055F:
     pl_ReleaseAll
     VMReturn  // End: the sub-script ends
-
-// ---- Pearl global script 370:122 (a subroutine here)
-C370_122_S122:
-C370_122_0D76:
-    pl_SetVarFromValue PVAR_8008, 463
-    pl_SetVarFromValue PVAR_8009, 1
-    pl_GoTo C370_122_17EE
-
-C370_122_17EE:
-    pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
-    pl_LockAll
-    pl_FacePlayer
-    pl_WaitSE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
-    pl_SetVarFromVar PVAR_8004, PVAR_8008
-    pl_SetVarFromVar PVAR_8005, PVAR_8009
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
-    pl_CompareVarToValue PVAR_800C, 1
-    pl_GoToIf 1, C370_122_1830
-    pl_CompareVarToValue PVAR_800C, 0
-    pl_GoToIf 1, C370_122_19E8
-    VMReturn  // End: the sub-script ends
-
-C370_122_182A:
-    pl_CloseMessage
-    pl_ReleaseAll
-    VMReturn  // End: the sub-script ends
-
-C370_122_1830:
-    VMCall C205_2_S2  // CallCommonScript 2001 (Pearl file 205 script 2)
-    pl_RemoveTalkedObject  // RemoveEvent VAR_LAST_TALKED: the ball, and its flag
-    pl_AddItem PVAR_8004, PVAR_8005, PVAR_800C
-// Unk02A2 PVAR_8004: Pearl's orb record (items 135/136), read by no script: nothing in Black 2
-    pl_CompareVarToValue PVAR_8004, 463
-    pl_CallIf 1, C370_122_1A00
-    ItemIsTMHM PVAR_8004, PVAR_800C  // ItemIdIsTMOrHM
-    pl_CompareVarToValue PVAR_800C, 1
-    pl_GoToIf 1, C370_122_19BD
-    pl_CompareVarToValue PVAR_800C, 0
-    pl_GoToIf 1, C370_122_19D5
-    VMReturn  // End: the sub-script ends
-
-C370_122_1873:
-    pl_WaitFanfare
-    WorkSetConst PVAR_800C, 0  // CheckItemIsPlate PVAR_8004
-    pl_CompareVarToValue PVAR_800C, 1
-    pl_CallIf 1, C370_122_1A06
-    pl_BufferPlayerName 0
-    pl_BufferItemName 1, PVAR_8004
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_SetVarFromVar PVAR_8008, PVAR_800C
-    pl_CompareVarToValue PVAR_8008, 7
-    pl_GoToIf 1, C370_122_1919
-    pl_CompareVarToValue PVAR_8008, 0
-    pl_GoToIf 1, C370_122_1906
-    pl_CompareVarToValue PVAR_8008, 4
-    pl_GoToIf 1, C370_122_1965
-    pl_CompareVarToValue PVAR_8008, 1
-    pl_GoToIf 1, C370_122_1952
-    pl_CompareVarToValue PVAR_8008, 2
-    pl_GoToIf 1, C370_122_1978
-    pl_CompareVarToValue PVAR_8008, 6
-    pl_GoToIf 1, C370_122_198B
-    pl_CompareVarToValue PVAR_8008, 5
-    pl_GoToIf 1, C370_122_193F
-    pl_CompareVarToValue PVAR_8008, 3
-    pl_GoToIf 1, C370_122_192C
-    VMReturn  // End: the sub-script ends
-
-C370_122_1906:
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_BufferPocketName 2, PVAR_800C
-    pl_GoTo C370_122_199E
-
-C370_122_1919:
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_BufferPocketName 2, PVAR_800C
-    pl_GoTo C370_122_199E
-
-C370_122_192C:
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_BufferPocketName 2, PVAR_800C
-    pl_GoTo C370_122_199E
-
-C370_122_193F:
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_BufferPocketName 2, PVAR_800C
-    pl_GoTo C370_122_199E
-
-C370_122_1952:
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_BufferPocketName 2, PVAR_800C
-    pl_GoTo C370_122_199E
-
-C370_122_1965:
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_BufferPocketName 2, PVAR_800C
-    pl_GoTo C370_122_199E
-
-C370_122_1978:
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_BufferPocketName 2, PVAR_800C
-    pl_GoTo C370_122_199E
-
-C370_122_198B:
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_BufferPocketName 2, PVAR_800C
-    pl_GoTo C370_122_199E
-
-C370_122_199E:
-// CreateJournalEvent 18, 32772, 0, 0, 0: nothing in Black 2 (Black 2 has no journal)
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 66  // Pearl bank 325 line 9
-    pl_WaitButton
-    pl_SetVarFromValue PVAR_800C, 1
-    pl_GoTo C370_122_182A
-
-C370_122_19BD:
-    pl_BufferPlayerName 0
-    WordSetItemNameWithArticle 1, PVAR_8004
-    pl_BufferTMHMMoveName 2, PVAR_8004
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 67  // Pearl bank 325 line 6
-    pl_GoTo C370_122_1873
-
-C370_122_19D5:
-    pl_BufferPlayerName 0
-    WordSetItemNameWithArticle 1, PVAR_8004
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 68  // Pearl bank 325 line 3
-    pl_GoTo C370_122_1873
-
-C370_122_19E8:
-    pl_BufferItemName 0, PVAR_8004
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 69  // Pearl bank 325 line 4
-    pl_WaitButton
-    pl_SetVarFromValue PVAR_800C, 0
-    pl_GoTo C370_122_182A
-
-C370_122_1A00:
-    pl_SetFlag PFLAG_0986
-    pl_Return
-
-C370_122_1A06:
-    VMCall C205_39_S39  // CallCommonScript 2038 (Pearl file 205 script 39)
-    pl_Return
-
-// ---- Pearl global script 205:2 (a subroutine here)
-C205_2_S2:
-C205_2_032C:
-    pl_Call C205_2_0336
-    pl_ReturnCommonScript
-    VMReturn  // End: the sub-script ends
-
-C205_2_0336:
-    pl_GetItemPocket PVAR_8004, PVAR_800C
-    pl_SetVarFromVar PVAR_8008, PVAR_800C
-    pl_CompareVarToValue PVAR_8008, 7
-    pl_GoToIf 1, C205_2_03B8
-    pl_CompareVarToValue PVAR_8008, 0
-    pl_GoToIf 1, C205_2_03AC
-    pl_CompareVarToValue PVAR_8008, 4
-    pl_GoToIf 1, C205_2_03AC
-    pl_CompareVarToValue PVAR_8008, 1
-    pl_GoToIf 1, C205_2_03AC
-    pl_CompareVarToValue PVAR_8008, 2
-    pl_GoToIf 1, C205_2_03AC
-    pl_CompareVarToValue PVAR_8008, 6
-    pl_GoToIf 1, C205_2_03AC
-    pl_CompareVarToValue PVAR_8008, 5
-    pl_GoToIf 1, C205_2_03BE
-    pl_CompareVarToValue PVAR_8008, 3
-    pl_GoToIf 1, C205_2_03B2
-    VMReturn  // End: the sub-script ends
-
-C205_2_03AC:
-    pl_PlayFanfare SEQ_ME_ITEM  // Pearl SEQ_FANFA4
-    pl_Return
-
-C205_2_03B2:
-    pl_PlayFanfare SEQ_ME_WAZA  // Pearl SEQ_WAZA
-    pl_Return
-
-C205_2_03B8:
-    pl_PlayFanfare SEQ_ME_KEYITEM  // Pearl SEQ_FANFA3
-    pl_Return
-
-C205_2_03BE:
-    pl_PlayFanfare SEQ_ME_ITEM  // Pearl SEQ_FANFA2
-    pl_Return
-
-// ---- Pearl global script 205:39 (a subroutine here)
-C205_39_S39:
-C205_39_1326:
-    pl_Call C205_39_1330
-    pl_ReturnCommonScript
-    VMReturn  // End: the sub-script ends
-
-C205_39_1330:
-    pl_AddVar PVAR_4115, 1
-    pl_CompareVarToValue PVAR_4115, 9
-    pl_CallIf 4, C205_39_13AD
-    pl_CompareVarToValue PVAR_4115, 1
-    pl_CallIf 1, C205_39_13B5
-    pl_CompareVarToValue PVAR_4115, 2
-    pl_CallIf 1, C205_39_13BA
-    pl_CompareVarToValue PVAR_4115, 3
-    pl_CallIf 1, C205_39_13BF
-    pl_CompareVarToValue PVAR_4115, 4
-    pl_CallIf 1, C205_39_13C4
-    pl_CompareVarToValue PVAR_4115, 5
-    pl_CallIf 1, C205_39_13C9
-    pl_CompareVarToValue PVAR_4115, 6
-    pl_CallIf 1, C205_39_13CE
-    pl_CompareVarToValue PVAR_4115, 7
-    pl_CallIf 1, C205_39_13D3
-    pl_CompareVarToValue PVAR_4115, 8
-    pl_CallIf 1, C205_39_13D8
-    pl_Return
-
-C205_39_13AD:
-    pl_SetVarFromValue PVAR_4115, 1
-    pl_Return
-
-C205_39_13B5:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 52  // Pearl bank 199 line 110
-    pl_Return
-
-C205_39_13BA:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 53  // Pearl bank 199 line 111
-    pl_Return
-
-C205_39_13BF:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 54  // Pearl bank 199 line 112
-    pl_Return
-
-C205_39_13C4:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 55  // Pearl bank 199 line 113
-    pl_Return
-
-C205_39_13C9:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 56  // Pearl bank 199 line 114
-    pl_Return
-
-C205_39_13CE:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 57  // Pearl bank 199 line 115
-    pl_Return
-
-C205_39_13D3:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 58  // Pearl bank 199 line 116
-    pl_Return
-
-C205_39_13D8:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 59  // Pearl bank 199 line 117
-    pl_Return
 
 PearlNoScript:
     VMHalt

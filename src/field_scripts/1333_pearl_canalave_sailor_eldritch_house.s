@@ -43,7 +43,7 @@ P46_0073:
 P46_007B:
     pl_SetObjectEventPos 0, 8, 6, 0, -1  // object 0
     pl_SetObjectEventPos 0, 8, 6, 1, -1  // SetObjectEventDir 0 (at the place SetObjectEventPos just gave)
-// SetObjectEventMovementType 0, 0: Black 2 has no command for it (the NPC keeps its own)
+    pl_SetObjectEventMovementType 0, 0  // Pearl movement 0
     pl_SetObjectEventPos 1, 9, 6, 0, -1  // object 1
     pl_SetObjectEventPos 1, 9, 6, 2, -1  // SetObjectEventDir 1 (at the place SetObjectEventPos just gave)
     pl_Return

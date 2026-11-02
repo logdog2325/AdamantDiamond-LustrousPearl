@@ -6,8 +6,8 @@
     python3 b2tools/ramanas.py show        the rooms of the version as resolved (numbers)
 
 Source: data/ramanas_park.json (the rooms, their Pokémon, moves, slates, unlocks, rewards, entrances, looks, text).
-Its "version" picks the rooms ('sp' = Pearl NDS, Shining Pearl's exclusives; 'bd' = a Diamond NDS, Brilliant
-Diamond's); PEARL_VERSION=bd overrides it. Nothing here is per-version code.
+The build version picks the rooms (version.BDSP: 'sp' = Lustrous Pearl, Shining Pearl's exclusives; 'bd' = Adamant
+Diamond, Brilliant Diamond's): a room's "version" tag says where it belongs. Nothing here is per-version code.
 
 What is made of it:
 - The rooms: one zone per room (652-660; 661-662 the Diamond rooms), all on ONE script file (FILE_SCRIPT) and ONE text
@@ -58,7 +58,9 @@ def load():
 
 
 def version(d=None):
-    return os.environ.get('PEARL_VERSION') or (d or load())['version']
+    """The rooms' version of this build: only the build version picks it, nothing in the data."""
+    import version as build
+    return build.BDSP
 
 
 _CONSTS = {}
@@ -386,14 +388,20 @@ def write_rooms(ver=None):
 
 
 def write():
+    """Both versions' files: Pearl's in src/field_scripts and src/text/script, Diamond's in their diamond/ folders (which
+    a Diamond build takes in their place: patches/scripts.py, patches/pearl_text.py)."""
     d = load()
-    src, text, problems = write_rooms()
-    for folder, num, ext, body in ((SRC_SCRIPTS, d['files']['script'], '.s', src),
-                                   (SRC_TEXT, d['files']['text'], '.txt', text)):
-        for old in os.listdir(folder):
-            assert not old.startswith(f'{num:04d}_') or old == f'{num:04d}_ramanas_rooms{ext}', \
-                f'{folder}/{old} already has number {num}'
-        open(os.path.join(folder, f'{num:04d}_ramanas_rooms{ext}'), 'w', encoding='utf-8').write('\n'.join(body) + '\n')
+    problems = []
+    for ver, sub in (('sp', ''), ('bd', 'diamond')):
+        src, text, bad = write_rooms(ver)
+        problems += bad
+        for folder, num, ext, body in ((SRC_SCRIPTS, d['files']['script'], '.s', src),
+                                       (SRC_TEXT, d['files']['text'], '.txt', text)):
+            for old in os.listdir(folder):
+                assert not old.startswith(f'{num:04d}_') or old == f'{num:04d}_ramanas_rooms{ext}', \
+                    f'{folder}/{old} already has number {num}'
+            os.makedirs(os.path.join(folder, sub), exist_ok=True)
+            open(os.path.join(folder, sub, f'{num:04d}_ramanas_rooms{ext}'), 'w', encoding='utf-8').write('\n'.join(body) + '\n')
     return problems
 
 

@@ -14,7 +14,7 @@
 
 P132_S1:
 P132_0012:
-    pl_stub InitPersistedMapFeaturesForVeilstoneGym  // Pearl 0x174 InitVeilstoneGym : not translated yet
+// InitVeilstoneGym: gimmick 60 starts the panels at their places (resident/veilstone_gym.c)
     pl_End
 
 P132_S2:

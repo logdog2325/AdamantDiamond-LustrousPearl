@@ -3,6 +3,9 @@
 // pearl_defog.py --sources writes this file; the decomp's src/pearlb2/defog_itcm.c runs it). Text: a/0/0/3
 // file 1236 (src/text/script/1236_field_moves.txt: Black 2's lines, then line 34, Pearl's "used Defog!").
 // Script_18 (10017): the following Pokémon talked to (patches/followers.py), lines 35-43.
+// Script_19 (10018): the Vs. Seeker (patches/vs_seeker.py), lines 44-46.
+
+// Script_20 (10019): Defog offered under the fog (field_moves.c, PEARLB2_SCRIPT_DEFOG_OFFER), line 47.
 #include "asm/field_script.inc"
 #include "text/script/global_10000.h"
 
@@ -24,6 +27,8 @@
     ScriptEntry Script_16
     ScriptEntry Script_17
     ScriptEntry Script_18
+    ScriptEntry Script_19
+    ScriptEntry Script_20
     ScriptEntriesEnd
     WorkSetConst 0x8020, 0
 
@@ -526,12 +531,14 @@ L_0654:
 // then the mist fades out (FieldSetWeather 0, not at once) and stays away until the player leaves the zone
 Script_17:
     ActorsPauseAll
+L_UseDefog:
     WordSetPartyPokeName 0, 0x8000
     SystemMsg 34, 2                   // "X used Defog!"
     InfoMsgClose
     VMCall L_005C
     PlayHMCutInEffect 0x8000
     VMCall L_006C
+    SEPlay SEQ_SE_FLD_02    // for SEQ_SE_DP_FBRADE: a Black 2 field-move sound stands in
     FlagSet 0x52                    // (map-local: the clear sky stays through battles: PearlB2_ZoneWeather)
     FieldSetWeather 0, 0
     FinishAllEvents
@@ -553,6 +560,60 @@ Script_18:
     PVWait
     LastKeyWait
     MsgWinCloseAll
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+// PearlB2: the Vs. Seeker (pokeplatinum scripts_vs_seeker.s; decomp resident/vs_seeker.c, patches/vs_seeker.py;
+// Pearl's sound and the player's pose with the device are Black 2 stand-ins): extension commands 0xA1, 0xA2
+Script_19:
+    ActorsPauseAll
+    FieldCommand 351
+    .byte 0xA1
+    .2byte 0x8000
+    .2byte 0x8001   // 0 ok, 1 battery, 2 no one near; steps left
+    WorkCmpConst 0x8000, 1
+    VMJumpIf CMP_EQ, L_PearlVsBattery
+    WorkCmpConst 0x8000, 2
+    VMJumpIf CMP_EQ, L_PearlVsNone
+    SEPlay SEQ_SE_BEEP
+    FieldCommand 351
+    .byte 0xA2
+    .2byte 0x8000   // the Trainers' "!": 0 somebody answered
+    SEWait
+    WorkCmpConst 0x8000, 0
+    VMJumpIf CMP_EQ, L_PearlVsEnd
+    SystemMsg 46, 2
+    VMJump L_PearlVsClose
+L_PearlVsBattery:
+    WordSetNumber 0, 0x8001, 3
+    SystemMsg 44, 2
+    VMJump L_PearlVsClose
+L_PearlVsNone:
+    SystemMsg 45, 2
+L_PearlVsClose:
+    LastKeyWait
+    InfoMsgClose
+L_PearlVsEnd:
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+// PearlB2: nobody need know Defog (src/pearlb2/resident/field_moves.c): A under the fog offers it, Pearl's line;
+// PokePartyHasMoveAny answers who shows it
+Script_20:
+    SEPlay SEQ_SE_MESSAGE
+    ActorsPauseAll
+    SystemMsg 47, 2                   // "A deep fog drapes the area... use Defog?"
+    YesNoWin 0x8010
+    InfoMsgClose
+    VMStackPush 0x8010
+    VMStackPushConst 0
+    VMStackCmp CMP_EQ
+    VMJumpIf CMP_STACK, L_DefogNo
+    PokePartyHasMoveAny 0x8000, 432
+    VMJump L_UseDefog
+L_DefogNo:
     FinishAllEvents
     ActorsUnpauseAll
     VMHalt

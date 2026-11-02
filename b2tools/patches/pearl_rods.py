@@ -73,10 +73,15 @@ def apply(files):
 
 
 def apply_code(code):
+    import decomp
     src = os.path.join(ROOT, 'src', 'code', 'rods.c')
+    feebas = decomp.symbol('PearlB2_Wild_FeebasSlot', code)
     with tempfile.TemporaryDirectory(dir=code) as tmp:
         def build(base):                  # the rod variable (u16, padded to 4) at base, the code after it
-            blob, sym = itcm.build(src, base + 4, tmp, defines=[f'-DROD_VAR={base:#x}'])
+            defines = [f'-DROD_VAR={base:#x}']
+            if feebas is not None:            # Pearl's Feebas (patches/wild.py, decomp resident/wild.c)
+                defines.append(f'-DFEEBAS_FN={feebas & ~1:#x}')
+            blob, sym = itcm.build(src, base + 4, tmp, defines=defines)
             return bytes(4) + blob, sym
         base, end, sym = itcm.install(code, build)
 

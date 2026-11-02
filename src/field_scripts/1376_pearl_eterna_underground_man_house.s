@@ -177,7 +177,7 @@ P89_015E:
     pl_CompareVarToValue PVAR_40B6, 0
     pl_GoToIf 1, P89_01D9
     pl_CompareVarToValue PVAR_40B6, 1
-    pl_GoToIf 1, P89_00A3
+    pl_GoToIf 1, P89_02D3
     pl_CompareVarToValue PVAR_40B6, 2
     pl_GoToIf 1, P89_0295
     pl_CompareVarToValue PVAR_40B6, 3
@@ -345,7 +345,7 @@ P89_03D3:
     pl_CallIf 0, P89_043D
     pl_SetVarFromValue PVAR_8004, 81
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P89_0565
     VMCall C205_47_S47  // CallCommonScript 2046 (Pearl file 205 script 47)
@@ -365,7 +365,7 @@ P89_043D:
     pl_Return
 
 P89_0442:
-    pl_stub GetCapturedFlagCount  // Pearl 0x24A Unk024A 32780: not translated yet
+    pl_GetCapturedFlagCount PVAR_800C
     pl_CompareVarToValue PVAR_800C, 3
     pl_GoToIf 0, P89_00A3
     pl_CheckFlag PFLAG_00FC
@@ -374,7 +374,7 @@ P89_0442:
     pl_CallIf 0, P89_049E
     pl_SetVarFromValue PVAR_8004, 82
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P89_0565
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -390,7 +390,7 @@ P89_049E:
     pl_Return
 
 P89_04A3:
-    pl_stub GetCapturedFlagCount  // Pearl 0x24A Unk024A 32780: not translated yet
+    pl_GetCapturedFlagCount PVAR_800C
     pl_CompareVarToValue PVAR_800C, 10
     pl_GoToIf 0, P89_00A3
     pl_CheckFlag PFLAG_00FC
@@ -399,7 +399,7 @@ P89_04A3:
     pl_CallIf 0, P89_04FF
     pl_SetVarFromValue PVAR_8004, 83
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P89_0565
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -415,7 +415,7 @@ P89_04FF:
     pl_Return
 
 P89_0504:
-    pl_stub GetCapturedFlagCount  // Pearl 0x24A Unk024A 32780: not translated yet
+    pl_GetCapturedFlagCount PVAR_800C
     pl_CompareVarToValue PVAR_800C, 50
     pl_GoToIf 0, P89_00A3
     pl_CheckFlag PFLAG_00FC
@@ -424,7 +424,7 @@ P89_0504:
     pl_CallIf 0, P89_0560
     pl_SetVarFromValue PVAR_8004, 84
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P89_0565
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -877,11 +877,11 @@ C205_47_0893:
 
 C205_47_08A0:
     pl_PlayFanfare SEQ_ME_ITEM  // Pearl SEQ_FANFA4
-    pl_stub SendGoodToPC  // Pearl 0x083 GiveSecretBaseDecoration 32772, 32773, 32780: not translated yet
-    pl_stub GetDecorationNameWithArticle  // Pearl 0x2C6 GetDecorationNameWithArticle 0, 32772: not translated yet
+    pl_SendGoodToPC PVAR_8004, PVAR_800C
+    pl_GetDecorationNameWithArticle 0, PVAR_8004
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 67  // Pearl bank 199 line 108
-    pl_stub BufferUndergroundGoodsName  // Pearl 0x0DF GetDecorationName 0, 32772: not translated yet
+    pl_BufferUndergroundGoodsName 0, PVAR_8004
     pl_WaitFanfare
     pl_Return
 
@@ -897,11 +897,11 @@ C205_13_0884:
 
 C205_13_08A0:
     pl_PlayFanfare SEQ_ME_ITEM  // Pearl SEQ_FANFA4
-    pl_stub SendGoodToPC  // Pearl 0x083 GiveSecretBaseDecoration 32772, 32773, 32780: not translated yet
-    pl_stub GetDecorationNameWithArticle  // Pearl 0x2C6 GetDecorationNameWithArticle 0, 32772: not translated yet
+    pl_SendGoodToPC PVAR_8004, PVAR_800C
+    pl_GetDecorationNameWithArticle 0, PVAR_8004
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 67  // Pearl bank 199 line 108
-    pl_stub BufferUndergroundGoodsName  // Pearl 0x0DF GetDecorationName 0, 32772: not translated yet
+    pl_BufferUndergroundGoodsName 0, PVAR_8004
     pl_WaitFanfare
     pl_Return
 

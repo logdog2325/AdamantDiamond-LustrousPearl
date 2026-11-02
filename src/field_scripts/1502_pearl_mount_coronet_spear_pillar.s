@@ -84,7 +84,7 @@ P230_007E:
 
 P230_0086:
     pl_SetVarFromValue PVAR_4021, 4632  // dynamic sprite: Pearl graphics 154 -> Black 2 code
-    WorkSetConst PVAR_4000, 11  // GetGameVersion: Pearl (pokediamond VERSION_PEARL 11)
+    WorkSetConst PVAR_4000, PEARLB2_GAME_VERSION  // GetGameVersion: the build's (patches/scripts.py)
     pl_CompareVarToValue PVAR_4000, 10
     pl_GoToIf 1, P230_00A3
     pl_SetVarFromValue PVAR_4021, 4633  // dynamic sprite: Pearl graphics 155 -> Black 2 code
@@ -93,7 +93,7 @@ P230_00A3:
     pl_Return
 
 P230_00A5:
-    WorkSetConst PVAR_4000, 11  // GetGameVersion: Pearl (pokediamond VERSION_PEARL 11)
+    WorkSetConst PVAR_4000, PEARLB2_GAME_VERSION  // GetGameVersion: the build's (patches/scripts.py)
     pl_CompareVarToValue PVAR_4000, 10
     pl_GoToIf 1, P230_00BC
     pl_SetFlag PFLAG_03FF
@@ -186,7 +186,7 @@ P230_01DA:
     pl_End
 
 P230_01E8:
-    WorkSetConst PVAR_800C, 11  // GetGameVersion: Pearl (pokediamond VERSION_PEARL 11)
+    WorkSetConst PVAR_800C, PEARLB2_GAME_VERSION  // GetGameVersion: the build's (patches/scripts.py)
     pl_SetVarFromVar PVAR_8004, PVAR_8005
     pl_CompareVarToValue PVAR_800C, 10
     pl_GoToIf 1, P230_0205
@@ -1410,7 +1410,7 @@ W230_03B7_03C3:
 
 // ---- continuation 16: after the Warp at 230:0458 (MAP_MOUNT_CORONET_SPEAR_PILLAR)
 W230_0458_01E8:
-    WorkSetConst PVAR_800C, 11  // GetGameVersion: Pearl (pokediamond VERSION_PEARL 11)
+    WorkSetConst PVAR_800C, PEARLB2_GAME_VERSION  // GetGameVersion: the build's (patches/scripts.py)
     pl_SetVarFromVar PVAR_8004, PVAR_8005
     pl_CompareVarToValue PVAR_800C, 10
     pl_GoToIf 1, W230_0458_0205
@@ -1698,7 +1698,7 @@ C205_40_13DF:
     pl_fade_out_white  // FadeScreen 6, 6, 0, 0x7fff
     pl_WaitFadeScreen
     RTReserveScript 5  // the rest of this Pearl script runs there (continuation 5)
-    pl_Warp 489, PVAR_8004, PVAR_8005, 0  // Pearl map 510 (MAP_HALL_OF_ORIGIN)
+    pl_Warp 489, 31, 52, 0  // Pearl map 510 (MAP_HALL_OF_ORIGIN)
     pl_ReleaseAll
     pl_End
 

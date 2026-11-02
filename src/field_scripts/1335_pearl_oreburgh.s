@@ -950,7 +950,7 @@ T205_28_1222:
     pl_LockAll
     pl_FacePlayer
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 44  // Pearl bank 199 line 67
+    pl_msg_sys 44  // Pearl bank 199 line 67
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll

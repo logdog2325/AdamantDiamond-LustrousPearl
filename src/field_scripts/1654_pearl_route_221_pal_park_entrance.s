@@ -572,7 +572,7 @@ P444_06CF:
 P444_06DA:
     pl_SetVarFromValue PVAR_8004, 97
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CanFitAccessory  // Pearl 0x1D3 Unk01D3 32772, 32773, 32780: not translated yet
+    pl_CanFitAccessory PVAR_8004, PVAR_8005, PVAR_800C  // Pearl 0x1D3
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P444_06C4
     pl_msg_talk 67
@@ -581,7 +581,7 @@ P444_06DA:
 P444_0706:
     pl_SetVarFromValue PVAR_8004, 98
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CanFitAccessory  // Pearl 0x1D3 Unk01D3 32772, 32773, 32780: not translated yet
+    pl_CanFitAccessory PVAR_8004, PVAR_8005, PVAR_800C  // Pearl 0x1D3
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P444_06C4
     pl_msg_talk 68
@@ -902,7 +902,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 1
     VMJumpIf CMP_EQ, .LRX_1open
-    pl_msg_talk 130
+    pl_msg_talk 132
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -911,17 +911,17 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1067, 0x8057
     WorkCmpConst 0x8057, 1
     VMJumpIf CMP_EQ, .LRX_4seen
-    pl_msg_talk 131
+    pl_msg_talk 133
     pl_WaitButton
     pl_CloseMessage
     FlagSet 1067
 .LRX_4seen:
 .LRX_2menu:
-    pl_msg_talk 132
+    pl_msg_talk 134
     ListMenu_AnchorTopRight 31, 10, 0, 1, 0x8050
-    ListMenuAdd 133, 65535, 0
-    ListMenuAdd 134, 65535, 1
-    ListMenuAdd 135, 65535, 2
+    ListMenuAdd 135, 65535, 0
+    ListMenuAdd 136, 65535, 1
+    ListMenuAdd 137, 65535, 2
     ListMenuShow
     pl_CloseMessage
     WorkCmpConst 0x8050, 0
@@ -929,7 +929,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     WorkCmpConst 0x8050, 1
     VMJumpIf CMP_EQ, .LRX_6enter
 .LRX_3bye:
-    pl_msg_talk 136
+    pl_msg_talk 138
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -1148,15 +1148,15 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
 .LRX_23:
     WorkCmpConst 0x8051, 0
     VMJumpIf CMP_NE, .LRX_25some
-    pl_msg_talk 137
+    pl_msg_talk 139
     pl_WaitButton
     pl_CloseMessage
     VMJump .LRX_2menu
 .LRX_25some:
-    pl_msg_talk 138
+    pl_msg_talk 140
     pl_WaitButton
     pl_CloseMessage
-    pl_msg_talk 139
+    pl_msg_talk 141
     ListMenu_AnchorTopRight 31, 10, 0, 1, 0x8050
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1172,7 +1172,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_27
     VMJump .LRX_26
 .LRX_27:
-    ListMenuAdd 140, 65535, 0
+    ListMenuAdd 142, 65535, 0
 .LRX_26:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1197,7 +1197,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_29
     VMJump .LRX_28
 .LRX_29:
-    ListMenuAdd 141, 65535, 1
+    ListMenuAdd 143, 65535, 1
 .LRX_28:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1219,7 +1219,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_31
     VMJump .LRX_30
 .LRX_31:
-    ListMenuAdd 142, 65535, 2
+    ListMenuAdd 144, 65535, 2
 .LRX_30:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1241,7 +1241,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_33
     VMJump .LRX_32
 .LRX_33:
-    ListMenuAdd 143, 65535, 3
+    ListMenuAdd 145, 65535, 3
 .LRX_32:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1266,7 +1266,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_35
     VMJump .LRX_34
 .LRX_35:
-    ListMenuAdd 144, 65535, 4
+    ListMenuAdd 146, 65535, 4
 .LRX_34:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1291,7 +1291,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_37
     VMJump .LRX_36
 .LRX_37:
-    ListMenuAdd 145, 65535, 5
+    ListMenuAdd 147, 65535, 5
 .LRX_36:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1316,7 +1316,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_39
     VMJump .LRX_38
 .LRX_39:
-    ListMenuAdd 146, 65535, 6
+    ListMenuAdd 148, 65535, 6
 .LRX_38:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1341,7 +1341,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_41
     VMJump .LRX_40
 .LRX_41:
-    ListMenuAdd 147, 65535, 7
+    ListMenuAdd 149, 65535, 7
 .LRX_40:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1366,9 +1366,9 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_43
     VMJump .LRX_42
 .LRX_43:
-    ListMenuAdd 148, 65535, 8
+    ListMenuAdd 150, 65535, 8
 .LRX_42:
-    ListMenuAdd 135, 65535, 255
+    ListMenuAdd 137, 65535, 255
     ListMenuShow
     pl_CloseMessage
     WorkCmpConst 0x8050, 0
@@ -1422,7 +1422,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     WorkCmpConst 0x8053, 1
     VMJumpIf CMP_NE, .LRX_54none
     WordSetItemName 0, 0x8052
-    pl_msg_talk 149
+    pl_msg_talk 151
     pl_WaitButton
     pl_CloseMessage
     VMJump .LRX_2menu
@@ -1433,17 +1433,17 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMJumpIf CMP_EQ, .LRX_58ask
     WorkCmpConst 0x8054, 1
     VMJumpIf CMP_EQ, .LRX_56paidL
-    pl_msg_talk 150
+    pl_msg_talk 152
     pl_WaitButton
     pl_CloseMessage
     VMJump .LRX_2menu
 .LRX_58ask:
     WorkCmpConst 0x8054, 1
     VMJumpIf CMP_NE, .LRX_55paidS
-    pl_msg_talk 151
+    pl_msg_talk 153
     ListMenu_AnchorTopRight 31, 10, 0, 1, 0x8050
-    ListMenuAdd 152, 65535, 0
-    ListMenuAdd 153, 65535, 1
+    ListMenuAdd 154, 65535, 0
+    ListMenuAdd 155, 65535, 1
     ListMenuShow
     pl_CloseMessage
     WorkCmpConst 0x8050, 0
@@ -1457,7 +1457,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
 .LRX_56paidL:
     ItemSub 130, 1, 0x8053
 .LRX_57pay:
-    pl_msg_talk 154
+    pl_msg_talk 156
     pl_WaitButton
     pl_CloseMessage
     VMStackPush 0x8000
@@ -1469,7 +1469,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMStackPop 0x8000
     VMJump .LRX_2menu
 .LRX_6enter:
-    pl_msg_talk 155
+    pl_msg_talk 157
     pl_WaitButton
     pl_CloseMessage
     ActorCmdExec PL_PLAYER, RamanasMov_toGap
@@ -1748,20 +1748,20 @@ C205_16_S16:
 C205_16_0906:
     pl_Call C205_16_0922
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 118  // Pearl bank 199 line 31 (the Accessory from PVAR_8004: not known here)
+    pl_msg_sys 118  // Pearl bank 199 line 31, an Accessory by word
     pl_WaitButton
     pl_ReturnCommonScript
     VMReturn  // End: the sub-script ends
 
 C205_16_0922:
     pl_PlayFanfare SEQ_ME_ACCE  // Pearl SEQ_ACCE
-// AddAccessory 32772, 32773: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
-// BufferAccessoryName 0, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_AddAccessory PVAR_8004, PVAR_8005  // Pearl AddAccessory (the Fashion Case)
+    pl_BufferAccessoryWord 0, PVAR_8004  // Pearl BufferAccessoryName
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 119  // Pearl bank 199 line 25 (the Accessory from PVAR_8004: not known here)
+    pl_msg_sys 119  // Pearl bank 199 line 25, an Accessory by word
     pl_WaitFanfare
     pl_BufferPlayerName 0
-// BufferAccessoryName 1, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_BufferAccessoryWord 1, PVAR_8004  // Pearl BufferAccessoryName
     pl_Return
 
 // ---- Pearl global script 205:37 (a subroutine here)
@@ -1769,17 +1769,17 @@ C205_37_S37:
 C205_37_0940:
     pl_Call C205_37_095C
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 118  // Pearl bank 199 line 31
+    pl_msg_sys 120  // Pearl bank 199 line 31
     pl_WaitButton
     pl_ReturnCommonScript
     VMReturn  // End: the sub-script ends
 
 C205_37_095C:
     pl_PlayFanfare SEQ_ME_ITEM  // Pearl SEQ_FANFA4
-// AddContestBackdrop 32772: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
+    pl_AddContestBackdrop PVAR_8004  // Pearl AddContestBackdrop (the Fashion Case)
     pl_stub BufferContestBackdropName  // Pearl 0x273 BufferContestBackgroundName 0, 32772: not translated yet
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 119  // Pearl bank 199 line 25
+    pl_msg_sys 121  // Pearl bank 199 line 25
     pl_WaitFanfare
     pl_BufferPlayerName 0
     pl_stub BufferContestBackdropName  // Pearl 0x273 BufferContestBackgroundName 1, 32772: not translated yet
@@ -1838,14 +1838,14 @@ C205_45_09C1:
     pl_CompareVarToValue PVAR_800C, 7
     pl_CallIf 5, C205_45_0A05
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 120  // Pearl bank 199 line 126
+    pl_msg_sys 122  // Pearl bank 199 line 126
     pl_Return
 
 C205_45_09F4:
     pl_BufferPlayerName 0
     pl_BufferItemName 1, PVAR_8004
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 121  // Pearl bank 199 line 28
+    pl_msg_sys 123  // Pearl bank 199 line 28
     pl_GoTo C205_45_0A2B
 
 C205_45_0A05:
@@ -1859,7 +1859,7 @@ C205_45_0A1D:
 
 C205_45_0A22:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 119  // Pearl bank 199 line 25
+    pl_msg_sys 121  // Pearl bank 199 line 25
     pl_GoTo C205_45_0A2B
 
 C205_45_0A2B:
@@ -1968,42 +1968,42 @@ C205_45_13AD:
 
 C205_45_13B5:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 122  // Pearl bank 199 line 110
+    pl_msg_sys 124  // Pearl bank 199 line 110
     pl_Return
 
 C205_45_13BA:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 123  // Pearl bank 199 line 111
+    pl_msg_sys 125  // Pearl bank 199 line 111
     pl_Return
 
 C205_45_13BF:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 124  // Pearl bank 199 line 112
+    pl_msg_sys 126  // Pearl bank 199 line 112
     pl_Return
 
 C205_45_13C4:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 125  // Pearl bank 199 line 113
+    pl_msg_sys 127  // Pearl bank 199 line 113
     pl_Return
 
 C205_45_13C9:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 126  // Pearl bank 199 line 114
+    pl_msg_sys 128  // Pearl bank 199 line 114
     pl_Return
 
 C205_45_13CE:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 127  // Pearl bank 199 line 115
+    pl_msg_sys 129  // Pearl bank 199 line 115
     pl_Return
 
 C205_45_13D3:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 128  // Pearl bank 199 line 116
+    pl_msg_sys 130  // Pearl bank 199 line 116
     pl_Return
 
 C205_45_13D8:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 129  // Pearl bank 199 line 117
+    pl_msg_sys 131  // Pearl bank 199 line 117
     pl_Return
 
 PearlNoScript:

@@ -89,7 +89,10 @@ WINTER_BG = 5                          # Pearl's SNOW: these zones battle in win
 # 14 Caitlin (grey), 16 the Champion (blue-grey, sparkles), e.g.
 # {'MAP_POKEMON_LEAGUE_AARON_ROOM': 11, 'MAP_POKEMON_LEAGUE_BERTHA_ROOM': 13, 'MAP_POKEMON_LEAGUE_FLINT_ROOM': 12,
 #  'MAP_POKEMON_LEAGUE_LUCIAN_ROOM': 14, 'MAP_POKEMON_LEAGUE_CYNTHIA_ROOM': 16}
-PLACE_BG = {}
+# The Old Chateau: Black 2's indoors (9) is a bright pale backdrop, read as an outdoor sky behind Rotom (2026-11-01). Shauntal's
+# (11), Black 2's candlelit ghost library, is its one dim mansion room; its stage holds for any floor tile (field 12, stage 15).
+PLACE_BG = {f'MAP_OLD_CHATEAU_{r}': 11 for r in ('ENTRANCE', '1F', '2F_SIDE_ROOMS', '2F_CORRIDOR', '2F_ROOM_1', '2F_ROOM_2',
+                                                 '2F_ROOM_3', '2F_ROOM_4', '2F_ROOM_5')}
 BG_SET_BY_CODE = {18, 19, 20}          # PWT / tournament / Kyurem: never a zone's (wbt_battle.c, field_encount.c)
 # Pearl map type (1 town, 2 route, 3 cave, 4 building, 5 Center) -> Black 2 mapTransitionEffectType
 PEARL_TRANSITION = {0: 0, 1: 0, 2: 0, 3: 3, 4: 1, 5: 1, 6: 1}

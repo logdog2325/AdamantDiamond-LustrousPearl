@@ -1,0 +1,6 @@
+{
+ "_doc": "Lines of Black 2's own script text files that a Sinnoh player reads (patches/pearl_text.py). title: the diploma's words (ov314 reads them directly); Pearl's own: bank 1 line 1.",
+ "title": {
+  "ScriptTitle_Text_DocumentCertifiesHaveMade": "{bd02}This document certifies that\\n{bd02}you have made the great\\n{bd02}achievement of meeting all\\n{bd02}the Pokémon in Sinnoh."
+ }
+}

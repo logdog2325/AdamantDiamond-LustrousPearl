@@ -42,3 +42,7 @@ Global10000_Text_PearlFollower5 = {0102:0} almost tripped!
 Global10000_Text_PearlFollower6 = {0102:0} is skipping happily.
 Global10000_Text_PearlFollower7 = {0102:0} seems to be so happy\nit can’t keep still.
 Global10000_Text_PearlFollower8 = {0102:0} seems to be enjoying\nthe walk.
+Global10000_Text_PearlVsSeeker0 = The battery isn’t charged enough.{be01}\nNumber of steps required to fully\ncharge the battery: {0201:0}
+Global10000_Text_PearlVsSeeker1 = There are no Trainers within range\nwho can battle...{be01}\nThe Vs. Seeker was turned off.
+Global10000_Text_PearlVsSeeker2 = The other Trainers don’t appear\nto be ready for battle.{be01}\nLet’s wait till later.
+Global10000_Text_PearlDefogOffer = A deep fog drapes the area...\nWould you like to use Defog?

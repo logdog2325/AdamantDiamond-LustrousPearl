@@ -13,7 +13,7 @@ P218_S1:
 P218_0006:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
-    pl_msg_talk 0
+    pl_msg_sys 0
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll

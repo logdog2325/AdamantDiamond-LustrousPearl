@@ -44,3 +44,4 @@ PearlHearthomePoffinHouse_Text_042 = Saving a lot of data...\nDon’t turn off t
 PearlHearthomePoffinHouse_Text_043 = Saving...\nDon’t turn off the power.
 PearlHearthomePoffinHouse_Text_044 = {0100:0} saved the game.
 PearlHearthomePoffinHouse_Text_045 = Save error.
+PearlHearthomePoffinHouse_Text_046 = Welcome.

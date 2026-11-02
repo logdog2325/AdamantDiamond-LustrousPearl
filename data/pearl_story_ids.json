@@ -10372,6 +10372,14 @@
   "PVAR_FOLLOWER_SLOT": {
    "b2": "0x40F7",
    "why": "the party slot of the Pok\u00e9mon that follows the player (written by the follower module, include/follower.h; its talk script, global 10017, names that Pok\u00e9mon and plays its cry)"
+  },
+  "PVAR_VS_SEEKER_BATTERY": {
+   "b2": "0x40F8",
+   "why": "the Vs. Seeker's battery, 0-100 steps (Pearl's VAR_VS_SEEKER_BATTERY_LEVEL): written by resident/vs_seeker.c"
+  },
+  "PVAR_VS_SEEKER_STEPS": {
+   "b2": "0x40F9",
+   "why": "steps since the Vs. Seeker last woke Trainers, + 1; 0 = none waiting (Pearl's VAR_VS_SEEKER_STEP_COUNT and FLAG_VS_SEEKER_USED)"
   }
  },
  "new_flags": {
@@ -13575,6 +13583,24 @@
    "pearl_class": "PKMN_TRAINER_DAWN",
    "b2_class": "HEROINE"
   },
+  "627": {
+   "b2": 670,
+   "name": "Elizabeth",
+   "pearl_class": "AROMA_LADY",
+   "b2_class": "NURSERY_AIDE"
+  },
+  "628": {
+   "b2": 671,
+   "name": "Elizabeth",
+   "pearl_class": "AROMA_LADY",
+   "b2_class": "NURSERY_AIDE"
+  },
+  "629": {
+   "b2": 672,
+   "name": "Elizabeth",
+   "pearl_class": "AROMA_LADY",
+   "b2_class": "NURSERY_AIDE"
+  },
   "630": {
    "b2": 633,
    "name": "Kevin",
@@ -13592,6 +13618,864 @@
    "name": "Kevin",
    "pearl_class": "ARTIST",
    "b2_class": "ARTIST"
+  },
+  "633": {
+   "b2": 673,
+   "name": "Helen",
+   "pearl_class": "BATTLE_GIRL",
+   "b2_class": "BATTLE_GIRL"
+  },
+  "634": {
+   "b2": 674,
+   "name": "Helen",
+   "pearl_class": "BATTLE_GIRL",
+   "b2_class": "BATTLE_GIRL"
+  },
+  "635": {
+   "b2": 675,
+   "name": "Helen",
+   "pearl_class": "BATTLE_GIRL",
+   "b2_class": "BATTLE_GIRL"
+  },
+  "636": {
+   "b2": 676,
+   "name": "Brianna",
+   "pearl_class": "BIRD_KEEPER",
+   "b2_class": "PKMN_RANGER_F"
+  },
+  "637": {
+   "b2": 677,
+   "name": "Brianna",
+   "pearl_class": "BIRD_KEEPER",
+   "b2_class": "PKMN_RANGER_F"
+  },
+  "638": {
+   "b2": 678,
+   "name": "Audrey",
+   "pearl_class": "BIRD_KEEPER",
+   "b2_class": "PKMN_RANGER_F"
+  },
+  "639": {
+   "b2": 679,
+   "name": "Albert",
+   "pearl_class": "PKMN_BREEDER_M",
+   "b2_class": "PKMN_BREEDER_M"
+  },
+  "640": {
+   "b2": 680,
+   "name": "Albert",
+   "pearl_class": "PKMN_BREEDER_M",
+   "b2_class": "PKMN_BREEDER_M"
+  },
+  "641": {
+   "b2": 681,
+   "name": "Albert",
+   "pearl_class": "PKMN_BREEDER_M",
+   "b2_class": "PKMN_BREEDER_M"
+  },
+  "642": {
+   "b2": 682,
+   "name": "Jennifer",
+   "pearl_class": "PKMN_BREEDER_F",
+   "b2_class": "PKMN_BREEDER_F"
+  },
+  "643": {
+   "b2": 683,
+   "name": "Jennifer",
+   "pearl_class": "PKMN_BREEDER_F",
+   "b2_class": "PKMN_BREEDER_F"
+  },
+  "644": {
+   "b2": 684,
+   "name": "Jennifer",
+   "pearl_class": "PKMN_BREEDER_F",
+   "b2_class": "PKMN_BREEDER_F"
+  },
+  "645": {
+   "b2": 685,
+   "name": "Zackary",
+   "pearl_class": "CAMPER",
+   "b2_class": "BACKPACKER_M"
+  },
+  "646": {
+   "b2": 686,
+   "name": "Zackary",
+   "pearl_class": "CAMPER",
+   "b2_class": "BACKPACKER_M"
+  },
+  "647": {
+   "b2": 687,
+   "name": "Zackary",
+   "pearl_class": "CAMPER",
+   "b2_class": "BACKPACKER_M"
+  },
+  "648": {
+   "b2": 688,
+   "name": "Dalton",
+   "pearl_class": "ACE_TRAINER_SNOW_M",
+   "b2_class": "ACE_TRAINER_M"
+  },
+  "649": {
+   "b2": 689,
+   "name": "Olivia",
+   "pearl_class": "ACE_TRAINER_SNOW_F",
+   "b2_class": "ACE_TRAINER_F"
+  },
+  "650": {
+   "b2": 690,
+   "name": "Ivan",
+   "pearl_class": "COLLECTOR",
+   "b2_class": "POKEFAN_M"
+  },
+  "653": {
+   "b2": 691,
+   "name": "John",
+   "pearl_class": "CYCLIST_M",
+   "b2_class": "CYCLIST_M"
+  },
+  "654": {
+   "b2": 692,
+   "name": "John",
+   "pearl_class": "CYCLIST_M",
+   "b2_class": "CYCLIST_M"
+  },
+  "655": {
+   "b2": 693,
+   "name": "John",
+   "pearl_class": "CYCLIST_M",
+   "b2_class": "CYCLIST_M"
+  },
+  "656": {
+   "b2": 694,
+   "name": "Kayla",
+   "pearl_class": "CYCLIST_F",
+   "b2_class": "CYCLIST_F"
+  },
+  "657": {
+   "b2": 695,
+   "name": "Kayla",
+   "pearl_class": "CYCLIST_F",
+   "b2_class": "CYCLIST_F"
+  },
+  "658": {
+   "b2": 696,
+   "name": "Kayla",
+   "pearl_class": "CYCLIST_F",
+   "b2_class": "CYCLIST_F"
+  },
+  "659": {
+   "b2": 697,
+   "name": "Patrick",
+   "pearl_class": "DRAGON_TAMER",
+   "b2_class": "ROUGHNECK"
+  },
+  "660": {
+   "b2": 698,
+   "name": "Patrick",
+   "pearl_class": "DRAGON_TAMER",
+   "b2_class": "ROUGHNECK"
+  },
+  "661": {
+   "b2": 699,
+   "name": "Hayden",
+   "pearl_class": "DRAGON_TAMER",
+   "b2_class": "ROUGHNECK"
+  },
+  "662": {
+   "b2": 700,
+   "name": "Geoffrey",
+   "pearl_class": "DRAGON_TAMER",
+   "b2_class": "ROUGHNECK"
+  },
+  "663": {
+   "b2": 701,
+   "name": "Jake",
+   "pearl_class": "ACE_TRAINER_M",
+   "b2_class": "ACE_TRAINER_M"
+  },
+  "664": {
+   "b2": 702,
+   "name": "Dennis",
+   "pearl_class": "ACE_TRAINER_M",
+   "b2_class": "ACE_TRAINER_M"
+  },
+  "665": {
+   "b2": 703,
+   "name": "Dennis",
+   "pearl_class": "ACE_TRAINER_M",
+   "b2_class": "ACE_TRAINER_M"
+  },
+  "666": {
+   "b2": 704,
+   "name": "Rodolfo",
+   "pearl_class": "ACE_TRAINER_M",
+   "b2_class": "ACE_TRAINER_M"
+  },
+  "667": {
+   "b2": 705,
+   "name": "Saul",
+   "pearl_class": "ACE_TRAINER_M",
+   "b2_class": "ACE_TRAINER_M"
+  },
+  "668": {
+   "b2": 706,
+   "name": "Shannon",
+   "pearl_class": "ACE_TRAINER_F",
+   "b2_class": "ACE_TRAINER_F"
+  },
+  "669": {
+   "b2": 707,
+   "name": "Maya",
+   "pearl_class": "ACE_TRAINER_F",
+   "b2_class": "ACE_TRAINER_F"
+  },
+  "670": {
+   "b2": 708,
+   "name": "Maya",
+   "pearl_class": "ACE_TRAINER_F",
+   "b2_class": "ACE_TRAINER_F"
+  },
+  "671": {
+   "b2": 709,
+   "name": "Deanna",
+   "pearl_class": "ACE_TRAINER_F",
+   "b2_class": "ACE_TRAINER_F"
+  },
+  "672": {
+   "b2": 710,
+   "name": "Ariana",
+   "pearl_class": "ACE_TRAINER_F",
+   "b2_class": "ACE_TRAINER_F"
+  },
+  "673": {
+   "b2": 711,
+   "name": "Mitchell",
+   "pearl_class": "PSYCHIC_M",
+   "b2_class": "PSYCHIC_M"
+  },
+  "674": {
+   "b2": 712,
+   "name": "Mitchell",
+   "pearl_class": "PSYCHIC_M",
+   "b2_class": "PSYCHIC_M"
+  },
+  "675": {
+   "b2": 713,
+   "name": "Maxwell",
+   "pearl_class": "PSYCHIC_M",
+   "b2_class": "PSYCHIC_M"
+  },
+  "676": {
+   "b2": 714,
+   "name": "Corbin",
+   "pearl_class": "PSYCHIC_M",
+   "b2_class": "PSYCHIC_M"
+  },
+  "677": {
+   "b2": 715,
+   "name": "Abigail",
+   "pearl_class": "PSYCHIC_F",
+   "b2_class": "PSYCHIC_F"
+  },
+  "678": {
+   "b2": 716,
+   "name": "Abigail",
+   "pearl_class": "PSYCHIC_F",
+   "b2_class": "PSYCHIC_F"
+  },
+  "679": {
+   "b2": 717,
+   "name": "Brittney",
+   "pearl_class": "PSYCHIC_F",
+   "b2_class": "PSYCHIC_F"
+  },
+  "680": {
+   "b2": 718,
+   "name": "Daisy",
+   "pearl_class": "PSYCHIC_F",
+   "b2_class": "PSYCHIC_F"
+  },
+  "681": {
+   "b2": 719,
+   "name": "Marco",
+   "pearl_class": "RANCHER",
+   "b2_class": "PKMN_BREEDER_M"
+  },
+  "682": {
+   "b2": 720,
+   "name": "Marco",
+   "pearl_class": "RANCHER",
+   "b2_class": "PKMN_BREEDER_M"
+  },
+  "683": {
+   "b2": 721,
+   "name": "Joseph",
+   "pearl_class": "FISHERMAN",
+   "b2_class": "FISHERMAN"
+  },
+  "684": {
+   "b2": 722,
+   "name": "Joseph",
+   "pearl_class": "FISHERMAN",
+   "b2_class": "FISHERMAN"
+  },
+  "685": {
+   "b2": 723,
+   "name": "Miguel",
+   "pearl_class": "FISHERMAN",
+   "b2_class": "FISHERMAN"
+  },
+  "686": {
+   "b2": 724,
+   "name": "Alec",
+   "pearl_class": "FISHERMAN",
+   "b2_class": "FISHERMAN"
+  },
+  "687": {
+   "b2": 725,
+   "name": "Teri & Tia",
+   "pearl_class": "TWINS",
+   "b2_class": "TWINS"
+  },
+  "688": {
+   "b2": 726,
+   "name": "Teri & Tia",
+   "pearl_class": "TWINS",
+   "b2_class": "TWINS"
+  },
+  "689": {
+   "b2": 727,
+   "name": "Carlos",
+   "pearl_class": "PI",
+   "b2_class": "GENTLEMAN"
+  },
+  "690": {
+   "b2": 728,
+   "name": "Carlos",
+   "pearl_class": "PI",
+   "b2_class": "GENTLEMAN"
+  },
+  "691": {
+   "b2": 729,
+   "name": "Jeremy",
+   "pearl_class": "GENTLEMAN",
+   "b2_class": "GENTLEMAN"
+  },
+  "692": {
+   "b2": 730,
+   "name": "Jeremy",
+   "pearl_class": "GENTLEMAN",
+   "b2_class": "GENTLEMAN"
+  },
+  "693": {
+   "b2": 731,
+   "name": "Jeremy",
+   "pearl_class": "GENTLEMAN",
+   "b2_class": "GENTLEMAN"
+  },
+  "694": {
+   "b2": 732,
+   "name": "Tony",
+   "pearl_class": "GUITARIST",
+   "b2_class": "GUITARIST"
+  },
+  "695": {
+   "b2": 733,
+   "name": "Harry",
+   "pearl_class": "RUIN_MANIAC",
+   "b2_class": "HIKER"
+  },
+  "696": {
+   "b2": 734,
+   "name": "Harry",
+   "pearl_class": "RUIN_MANIAC",
+   "b2_class": "HIKER"
+  },
+  "697": {
+   "b2": 735,
+   "name": "Craig",
+   "pearl_class": "JOGGER",
+   "b2_class": "STRIKER"
+  },
+  "698": {
+   "b2": 736,
+   "name": "Craig",
+   "pearl_class": "JOGGER",
+   "b2_class": "STRIKER"
+  },
+  "699": {
+   "b2": 737,
+   "name": "Philip",
+   "pearl_class": "BLACK_BELT",
+   "b2_class": "BLACK_BELT"
+  },
+  "700": {
+   "b2": 738,
+   "name": "Davon",
+   "pearl_class": "BLACK_BELT",
+   "b2_class": "BLACK_BELT"
+  },
+  "701": {
+   "b2": 739,
+   "name": "Reina",
+   "pearl_class": "SOCIALITE",
+   "b2_class": "SOCIALITE"
+  },
+  "702": {
+   "b2": 740,
+   "name": "Reina",
+   "pearl_class": "SOCIALITE",
+   "b2_class": "SOCIALITE"
+  },
+  "703": {
+   "b2": 741,
+   "name": "Samantha",
+   "pearl_class": "LASS",
+   "b2_class": "LASS"
+  },
+  "704": {
+   "b2": 742,
+   "name": "Samantha",
+   "pearl_class": "LASS",
+   "b2_class": "LASS"
+  },
+  "705": {
+   "b2": 743,
+   "name": "Samantha",
+   "pearl_class": "LASS",
+   "b2_class": "LASS"
+  },
+  "706": {
+   "b2": 744,
+   "name": "Madeline",
+   "pearl_class": "LASS",
+   "b2_class": "LASS"
+  },
+  "707": {
+   "b2": 745,
+   "name": "Madeline",
+   "pearl_class": "LASS",
+   "b2_class": "LASS"
+  },
+  "708": {
+   "b2": 746,
+   "name": "Madeline",
+   "pearl_class": "LASS",
+   "b2_class": "LASS"
+  },
+  "709": {
+   "b2": 747,
+   "name": "Theodore",
+   "pearl_class": "HIKER",
+   "b2_class": "HIKER"
+  },
+  "710": {
+   "b2": 748,
+   "name": "Theodore",
+   "pearl_class": "HIKER",
+   "b2_class": "HIKER"
+  },
+  "711": {
+   "b2": 749,
+   "name": "Theodore",
+   "pearl_class": "HIKER",
+   "b2_class": "HIKER"
+  },
+  "712": {
+   "b2": 750,
+   "name": "Brandon",
+   "pearl_class": "BUG_CATCHER",
+   "b2_class": "SCHOOL_KID_M"
+  },
+  "713": {
+   "b2": 751,
+   "name": "Brandon",
+   "pearl_class": "BUG_CATCHER",
+   "b2_class": "SCHOOL_KID_M"
+  },
+  "714": {
+   "b2": 753,
+   "name": "Brandon",
+   "pearl_class": "BUG_CATCHER",
+   "b2_class": "SCHOOL_KID_M"
+  },
+  "715": {
+   "b2": 754,
+   "name": "Alexa",
+   "pearl_class": "PARASOL_LADY",
+   "b2_class": "PARASOL_LADY"
+  },
+  "716": {
+   "b2": 755,
+   "name": "Alexa",
+   "pearl_class": "PARASOL_LADY",
+   "b2_class": "PARASOL_LADY"
+  },
+  "717": {
+   "b2": 756,
+   "name": "Alexa",
+   "pearl_class": "PARASOL_LADY",
+   "b2_class": "PARASOL_LADY"
+  },
+  "718": {
+   "b2": 757,
+   "name": "Karina",
+   "pearl_class": "PICNICKER",
+   "b2_class": "BACKPACKER_F"
+  },
+  "719": {
+   "b2": 758,
+   "name": "Karina",
+   "pearl_class": "PICNICKER",
+   "b2_class": "BACKPACKER_F"
+  },
+  "720": {
+   "b2": 759,
+   "name": "Karina",
+   "pearl_class": "PICNICKER",
+   "b2_class": "BACKPACKER_F"
+  },
+  "721": {
+   "b2": 760,
+   "name": "Danielle",
+   "pearl_class": "POKE_KID",
+   "b2_class": "PRESCHOOLER_F"
+  },
+  "722": {
+   "b2": 761,
+   "name": "Danielle",
+   "pearl_class": "POKE_KID",
+   "b2_class": "PRESCHOOLER_F"
+  },
+  "723": {
+   "b2": 762,
+   "name": "Danielle",
+   "pearl_class": "POKE_KID",
+   "b2_class": "PRESCHOOLER_F"
+  },
+  "724": {
+   "b2": 763,
+   "name": "Danny",
+   "pearl_class": "POLICEMAN",
+   "b2_class": "POLICEMAN"
+  },
+  "725": {
+   "b2": 764,
+   "name": "Danny",
+   "pearl_class": "POLICEMAN",
+   "b2_class": "POLICEMAN"
+  },
+  "726": {
+   "b2": 765,
+   "name": "Danny",
+   "pearl_class": "POLICEMAN",
+   "b2_class": "POLICEMAN"
+  },
+  "727": {
+   "b2": 766,
+   "name": "Trey",
+   "pearl_class": "RICH_BOY",
+   "b2_class": "RICH_BOY"
+  },
+  "728": {
+   "b2": 767,
+   "name": "Trey",
+   "pearl_class": "RICH_BOY",
+   "b2_class": "RICH_BOY"
+  },
+  "729": {
+   "b2": 768,
+   "name": "Melissa",
+   "pearl_class": "LADY",
+   "b2_class": "LADY"
+  },
+  "730": {
+   "b2": 769,
+   "name": "Melissa",
+   "pearl_class": "LADY",
+   "b2_class": "LADY"
+  },
+  "731": {
+   "b2": 770,
+   "name": "Melissa",
+   "pearl_class": "LADY",
+   "b2_class": "LADY"
+  },
+  "732": {
+   "b2": 771,
+   "name": "Taylor",
+   "pearl_class": "PKMN_RANGER_M",
+   "b2_class": "PKMN_RANGER_M"
+  },
+  "733": {
+   "b2": 772,
+   "name": "Taylor",
+   "pearl_class": "PKMN_RANGER_M",
+   "b2_class": "PKMN_RANGER_M"
+  },
+  "734": {
+   "b2": 773,
+   "name": "Taylor",
+   "pearl_class": "PKMN_RANGER_M",
+   "b2_class": "PKMN_RANGER_M"
+  },
+  "735": {
+   "b2": 774,
+   "name": "Kyler",
+   "pearl_class": "PKMN_RANGER_M",
+   "b2_class": "PKMN_RANGER_M"
+  },
+  "736": {
+   "b2": 775,
+   "name": "Allison",
+   "pearl_class": "PKMN_RANGER_F",
+   "b2_class": "PKMN_RANGER_F"
+  },
+  "737": {
+   "b2": 776,
+   "name": "Allison",
+   "pearl_class": "PKMN_RANGER_F",
+   "b2_class": "PKMN_RANGER_F"
+  },
+  "738": {
+   "b2": 777,
+   "name": "Allison",
+   "pearl_class": "PKMN_RANGER_F",
+   "b2_class": "PKMN_RANGER_F"
+  },
+  "739": {
+   "b2": 778,
+   "name": "Ashlee",
+   "pearl_class": "PKMN_RANGER_F",
+   "b2_class": "PKMN_RANGER_F"
+  },
+  "740": {
+   "b2": 779,
+   "name": "Marc",
+   "pearl_class": "SAILOR",
+   "b2_class": "FISHERMAN"
+  },
+  "741": {
+   "b2": 780,
+   "name": "Marc",
+   "pearl_class": "SAILOR",
+   "b2_class": "FISHERMAN"
+  },
+  "742": {
+   "b2": 781,
+   "name": "Zachariah",
+   "pearl_class": "SAILOR",
+   "b2_class": "FISHERMAN"
+  },
+  "743": {
+   "b2": 782,
+   "name": "Shaun",
+   "pearl_class": "SCIENTIST",
+   "b2_class": "SCIENTIST_M_52"
+  },
+  "744": {
+   "b2": 783,
+   "name": "Shaun",
+   "pearl_class": "SCIENTIST",
+   "b2_class": "SCIENTIST_M_52"
+  },
+  "745": {
+   "b2": 784,
+   "name": "Shaun",
+   "pearl_class": "SCIENTIST",
+   "b2_class": "SCIENTIST_M_52"
+  },
+  "746": {
+   "b2": 785,
+   "name": "Zach",
+   "pearl_class": "NINJA_BOY",
+   "b2_class": "PRESCHOOLER_M"
+  },
+  "747": {
+   "b2": 786,
+   "name": "Zach",
+   "pearl_class": "NINJA_BOY",
+   "b2_class": "PRESCHOOLER_M"
+  },
+  "748": {
+   "b2": 787,
+   "name": "Zach",
+   "pearl_class": "NINJA_BOY",
+   "b2_class": "PRESCHOOLER_M"
+  },
+  "749": {
+   "b2": 788,
+   "name": "Cyndy",
+   "pearl_class": "BEAUTY",
+   "b2_class": "BEAUTY"
+  },
+  "750": {
+   "b2": 789,
+   "name": "Cyndy",
+   "pearl_class": "BEAUTY",
+   "b2_class": "BEAUTY"
+  },
+  "751": {
+   "b2": 790,
+   "name": "Edward",
+   "pearl_class": "SKIER_M",
+   "b2_class": "BACKPACKER_M"
+  },
+  "752": {
+   "b2": 791,
+   "name": "Edward",
+   "pearl_class": "SKIER_M",
+   "b2_class": "BACKPACKER_M"
+  },
+  "753": {
+   "b2": 792,
+   "name": "Bjorn",
+   "pearl_class": "SKIER_M",
+   "b2_class": "BACKPACKER_M"
+  },
+  "754": {
+   "b2": 793,
+   "name": "Bjorn",
+   "pearl_class": "SKIER_M",
+   "b2_class": "BACKPACKER_M"
+  },
+  "755": {
+   "b2": 794,
+   "name": "Andrea",
+   "pearl_class": "SKIER_F",
+   "b2_class": "BACKPACKER_F"
+  },
+  "756": {
+   "b2": 795,
+   "name": "Andrea",
+   "pearl_class": "SKIER_F",
+   "b2_class": "BACKPACKER_F"
+  },
+  "757": {
+   "b2": 796,
+   "name": "Madison",
+   "pearl_class": "SKIER_F",
+   "b2_class": "BACKPACKER_F"
+  },
+  "758": {
+   "b2": 797,
+   "name": "Madison",
+   "pearl_class": "SKIER_F",
+   "b2_class": "BACKPACKER_F"
+  },
+  "759": {
+   "b2": 798,
+   "name": "Wesley",
+   "pearl_class": "SWIMMER_M",
+   "b2_class": "SWIMMER_M"
+  },
+  "760": {
+   "b2": 799,
+   "name": "Francisco",
+   "pearl_class": "SWIMMER_M",
+   "b2_class": "SWIMMER_M"
+  },
+  "761": {
+   "b2": 800,
+   "name": "Glenn",
+   "pearl_class": "SWIMMER_M",
+   "b2_class": "SWIMMER_M"
+  },
+  "762": {
+   "b2": 801,
+   "name": "Miranda",
+   "pearl_class": "SWIMMER_F",
+   "b2_class": "SWIMMER_F"
+  },
+  "763": {
+   "b2": 802,
+   "name": "Crystal",
+   "pearl_class": "SWIMMER_F",
+   "b2_class": "SWIMMER_F"
+  },
+  "764": {
+   "b2": 803,
+   "name": "Joanna",
+   "pearl_class": "SWIMMER_F",
+   "b2_class": "SWIMMER_F"
+  },
+  "765": {
+   "b2": 804,
+   "name": "Tristan",
+   "pearl_class": "YOUNGSTER",
+   "b2_class": "YOUNGSTER"
+  },
+  "766": {
+   "b2": 805,
+   "name": "Tristan",
+   "pearl_class": "YOUNGSTER",
+   "b2_class": "YOUNGSTER"
+  },
+  "767": {
+   "b2": 806,
+   "name": "Tristan",
+   "pearl_class": "YOUNGSTER",
+   "b2_class": "YOUNGSTER"
+  },
+  "768": {
+   "b2": 807,
+   "name": "Dallas",
+   "pearl_class": "YOUNGSTER",
+   "b2_class": "YOUNGSTER"
+  },
+  "769": {
+   "b2": 808,
+   "name": "Dallas",
+   "pearl_class": "YOUNGSTER",
+   "b2_class": "YOUNGSTER"
+  },
+  "770": {
+   "b2": 809,
+   "name": "Dallas",
+   "pearl_class": "YOUNGSTER",
+   "b2_class": "YOUNGSTER"
+  },
+  "771": {
+   "b2": 810,
+   "name": "Jared",
+   "pearl_class": "TUBER_M",
+   "b2_class": "PRESCHOOLER_M"
+  },
+  "772": {
+   "b2": 811,
+   "name": "Jared",
+   "pearl_class": "TUBER_M",
+   "b2_class": "PRESCHOOLER_M"
+  },
+  "773": {
+   "b2": 812,
+   "name": "Chelsea",
+   "pearl_class": "TUBER_F",
+   "b2_class": "PRESCHOOLER_F"
+  },
+  "774": {
+   "b2": 813,
+   "name": "Brian",
+   "pearl_class": "VETERAN",
+   "b2_class": "VETERAN_M"
+  },
+  "775": {
+   "b2": 227,
+   "name": "Chelsea",
+   "pearl_class": "TUBER_F",
+   "b2_class": "PRESCHOOLER_F"
+  },
+  "776": {
+   "b2": 228,
+   "name": "Brian",
+   "pearl_class": "VETERAN",
+   "b2_class": "VETERAN_M"
+  },
+  "777": {
+   "b2": 229,
+   "name": "Armando",
+   "pearl_class": "VETERAN",
+   "b2_class": "VETERAN_M"
   },
   "817": {
    "b2": 636,
@@ -13782,8 +14666,8 @@
  },
  "free_left": {
   "flags": 256,
-  "works": 131,
+  "works": 129,
   "daily_flags": 23,
-  "trainer_ids": 143
+  "trainer_ids": 0
  }
 }

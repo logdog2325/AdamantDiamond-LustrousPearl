@@ -508,7 +508,7 @@ T375_3_022A:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_3_0288
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 14  // Pearl bank 334 line 6
+    pl_msg_sys 14  // Pearl bank 334 line 6
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_3_0297
@@ -517,7 +517,7 @@ T375_3_022A:
 
 T375_3_0288:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 15  // Pearl bank 334 line 8
+    pl_msg_sys 15  // Pearl bank 334 line 8
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo T375_3_055B
@@ -527,10 +527,10 @@ T375_3_0297:
     PokePartyHasMoveAny PVAR_800C, 70  // FindPartySlotWithMove: the slot, 6 = none (the same in both games)
     pl_SetVarFromVar PVAR_8004, PVAR_800C
     pl_BufferPartyMonNickname 0, PVAR_800C
-    pl_msg_talk 16  // Pearl bank 334 line 10
-// PlayHMCutIn 32772: nothing in Black 2 (the field-move cut-in (with the HM work: Black 2's PlayHMCutInEffect needs its player sequence))
+    pl_msg_sys 16  // Pearl bank 334 line 10
+    pl_PlayHMCutIn PVAR_8004
     pl_CloseMessage
-    pl_msg_talk 17  // Pearl bank 334 line 11
+    pl_msg_sys 17  // Pearl bank 334 line 11
     pl_WaitButton
     pl_CloseMessage
     WorkSetConst PVAR_8004, 247  // GetCurrentMapID: Pearl map 247
@@ -539,7 +539,7 @@ T375_3_0297:
 
 T375_3_02D3:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 18  // Pearl bank 334 line 9
+    pl_msg_sys 18  // Pearl bank 334 line 9
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo T375_3_055B

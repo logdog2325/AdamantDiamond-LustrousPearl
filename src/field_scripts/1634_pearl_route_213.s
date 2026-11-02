@@ -1,6 +1,6 @@
 // MAP_ROUTE_213: Pearl script file 424, text bank 444. Written by b2tools/pearl_story.py:
 // do not edit; rerun `python3 b2tools/pearl_story.py zones ...` (notes/STORY.md).
-// Scripts 1-8: Pearl's; no warp continuations; 9: PearlArrive; 54: Pearl 2800, 93: Pearl 10001, 106: Pearl 10003
+// Scripts 1-8: Pearl's; no warp continuations; 9: PearlArrive; 108: Pearl 2008, 54: Pearl 2800, 93: Pearl 10001, 106: Pearl 10003
 #include "asm/field_script.inc"
 #include "pearl.h"
 #include "pearl_story.inc"
@@ -111,6 +111,8 @@
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
     ScriptEntry PearlProxy_10003
+    ScriptEntry PearlNoScript
+    ScriptEntry PearlProxy_2008
     ScriptEntriesEnd
 
 P424_S1:
@@ -247,6 +249,10 @@ P424_00DC:
     Move 19, 9  // WALK_FAST_EAST
     MoveEnd
 
+PearlProxy_2008:                  // Pearl global script 2008 (run by this zone's events)
+    VMCall C205_9_S9
+    VMHalt
+
 PearlProxy_2800:                  // Pearl global script 2800 (run by this zone's events)
     VMCall T378_1_S1
     VMHalt
@@ -259,15 +265,109 @@ PearlProxy_10003:                  // Pearl global script 10003 (run by this zon
     VMCall C375_4_S4
     VMHalt
 
+// ---- Pearl global script 205:9 (a subroutine here)
+C205_9_S9:
+C205_9_0571:
+    pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
+    pl_LockAll
+    pl_CheckItem 94, 1, PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 0
+    pl_GoToIf 5, C205_9_05B9
+    pl_GetHoneyTreeStatus PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 1
+    pl_GoToIf 1, C205_9_05E6
+    pl_CompareVarToValue PVAR_800C, 2
+    pl_GoToIf 1, C205_9_05F1
+    pl_CompareVarToValue PVAR_800C, 3
+    pl_GoToIf 1, C205_9_067B
+    VMReturn  // End: the sub-script ends
+
+C205_9_05B9:
+    pl_GetHoneyTreeStatus PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 1
+    pl_GoToIf 1, C205_9_05FC
+    pl_CompareVarToValue PVAR_800C, 2
+    pl_GoToIf 1, C205_9_0605
+    pl_CompareVarToValue PVAR_800C, 3
+    pl_GoToIf 1, C205_9_067B
+    VMReturn  // End: the sub-script ends
+
+C205_9_05E6:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 8  // Pearl bank 199 line 46
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_05F1:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 9  // Pearl bank 199 line 48
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_05FC:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 10  // Pearl bank 199 line 47
+    pl_GoTo C205_9_0642
+
+C205_9_0605:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 11  // Pearl bank 199 line 49
+    pl_GoTo C205_9_0642
+
+C205_9_0629:
+    pl_CheckItem 94, 1, PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 0
+    pl_GoToIf 5, C205_9_0642
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_0642:
+    MsgWinCloseAll  // another speaker: close the first window
+    pl_msg_sys 12  // Pearl bank 199 line 50
+    pl_ShowYesNoMenu PVAR_800C
+    pl_CloseMessage
+    pl_CompareVarToValue PVAR_800C, 0
+    pl_GoToIf 1, C205_9_065C
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_065C:
+    pl_RemoveItem 94, 1, PVAR_800C
+// IncrementTrainerScore2 1: nothing in Black 2 (Pearl's trainer-card score (Black 2 keeps its own records))
+    pl_SlatherHoneyTree
+    pl_WaitTime 10, PVAR_800C
+    pl_msg_sys 13  // Pearl bank 199 line 51
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
+C205_9_067B:
+    pl_StartHoneyTreeBattle
+    pl_CheckWonBattle PVAR_800C
+    pl_CompareVarToValue PVAR_800C, 0
+    pl_GoToIf 1, C205_9_0696
+    pl_StopHoneyTreeShaking
+    pl_GoTo C205_9_0629
+
+C205_9_0696:
+    pl_BlackOutFromBattle
+    pl_ReleaseAll
+    VMReturn  // End: the sub-script ends
+
 // ---- Pearl global script 378:1 (a subroutine here)
 T378_1_S1:
 T378_1_0012:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_stub GetBerryItemID  // Pearl 0x17E GetBerryTreeType 32768: not translated yet
-    pl_stub GetBerryYield  // Pearl 0x181 GetBerryTreeAmount 32769: not translated yet
-    pl_stub GetBerryGrowthStage  // Pearl 0x17D GetBerryTreeGrowth 32780: not translated yet
+    pl_GetBerry 1, PVAR_8000  // GetBerryItemID
+    pl_GetBerry 4, PVAR_8001  // GetBerryYield
+    pl_GetBerry 0, PVAR_800C  // GetBerryGrowthStage
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
     pl_GoToIf 1, T378_1_033E
@@ -290,14 +390,14 @@ T378_1_0082:
     WordSetItemNameWithArticle 0, PVAR_8000
 // CapitalizeFirstChar: nothing in Black 2
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 8  // Pearl bank 350 line 13
+    pl_msg_talk 14  // Pearl bank 350 line 13
     pl_GoTo T378_1_01F2
 
 T378_1_00A6:
     WordSetItemNameWithArticle 0, PVAR_8000
 // CapitalizeFirstChar: nothing in Black 2
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 9  // Pearl bank 350 line 31
+    pl_msg_talk 15  // Pearl bank 350 line 31
     pl_WaitButton
     pl_GoTo T378_1_053A
 
@@ -305,15 +405,15 @@ T378_1_00B9:
     pl_Call T378_1_0158
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_00DC
-    pl_stub BufferBerryName  // Pearl 0x17B GetBerryName 0, 32768, 32769: not translated yet
+    pl_BufferBerryName 0, PVAR_8000  // Pearl's count PVAR_8001: its name has one form
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 10  // Pearl bank 350 line 14
+    pl_msg_talk 16  // Pearl bank 350 line 14
     pl_GoTo T378_1_01F2
 
 T378_1_00DC:
-    pl_stub BufferBerryName  // Pearl 0x17B GetBerryName 0, 32768, 32769: not translated yet
+    pl_BufferBerryName 0, PVAR_8000  // Pearl's count PVAR_8001: its name has one form
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 11  // Pearl bank 350 line 32
+    pl_msg_talk 17  // Pearl bank 350 line 32
     pl_WaitButton
     pl_GoTo T378_1_053A
 
@@ -321,15 +421,15 @@ T378_1_00EE:
     pl_Call T378_1_0158
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_0111
-    pl_stub BufferBerryName  // Pearl 0x17B GetBerryName 0, 32768, 32769: not translated yet
+    pl_BufferBerryName 0, PVAR_8000  // Pearl's count PVAR_8001: its name has one form
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 12  // Pearl bank 350 line 15
+    pl_msg_talk 18  // Pearl bank 350 line 15
     pl_GoTo T378_1_01F2
 
 T378_1_0111:
-    pl_stub BufferBerryName  // Pearl 0x17B GetBerryName 0, 32768, 32769: not translated yet
+    pl_BufferBerryName 0, PVAR_8000  // Pearl's count PVAR_8001: its name has one form
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 13  // Pearl bank 350 line 33
+    pl_msg_talk 19  // Pearl bank 350 line 33
     pl_WaitButton
     pl_GoTo T378_1_053A
 
@@ -337,15 +437,15 @@ T378_1_0123:
     pl_Call T378_1_0158
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_0146
-    pl_stub BufferBerryName  // Pearl 0x17B GetBerryName 0, 32768, 32769: not translated yet
+    pl_BufferBerryName 0, PVAR_8000  // Pearl's count PVAR_8001: its name has one form
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 14  // Pearl bank 350 line 16
+    pl_msg_talk 20  // Pearl bank 350 line 16
     pl_GoTo T378_1_01F2
 
 T378_1_0146:
-    pl_stub BufferBerryName  // Pearl 0x17B GetBerryName 0, 32768, 32769: not translated yet
+    pl_BufferBerryName 0, PVAR_8000  // Pearl's count PVAR_8001: its name has one form
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 15  // Pearl bank 350 line 34
+    pl_msg_talk 21  // Pearl bank 350 line 34
     pl_WaitButton
     pl_GoTo T378_1_053A
 
@@ -384,15 +484,15 @@ T378_1_01EA:
     pl_Return
 
 T378_1_01F2:
-    pl_msg_talk 16  // Pearl bank 350 line 17
+    pl_msg_talk 22  // Pearl bank 350 line 17
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T378_1_053A
     pl_CloseMessage
-    pl_stub SetBerryWateringState  // Pearl 0x184 Unk0184 0: not translated yet
-    pl_msg_talk 17  // Pearl bank 350 line 20
+    pl_WaterBerry
+    pl_msg_talk 23  // Pearl bank 350 line 20
     pl_WaitButton
-    pl_stub SetBerryWateringState  // Pearl 0x184 Unk0184 1: not translated yet
+// SetBerryWateringState 1: nothing to end
     pl_GoTo T378_1_053A
 
 T378_1_021B:
@@ -401,13 +501,13 @@ T378_1_021B:
     pl_GoToIf 2, T378_1_023B
     WordSetItemNameWithArticle 0, PVAR_8000
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 18  // Pearl bank 350 line 35
+    pl_msg_talk 24  // Pearl bank 350 line 35
     pl_GoTo T378_1_0243
 
 T378_1_023B:
     pl_BufferItemName 0, PVAR_8000  // GetItemNamePlural
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 19  // Pearl bank 350 line 21
+    pl_msg_talk 25  // Pearl bank 350 line 21
 
 T378_1_0243:
     pl_ShowYesNoMenu PVAR_800C
@@ -420,17 +520,17 @@ T378_1_0243:
     pl_CompareVarToValue PVAR_8001, 1
     pl_GoToIf 2, T378_1_0289
     pl_BufferItemName 0, PVAR_8000
-    pl_msg_talk 20  // Pearl bank 350 line 37
+    pl_msg_talk 26  // Pearl bank 350 line 37
     pl_GoTo T378_1_0291
 
 T378_1_0289:
     pl_BufferItemName 0, PVAR_8000  // GetItemNamePlural
-    pl_msg_talk 21  // Pearl bank 350 line 25
+    pl_msg_talk 27  // Pearl bank 350 line 25
 
 T378_1_0291:
     pl_PlayFanfare SEQ_ME_KINOMI  // Pearl SEQ_KINOMI
     pl_WaitFanfare
-    pl_stub HarvestBerry  // Pearl 0x185 TakeBerryTreeBerries : not translated yet
+    pl_HarvestBerry
     pl_BufferPlayerName 0
     pl_CompareVarToValue PVAR_8001, 1
     pl_GoToIf 2, T378_1_02B4
@@ -443,7 +543,7 @@ T378_1_02B4:
 T378_1_02B9:
     pl_GetItemPocket PVAR_8000, PVAR_800C
     pl_BufferPocketName 3, PVAR_800C
-    pl_msg_talk 22  // Pearl bank 350 line 27
+    pl_msg_talk 28  // Pearl bank 350 line 27
     pl_WaitButton
     pl_GoTo T378_1_053A
 
@@ -457,7 +557,7 @@ T378_1_02E7:
     pl_BufferItemName 0, PVAR_8000  // GetItemNamePlural
 
 T378_1_02EC:
-    pl_msg_talk 23  // Pearl bank 350 line 26
+    pl_msg_talk 29  // Pearl bank 350 line 26
     pl_WaitButton
     pl_GoTo T378_1_053A
 
@@ -472,28 +572,28 @@ T378_1_0310:
     pl_CompareVarToValue PVAR_8001, 1
     pl_GoToIf 2, T378_1_032E
     pl_BufferItemName 1, PVAR_8000
-    pl_msg_talk 24  // Pearl bank 350 line 36
+    pl_msg_talk 30  // Pearl bank 350 line 36
     pl_GoTo T378_1_0336
 
 T378_1_032E:
     pl_BufferItemName 1, PVAR_8000  // GetItemNamePlural
-    pl_msg_talk 25  // Pearl bank 350 line 24
+    pl_msg_talk 31  // Pearl bank 350 line 24
 
 T378_1_0336:
     pl_WaitButton
     pl_GoTo T378_1_053A
 
 T378_1_033E:
-    pl_stub GetBerryMulchType  // Pearl 0x17F GetBerryTreeMulch 32780: not translated yet
+    pl_GetBerry 2, PVAR_800C  // GetBerryMulchType
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_0374
-    pl_stub CheckPocketHasItems  // Pearl 0x17A CheckPocketNotEmpty 4, 32780: not translated yet
+    pl_CheckBerriesInBag PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_054B
-    pl_stub GetBerryMulchType  // Pearl 0x17F GetBerryTreeMulch 32780: not translated yet
+    pl_GetBerry 2, PVAR_800C  // GetBerryMulchType
     pl_BufferItemName 0, PVAR_800C
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 26  // Pearl bank 350 line 1
+    pl_msg_talk 32  // Pearl bank 350 line 1
     pl_GoTo T378_1_04DA
 
 T378_1_0374:
@@ -503,23 +603,23 @@ T378_1_0374:
     pl_Call T378_1_018E
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T378_1_03B4
-    pl_stub CheckPocketHasItems  // Pearl 0x17A CheckPocketNotEmpty 4, 32780: not translated yet
+    pl_CheckBerriesInBag PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_0540
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 27  // Pearl bank 350 line 0
+    pl_msg_talk 33  // Pearl bank 350 line 0
     pl_GoTo T378_1_04DA
 
 T378_1_03B4:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 27  // Pearl bank 350 line 0
-    pl_stub CheckPocketHasItems  // Pearl 0x17A CheckPocketNotEmpty 4, 32780: not translated yet
+    pl_msg_talk 33  // Pearl bank 350 line 0
+    pl_CheckBerriesInBag PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_0413
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 28, 65535, 0  // Pearl AddMenuEntryImm 2, 0
-    ListMenuAdd 29, 65535, 1  // Pearl AddMenuEntryImm 3, 1
-    ListMenuAdd 30, 65535, 2  // Pearl AddMenuEntryImm 4, 2
+    ListMenuAdd 34, 65535, 0  // Pearl AddMenuEntryImm 2, 0
+    ListMenuAdd 35, 65535, 1  // Pearl AddMenuEntryImm 3, 1
+    ListMenuAdd 36, 65535, 2  // Pearl AddMenuEntryImm 4, 2
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -531,7 +631,7 @@ T378_1_03B4:
     pl_GoTo T378_1_053A
 
 T378_1_0413:
-    pl_msg_talk 31  // Pearl bank 350 line 5
+    pl_msg_talk 37  // Pearl bank 350 line 5
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_042D
@@ -541,11 +641,11 @@ T378_1_042D:
     pl_CloseMessage
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
-    pl_stub OpenBag  // Pearl 0x178 ShowBagScreen 0: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+    pl_OpenBerryBag 0
+// RestoreOverworld: Black 2's CallPlaceSelect reopened the field itself
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
-    pl_stub GetSelectedItem  // Pearl 0x179 GetBagScreenSelection 32773: not translated yet
+    pl_GetBagSelection PVAR_8005
     pl_SetVarFromVar PVAR_8008, PVAR_8005
     pl_CompareVarToValue PVAR_8008, 0
     pl_GoToIf 1, T378_1_053C
@@ -561,22 +661,22 @@ T378_1_042D:
 
 T378_1_049D:
     pl_RemoveItem PVAR_8005, 1, PVAR_8004
-    pl_stub SetBerryMulch  // Pearl 0x182 SetBerryTreeMulch 32773: not translated yet
-    pl_stub CheckPocketHasItems  // Pearl 0x17A CheckPocketNotEmpty 4, 32780: not translated yet
+    pl_SetBerryMulch PVAR_8005
+    pl_CheckBerriesInBag PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_04CA
     pl_BufferItemName 0, PVAR_8005
-    pl_msg_talk 32  // Pearl bank 350 line 11
+    pl_msg_talk 38  // Pearl bank 350 line 11
     pl_GoTo T378_1_04DA
 
 T378_1_04CA:
     pl_BufferItemName 0, PVAR_8005
-    pl_msg_talk 33  // Pearl bank 350 line 30
+    pl_msg_talk 39  // Pearl bank 350 line 30
     pl_WaitButton
     pl_GoTo T378_1_053A
 
 T378_1_04DA:
-    pl_msg_talk 34  // Pearl bank 350 line 8
+    pl_msg_talk 40  // Pearl bank 350 line 8
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T378_1_053A
@@ -585,18 +685,18 @@ T378_1_04EE:
     pl_CloseMessage
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
-    pl_stub OpenBag  // Pearl 0x178 ShowBagScreen 1: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+    pl_OpenBerryBag 3
+// RestoreOverworld: Black 2's CallPlaceSelect reopened the field itself
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
-    pl_stub GetSelectedItem  // Pearl 0x179 GetBagScreenSelection 32780: not translated yet
+    pl_GetBagSelection PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_053C
     pl_BufferItemName 0, PVAR_800C
-    pl_msg_talk 35  // Pearl bank 350 line 12
+    pl_msg_talk 41  // Pearl bank 350 line 12
     pl_WaitButton
     pl_RemoveItem PVAR_800C, 1, PVAR_8004
-    pl_stub PlantBerry  // Pearl 0x183 SetBerryTreeType 32780: not translated yet
+    pl_PlantBerry PVAR_800C
     pl_GoTo T378_1_053A
 
 T378_1_053A:
@@ -608,15 +708,15 @@ T378_1_053C:
 
 T378_1_0540:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 36  // Pearl bank 350 line 28
+    pl_msg_talk 42  // Pearl bank 350 line 28
     pl_WaitButton
     pl_GoTo T378_1_053A
 
 T378_1_054B:
-    pl_stub GetBerryMulchType  // Pearl 0x17F GetBerryTreeMulch 32780: not translated yet
+    pl_GetBerry 2, PVAR_800C  // GetBerryMulchType
     pl_BufferItemName 0, PVAR_800C
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 37  // Pearl bank 350 line 29
+    pl_msg_talk 43  // Pearl bank 350 line 29
     pl_WaitButton
     pl_GoTo T378_1_053A
 
@@ -634,7 +734,7 @@ T375_2_0139:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_2_018B
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 38  // Pearl bank 334 line 3
+    pl_msg_sys 44  // Pearl bank 334 line 3
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_2_019A
@@ -643,16 +743,16 @@ T375_2_0139:
 
 T375_2_018B:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 39  // Pearl bank 334 line 4
+    pl_msg_sys 45  // Pearl bank 334 line 4
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo T375_2_055B
 
 T375_2_019A:
     pl_BufferPartyMonNickname 0, PVAR_8004
-    pl_msg_talk 40  // Pearl bank 334 line 5
+    pl_msg_sys 46  // Pearl bank 334 line 5
     pl_CloseMessage
-// PlayHMCutIn 32772: nothing in Black 2 (the field-move cut-in (with the HM work: Black 2's PlayHMCutInEffect needs its player sequence))
+    pl_PlayHMCutIn PVAR_8004
 // StartDestroyObstacleAnimation 1: no animation in Black 2
     pl_SetVarFromValue PVAR_8005, 1  // the animation is "over" at once (the script waits for it)
     pl_WaitTime 10, PVAR_800C
@@ -685,7 +785,7 @@ C375_4_0324:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, C375_4_038E
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 41  // Pearl bank 334 line 18
+    pl_msg_sys 47  // Pearl bank 334 line 18
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, C375_4_039D
@@ -694,14 +794,14 @@ C375_4_0324:
 
 C375_4_037F:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 42  // Pearl bank 334 line 20
+    pl_msg_sys 48  // Pearl bank 334 line 20
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo C375_4_055F
 
 C375_4_038E:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 43  // Pearl bank 334 line 21
+    pl_msg_sys 49  // Pearl bank 334 line 21
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo C375_4_055F
@@ -710,9 +810,10 @@ C375_4_039D:
     PokePartyHasMoveAny PVAR_800C, 431  // FindPartySlotWithMove: the slot, 6 = none (the same in both games)
     pl_SetVarFromVar PVAR_8004, PVAR_800C
     pl_BufferPartyMonNickname 0, PVAR_800C
-    pl_msg_sys 44  // Pearl bank 334 line 19
+    pl_msg_sys 50  // Pearl bank 334 line 19
     pl_CloseMessage
 // UseRockClimb PVAR_8004: 12 climb starts in this zone
+    pl_PlayHMCutIn PVAR_8004
     pl_GetPlayerMapPos PL_TMP, PL_TMP2
     pl_GetPlayerDir PL_TMP3
     WorkCmpConst PL_TMP, 721

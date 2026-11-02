@@ -204,6 +204,20 @@ Chapter 1 has no trainers, so it is not needed yet. Not seen in game yet (see "L
    - B: Black 2's stronger AI for Gym Leaders, the Elite Four, Cynthia and Team Galactic's bosses.
    - C: Black 2's stronger AI for everyone.
 
+## Rematches (2026-11-01; DECISIONS 2026-10-19)
+- Pearl's table is in Pearl's ROM (0x16483c, 240 records: base Trainer, then levels 1-5; 0xffff no Trainer at that level, 0
+  the end; pokeplatinum gVsSeekerRematchData has the same shape). 232 records have a base with a Black 2 id.
+- **The defeat flags did not have to move.** 146 Trainers only the table uses need ids; 143 ids were free. TRAINER_NEVER
+  had come from a survey that also counted Unova zone scripts and global_3000's message types written as Trainer names:
+  227-229 have no reference in Black 2's C or global scripts, so they take the last three (pearl_ids REMATCH_EXTRA).
+- Item: the Bag (ov142 row, action 7: main map only, as Pearl's check; then result 13 with a flag) and the Y button
+  (eventId 6) run global 10018 (src/field_scripts/1243_global_10000.s, Pearl's bank 486 lines).
+- src/pearlb2/resident/vs_seeker.c ports pokeplatinum vs_seeker.c: 100-step battery (PVAR_VS_SEEKER_BATTERY), the Trainers
+  in range, 50 % of the defeated ones spin (Black 2 kept Gen 4's move code 49), both halves of a double, 100 steps later they
+  stop (PVAR_VS_SEEKER_STEPS). As in Pearl, a spinning Trainer doesn't see the player: the player talks to it.
+- src/field_scripts/1239_global_3000.s (patches/vs_seeker.py --sources): Black 2's Trainer script + Pearl's Battles_Rematch.
+- Pearl's rematch lines 17-19 are Black 2 message types 25-27 (all 232 bases have them).
+
 ## Not done yet (story phase)
 - Allocate Black 2 ids. Keep a registry fixed once given, as HoennB2's `data/hoenn_trainers.json` does.
 - Names (system text 382), class names (383/485), and Pearl's trainer messages (text 381 + a/0/8/9 + a/0/9/0).

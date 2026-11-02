@@ -613,7 +613,7 @@ P90_0904:
     pl_msg_talk 40
     pl_SetVarFromValue PVAR_8004, 46
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -631,7 +631,7 @@ P90_094C:
     pl_msg_talk 41
     pl_SetVarFromValue PVAR_8004, 47
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -648,7 +648,7 @@ P90_099A:
     pl_msg_talk 42
     pl_SetVarFromValue PVAR_8004, 72
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -665,7 +665,7 @@ P90_09E2:
     pl_msg_talk 43
     pl_SetVarFromValue PVAR_8004, 73
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -682,7 +682,7 @@ P90_0A2A:
     pl_msg_talk 44
     pl_SetVarFromValue PVAR_8004, 74
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -699,7 +699,7 @@ P90_0A72:
     pl_msg_talk 45
     pl_SetVarFromValue PVAR_8004, 75
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -716,7 +716,7 @@ P90_0ABA:
     pl_msg_talk 46
     pl_SetVarFromValue PVAR_8004, 76
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -734,7 +734,7 @@ P90_0B02:
     pl_msg_talk 47
     pl_SetVarFromValue PVAR_8004, 77
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -752,7 +752,7 @@ P90_0B50:
     pl_msg_talk 48
     pl_SetVarFromValue PVAR_8004, 78
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -770,7 +770,7 @@ P90_0B9E:
     pl_msg_talk 49
     pl_SetVarFromValue PVAR_8004, 79
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -788,7 +788,7 @@ P90_0BEC:
     pl_msg_talk 50
     pl_SetVarFromValue PVAR_8004, 80
     pl_SetVarFromValue PVAR_8005, 1
-    pl_stub CheckHasRoomForGoodsInPC  // Pearl 0x085 HasSpaceForDecoration 32772, 32773, 32780: not translated yet
+    pl_CheckHasRoomForGoodsInPC PVAR_8004, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P90_0C4B
     VMCall C205_13_S13  // CallCommonScript 2012 (Pearl file 205 script 13)
@@ -1363,11 +1363,11 @@ C205_13_0884:
 
 C205_13_08A0:
     pl_PlayFanfare SEQ_ME_ITEM  // Pearl SEQ_FANFA4
-    pl_stub SendGoodToPC  // Pearl 0x083 GiveSecretBaseDecoration 32772, 32773, 32780: not translated yet
-    pl_stub GetDecorationNameWithArticle  // Pearl 0x2C6 GetDecorationNameWithArticle 0, 32772: not translated yet
+    pl_SendGoodToPC PVAR_8004, PVAR_800C
+    pl_GetDecorationNameWithArticle 0, PVAR_8004
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 68  // Pearl bank 199 line 108
-    pl_stub BufferUndergroundGoodsName  // Pearl 0x0DF GetDecorationName 0, 32772: not translated yet
+    pl_BufferUndergroundGoodsName 0, PVAR_8004
     pl_WaitFanfare
     pl_Return
 

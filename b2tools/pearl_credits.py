@@ -10,7 +10,7 @@ pages, then the scroll (names 20 frames apart, a gap between groups) with twelve
 the last photo with the player's sprite, the producers, and DEVELOPED BY / GAME FREAK stopping mid-screen; 21,172
 frames in all, as long as Black 2's ending song.
 
-Pearl's (bank 493 of the Pearl dump, gen4_text: 216 lines): "Pokémon Diamond"/"Pokémon Pearl" (one per version),
+Pearl's (bank 493 of the Pearl dump, gen4_text: 216 lines): "Pokémon Diamond"/"Pokémon Pearl" (one per version; shown as Adamant Diamond / Lustrous Pearl, version.game_names),
 "Credits", then its staff by role (a role in colour 2, its names indented), "Fin". Here:
 - the text: title_15's first 216 lines become Pearl's, in Pearl's order (colours, indents and cursor codes dropped:
   the roll's own colours and centring do that), via data/text_overrides/pearl_credits.json (sinnoh_names). Black 2's
@@ -19,7 +19,7 @@ Pearl's (bank 493 of the Pearl dump, gen4_text: 216 lines): "Pokémon Diamond"/"
   Pearl's first roles (Director; Art and Battle Directors; Program Leader), the scroll the rest, each role in Black
   2's title colour and font, its names 20 frames apart, the groups spread so the scroll lasts as long as Black 2's,
   and each photo shown at its time in Black 2's roll (at the next group's end); the producers after the last photo,
-  "Pokémon Pearl" where the roll stops (Black 2's version title, LINE_AT) and "Fin" for DEVELOPED BY. The total
+  "Pokémon Lustrous Pearl" where the roll stops (Black 2's version title, LINE_AT) and "Fin" for DEVELOPED BY. The total
   stays Black 2's.
 Not translated: the logo before the roll (a/0/2/6, already Pearl's: patches/pearl_title.py), the copyright screen
 after it (a/2/0/5 art, Black 2's years) and THE END (Black 2's art).
@@ -37,7 +37,8 @@ END_ARC = 215
 NONE = 0xFFFF
 CMD_LINE, CMD_FADE_IN, CMD_FADE_OUT, CMD_SCROLL_START, CMD_SCROLL_STOP, CMD_END, CMD_YIELD, CMD_LINE_AT, \
     CMD_PICTURE, CMD_LAST_PICTURE = range(10)
-GAME = 1                       # Pearl's "Pokémon Pearl" line (0 is Diamond's)
+import version  # noqa: E402
+GAME = 0 if version.DIAMOND else 1   # Pearl's bank: line 0 "Pokémon Diamond", line 1 "Pokémon Pearl" (shown with the new names)
 FIN = 215
 FADE_PAGES = [(3, 4), (5, 6, 7, 8), (9, 10)]      # Director; Art Director, Battle Director; Program Leader
 SCROLL_FIRST, SCROLL_LAST = 11, 210               # the scroll: Graphic Leader .. Producers
@@ -53,8 +54,8 @@ def pearl_lines():
     for m in gen4_text.bank(PEARL_BANK):
         kind = 'game' if '{COLOR 1}' in m else 'title' if '{COLOR 2}' in m else 'name'
         text = re.sub(r'\{[^}]*\}', '', m).strip()
-        out.append((kind, text, kind == 'title' and m.startswith(' ')))
-    assert len(out) == 216 and out[GAME][:2] == ('game', 'Pokémon Pearl') and out[FIN][:2] == ('name', 'Fin'), out[:3]
+        out.append((kind, version.game_names(text), kind == 'title' and m.startswith(' ')))
+    assert len(out) == 216 and out[GAME][:2] == ('game', version.PUBLIC_NAME) and out[FIN][:2] == ('name', 'Fin'), out[:3]
     return out
 
 

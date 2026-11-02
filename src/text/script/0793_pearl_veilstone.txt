@@ -64,7 +64,3 @@ PearlVeilstone_Text_062 = The wall is very rocky...\nWould you like to use Rock 
 PearlVeilstone_Text_063 = The wall is very rocky...\nWill a Pokémon’s move scale it?
 PearlVeilstone_Text_064 = Rock Climb can’t be used if you have\nsomeone with you.
 PearlVeilstone_Text_065 = {0101:0} used Rock Climb!{be01}
-PearlVeilstone_Text_066 = {0100:0} put the {0109:1}\nin the {ff00:2}{0112:2}{ff00:0} Pocket.
-PearlVeilstone_Text_067 = {0100:0} found\n{0109:1} {0107:2}!
-PearlVeilstone_Text_068 = {0100:0} found\n{0109:1}!
-PearlVeilstone_Text_069 = Obtained the {0109:0}!{be01}\nToo bad!\nThe Bag is full...

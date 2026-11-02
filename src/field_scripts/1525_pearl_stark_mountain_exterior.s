@@ -174,6 +174,7 @@ C375_4_039D:
     pl_msg_sys 4  // Pearl bank 334 line 19
     pl_CloseMessage
 // UseRockClimb PVAR_8004: 6 climb starts in this zone
+    pl_PlayHMCutIn PVAR_8004
     pl_GetPlayerMapPos PL_TMP, PL_TMP2
     pl_GetPlayerDir PL_TMP3
     WorkCmpConst PL_TMP, 742

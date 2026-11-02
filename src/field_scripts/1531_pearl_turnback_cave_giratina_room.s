@@ -41,7 +41,7 @@ P283_0044:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_WaitSE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_PlayCry 487
-    pl_msg_talk 0
+    pl_msg_sys 0
     pl_CloseMessage
     pl_SetFlag PFLAG_008E
     pl_StartWildBattle 487, 70
@@ -59,7 +59,7 @@ P283_0044:
     pl_End
 
 P283_0099:
-    pl_msg_talk 1
+    pl_msg_sys 1
     pl_WaitButton
     pl_CloseMessage
     pl_ClearFlag PFLAG_026E

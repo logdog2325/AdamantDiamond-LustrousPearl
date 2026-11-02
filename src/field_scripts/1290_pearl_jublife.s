@@ -649,7 +649,7 @@ P2_08E7:
     pl_Call P2_0963
     pl_Call P2_0963
     pl_Call P2_0963
-// AddContestBackdrop 0: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
+    pl_AddContestBackdrop 0  // Pearl AddContestBackdrop (the Fashion Case)
     pl_Call P2_097D
     pl_Call P2_097D
     pl_Return
@@ -658,21 +658,21 @@ P2_0949:
     pl_GetRandom PVAR_800C, 6
     pl_SetVarFromValue PVAR_8004, 0
     pl_AddVar PVAR_8004, PVAR_800C
-// AddAccessory 32772, 1: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
+    pl_AddAccessory PVAR_8004, 1  // Pearl AddAccessory (the Fashion Case)
     pl_Return
 
 P2_0963:
     pl_GetRandom PVAR_800C, 6
     pl_SetVarFromValue PVAR_8004, 18
     pl_AddVar PVAR_8004, PVAR_800C
-// AddAccessory 32772, 1: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
+    pl_AddAccessory PVAR_8004, 1  // Pearl AddAccessory (the Fashion Case)
     pl_Return
 
 P2_097D:
     pl_GetRandom PVAR_800C, 8
     pl_SetVarFromValue PVAR_8004, 1
     pl_AddVar PVAR_8004, PVAR_800C
-// AddContestBackdrop 32772: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
+    pl_AddContestBackdrop PVAR_8004  // Pearl AddContestBackdrop (the Fashion Case)
     pl_Return
 
 P2_0995:
@@ -688,9 +688,9 @@ P2_0AF0:
     pl_msg_talk 59
     ListMenu_AnchorTopRight 31, 11, 0, 0, PVAR_800C  // Pearl InitGlobalTextListMenu 29, 11, 0, 0, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
-    ListMenuAdd 81, 65535, 255  // Pearl AddListMenuEntry 45, 255
-    ListMenuAdd 82, 65535, 255  // Pearl AddListMenuEntry 46, 255
-    ListMenuAdd 83, 65535, 255  // Pearl AddListMenuEntry 47, 255
+    ListMenuAdd 81, 65535, 0  // Pearl AddListMenuEntry 45, 0
+    ListMenuAdd 82, 65535, 1  // Pearl AddListMenuEntry 46, 1
+    ListMenuAdd 83, 65535, 2  // Pearl AddListMenuEntry 47, 2
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0

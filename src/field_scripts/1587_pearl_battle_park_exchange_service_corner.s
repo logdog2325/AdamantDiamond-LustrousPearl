@@ -33,7 +33,7 @@ P356_0048:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_stub ShowBattlePoints  // Pearl 0x294 Unk0294 21, 1: not translated yet
+    pl_TowerBpWindow 9, 6  // ShowBattlePoints 21, 1: Black 2's money window
     pl_msg_talk 0
 
 P356_0057:
@@ -45,7 +45,7 @@ P356_0057:
     pl_CompareVarToVar PVAR_800C, PVAR_4001
     pl_GoToIf 1, P356_00F4
     pl_SetVarFromVar PVAR_4003, PVAR_800C
-    pl_stub GetExchangeServiceCornerItemAndCost  // Pearl 0x29B Unk029B 16384, 16387, 32768, 32769: not translated yet
+    pl_TowerExchange PVAR_4000, PVAR_4003, PVAR_8000, PVAR_8001
     pl_CompareVarToValue PVAR_4000, 0
     pl_CallIf 1, P356_0101
     pl_CompareVarToValue PVAR_4000, 1
@@ -53,7 +53,7 @@ P356_0057:
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P356_0057
-    pl_stub CheckBattlePoints  // Pearl 0x29A Unk029A 32769, 32780: not translated yet
+    pl_TowerBpCheck PVAR_8001, PVAR_800C  // CheckBattlePoints
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P356_011A
     pl_CanFitItem PVAR_8000, 1, PVAR_800C
@@ -62,15 +62,15 @@ P356_0057:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 3
     pl_AddItem PVAR_8000, 1, PVAR_800C
-    pl_stub RemoveBattlePoints  // Pearl 0x299 Unk0299 32769: not translated yet
-    pl_stub UpdateBPDisplay  // Pearl 0x296 Unk0296 : not translated yet
+    pl_TowerBpSub PVAR_8001
+    pl_TowerBpWindow 9, 6  // UpdateBPDisplay
     pl_GoTo P356_0057
 
 P356_00F4:
     pl_msg_talk 6
     pl_WaitButton
     pl_CloseMessage
-    pl_stub HideBattlePoints  // Pearl 0x295 Unk0295 : not translated yet
+    MoneyWinClose  // HideBattlePoints
     pl_ReleaseAll
     pl_End
 
@@ -104,14 +104,14 @@ P356_0131:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextListMenu 1, 1, 0, 1, PVAR_800C
 
 P356_0145:
-    pl_stub GetExchangeServiceCornerItemAndCost  // Pearl 0x29B Unk029B 16384, 32776, 32768, 32769: not translated yet
+    pl_TowerExchange PVAR_4000, PVAR_8008, PVAR_8000, PVAR_8001
     pl_BufferItemName 0, PVAR_8000
-    pl_stub BufferVarPaddingDigits  // Pearl 0x280 Unk0280 1, 32769, 1, 3: not translated yet
-    ListMenuAdd 15, 65535, 255  // Pearl AddListMenuEntry 231, 255
+    pl_BufferNumber 1, PVAR_8001, 3  // BufferVarPaddingDigits
+    ListMenuAdd 15, 65535, PVAR_8008  // Pearl AddListMenuEntry 231, PVAR_8008
     pl_AddVar PVAR_8008, 1
     pl_CompareVarToVar PVAR_8008, PVAR_4001
     pl_GoToIf 0, P356_0145
-    ListMenuAdd 16, 65535, 255  // Pearl AddListMenuEntry 232, 255
+    ListMenuAdd 16, 65535, PVAR_8008  // Pearl AddListMenuEntry 232, PVAR_8008
     ListMenuShow
     pl_Return
 

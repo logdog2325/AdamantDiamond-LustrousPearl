@@ -32,7 +32,7 @@ P354_002B:
     pl_LockAll
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_WaitSE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
-    pl_msg_talk 0
+    pl_msg_sys 0
     pl_CloseMessage
     pl_SetFlag PFLAG_008E
     pl_StartWildBattle 491, 40
@@ -53,7 +53,7 @@ P354_006E:
     pl_End
 
 P354_0083:
-    pl_msg_talk 1
+    pl_msg_sys 1
     pl_CloseMessage
     pl_GoTo P354_006E
 

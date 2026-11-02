@@ -90,13 +90,13 @@ SHARED_ROOMS = {'MAP_JUBLIFE_POKECENTER_2F': 'POKECENTER_2F'}
 # every Pearl map a script's Warp goes to that has no zone yet gets one, after everything else (appended: no number
 # above moves; rooms['script_warp'] lists them). Black 2 had 4 free zones left for them. Left out, with the reason:
 SCRIPT_WARP_SKIP = {
+    'MAP_BATTLE_TOWER_ELEVATOR': "the Battle Tower's rooms are appended zones (APPENDED)",
+    'MAP_BATTLE_TOWER_CORRIDOR_MULTI': "(the same)",
+    'MAP_BATTLE_TOWER_CORRIDOR_WIFI': "(the same)",
+    'MAP_BATTLE_TOWER_ARENA_MULTI': "(the same)",
+    'MAP_BATTLE_TOWER_ARENA_WIFI': "(the same)",
+    'MAP_BATTLE_TOWER_PARTNER_ROOM': "(the same)",
     'MAP_HEARTHOME_SUPER_CONTEST_HALL_STAGE': 'the Contest stage: Super Contests are not built (DECISIONS 2026-10-18)',
-    'MAP_BATTLE_TOWER_ELEVATOR': "Pearl's Battle Tower: the Battle Zone uses Black 2's tower (DECISIONS 2026-10-18)",
-    'MAP_BATTLE_TOWER_CORRIDOR_MULTI': "Pearl's Battle Tower (the same)",
-    'MAP_BATTLE_TOWER_CORRIDOR_WIFI': "Pearl's Battle Tower (the same)",
-    'MAP_BATTLE_TOWER_ARENA_MULTI': "Pearl's Battle Tower (the same)",
-    'MAP_BATTLE_TOWER_ARENA_WIFI': "Pearl's Battle Tower (the same)",
-    'MAP_BATTLE_TOWER_PARTNER_ROOM': "Pearl's Battle Tower (the same)",
     'MAP_HALL_OF_ORIGIN': "Arceus's Hall of Origin: an event-only place, on its named zone (EVENT_ROOM_ZONES)",
 }
 # Zones after Black 2's 615 (notes/ZONE_TABLE.md): the blocks reserved per feature, and the Pearl maps given a zone
@@ -106,7 +106,8 @@ SCRIPT_WARP_SKIP = {
 # Turnback Cave (2026-10-26, the lead): 623-632, then 663-664 (Pearl's maze takes 12 zones: b2tools/turnback.py).
 APPEND_BLOCKS = {'Battle Tower': range(616, 623), 'Turnback Cave': range(623, 633), 'Underground': range(633, 652),
                  'Ramanas Park': range(652, 661), 'Ramanas Park, Diamond only (Johto, Rainbow Rooms)': range(661, 663),
-                 'Turnback Cave (2)': range(663, 665)}
+                 'Turnback Cave (2)': range(663, 665),
+                 'Secret Bases': range(670, 685)}    # (670: the base; the others kept for it: notes/SECRET_BASES.md)
 DIAMOND_ONLY = APPEND_BLOCKS['Ramanas Park, Diamond only (Johto, Rainbow Rooms)']
 # Features whose rooms are not Pearl maps (the Underground's Hideaways, Ramanas Park) write their zones' headers in
 # their own patches: sinnoh_world grows the header file to the end of the last block (APPEND_END), so every reserved
@@ -131,7 +132,11 @@ APPENDED = {'MAP_UNDERGROUND': 633, 'MAP_TURNBACK_CAVE_GIRATINA_ROOM': 624,
             'MAP_TURNBACK_CAVE_RANDOM_ROOM_12': 628, 'MAP_TURNBACK_CAVE_RANDOM_ROOM_10': 629,
             'MAP_TURNBACK_CAVE_RANDOM_ROOM_7': 630, 'MAP_TURNBACK_CAVE_RANDOM_ROOM_18': 631,
             'MAP_TURNBACK_CAVE_RANDOM_ROOM_16': 632, 'MAP_TURNBACK_CAVE_RANDOM_ROOM_17': 663,
-            'MAP_TURNBACK_CAVE_RANDOM_ROOM_14': 664}
+            'MAP_TURNBACK_CAVE_RANDOM_ROOM_14': 664,
+            # The Battle Tower's rooms (2026-11-01, notes/BATTLE_ZONE.md); 622 stays free in the block
+            'MAP_BATTLE_TOWER_ELEVATOR': 616, 'MAP_BATTLE_TOWER_CORRIDOR_MULTI': 617,
+            'MAP_BATTLE_TOWER_CORRIDOR_WIFI': 618, 'MAP_BATTLE_TOWER_ARENA_MULTI': 619,
+            'MAP_BATTLE_TOWER_ARENA_WIFI': 620, 'MAP_BATTLE_TOWER_PARTNER_ROOM': 621}
 # Areas whose building pack is not Pearl's list (install below): Pearl's area 2 (the Underground) lists 138 Secret Base
 # models (over a pack's 128); the tunnels place only Pearl's four Secret Base holes (build models 429-432, ug_hole_b/f/l/r:
 # patches/underground.py puts one on each Hideaway's tunnel wall)

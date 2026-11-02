@@ -65,7 +65,7 @@ the bike, the Escape Rope and the Entralink behave as without it. Nothing new is
 actor block like any person.
 
 ## The config (`FollowerConfig`, include/follower.h; little-endian u16)
-`flag, scrId, rooms, nSheets, nOff, nHuge, nNever, slotWork`, then `sheets[nSheets] {species, object code}` (form 0),
+`flag, scrId, rooms, nSheets, nOff, nHuge, nNever, slotWork, ballCode, pad`, then `sheets[nSheets] {species, object code}` (form 0),
 `off[nOff]` zone ids, `huge[nHuge]` object codes (overworld only), `never[nNever]` object codes. PearlB2's
 (followers.py): the flag PFLAG_POKE_FOLLOWER (by name from src/include/pearl.h), the talk script 10017, rooms 1
 (step 2), 13 sheets (Pearl's walkers), off = 616-622 (Battle Tower) and 261 (the Hall of Fame), the 31 huge codes from
@@ -102,6 +102,19 @@ Next (FOLLOWERS_PLAN.md): step 2 rooms and caves on, scripted walks hide it (Act
 door exits (EventWarpSequence_CreateIn), gimmick rides; step 3 the pair start deletes it at once (s0250_ActorPairSet's
 ChangeActorMoveCodeSeq) and trainers see past it (EventTrainerEye_CheckPathObstacle's ActorRouteCollCheck); step 4
 talking (a global script: the cry and one of Pearl's 9 Amity Square lines).
+
+## Alpha 0.1 fixes (2026-10-27, tested in DeSmuME: work/agents/followers3/shots1, shots2)
+- **Floating:** Black 2 draws a walking Pokémon (scene node 10/11) 1.5 units up on most frames (a bob), 2 nearer the
+  camera and 2 to the side (field_rail_loader.c RailActorAnim_UpdateWalkOffset), except for uid 0xfc (its comm
+  players'). The follower is now 0xfc (told apart from comm players by its move code 0x30; alpha 0.1 saves' 0xfd
+  follower is removed when the field opens and comes back as 0xfc). And a follower placed on a tile (made, sent out,
+  put back) takes the ground's height there (CheckRecalcActorY), not the tile's whole height. Piplup (Black 2's sheet)
+  and Pikachu (Pearl's) stand on the ground beside the player.
+- **Poké Ball:** put away (a partner takes its place, the bike, the water, a scene, a gimmick ride) a Poké Ball shows
+  where it stood for 14 frames with Black 2's ball sound (SEQ_SE_BOWA2); sent out (back on foot, after the partner),
+  the ball shows first and the Pokémon appears when it goes. The ball is Black 2's item-ball actor (object code 110,
+  the config's `ballCode`; uid 0xfb), timed by a field-effect task; no new pixels (Black 2 has no field effect of a
+  Poké Ball). Played: Amity Square's walk starting and ending, Surf and landing.
 
 ## Porting to another B2 hack (the HoennB2 games)
 Checked against HoennB2 (read only, 2026-10-26): its decomp `external/pokebw2_new` is the same upstream commit

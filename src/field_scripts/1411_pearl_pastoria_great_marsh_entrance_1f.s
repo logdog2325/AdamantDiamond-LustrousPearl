@@ -80,7 +80,7 @@ P124_00E8:
 P124_00F8:
     pl_SetVarFromValue PVAR_40DA, 1
     pl_SafariStart  // Pearl EnableDisableSafariZone 0: 30 Safari Balls into the Bag
-    FieldSetNextZone 176, 2, 5, 2, 2  // SetDynamicWarp: the exit (dest 0x100) goes to Pearl map 125 (MAP_PASTORIA_GREAT_MARSH_ENTRANCE_1F) warp 2
+    FieldSetNextZone 176, 2, 5, 0, 2  // SetDynamicWarp: the exit (dest 0x100) goes to Pearl map 125 (MAP_PASTORIA_GREAT_MARSH_ENTRANCE_1F) warp 2
     WorkSetConst PL_ELEVATOR_FROM, 1  // and that is now where the player came from
     pl_PlaySE SEQ_SE_KAIDAN  // Pearl SEQ_SE_DP_KAIDAN2
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0

@@ -1,0 +1,67 @@
+{
+ "_doc": "Black 2's Unova / Juniper lines a Sinnoh player can read: the Bag's item refusal (Pearl bank 199 line 36: Rowan), the title menu's UNOVA LINK label, the Medal Box's lines about the regional Pokédex, walking, flying and visiting (title_11 descriptions, title_12 hints, medal_names), and two help pages (title_8). Medals of Unova's own places (bridges, PWT, Royal Unova, Unova's Challenge) keep Black 2's words: they can't be earned here. Packed by patches/sinnoh_names.py.",
+ "btl_main": {
+  "BtlMain_Text_JunipersWordsEchoedTheres": "Rowan’s words echoed...\\n{0100:0}! There's a time and{be00}\\nplace for everything! But not now.",
+  "BtlMain_Text_JunipersWordsEchoedTheres_2": "Rowan’s words echoed...\\n{0100:0}! There's a time and{be00}\\nplace for everything! But not now."
+ },
+ "b_bag_main": {
+  "BBagMain_Text_JunipersWordsEchoedTheres": "Rowan’s words echoed...\\nThere's a time and{be00}\\nplace for everything! But not now."
+ },
+ "title_11": {
+  "Title11_Text_MedalPraiseLightWalkers": "A Medal to praise light walkers\\nwho took 5,000 steps on the land\\nof Sinnoh.",
+  "Title11_Text_MedalPraiseMiddleWalkers": "A Medal to praise middle walkers\\nwho took 10,000 steps on the land\\nof Sinnoh.",
+  "Title11_Text_MedalPraiseHeavyWalkers": "A Medal to praise heavy walkers\\nwho took 20,000 steps on the land\\nof Sinnoh.",
+  "Title11_Text_MedalPraiseUltimateWalkers": "A Medal to praise ultimate walkers\\nwho took 100,000 steps on the land\\nof Sinnoh.",
+  "Title11_Text_MedalCommemorationCatchingAll": "A Medal in commemoration of\\ncatching all the Normal-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_2": "A Medal in commemoration of\\ncatching all the Fire-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_3": "A Medal in commemoration of\\ncatching all the Water-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_4": "A Medal in commemoration of\\ncatching all the Electric-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_5": "A Medal in commemoration of\\ncatching all the Grass-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_6": "A Medal in commemoration of\\ncatching all the Ice-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_7": "A Medal in commemoration of\\ncatching all the Fighting-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_8": "A Medal in commemoration of\\ncatching all the Poison-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_9": "A Medal in commemoration of\\ncatching all the Ground-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_10": "A Medal in commemoration of\\ncatching all the Flying-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_11": "A Medal in commemoration of\\ncatching all the Psychic-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_12": "A Medal in commemoration of\\ncatching all the Bug-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_13": "A Medal in commemoration of\\ncatching all the Rock-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_14": "A Medal in commemoration of\\ncatching all the Ghost-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_15": "A Medal in commemoration of\\ncatching all the Dragon-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_16": "A Medal in commemoration of\\ncatching all the Dark-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationCatchingAll_17": "A Medal in commemoration of\\ncatching all the Steel-type Pokémon\\nin the Sinnoh Pokédex.",
+  "Title11_Text_MedalCommemorationReceivingAward": "A Medal in commemoration of receiving\\nthe award from the Game Director\\nfor completing the Sinnoh Pokédex.",
+  "Title11_Text_MedalThoseWhoFlew": "A Medal for those who flew\\nall over the Sinnoh sky using Fly.",
+  "Title11_Text_MedalGivenGreatTravelers": "A Medal given to great travelers\\nwho have visited every city and town\\nin the Sinnoh region."
+ },
+ "title_12": {
+  "Title12_Text_CanCatchAllNormal": "Can you catch all of the\\nNormal-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllFire": "Can you catch all of the\\nFire-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllWater": "Can you catch all of the\\nWater-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllElectric": "Can you catch all of the\\nElectric-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllGrass": "Can you catch all of the\\nGrass-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllIce": "Can you catch all of the\\nIce-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllFighting": "Can you catch all of the\\nFighting-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllPoison": "Can you catch all of the\\nPoison-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllGround": "Can you catch all of the\\nGround-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllFlying": "Can you catch all of the\\nFlying-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllPsychic": "Can you catch all of the\\nPsychic-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllBug": "Can you catch all of the\\nBug-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllRock": "Can you catch all of the\\nRock-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllGhost": "Can you catch all of the\\nGhost-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllDragon": "Can you catch all of the\\nDragon-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllDark": "Can you catch all of the\\nDark-type Pokémon\\nin the Sinnoh region?",
+  "Title12_Text_CanCatchAllSteel": "Can you catch all of the\\nSteel-type Pokémon\\nin the Sinnoh region?"
+ },
+ "medal_names": {
+  "MedalNames_Text_UnovaCatcher": "Sinnoh Catcher",
+  "MedalNames_Text_AroundUnova": "Around Sinnoh"
+ },
+ "title_8": {
+  "Title8_Text_CanRestoreTiredPokemon": "You can restore your tired Pokémon and buy\\nuseful items. You'll find the PC where you\\ncan keep captured Pokémon.\\n\\nYou can hear\\nProfessor Rowan's evaluation\\nof your Pokédex.\\n\\nVisit 2F for Link Trade and Link Battle.",
+  "Title8_Text_UnovaRegionHasEight": "The Sinnoh region has eight Gyms. Each Gym\\nhas its own Gym Leader, and you can win\\nGym Badges by defeating those Gym Leaders.\\n\\n\\nYou can tap the icon in the bottom-left\\ncorner of the Trainer Card screen to check\\nhow many Gym Badges you have."
+ },
+ "startmenu_fieldmap_ctrl_hybrid": {
+  "StartmenuFieldmapCtrlHybrid_Text_UnovaLink": "SINNOH LINK",
+  "StartmenuFieldmapCtrlHybrid_Text_ModeSelectionKeysCan": "Mode selection keys can\\nnow be transmitted with{be00}\\nSinnoh Link's Key System.{be01}"
+ }
+}

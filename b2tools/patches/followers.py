@@ -8,7 +8,8 @@ the follow move code 0x30). This patch puts its config in ITCM and the config's 
 it: NULL, the game's behaviour, no follower):
 - the flag, the talk script (global 10017: pearl_defog.py --sources writes it into global 10000 with Pearl's 9 Amity
   Square lines), whether rooms and caves have a follower (yes; the 64 x 64 sheets stay on the overworld), and the
-  work that gets the following Pokémon's party slot (PVAR_FOLLOWER_SLOT, which the talk script reads);
+  work that gets the following Pokémon's party slot (PVAR_FOLLOWER_SLOT, which the talk script reads), and the Poké
+  Ball shown when it is put away or sent out (Black 2's item-ball actor, code 110);
 - Pearl's own walkers by species (pearl_amity_sprites.POKEMON and their codes in data/pearl_sprite_map.json: the 11
   Amity Square species, Machop and Shaymin), shown for form 0; every other species uses Black 2's walking Pokémon
   (ARCID_TPOKE), read by the C;
@@ -83,11 +84,18 @@ def config():
     return pearl, off, huge, never
 
 
+def ball_code():
+    """The Poké Ball shown when the follower is put away or sent out: the object code Pearl's ball (SPRITE_MONSTARBALL,
+    the item balls) has here (data/pearl_sprite_map.json; Black 2's item ball, no new pixels)."""
+    smap = json.load(open(os.path.join(ROOT, 'data', 'pearl_sprite_map.json'), encoding='utf-8'))
+    return smap['87']['code']
+
+
 def blob(base, flag):
     import pearl_defog
     pearl, off, huge, never = config()
-    head = struct.pack('<8H', flag, pearl_defog.FOLLOWER_SCRIPT, ROOMS, len(pearl), len(off), len(huge), len(never),
-                       pearl_var('PVAR_FOLLOWER_SLOT'))
+    head = struct.pack('<10H', flag, pearl_defog.FOLLOWER_SCRIPT, ROOMS, len(pearl), len(off), len(huge), len(never),
+                       pearl_var('PVAR_FOLLOWER_SLOT'), ball_code(), 0)
     data = b''.join(struct.pack('<HH', s, c) for s, c in pearl) + struct.pack(f'<{len(off) + len(huge) + len(never)}H',
                                                                             *off, *huge, *never)
     return head + data, (pearl, off, huge, never)

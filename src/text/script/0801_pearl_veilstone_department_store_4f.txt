@@ -10,4 +10,3 @@ PearlVeilstoneDepartmentStore4f_Text_008 = That boy doesn’t have any Pokémon,
 PearlVeilstoneDepartmentStore4f_Text_009 = 1F: Trainers’ Zone{be01}\n2F: Battle Collection{be01}\n3F: TM Corner{be01}\n4F: Poké Dolls & Goods{be01}\n5F: Rooftop Plaza
 PearlVeilstoneDepartmentStore4f_Text_010 = What’s recommended?
 PearlVeilstoneDepartmentStore4f_Text_011 = Nothing, thanks.
-PearlVeilstoneDepartmentStore4f_Text_012 = Welcome!\nWhat do you need?

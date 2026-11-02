@@ -56,9 +56,8 @@ How (decomp branch pearlb2, notes/DECOMP_WORKFLOW.md; data: b2tools/patches/pear
   chapters are installed. Gift lines name the item through
   its buffer (TM114 ...). `data/pearl_text_edits.json` (gen4_text applies it): "Hidden Machine" -> "Technical
   Machine" in the Oreburgh Gate man's two lines, the Great Marsh man's and a Pastoria resident's.
-- Shops: Pearl NDS's Marts are Black 2's badge Mart (lists 0-5: no TMs). Pearl's Veilstone Department Store TM lists
-  and Game Corner prizes are not ported; when they are, map them by move too (Natural Gift = TM118, Endure = TM108;
-  `tm_audit.py check` lists them).
+- Shops: Pearl's Veilstone Dept. Store TM lists are Pearl's by move (Natural Gift = TM118: patches/pearl_shops.py, 2026-11-01),
+  at Pearl's prices. Game Corner prizes are not ported (closed); `tm_audit.py check` lists them.
 - Proof: `python3 b2tools/tm_audit.py check [FILES]`: every Pearl TM/HM -> its item -> the move -> its learners
   against Pearl's data (all 100: equal), the Unova bits against their close moves, Black 2's own TMs unchanged, the
   items' data, every TM line of the installed scripts, the built code's move table.
@@ -159,9 +158,9 @@ default: copy it from Black 2's own data where the move is a Gen 5 tutor move, e
   brings it back (9). Shots: work/agents/tms/shots/defog_*.png. The fog came back after a trainer battle: fixed with
   flag 0x52 (above) and retested: after Defog and a won battle with Dragon Tamer Patrick the weather stays 0 (flag
   0x52 set); in and out of the house the flag is clear and the mist is back (9).
-- Not built: Pearl's Defog sound and its clearing animation (Black 2's mist fades out instead), the battle's fog
-  (Pearl lowers accuracy in battles under fog; Black 2's mist has no battle effect), Rock Climb from the party menu
-  (the same machinery could list it).
+- 2026-11-01: a Black 2 field sound stands in for Pearl's Defog sound; a battle under the mist has Pearl's accuracy x 3/5
+  (resident/leftovers.c); Rock Climb is on the party menu (result 25, kind 14; it reads the climb's sign, so Pearl's question
+  comes first). Not built: Pearl's clearing animation (the mist fades out), "The fog is deep" lines, Defog clearing fog in battle.
 
 ## Next steps (2026-10-18; done: see "Built")
 1. User: confirm way 1 or way 2 (START_HERE question 9b).
@@ -202,3 +201,25 @@ its test (TM pocket, "No. 96-104", ABLE/NOT ABLE, teaching). Apply to Pearl's TM
 - Regenerate every item source after the mapping and check the BUILT ROM; gift text must name the same move.
 - Test like the user: a melonDS test ROM whose town sign gives a Lv 100 Pokémon + FLAG_SYS_POKEMON_GET + the TMs
   (never in a zone init).
+
+## HMs by badge (the user, 2026-11-01; DECISIONS 2026-11-01)
+"HMs are supposed to just work when you have the corresponding badge; you don't need to teach a Pokémon." Always on, no
+Rowan question. Pearl's badges (pokediamond arm9/src/field_move.c FieldMove_Check*; Platinum swaps Surf and Defog): Rock
+Smash Coal (0), Cut Forest (1), Fly Cobble (2), Defog Fen (3), Surf Relic (4), Strength Mine (5), Rock Climb Icicle (6),
+Waterfall Beacon (7). Flash is a TM in Pearl, with no badge: unchanged. The HM item itself isn't needed either (Pearl's
+story gives each HM by the time its badge counts, and every gate works by its badge). HoennB2's patches/hm_free.py (Hoenn
+badges, byte patches, its own copy of the global scripts) is not used: one rule in C, the decomp's
+src/pearlb2/resident/field_moves.c:
+- `PearlB2_FieldMoveSlot`: no badge, nobody; else the first Pokémon that knows the move, else the party's first that
+  isn't an Egg (its name and its cut-in: "Piplup used Surf!"). Black 2's script command PokePartyHasMoveAny and
+  GameData_FindPartyPkmByMove (Surf, Waterfall on the field) come to it, so every script keeps its flow: Black 2's Cut, Surf,
+  Waterfall; Pearl's Rock Smash, Strength, Rock Climb (FindPartySlotWithMove).
+- The party menu: a Pokémon's Cut, Surf, Waterfall, Strength, Fly need their badge (its own "can't be used until a new
+  Badge is obtained"); before, Black 2 had no such rule.
+- Fly: the Bag's Town Map opens in Fly mode with the Cobble Badge, where the zone allows flying; a town picked flies as
+  the party menu's Fly does (the FIELD_PROC_LINK_LIST row of the Town Map).
+- Defog: A under the deep fog with the Fen Badge, facing nothing else, offers it with Pearl's own line (bank 334 line 15,
+  its unused script 375:6; row 1 of SPECIAL_TILE_SCRIPTS, global 10018). The party menu's Defog stays.
+- PML_MoveIsHM answers no: HM moves can be forgotten and traded with.
+- The cut-in: Pearl's PlayHMCutIn (Rock Smash, Strength) and UseRockClimb now play Black 2's (pl_PlayHMCutIn). The rock still
+  goes without a breaking animation (Black 2 has none).

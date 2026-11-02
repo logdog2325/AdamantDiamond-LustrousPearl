@@ -1,0 +1,1535 @@
+{
+"_doc": "Pearl's and Diamond's Underground digging weights, as data (notes/DIAMOND.md 2.2 G). Digging is not built (notes/UNDERGROUND.md),\nso nothing in a build reads data/underground_digging.json yet; it keeps Diamond's side, with its version tag, for when it is. weights: [before the National Pokédex, after it].",
+"objects": [
+{
+"object": 1,
+"name": "Prism Sphere",
+"shape": [
+4,
+4
+],
+"weights": {
+"diamond": [
+30,
+27
+],
+"pearl": [
+22,
+20
+]
+}
+},
+{
+"object": 2,
+"name": "{ff00:4}Pale Sphere{ff00:0}",
+"shape": [
+4,
+4
+],
+"weights": {
+"diamond": [
+22,
+20
+],
+"pearl": [
+30,
+27
+]
+}
+},
+{
+"object": 3,
+"name": "{ff00:1}Red Sphere{ff00:0}",
+"shape": [
+4,
+4
+],
+"weights": {
+"diamond": [
+166,
+122
+],
+"pearl": [
+192,
+150
+]
+}
+},
+{
+"object": 4,
+"name": "{ff00:2}Blue Sphere{ff00:0}",
+"shape": [
+4,
+4
+],
+"weights": {
+"diamond": [
+192,
+150
+],
+"pearl": [
+166,
+122
+]
+}
+},
+{
+"object": 5,
+"name": "{ff00:3}Green Sphere{ff00:0}",
+"shape": [
+4,
+4
+],
+"weights": {
+"diamond": [
+150,
+106
+],
+"pearl": [
+150,
+106
+]
+}
+},
+{
+"object": 6,
+"name": "Prism Sphere",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+15,
+13
+],
+"pearl": [
+13,
+10
+]
+}
+},
+{
+"object": 7,
+"name": "{ff00:4}Pale Sphere{ff00:0}",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+13,
+10
+],
+"pearl": [
+15,
+13
+]
+}
+},
+{
+"object": 8,
+"name": "{ff00:1}Red Sphere{ff00:0}",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+83,
+61
+],
+"pearl": [
+96,
+75
+]
+}
+},
+{
+"object": 9,
+"name": "{ff00:2}Blue Sphere{ff00:0}",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+96,
+75
+],
+"pearl": [
+83,
+61
+]
+}
+},
+{
+"object": 10,
+"name": "{ff00:3}Green Sphere{ff00:0}",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+75,
+53
+],
+"pearl": [
+75,
+53
+]
+}
+},
+{
+"object": 11,
+"name": "Oval Stone",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+0,
+0
+],
+"pearl": [
+0,
+0
+]
+}
+},
+{
+"object": 12,
+"name": "Odd Keystone",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+0,
+2
+],
+"pearl": [
+0,
+2
+]
+}
+},
+{
+"object": 13,
+"name": "Sun Stone",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+4,
+15
+],
+"pearl": [
+1,
+3
+]
+}
+},
+{
+"object": 14,
+"name": "Star Piece",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+2,
+10
+],
+"pearl": [
+2,
+10
+]
+}
+},
+{
+"object": 15,
+"name": "Moon Stone",
+"shape": [
+8,
+4
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+2,
+8
+]
+}
+},
+{
+"object": 15,
+"name": "Moon Stone",
+"shape": [
+4,
+8
+],
+"weights": {
+"diamond": [
+1,
+2
+],
+"pearl": [
+2,
+7
+]
+}
+},
+{
+"object": 16,
+"name": "Hard Stone",
+"shape": [
+4,
+4
+],
+"weights": {
+"diamond": [
+4,
+20
+],
+"pearl": [
+4,
+20
+]
+}
+},
+{
+"object": 17,
+"name": "Thunderstone",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+4,
+30
+],
+"pearl": [
+1,
+5
+]
+}
+},
+{
+"object": 18,
+"name": "Everstone",
+"shape": [
+8,
+4
+],
+"weights": {
+"diamond": [
+4,
+20
+],
+"pearl": [
+4,
+20
+]
+}
+},
+{
+"object": 19,
+"name": "Fire Stone",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+4,
+30
+],
+"pearl": [
+1,
+5
+]
+}
+},
+{
+"object": 20,
+"name": "Water Stone",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+1,
+5
+],
+"pearl": [
+4,
+30
+]
+}
+},
+{
+"object": 21,
+"name": "Leaf Stone",
+"shape": [
+6,
+8
+],
+"weights": {
+"diamond": [
+1,
+3
+],
+"pearl": [
+2,
+15
+]
+}
+},
+{
+"object": 21,
+"name": "Leaf Stone",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+2
+],
+"pearl": [
+2,
+15
+]
+}
+},
+{
+"object": 23,
+"name": "Helix Fossil",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+0,
+3
+],
+"pearl": [
+0,
+1
+]
+}
+},
+{
+"object": 23,
+"name": "Helix Fossil",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+0,
+3
+],
+"pearl": [
+0,
+1
+]
+}
+},
+{
+"object": 23,
+"name": "Helix Fossil",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+0,
+3
+],
+"pearl": [
+0,
+1
+]
+}
+},
+{
+"object": 23,
+"name": "Helix Fossil",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+0,
+3
+],
+"pearl": [
+0,
+1
+]
+}
+},
+{
+"object": 24,
+"name": "Dome Fossil",
+"shape": [
+10,
+8
+],
+"weights": {
+"diamond": [
+0,
+1
+],
+"pearl": [
+0,
+13
+]
+}
+},
+{
+"object": 25,
+"name": "Claw Fossil",
+"shape": [
+8,
+10
+],
+"weights": {
+"diamond": [
+0,
+3
+],
+"pearl": [
+0,
+1
+]
+}
+},
+{
+"object": 25,
+"name": "Claw Fossil",
+"shape": [
+10,
+8
+],
+"weights": {
+"diamond": [
+0,
+3
+],
+"pearl": [
+0,
+1
+]
+}
+},
+{
+"object": 25,
+"name": "Claw Fossil",
+"shape": [
+8,
+10
+],
+"weights": {
+"diamond": [
+0,
+3
+],
+"pearl": [
+0,
+1
+]
+}
+},
+{
+"object": 25,
+"name": "Claw Fossil",
+"shape": [
+10,
+8
+],
+"weights": {
+"diamond": [
+0,
+3
+],
+"pearl": [
+0,
+1
+]
+}
+},
+{
+"object": 26,
+"name": "Root Fossil",
+"shape": [
+10,
+10
+],
+"weights": {
+"diamond": [
+0,
+1
+],
+"pearl": [
+0,
+3
+]
+}
+},
+{
+"object": 26,
+"name": "Root Fossil",
+"shape": [
+10,
+10
+],
+"weights": {
+"diamond": [
+0,
+1
+],
+"pearl": [
+0,
+3
+]
+}
+},
+{
+"object": 26,
+"name": "Root Fossil",
+"shape": [
+10,
+10
+],
+"weights": {
+"diamond": [
+0,
+1
+],
+"pearl": [
+0,
+3
+]
+}
+},
+{
+"object": 26,
+"name": "Root Fossil",
+"shape": [
+10,
+10
+],
+"weights": {
+"diamond": [
+0,
+1
+],
+"pearl": [
+0,
+3
+]
+}
+},
+{
+"object": 27,
+"name": "Old Amber",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+0,
+2
+],
+"pearl": [
+0,
+2
+]
+}
+},
+{
+"object": 27,
+"name": "Old Amber",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+0,
+3
+],
+"pearl": [
+0,
+3
+]
+}
+},
+{
+"object": 28,
+"name": "Rare Bone",
+"shape": [
+6,
+12
+],
+"weights": {
+"diamond": [
+1,
+5
+],
+"pearl": [
+1,
+5
+]
+}
+},
+{
+"object": 28,
+"name": "Rare Bone",
+"shape": [
+12,
+6
+],
+"weights": {
+"diamond": [
+1,
+5
+],
+"pearl": [
+1,
+5
+]
+}
+},
+{
+"object": 29,
+"name": "Revive",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+10,
+10
+],
+"pearl": [
+10,
+10
+]
+}
+},
+{
+"object": 30,
+"name": "Max Revive",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+1,
+2
+],
+"pearl": [
+1,
+2
+]
+}
+},
+{
+"object": 31,
+"name": "Red Shard",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+10,
+12
+],
+"pearl": [
+15,
+22
+]
+}
+},
+{
+"object": 32,
+"name": "Blue Shard",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+15,
+25
+],
+"pearl": [
+10,
+15
+]
+}
+},
+{
+"object": 33,
+"name": "Yellow Shard",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+15,
+22
+],
+"pearl": [
+10,
+12
+]
+}
+},
+{
+"object": 34,
+"name": "Green Shard",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+10,
+12
+],
+"pearl": [
+15,
+22
+]
+}
+},
+{
+"object": 35,
+"name": "Heart Scale",
+"shape": [
+4,
+4
+],
+"weights": {
+"diamond": [
+33,
+30
+],
+"pearl": [
+33,
+30
+]
+}
+},
+{
+"object": 36,
+"name": "Armor Fossil",
+"shape": [
+10,
+8
+],
+"weights": {
+"diamond": [
+0,
+0
+],
+"pearl": [
+25,
+12
+]
+}
+},
+{
+"object": 37,
+"name": "Skull Fossil",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+25,
+12
+],
+"pearl": [
+0,
+0
+]
+}
+},
+{
+"object": 38,
+"name": "Light Clay",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+1,
+5
+],
+"pearl": [
+1,
+2
+]
+}
+},
+{
+"object": 39,
+"name": "Iron Ball",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+1,
+2
+],
+"pearl": [
+1,
+5
+]
+}
+},
+{
+"object": 40,
+"name": "Icy Rock",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+2,
+11
+],
+"pearl": [
+1,
+5
+]
+}
+},
+{
+"object": 41,
+"name": "Smooth Rock",
+"shape": [
+8,
+8
+],
+"weights": {
+"diamond": [
+1,
+5
+],
+"pearl": [
+2,
+11
+]
+}
+},
+{
+"object": 42,
+"name": "Heat Rock",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+2,
+11
+],
+"pearl": [
+1,
+5
+]
+}
+},
+{
+"object": 43,
+"name": "Damp Rock",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+1,
+5
+],
+"pearl": [
+2,
+11
+]
+}
+},
+{
+"object": 44,
+"name": "Flame Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 45,
+"name": "Splash Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 46,
+"name": "Zap Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 47,
+"name": "Meadow Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 48,
+"name": "Icicle Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 49,
+"name": "Fist Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 50,
+"name": "Toxic Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 51,
+"name": "Earth Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 52,
+"name": "Sky Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 53,
+"name": "Mind Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 54,
+"name": "Insect Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 55,
+"name": "Stone Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 56,
+"name": "Spooky Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 57,
+"name": "Draco Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 58,
+"name": "Dread Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 59,
+"name": "Iron Plate",
+"shape": [
+8,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 60,
+"name": "CLOSE",
+"shape": [
+8,
+2
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 60,
+"name": "CLOSE",
+"shape": [
+2,
+8
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 61,
+"name": "Close the Bag.",
+"shape": [
+4,
+4
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 62,
+"name": "A crystal clear, hard sphere.\\nIt slowly grows when buried.",
+"shape": [
+6,
+4
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 62,
+"name": "A crystal clear, hard sphere.\\nIt slowly grows when buried.",
+"shape": [
+4,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 62,
+"name": "A crystal clear, hard sphere.\\nIt slowly grows when buried.",
+"shape": [
+6,
+4
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 62,
+"name": "A crystal clear, hard sphere.\\nIt slowly grows when buried.",
+"shape": [
+4,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 63,
+"name": "A crystal clear, hard sphere.\\nIt slowly grows when buried.",
+"shape": [
+6,
+4
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 63,
+"name": "A crystal clear, hard sphere.\\nIt slowly grows when buried.",
+"shape": [
+4,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 64,
+"name": "A white sphere that glows in seven\\ncolors. It slowly grows when buried.",
+"shape": [
+6,
+4
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 64,
+"name": "A white sphere that glows in seven\\ncolors. It slowly grows when buried.",
+"shape": [
+4,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 65,
+"name": "A red sphere that glows like fire.\\nIt slowly grows when buried.",
+"shape": [
+6,
+6
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 66,
+"name": "A blue sphere that glistens like ice.\\nIt slowly grows when buried.",
+"shape": [
+4,
+8
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+},
+{
+"object": 66,
+"name": "A blue sphere that glistens like ice.\\nIt slowly grows when buried.",
+"shape": [
+8,
+4
+],
+"weights": {
+"diamond": [
+1,
+1
+],
+"pearl": [
+1,
+1
+]
+}
+}
+]
+}

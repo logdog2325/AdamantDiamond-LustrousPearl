@@ -169,3 +169,14 @@ def grass_recolour(pal_bytes, pairs, keep_first=True):
         r, g, bl = (min(31, round((b >> s & 31) * ratio)) for s in (0, 5, 10))
         out[i] = r | g << 5 | bl << 10
     return struct.pack(f'<{n}H', *out)
+
+
+def grass_over(pal_bytes, other, pairs, keep_first=True):
+    """pal_bytes recoloured by other(pal_bytes), except its grass colours (is_grass), which grass_recolour takes to the
+    ground of pairs: winter's snow ground (b2_look.grass_set) under art whose stone and sand follow Black 2's winter
+    colours (path and lawn edges, bare patches; their nearest anchor would be Black 2's own winter green)."""
+    n = len(pal_bytes) // 2
+    cols = struct.unpack(f'<{n}H', pal_bytes)
+    a = struct.unpack(f'<{n}H', other(pal_bytes))
+    g = struct.unpack(f'<{n}H', grass_recolour(pal_bytes, pairs, keep_first))
+    return struct.pack(f'<{n}H', *(g[i] if is_grass(cols[i]) and (i or not keep_first) else a[i] for i in range(n)))

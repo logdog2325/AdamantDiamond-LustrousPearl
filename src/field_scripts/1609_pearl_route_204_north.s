@@ -401,7 +401,7 @@ T375_1_0042:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_1_008E
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 16  // Pearl bank 334 line 0
+    pl_msg_sys 16  // Pearl bank 334 line 0
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_1_009D
@@ -410,7 +410,7 @@ T375_1_0042:
 
 T375_1_008E:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 17  // Pearl bank 334 line 2
+    pl_msg_sys 17  // Pearl bank 334 line 2
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo T375_1_055B
@@ -419,9 +419,9 @@ T375_1_009D:
     PokePartyHasMoveAny PVAR_800C, 15  // FindPartySlotWithMove: the slot, 6 = none (the same in both games)
     pl_SetVarFromVar PVAR_8004, PVAR_800C
     pl_BufferPartyMonNickname 0, PVAR_800C
-    pl_msg_talk 18  // Pearl bank 334 line 1
+    pl_msg_sys 18  // Pearl bank 334 line 1
     pl_CloseMessage
-// PlayHMCutIn 32772: nothing in Black 2 (the field-move cut-in (with the HM work: Black 2's PlayHMCutInEffect needs its player sequence))
+    pl_PlayHMCutIn PVAR_8004
 // StartDestroyObstacleAnimation 0: no animation in Black 2
     pl_SetVarFromValue PVAR_8005, 1  // the animation is "over" at once (the script waits for it)
     pl_WaitTime 7, PVAR_800C

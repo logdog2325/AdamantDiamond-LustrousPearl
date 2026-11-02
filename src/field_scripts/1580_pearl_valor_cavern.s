@@ -52,7 +52,7 @@ P348_0077:
     pl_LockAll
     pl_FacePlayer
     pl_PlayCry 482
-    pl_msg_talk 3
+    pl_msg_sys 3
     pl_CloseMessage
     pl_SetFlag PFLAG_008E
     pl_StartWildBattle 482, 50
@@ -68,7 +68,7 @@ P348_0077:
     pl_End
 
 P348_00C2:
-    pl_msg_talk 4
+    pl_msg_sys 4
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll

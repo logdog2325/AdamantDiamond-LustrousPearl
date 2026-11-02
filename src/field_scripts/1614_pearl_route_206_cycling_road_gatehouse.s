@@ -48,7 +48,7 @@ P401_0060:
     pl_CheckFlag PFLAG_012B
     pl_GoToIf 1, P401_0095
     pl_SetVarFromValue PVAR_8004, 96
-// BufferAccessoryName 0, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_BufferAccessoryWord 0, PVAR_8004  // Pearl BufferAccessoryName
     pl_msg_talk 3
     pl_SetVarFromValue PVAR_8005, 1
     VMCall C205_16_S16  // CallCommonScript 2015 (Pearl file 205 script 16)
@@ -79,34 +79,20 @@ C205_16_S16:
 C205_16_0906:
     pl_Call C205_16_0922
     MsgWinCloseAll  // another speaker: close the first window
-    pl_CompareVarToValue PVAR_8004, 96
-    pl_GoToIf 1, C205_16_090C_App96
-    pl_msg_sys 5  // Pearl bank 199 line 31: another one (no caller here sets it)
-    pl_GoTo C205_16_090C_AppDone
-C205_16_090C_App96:
-    pl_msg_sys 6  // naming Flag
-    pl_GoTo C205_16_090C_AppDone
-C205_16_090C_AppDone:
+    pl_msg_sys 5  // Pearl bank 199 line 31, an Accessory by word
     pl_WaitButton
     pl_ReturnCommonScript
     VMReturn  // End: the sub-script ends
 
 C205_16_0922:
     pl_PlayFanfare SEQ_ME_ACCE  // Pearl SEQ_ACCE
-// AddAccessory 32772, 32773: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
-// BufferAccessoryName 0, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_AddAccessory PVAR_8004, PVAR_8005  // Pearl AddAccessory (the Fashion Case)
+    pl_BufferAccessoryWord 0, PVAR_8004  // Pearl BufferAccessoryName
     MsgWinCloseAll  // another speaker: close the first window
-    pl_CompareVarToValue PVAR_8004, 96
-    pl_GoToIf 1, C205_16_0931_App96
-    pl_msg_sys 7  // Pearl bank 199 line 25: another one (no caller here sets it)
-    pl_GoTo C205_16_0931_AppDone
-C205_16_0931_App96:
-    pl_msg_sys 8  // naming Flag
-    pl_GoTo C205_16_0931_AppDone
-C205_16_0931_AppDone:
+    pl_msg_sys 6  // Pearl bank 199 line 25, an Accessory by word
     pl_WaitFanfare
     pl_BufferPlayerName 0
-// BufferAccessoryName 1, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_BufferAccessoryWord 1, PVAR_8004  // Pearl BufferAccessoryName
     pl_Return
 
 PearlNoScript:

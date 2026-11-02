@@ -53,6 +53,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, 'patches'))
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import nsbtx, pearl_mesh, pearl_render, pearl_buildings, pearl_chunk, pearl_model_fix  # noqa: E402
 import pearl_rooms_view as RV  # noqa: E402
 
@@ -165,7 +166,7 @@ class Room(RV.Room):
             for cx, c in enumerate(row):
                 if c == 0xffff: continue
                 self.cells[(cx, cz)] = c
-                land = json.load(open(os.path.join(PEARL, 'land', f'{c:03d}.json')))
+                land = json.load(open(os.path.join(PEARL, 'land', f'{land_id(c):03d}.json')))
                 ht = RV.heights().get(str(c), {})
                 beds = pearl_chunk.bed_solid(c)
                 for tz in range(32):
@@ -212,7 +213,7 @@ class Look:
         maps = {}
         for (cx, cz), c in self.room.cells.items():
             off = np.array([cx * 512 + 256.0, 0.0, cz * 512 + 256.0])
-            land = json.load(open(os.path.join(PEARL, 'land', f'{c:03d}.json')))
+            land = json.load(open(os.path.join(PEARL, 'land', f'{land_id(c):03d}.json')))
             if which == 'pearl':
                 self.models.append((with_nodes(pearl_chunk.pearl_model(c)), self.tex, off))
                 for pr in land['props']:

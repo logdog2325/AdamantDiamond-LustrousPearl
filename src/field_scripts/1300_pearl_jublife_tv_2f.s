@@ -144,7 +144,7 @@ P12_0040:
     pl_CompareVarToValue PVAR_800C, 393
     pl_CallIf 1, P12_00C0
     pl_SetVarFromVar PVAR_410A, PVAR_8004
-// GetFashionNameWithArticle 0, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_BufferAccessoryArticle 0, PVAR_8004  // Pearl GetFashionNameWithArticle
     pl_msg_talk 1
     pl_SetVarFromValue PVAR_8005, 1
     VMCall C205_16_S16  // CallCommonScript 2015 (Pearl file 205 script 16)
@@ -154,8 +154,8 @@ P12_0040:
     pl_End
 
 P12_00A0:
-// BufferAccessoryName 0, PVAR_410A: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
-    pl_msg_talk 2  // Pearl bank 26 line 2 (the Accessory from PVAR_410A: not known here)
+    pl_BufferAccessoryWord 0, PVAR_410A  // Pearl BufferAccessoryName
+    pl_msg_talk 3  // Pearl bank 26 line 2, an Accessory by word
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -186,20 +186,20 @@ C205_16_S16:
 C205_16_0906:
     pl_Call C205_16_0922
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 3  // Pearl bank 199 line 31 (the Accessory from PVAR_8004: not known here)
+    pl_msg_sys 4  // Pearl bank 199 line 31, an Accessory by word
     pl_WaitButton
     pl_ReturnCommonScript
     VMReturn  // End: the sub-script ends
 
 C205_16_0922:
     pl_PlayFanfare SEQ_ME_ACCE  // Pearl SEQ_ACCE
-// AddAccessory 32772, 32773: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
-// BufferAccessoryName 0, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_AddAccessory PVAR_8004, PVAR_8005  // Pearl AddAccessory (the Fashion Case)
+    pl_BufferAccessoryWord 0, PVAR_8004  // Pearl BufferAccessoryName
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 4  // Pearl bank 199 line 25 (the Accessory from PVAR_8004: not known here)
+    pl_msg_sys 5  // Pearl bank 199 line 25, an Accessory by word
     pl_WaitFanfare
     pl_BufferPlayerName 0
-// BufferAccessoryName 1, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_BufferAccessoryWord 1, PVAR_8004  // Pearl BufferAccessoryName
     pl_Return
 
 // ---- Pearl global script 1042:9 (a subroutine here)
@@ -216,7 +216,7 @@ T1042_9_00D2:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_9_0214
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 5  // Pearl bank 562 line 0
+    pl_msg_talk 6  // Pearl bank 562 line 0
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_9_0107
@@ -241,23 +241,23 @@ T1042_9_0107:
 
 T1042_9_0165:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
-    ListMenuAdd 6, 65535, 255  // Pearl AddListMenuEntry 16, 255
-    ListMenuAdd 7, 65535, 255  // Pearl AddListMenuEntry 17, 255
-    ListMenuAdd 8, 65535, 255  // Pearl AddListMenuEntry 18, 255
-    ListMenuAdd 9, 65535, 255  // Pearl AddListMenuEntry 19, 255
-    ListMenuAdd 10, 65535, 255  // Pearl AddListMenuEntry 20, 255
-    ListMenuAdd 11, 65535, 255  // Pearl AddListMenuEntry 21, 255
-    ListMenuAdd 12, 65535, 255  // Pearl AddListMenuEntry 22, 255
-    ListMenuAdd 13, 65535, 255  // Pearl AddListMenuEntry 23, 255
-    ListMenuAdd 14, 65535, 255  // Pearl AddListMenuEntry 24, 255
-    ListMenuAdd 15, 65535, 255  // Pearl AddListMenuEntry 25, 255
-    ListMenuAdd 16, 65535, 255  // Pearl AddListMenuEntry 26, 255
-    ListMenuAdd 17, 65535, 255  // Pearl AddListMenuEntry 27, 255
-    ListMenuAdd 18, 65535, 255  // Pearl AddListMenuEntry 28, 255
-    ListMenuAdd 19, 65535, 255  // Pearl AddListMenuEntry 29, 255
-    ListMenuAdd 20, 65535, 255  // Pearl AddListMenuEntry 30, 255
-    ListMenuAdd 21, 65535, 255  // Pearl AddListMenuEntry 31, 255
-    ListMenuAdd 22, 65535, 255  // Pearl AddListMenuEntry 32, 255
+    ListMenuAdd 7, 65535, 1  // Pearl AddListMenuEntry 16, 1
+    ListMenuAdd 8, 65535, 2  // Pearl AddListMenuEntry 17, 2
+    ListMenuAdd 9, 65535, 3  // Pearl AddListMenuEntry 18, 3
+    ListMenuAdd 10, 65535, 4  // Pearl AddListMenuEntry 19, 4
+    ListMenuAdd 11, 65535, 5  // Pearl AddListMenuEntry 20, 5
+    ListMenuAdd 12, 65535, 6  // Pearl AddListMenuEntry 21, 6
+    ListMenuAdd 13, 65535, 7  // Pearl AddListMenuEntry 22, 7
+    ListMenuAdd 14, 65535, 8  // Pearl AddListMenuEntry 23, 8
+    ListMenuAdd 15, 65535, 9  // Pearl AddListMenuEntry 24, 9
+    ListMenuAdd 16, 65535, 10  // Pearl AddListMenuEntry 25, 10
+    ListMenuAdd 17, 65535, 11  // Pearl AddListMenuEntry 26, 11
+    ListMenuAdd 18, 65535, 12  // Pearl AddListMenuEntry 27, 12
+    ListMenuAdd 19, 65535, 13  // Pearl AddListMenuEntry 28, 13
+    ListMenuAdd 20, 65535, 14  // Pearl AddListMenuEntry 29, 14
+    ListMenuAdd 21, 65535, 15  // Pearl AddListMenuEntry 30, 15
+    ListMenuAdd 22, 65535, 16  // Pearl AddListMenuEntry 31, 16
+    ListMenuAdd 23, 65535, 17  // Pearl AddListMenuEntry 32, 17
     ListMenuShow
     pl_CompareVarToValue PVAR_8004, 65534
     pl_GoToIf 1, T1042_9_021F
@@ -266,13 +266,13 @@ T1042_9_0165:
 
 T1042_9_0214:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 23  // Pearl bank 562 line 2
+    pl_msg_talk 24  // Pearl bank 562 line 2
     pl_WaitButton
     pl_GoTo T1042_9_022A
 
 T1042_9_021F:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 24  // Pearl bank 562 line 1
+    pl_msg_talk 25  // Pearl bank 562 line 1
     pl_WaitButton
     pl_GoTo T1042_9_022A
 

@@ -101,7 +101,11 @@ NAMED = {134, 135, 136, 137, 141, 142, 143, 144, 145, 169, 166}   # the Elite Fo
 DOOR = ('Galactic HQ door', 202, 369, 'ginga_door')
 # Pearl's field objects: (what, graphics id, mmodel file, texture name), one picture on every frame of their code's sheet
 OBJECTS = [('Rock Smash rock', 85, 83, 'breakrock'), ('Moss Rock', 190, 168, 'moss'), ('Ice Rock', 191, 169, 'freezes'),
-           ('bollard', 192, 170, 'pole'), ('Cut tree', 86, 84, 'tree')]
+           ('bollard', 192, 170, 'pole'), ('Cut tree', 86, 84, 'tree'), ('Underground vent', 182, 161, 'venthole')]
+# Pearl's snowball (OBJ_EVENT_GFX_SNOWBALL 118, Candice's Gym; 2026-11-01) is a 3D object in Pearl, one card tilted to the
+# camera (mmodel 381 / fldeff 78 'gym06_o1') with texture frames r09_o01.1-4, whole and breaking: its whole frame on code 144's
+# one-frame sheet, no reflection, as Pearl's. Black 2 removes the actor when it breaks (no break frames, as before).
+SNOWBALL = ('snowball', 118, 381, 'r09_o01.1')
 # Pearl's Strength boulder: (what, graphics id, mmodel file, texture name), its code (Black 2's 1 x 1 Strength rock)
 # and the code whose record and sheet it takes
 BOULDER = ('Strength boulder', 84, 82, 'rock')
@@ -112,7 +116,9 @@ ROCK_BOX = (9, 22, 30)                               # code 206's rock: columns 
 # species (6 frames: 0-1, 2-3 and 4-5 are its three ways; the same size as Pearl's), Pearl's colours, pixel for pixel
 # (their lowest rows match Black 2's: Palkia's both 62). Turned up or sideways they show their front, as Pearl's do.
 POKEMON = [('Palkia', 155, 134, 'sppoke5'), ('Uxie', 151, 130, 'sppoke1'), ('Mesprit', 152, 131, 'sppoke2'),
-           ('Azelf', 153, 132, 'sppoke3')]
+           ('Azelf', 153, 132, 'sppoke3'), ('Dialga', 154, 133, 'sppoke4')]
+# Dialga shows in Adamant Diamond's Spear Pillar only; a Pearl build keeps Black 2's sheet, which it never shows.
+POKEMON_ONLY_IN = {'Dialga': 'diamond'}
 # Pearl draws the lake trio 24 units above their tile, wherever they are (pokediamond ov05_021F0514.s: graphics ids
 # 0x97-0x99 take the draw table ov05_021F8D1C, whose init ov05_021F1BD0 sets the sprite offset (0, 24, 0);
 # pokeplatinum ov5_021ECB34, MapObject_SetSpritePosOffset): in the Galactic HQ lab they float in the containment
@@ -216,6 +222,30 @@ def pearl_wall(mm):
     return bytes(out), pal
 
 
+def pearl_snowball(bmd, tex):
+    """Pearl's snowball card, its whole frame: (32 x 32 indices, 16 BGR555 colours), its lowest row on the frame's row
+    30 as the one-tile objects."""
+    from pearl_player_sprites import model_textures
+    _, texs, pals = model_textures(bmd)
+    w, h, fmt, off = texs[tex]
+    assert (w, h, fmt) == (32, 32, 3), (tex, w, h, fmt)
+    pix = sprites.unpack4(bmd[off:off + w * h // 2], w * h)
+    poff = next(pals[n] for n in (tex + '_pl', tex.rsplit('.', 1)[0] + '_pl', tex) if n in pals) if len(pals) > 1 \
+        else next(iter(pals.values()))
+    n = min(16, (len(bmd) - poff) // 2)              # (Pearl's object palettes can hold fewer than 16 colours)
+    pal = list(struct.unpack_from(f'<{n}H', bmd, poff)) + [0] * (16 - n)
+    assert max(pix) < n, tex
+    bottom = max(i // w for i, v in enumerate(pix) if v)
+    dy = ROCK_BOX[2] - bottom
+    out = bytearray(w * h)
+    for i, v in enumerate(pix):
+        if v:
+            y = i // w + dy
+            assert 0 <= y < h, tex
+            out[y * w + i % w] = v
+    return bytes(out), pal
+
+
 def pwt_codes(files):
     """Object codes the PWT's trainer table (a/2/4/7) shows."""
     t = narcio.load(files, ARC_PWT)[0]
@@ -303,6 +333,21 @@ def apply(files):
         pix, pal = pearl_object(mm[mid])
         sheets[sheet] = sprites.btx_encode(sheets[sheet], [pix] * len(lay), pal)
         done.append(f'{who} = code {code} (sheet {sheet}, {len(lay)} frames)')
+    who, gfx, mid, tex = SNOWBALL
+    code = own_code(who, gfx)
+    sheet, _ = sprites.ow_sheet_of(files, code, table)
+    lay, _, _ = sprites.btx_layout(sheets[sheet])
+    assert [(w, h) for _, w, h, _ in lay] == [(32, 32)], who
+    pix, pal = pearl_snowball(mm[mid], tex)
+    sheets[sheet] = sprites.btx_encode(sheets[sheet], [pix], pal)
+    rec = narcio.load(files, sprites.ARC_OW_TABLE)
+    t = bytearray(rec[0])
+    at = 4 + 28 * sprites.obj_record(code)
+    assert struct.unpack_from('<H', t, at)[0] == code, who
+    t[at + 6] = 0                                   # reflections (Pearl: shadow, no reflection)
+    rec[0] = bytes(t)
+    narcio.save(files, sprites.ARC_OW_TABLE, rec)
+    done.append(f'{who} = code {code} (sheet {sheet}, 1 frame; no reflection)')
     who, gfx, mid, tex = BOULDER
     code = own_code(who, gfx)
     assert code == STRENGTH_ROCK, f'{who}: code {code}, not Black 2\'s 1 x 1 Strength rock {STRENGTH_ROCK}'
@@ -329,6 +374,8 @@ def apply(files):
     narcio.save(files, sprites.ARC_OW_TABLE, rec)
     done.append(f'{who} = code {code} (1 x 1, the record and sheet {sheet} of code {BOULDER_SHEET}, {len(lay)} frames)')
     for who, gfx, mid, tex in POKEMON:
+        if POKEMON_ONLY_IN.get(who, version.VERSION) != version.VERSION:
+            continue
         code = own_code(who, gfx)
         fr, _, pal = sprites.btx_decode(mm[mid])
         fr = sorted(fr, key=lambda f: int(f[0].split('.')[-1]))

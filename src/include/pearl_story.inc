@@ -638,6 +638,20 @@
     BMReleaseHandle PL_DOOR(\tag)
     .endm
 
+    .macro pl_PlayHMCutIn slot             // Pearl's PlayHMCutIn: Black 2's own steps (its global 10000 L_005C, L_006C)
+    PlayerSetSpecialSequence 128
+    ActorCmdExec 255, 8f
+    ActorCmdWait
+    PlayHMCutInEffect \slot
+    PlayerSetSpecialSequence 8
+    VMJump 9f
+    .balign 4, 0
+8:
+    Move 162, 1
+    MoveEnd
+9:
+    .endm
+
 // ---- more Pearl commands --------------------------------------------------------------------------------------------
     .macro pl_GetTimeOfDay var             // 0x1B6: Pearl 0 morning, 1 day, 2 evening, 3 night, 4 late night; Black 2's
     RTCGetDayPart \var                     // day period (GameData_GetDayPeriod) has the same five
@@ -682,9 +696,35 @@
     .macro pl_CountBadgesAcquired var          // 0x15D
     TrainerCardGetBadgeCount \var
     .endm
-    .macro pl_PokeMartCommon var               // 0x147: Black 2's own Poke Mart, its stock by badges: shop id 255
-    CallFriendlyShopBuy 255, PL_TMP            // (ov036 SHOP_ID_BADGE_MART, as Black 2's Centers pass to global 10110;
-    .endm                                      //  shop id 0 is one town's list: Repeat/Nest/Quick Balls, mail; 2026-10-25)
+    // Pearl's Marts (0x147 PokeMartCommon, 0x148 SpecialMart): Black 2's Mart menu (global 10110: Buy / Sell, as Black 2's
+    // Centers call it; its first line Pearl's greeting, a/0/0/3 1302). Shop 255 is the badge Mart (ov036
+    // SHOP_ID_BADGE_MART, Pearl's six lists in list files 0-5), shop n reads list file n + 6 (Pearl's SpecialMart n):
+    // patches/pearl_shops.py
+    .macro pl_mart shop
+    VMStackPush 0x8000
+    VMStackPush 0x8001
+    WorkSet 0x8000, \shop
+    WorkSet 0x8001, 0                      // (1 would say Black 2's "Hello!" first: Pearl's clerk doesn't)
+    RTCallGlobal 10110
+    VMStackPop 0x8001
+    VMStackPop 0x8000
+    .endm
+    .macro pl_PokeMartCommon var
+    pl_mart 255
+    .endm
+    .macro pl_PokeMartSpecial shop
+    pl_mart \shop
+    .endm
+    // Pearl's CheckItemIsPlate (Flame Plate 298 .. Iron Plate 313: pokediamond ItemIdIsPlate)
+    .macro pl_CheckItemIsPlate item, var
+    WorkSetConst \var, 0
+    WorkCmpConst \item, 298
+    VMJumpIf CMP_LT, .Lpcip\@
+    WorkCmpConst \item, 313
+    VMJumpIf CMP_GT, .Lpcip\@
+    WorkSetConst \var, 1
+.Lpcip\@:
+    .endm
 
 // ---- the follower (Pearl: SetMovementType X, 0x30 + SetObjectFlagIsPersistent; Black 2: ov012 pair_sys.c) ----------
 // Black 2's follower: ActorPairSet makes the NPC follow (move code 0x30) and renames it 0xFE (Pearl's own id for the
@@ -761,12 +801,7 @@
     PedometerGet \var
     .endm
 // 0x217 CalcAmitySquareFoundAccessory: Pearl picks the next find's Accessory from a table per species (4 finds in 5;
-// the other is one of Pearl's Berries). Black 2 has no Accessories: every find is a Berry (user 2026-10-25, "Amity
-// Square: A, Pearl's Berries only"): the kind var Pearl set just before (0 Berry, 1 Accessory) becomes 0.
-    .macro pl_AmitySquareBerryOnly kind, var
-    WorkSetConst \kind, 0
-    WorkSetConst \var, 0
-    .endm
+// the other is one of Pearl's Berries): pl_AmityAccessory, Super Contests' Fashion Case (the user, 2026-11-01).
 
 // ---- the briefcase and the first battle (Black 2's starter screen, as its Aspertia scene: aspertia_city.s) --------
 // Pearl: StartChooseStarterScene (0xB4) opens the briefcase, SaveChosenStarter (0xB5) keeps the species (Pearl's var
@@ -819,8 +854,12 @@
     // a loss heals the party and the scene goes on (as Black 2's first Hugh battle; a whiteout would replay the lake and
     // give a second starter: notes/STORY.md question). Pearl's map script removes the Starly when the field reloads.
     .macro pl_StartFirstBattle species, level
+    pl_ext 0xA0                            // Pearl's first-battle rules on: no critical hits, FIGHT only
+    .2byte 1                               // (resident/leftovers.c PearlB2_IsFirstBattle)
     CallWildBattle \species, \level, 0
     WildBattleIsVictory PL_TMP
+    pl_ext 0xA0
+    .2byte 0
     WorkCmpConst PL_TMP, 1
     VMJumpIf CMP_EQ, .Lpfb\@
     PokePartyRecoverAll
@@ -1416,6 +1455,90 @@
     .macro pl_ShowPoketch                  // 0x266: flag 0x97C cleared
     pl_ext 0x05
     .endm
+// ---- Pearl's honey trees and swarms (notes/ENCOUNTERS.md; decomp resident/wild.c PearlB2_Ext_Wild, row 0x60-0x7F)
+    .macro pl_GetHoneyTreeStatus var           // 0x128 CheckHoneyTree: 1 bare, 2 slathered, 3 a Pokémon may be there
+    pl_ext 0x60
+    .2byte \var
+    .endm
+    .macro pl_SlatherHoneyTree                 // 0x127 UpdateHoneyTree
+    pl_ext 0x61
+    .endm
+    .macro pl_StartHoneyTreeBattle             // 0x129 HoneyTreeBattle: Pearl's species and level, the tree is bare
+    pl_ext 0x62
+    .2byte PL_TMP
+    .2byte PL_TMP2
+    CallWildBattle PL_TMP, PL_TMP2, 0
+    .endm
+    .macro pl_StopHoneyTreeShaking             // 0x12A StopHoneyTreeAnimation
+    pl_ext 0x63
+    .endm
+    .macro pl_EnableSwarms                     // 0x21B: Barry's sister has told the player
+    pl_ext 0x64
+    .endm
+    .macro pl_GetSwarmInfo zone, species       // 0xE3 GetSwarmInfo: the day's zone (Black 2's) and its first species
+    pl_ext 0x65
+    .2byte \zone
+    .2byte \species
+    .endm
+// ---- Pearl's berry patches (notes/ENCOUNTERS.md; decomp resident/berry.c). 0x8011: Black 2's talked-to person
+    .macro pl_GetBerry field, var              // 0x17D-0x181: 0 stage, 1 Berry item, 2 mulch item, 3 moisture, 4 yield
+    pl_ext 0x66
+    .2byte 0x8011
+    .byte \field
+    .2byte \var
+    .endm
+    .macro pl_SetBerryMulch item               // 0x182
+    pl_ext 0x67
+    .2byte 0x8011
+    .2byte \item
+    .endm
+    .macro pl_PlantBerry item                  // 0x183
+    pl_ext 0x68
+    .2byte 0x8011
+    .2byte \item
+    .endm
+    .macro pl_WaterBerry                       // 0x184 0: the patch in front (no pose in Black 2)
+    pl_ext 0x69
+    .2byte 0x8011
+    VMSleep 30
+    .endm
+    .macro pl_HarvestBerry                     // 0x185
+    pl_ext 0x6A
+    .2byte 0x8011
+    .endm
+    .macro pl_BufferBerryName n, item          // 0x17B: "Cheri" of Cheri Berry
+    pl_ext 0x6B
+    .byte \n
+    .2byte \item
+    .endm
+    .macro pl_OpenBerryBag pocket              // 0x178: the Bag on Black 2's pocket; the choice in work 0x8007
+    pl_ext 0x6C
+    .byte \pocket
+    WorkSetConst 0x8006, \pocket
+    FieldClose
+    CallBag 1, PL_TMP, 0x8007
+    FieldOpen
+    WorkCmpConst PL_TMP, 0
+    VMJumpIf CMP_NE, .Lpobb\@
+    WorkSetConst 0x8007, 0
+.Lpobb\@:
+    .endm
+    .macro pl_GetBagSelection var              // 0x179: 0 for no choice; on the Berries, 0 for what isn't a Berry
+    WorkSet \var, 0x8007
+    WorkCmpConst 0x8006, 3
+    VMJumpIf CMP_NE, .Lpgbs\@
+    WorkCmpConst \var, 149
+    VMJumpIf CMP_LT, .Lpgbz\@
+    WorkCmpConst \var, 212
+    VMJumpIf CMP_LE, .Lpgbs\@
+.Lpgbz\@:
+    WorkSetConst \var, 0
+.Lpgbs\@:
+    .endm
+    .macro pl_CheckBerriesInBag var            // 0x17A CheckPocketNotEmpty 4
+    pl_ext 0x6D
+    .2byte \var
+    .endm
 // ---- Chapter 9b (2026-10-26)
     .macro pl_GetSpiritombCounter var          // 0x214 GetSpiritombTalkCounter (people talked to in Pearl's multiplayer
     WorkSet \var, PVAR_UG_HIDEAWAY_BATTLES     // Underground): the Hideaways' wild battles here (underground_itcm.c;
@@ -1512,4 +1635,238 @@
     pl_ext 0x45
     .2byte \kind
     .2byte \var
+    .endm
+
+// The Battle Tower's extension sub-commands 0x80-0x9F (notes/BATTLE_ZONE.md, decomp src/pearlb2/resident/tower.c)
+    .macro pl_TowerBpGet var
+    pl_ext 0x80
+    .short \var
+    .endm
+    .macro pl_TowerBpAdd value
+    pl_ext 0x81
+    .short \value
+    .endm
+    .macro pl_TowerBpSub value
+    pl_ext 0x82
+    .short \value
+    .endm
+    .macro pl_TowerBpCheck value, var
+    pl_ext 0x83
+    .short \value
+    .short \var
+    .endm
+    .macro pl_TowerBpWindow x, y
+    pl_ext 0x84
+    .short \x
+    .short \y
+    .endm
+    .macro pl_TowerBpUpdate
+    pl_ext 0x85
+    .endm
+    .macro pl_TowerCheckParty mode, var
+    pl_ext 0x86
+    .short \mode
+    .short \var
+    .endm
+    .macro pl_TowerIsNull var
+    pl_ext 0x87
+    .short \var
+    .endm
+    .macro pl_TowerMakePartners
+    pl_ext 0x88
+    .endm
+    .macro pl_TowerPartnerMon partner, mon, species, move
+    pl_ext 0x89
+    .short \partner
+    .short \mon
+    .short \species
+    .short \move
+    .endm
+    .macro pl_TowerSetPartner partner
+    pl_ext 0x8A
+    .short \partner
+    .endm
+    .macro pl_TowerGetPartner var
+    pl_ext 0x8B
+    .short \var
+    .endm
+    .macro pl_TowerPartnerCode var
+    pl_ext 0x8C
+    .short \var
+    .endm
+    .macro pl_TowerResumePartner
+    pl_ext 0x8D
+    .endm
+    .macro pl_TowerExchange list, prize, item, cost
+    pl_ext 0x8E
+    .short \list
+    .short \prize
+    .short \item
+    .short \cost
+    .endm
+    .macro pl_TowerPlayerCode var
+    pl_ext 0x8F
+    .short \var
+    .endm
+    .macro pl_TowerActorVisible actor, value
+    pl_ext 0x90
+    .short \actor
+    .short \value
+    .endm
+
+// ---- the smaller finishes of the base game (decomp src/pearlb2/resident/leftovers.c PearlB2_Ext_Leftovers, row 0xA0)
+    .macro pl_GetUnownFormsSeenCount var   // 0x284 CountSeenUnown: the Unown forms the Pokédex has seen
+    pl_ext 0xA5
+    .2byte \var
+    .endm
+    .macro pl_MoveReminderCheck var, slot  // 0x21F GetMoveReminderCount: Black 2's own: 0 = nothing to remember
+    MoveReminderCheckPkm \var, \slot
+    .endm
+    // 0x221 OpenMoveReminderMenu and 0x223 CheckLearnedReminderMove: Black 2's remembering screen; var = 0 when a move
+    // was learned, 255 when not (Pearl's answers)
+    .macro pl_OpenMoveReminderMenu slot
+    MoveReminderCallMoveSelect PL_TMP3, \slot   // (0 = a move was learned, 1 = cancelled)
+    .endm
+    .macro pl_CheckLearnedReminderMove var
+    WorkSetConst \var, 255
+    WorkCmpConst PL_TMP3, 0
+    VMJumpIf CMP_NE, .Lpclrm\@     // (MOVE_REMINDER_STATUS_LEARNED 0: scrcmd_proc.c MoveReminder_ReadResult; 1 cancelled)
+    WorkSetConst \var, 0
+.Lpclrm\@:
+    .endm
+    .macro pl_SetObjectEventMovementType uid, move   // 0x18D: the person's template (resident/leftovers.c), before they appear
+    pl_ext 0xA6
+    .2byte \uid
+    .2byte \move
+    .endm
+    // 0x26A BlinkEvent uid, times, delay (pokeplatinum Task_FlickerMapObject): hidden, then shown, every delay frames
+    .macro pl_FlickerObject uid, times, delay
+    VMJump .Lplfl\@
+    .balign 4, 0
+.Lplflh\@:
+    Move 69, 1
+    MoveEnd
+.Lplfls\@:
+    Move 70, 1
+    MoveEnd
+.Lplfl\@:
+    .rept (\times + 1) / 2
+    ActorCmdExec \uid, .Lplflh\@
+    ActorCmdWait
+    VMSleep \delay
+    ActorCmdExec \uid, .Lplfls\@
+    ActorCmdWait
+    VMSleep \delay
+    .endr
+    .endm
+
+// ---- Pearl's Secret Base goods in any zone's script (notes/SECRET_BASES.md; decomp resident/secret_base.c, row 0xE0-0xFF;
+// each op: one value-or-var argument, its result in work 0x8053; secret_base_check.py compares these numbers with the C's)
+    .macro pl_SendGoodToPC good, var           // 0x083 GiveSecretBaseDecoration
+    pl_ext 0xE0 + 24
+    .2byte \good
+    WorkSet \var, 0x8053
+    .endm
+    .macro pl_CheckHasRoomForGoodsInPC good, var   // 0x085 HasSpaceForDecoration
+    pl_ext 0xE0 + 25
+    .2byte \good
+    WorkSet \var, 0x8053
+    .endm
+    .macro pl_GetCapturedFlagCount var         // 0x24A
+    pl_ext 0xE0 + 27
+    .2byte 0
+    WorkSet \var, 0x8053
+    .endm
+    .macro pl_BufferUndergroundGoodsName n, good   // 0x0DF GetDecorationName
+    WorkSet 0x8051, \good
+    pl_ext 0xE0 + 5
+    .2byte \n
+    .endm
+    .macro pl_GetDecorationNameWithArticle n, good // 0x2C6
+    WorkSet 0x8051, \good
+    pl_ext 0xE0 + 6
+    .2byte \n
+    .endm
+    .macro pl_GoodsMart list                   // 0x149 GoodsMart: Veilstone's two lists, on the Secret Bases' shop script
+    MsgWinCloseAll
+    WorkSetConst 0x8057, \list
+    RTCallGlobal 10740
+    .endm
+
+// ---- Super Contests (notes/CONTESTS.md; decomp src/pearlb2/resident/contest.c PearlB2_Ext_Contest): sub 0xc0-0xd7 of
+// PearlB2's extension command 0x15F. A value may be a var.
+    .macro pl_ContestEntry slot, rank, type, var   // var = 0 it can enter, else why not
+    pl_ext 0xc0
+    .2byte \slot, \rank, \type, \var
+    .endm
+    .macro pl_ContestRun slot, rank, type, mode, var   // the contest; var = the player's place, 0 = first
+    pl_ext 0xc1
+    .2byte \slot, \rank, \type, \mode, \var
+    .endm
+    .macro pl_AddAccessory id, count
+    pl_ext 0xc3
+    .2byte \id, \count
+    .endm
+    .macro pl_CanFitAccessory id, count, var
+    pl_ext 0xc4
+    .2byte \id, \count, \var
+    .endm
+    .macro pl_AddContestBackdrop id
+    pl_ext 0xc5
+    .2byte \id
+    .endm
+    .macro pl_CheckContestBackdrop id, var
+    pl_ext 0xc6
+    .2byte \id, \var
+    .endm
+    .macro pl_ContestMasterCount var
+    pl_ext 0xc7
+    .2byte \var
+    .endm
+    .macro pl_FirstWinAccessory rank, type, var    // the prize of a first win of this rank and type, or 0xFFFF
+    pl_ext 0xc8
+    .2byte \rank, \type, \var
+    .endm
+    .macro pl_MassageGirlAccessory var     // Pearl 0x26C: an Accessory the Case can take, else 0xFFFF
+    pl_ext 0xc9
+    .2byte \var
+    .endm
+    .macro pl_BufferAccessoryWord word, id // the Accessory's name in word buffer `word`
+    pl_ext 0xca
+    .byte \word
+    .2byte \id
+    .endm
+    .macro pl_AmityAccessory var, species  // Pearl 0x217: Pearl's Accessory for the next find
+    pl_ext 0xcb
+    .2byte \var, \species
+    .endm
+    .macro pl_BufferAccessoryArticle word, id // with an article (Pearl's GetFashionNameWithArticle)
+    pl_ext 0xcc
+    .byte \word
+    .2byte \id
+    .endm
+// Poffins (decomp src/pearlb2/resident/poffin.c): sub 0xd8-0xdd
+    .macro pl_PoffinGive var, spicy, dry, sweet, bitter, sour, smooth // Pearl 0x289
+    pl_ext 0xdc
+    .2byte \var, \spicy, \dry, \sweet, \bitter, \sour, \smooth
+    .endm
+    .macro pl_PoffinHasRoom var            // Pearl 0x28A
+    pl_ext 0xdd
+    .2byte \var
+    .endm
+    .macro pl_PoffinCanCook var            // Pearl 0x1D8: 0 can, 1 no Berry, 2 the Case is full
+    pl_ext 0xd8
+    .2byte \var
+    .endm
+    .macro pl_PoffinCook var               // the cooking screen
+    pl_ext 0xd9
+    .2byte \var
+    .endm
+    .macro pl_PoffinCase var               // the Case: var = the slot chosen to give, 0xffff none
+    pl_ext 0xda
+    .2byte \var
+    .endm
+    .macro pl_PoffinFeed slot, party, var  // 0 liked, 1 disliked, 2 neutral, 3 it eats no more
+    pl_ext 0xdb
+    .2byte \slot, \party, \var
     .endm

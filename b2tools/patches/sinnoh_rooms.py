@@ -39,6 +39,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import narcio, zoneheaders  # noqa: E402
 import pearl_chunk, pearl_buildings, pearl_mesh, pearl_model_fix, maplook  # noqa: E402
 import pearl_signs, pearl_gimmicks, ramanas, b2_look  # noqa: E402
@@ -133,7 +134,7 @@ def apply(files):
         P = [mm.units(v) for sh in mm.shapes for poly in sh.polys for v in poly]
         if P: extent[c] = (min(p[0] for p in P), max(p[0] for p in P), min(p[2] for p in P), max(p[2] for p in P))
         fixed[c] = rep.get('fixes', {})
-        props = json.load(open(os.path.join(PEARL, 'land', f'{c:03d}.json')))['props']
+        props = json.load(open(os.path.join(PEARL, 'land', f'{land_id(c):03d}.json')))['props']
         props = b2_look.placed_props(c, props)              # (the lakes' water planes are in the chunk model now)
         props = pearl_chunk.people_props_moved(c, props)   # (on a counter or table the people fix sinks)
         props = props + pearl_gimmicks.extra_props(c)      # (props Pearl's code adds: the Canalave Gym's floors and

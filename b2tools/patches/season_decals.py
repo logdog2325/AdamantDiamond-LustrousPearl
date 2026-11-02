@@ -5,14 +5,16 @@ List it after sinnoh_world, sinnoh_reskin and sinnoh_rooms (it adds to the overw
 
 What Black 2 does: in winter its routes get `kisetu_yuki` snow patches (A5I3 32x32 soft blob, clear in its spring,
 summer and autumn sets): flat quads of 1 or 2 tiles square 2 units over the ground on about a tenth of the walkable
-ground, mostly at the foot of trees, ledges and fences; in autumn its flower decals (kisetu_hana) show orange leaf
-clusters, and Route 20's autumn chunks have falling leaves: long thin ribbons of `54_ha01` (four rows of yellow
+ground, mostly at the foot of trees, ledges and fences; its flower decals (kisetu_hana) are the season's own art: pink
+and white blossoms in spring, white flowers in summer, orange leaf clusters in autumn, frosted leaves in winter; and
+Route 20's autumn chunks have falling leaves: long thin ribbons of `54_ha01` (four rows of yellow
 leaves) 40-80 units up across the chunk, material `_ha01`, scrolled by Route 20's texture animation (a/0/6/8 file 47).
 There is no falling-leaves weather (weathers 0-14).
 
 Here, on every overworld chunk outside the north (Pearl area 14, snow all year), by HoennB2's rules: snow patches
-(kisetu_yuki, 1 or 2 tiles square, chance by blocked neighbours P_SNOW), leaf clusters (`ochiba_h` = Black 2's
-autumn kisetu_hana, one of its four clusters, on tiles next to a tree, P_LEAF), each on a level tile of plain grass,
+(kisetu_yuki, 1 or 2 tiles square, chance by blocked neighbours P_SNOW), season clusters (`ochiba_h` = Black 2's
+kisetu_hana of the season, one of its four clusters, on tiles next to a tree, P_LEAF, and a few on open ground,
+P_LEAF_OPEN), each on a level tile of plain grass,
 lawn or sand path (Pearl's ngrass, lgreen, nsand) with nothing else over it (no tree, shadow, flower, ledge, sign) and
 2.25 units over it (the world pass's 2-unit rule); Route 20's ribbons (data/season_ribbons.json, copied from
 HoennB2: Black 2 chunks 290-293) over chunks with RIBBON_MIN_TREES tree tiles, 60-100 units over the highest ground and
@@ -20,12 +22,14 @@ HoennB2: Black 2 chunks 290-293) over chunks with RIBBON_MIN_TREES tree tiles, 6
 (add_shapes: the material, texture and palette dictionaries, the render commands and the shape list rebuilt; the
 existing ones byte for byte). In the overworld areas' four texture sets: kisetu_yuki is Black 2's own of the season
 (clear but in winter), `ochiba_h` and `_ha01` Black 2's autumn art in autumn and a clear 8x8 stand-in in the other
-three (a missing name would draw white). The autumn area records name Route 20's texture animation (srt 47) for the
+three (a missing name would draw white); `ochiba_h` is Black 2's kisetu_hana of each season (2026-11-01: with Black 2's
+grass the ground alone no longer separates the seasons, spring's and winter's nearly match: notes/MAP_LOOK.md "Seasons
+after Black 2's grass"). The autumn area records name Route 20's texture animation (srt 47) for the
 ribbons' `_ha01`; its other tracks name Black 2 materials, which Pearl's models do not have.
-Seasons off (spring all year): every decal is clear, nothing else changes. Not copied: walk-through leaf piles and
+Seasons off (spring all year): spring's blossoms show, the other decals are clear. Not copied: walk-through leaf piles and
 snow footprints (tile classes 0x25 and 2 change the battle terrain all year). A chunk keeps its decals only while it
-stays under CHUNK_MAX (Black 2's chunk buffer is 110,600 B with no length check): leaves go first, then ribbons, then
-snow.
+stays under CHUNK_MAX (Black 2's chunk buffer is 110,600 B with no length check): clusters go first, then ribbons, then
+clusters and snow are thinned.
 """
 import collections, hashlib, json, math, os, struct, sys
 
@@ -41,16 +45,19 @@ from b2files import gf_container, gf_container_build  # noqa: E402
 VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
 NORTH_AREA = 14
 DECAL_Y = F.GAP                       # over the ground (Black 2: 2; the world pass's rule: 2.25)
-P_SNOW = (0.07, 0.30, 0.45)           # chance of a snow tile by its blocked neighbours (0, 1, 2+): Black 2's tenth
-P_LEAF = 0.30                         # chance of a leaf tile next to a tree
+P_SNOW = (0.14, 0.40, 0.60)           # chance of a snow tile by its blocked neighbours (0, 1, 2+): above Black 2's tenth
+P_LEAF = 0.45                         # chance of a season cluster on a tile next to a tree
+P_LEAF_OPEN = 0.05                    # and on open ground
 RIBBON_MIN_TREES = 140                # tree tiles in a chunk (of 1024) for falling leaves (Route 20's: 180-420)
 RIBBON_LOW, RIBBON_SPAN, RIBBON_TREE_CLEAR = 60, 40, 6
 GROUND_OK = {'ngrass', 'lgreen', 'nsand'}
+CLUSTER_OK = {'ngrass', 'lgreen'}     # season clusters: on grass only (spring's blossoms and summer's plants on a road look wrong)
 CHUNK_MAX = 104000                    # (the world pass keeps chunks under 100,000; the hard limit is 110,600)
 UP = 511 << 10                        # GX packed normal (0, 1, 0)
 SNOW = 'kisetu_yuki'
 # name -> (season it shows in, Black 2 set, Black 2 texture, its palette, size, repeat): texture sets
-SEASONAL = {'ochiba_h': (2, 4, 'kisetu_hana', 'kisetu_hana_pl', (32, 32), False),
+# (season None: every season, from Black 2's own set of that season, 2 + season)
+SEASONAL = {'ochiba_h': (None, None, 'kisetu_hana', 'kisetu_hana_pl', (32, 32), False),
             '_ha01': (2, 216, '54_ha01', '54_ha01_pl', (128, 64), True)}
 SNOW_ART = (SNOW, 'kisetu_yuki_pl', (32, 32), False)   # Black 2's own in each season's set (2 + season)
 AUTUMN_SRT = 47
@@ -225,12 +232,12 @@ def plan(model, land, cx, cz, ribbons_tpl):
     """(snow quads, leaf quads, ribbon triangles) of one overworld chunk (model units, ground-level y + DECAL_Y)."""
     T = Tiles(model)
     col = land['collision']
-    ok = {}
+    ok, mats = {}, {}
     for tz in range(32):
         for tx in range(32):
             if col[tz][tx] == 0 and land['behaviour'][tz][tx] == 0:
                 g = T.ground(tx, tz)
-                if g: ok[(tx, tz)] = g[0]
+                if g: ok[(tx, tz)] = g[0]; mats[(tx, tz)] = g[1]
     trees = {(tx, tz) for tz in range(32) for tx in range(32) if T.tree(tx, tz)}
     near = lambda tx, tz: any((tx + a, tz + b) in trees for a in (-1, 0, 1) for b in (-1, 0, 1) if a or b)
     def blocked(tx, tz):
@@ -239,7 +246,7 @@ def plan(model, land, cx, cz, ribbons_tpl):
     X, Z = cx * 32, cz * 32
     used, leaf, snow = set(), [], []
     for (tx, tz), y in sorted(ok.items()):
-        if near(tx, tz) and _rnd('leaf', X + tx, Z + tz) < P_LEAF:
+        if mats[(tx, tz)] in CLUSTER_OK and _rnd('leaf', X + tx, Z + tz) < (P_LEAF if near(tx, tz) else P_LEAF_OPEN):
             q = int(_rnd('leafq', X + tx, Z + tz) * 4)
             leaf.append((tx, tz, 1, y, q)); used.add((tx, tz))
     for (tx, tz), y in sorted(ok.items()):
@@ -335,15 +342,17 @@ def decorate(bmd, land, cx, cz, ribbons_tpl, budget=CHUNK_MAX):
     snow, leaf, ribbons = plan(M, land, cx, cz, ribbons_tpl)
     arts = {SNOW: SNOW_ART[2:], 'ochiba_h': SEASONAL['ochiba_h'][4:], '_ha01': SEASONAL['_ha01'][4:]}
     pal = {SNOW: SNOW_ART[1], 'ochiba_h': 'ochiba_h_pl', '_ha01': '_ha01_pl'}
-    def build(keep):
-        groups = decal_groups(M, *(x if k in keep else [] for k, x in zip(('snow', 'leaf', 'ribbon'),
-                                                                         (snow, leaf, ribbons))))
-        adds = [(name, name, pal[name], material_record(M, name, *arts[name]), g) for name, g in groups.items()]
-        return add_shapes(bmd, adds)
-    for keep in (('snow', 'leaf', 'ribbon'), ('snow', 'ribbon'), ('snow',), ()):
-        new = build(keep)
+    def build(keep, step=1):
+        parts = [x[::step] if k in keep else [] for k, x in zip(('snow', 'leaf', 'ribbon'), (snow, leaf, ribbons))]
+        adds = [(name, name, pal[name], material_record(M, name, *arts[name]), g)
+                for name, g in decal_groups(M, *parts).items()]
+        return add_shapes(bmd, adds), tuple(len(x) for x in parts)
+    # (a full chunk thins its clusters and snow rather than having no season at all: every 2nd, 4th, 8th of each)
+    for keep, step in ((('snow', 'leaf', 'ribbon'), 1), (('snow', 'ribbon'), 1), (('snow', 'leaf'), 1),
+                       (('snow', 'leaf'), 2), (('snow', 'leaf'), 4), (('snow', 'leaf'), 8), ((), 1)):
+        new, kept = build(keep, step)
         if len(new) - len(bmd) <= budget:
-            return new, tuple(len(x) if k in keep else 0 for k, x in zip(('snow', 'leaf', 'ribbon'), (snow, leaf, ribbons)))
+            return new, kept
     return bmd, (0, 0, 0)
 
 
@@ -375,7 +384,8 @@ def add_textures(sets, group):
     for s in range(4):
         adds = [(b2[2 + s], SNOW, SNOW_ART[1])]
         for name, (shown, ts, src, spal, size, _) in sorted(SEASONAL.items()):
-            if s == shown: adds.append((b2[ts], src, spal, name, name + '_pl'))
+            if shown is None: adds.append((b2[2 + s], src, spal, name, name + '_pl'))
+            elif s == shown: adds.append((b2[ts], src, spal, name, name + '_pl'))
             else: adds.append((clear_source(name), name, name + '_pl'))
         have = {n for n, _ in nsbtx._parse(sets[group + s])['texs']}
         adds = [a for a in adds if (a[3] if len(a) > 3 else a[1]) not in have]

@@ -21,6 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, 'patches'))
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import ug_data  # noqa: E402
 
 PEARL = os.path.join(ROOT, 'work', 'pearl')
@@ -29,7 +30,7 @@ _lands = {}
 
 
 def land(c):
-    if c not in _lands: _lands[c] = json.load(open(os.path.join(PEARL, 'land', f'{c:03d}.json')))
+    if c not in _lands: _lands[c] = json.load(open(os.path.join(PEARL, 'land', f'{land_id(c):03d}.json')))
     return _lands[c]
 
 
@@ -187,7 +188,7 @@ def odds(h, stage, water, version):
 
 def check_table(errors, show=None):
     d = ug_data.data()
-    v = d['version']
+    v = ug_data.bdsp()
     import narcio
     per = narcio.load(os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files'), 16)
     rows = []

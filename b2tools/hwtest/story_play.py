@@ -40,6 +40,11 @@ Commands (each prints what happened):
   ROAM                      the roamers (EncountSave, save block 0x37: patches/roamers.py): each slot's species, level,
                             active, HP, status, zone and place (Pearl's 0-28), the player's previous / current place + 1
   ROAMSET<slot>,<zone>,<place>  TEST ONLY, writes RAM: puts that roamer in that zone / place (to meet it at once)
+  WSAVE                     PearlB2's save in block 0x3C (decomp pearlb2/wild.h): the magic, the daily number, the
+                            swarm's switch, the last tree and the player's zone's tree, if any
+  WSET<byte offset>,<value>[,<size>]   TEST ONLY, writes RAM: that value (1, 2 or 4 bytes, default 4) at the offset
+                            in that save (0x04 the daily number, 0x08 the swarm's switch, 0x0C + 6 * tree the tree:
+                            u16 minutes, slot, table, group, shakes)
   SHOT<name>                both screens -> OUT/<name>.png
   TOUCH<x>,<y>[,<frames>]   touch the bottom screen there (held 6 frames, or <frames>), then 20 frames
   REC<name>,<U|D|L|R|->,<n>,<k>  hold that direction 8 frames (-: none), then run n frames keeping the top screen every
@@ -58,6 +63,7 @@ import os, struct, sys, time
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 from emu import Emu, fresh_battery, KEYS  # noqa: E402
 from desmume.controls import keymask  # noqa: E402
 
@@ -399,7 +405,7 @@ class P:
                 for cx in range(m['width']):
                     c = m['maps'][cz][cx]
                     if c == 0xffff: continue
-                    land = json.load(open(os.path.join(root, 'work', 'pearl', 'land', f'{c:03d}.json')))
+                    land = json.load(open(os.path.join(root, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))
                     for tz in range(32):
                         for tx in range(32):
                             b = land['behaviour'][tz][tx]
@@ -583,7 +589,7 @@ def run_cmds(p, cmds):
         elif c == 'BAG':                               # the Bag's pockets (GameData +0x190; pt/party.py offsets)
             b = p.u32(p.gdata() + 0x190)
             for name, (off, n) in (('items', (0, 310)), ('key', (0x4d8, 83)), ('tms', (0x624, 109)),
-                                   ('medicine', (0x7d8, 48))):
+                                   ('medicine', (0x7d8, 48)), ('berries', (0x898, 64))):
                 got = [(p.u16(b + off + 4 * i), p.u16(b + off + 4 * i + 2)) for i in range(n)]
                 p.say('BAG', name, [g for g in got if g[0]])
         elif c == 'PARTY':
@@ -641,6 +647,20 @@ def run_cmds(p, cmds):
                       p.u16(r + 14), 'status', p.m[r + 17], 'zone', p.u16(r), 'place', p.m[enc + 40 + slot],
                       'nature', p.m[r + 2], 'pid', hex(p.u32(r + 8)), 'ivs', hex(p.u32(r + 4)))
             p.say('ROAM player prev/cur place+1', p.m[enc + 50], p.m[enc + 51], 'zone now', p.zone())
+        elif c == 'WSAVE' or c.startswith('WSET'):   # PearlB2's save in block 0x3C (decomp pearlb2/wild.h)
+            sc = p.u32(0x02140f60)
+            sv = p.u32(sc + 0x10)
+            data, blocks = p.u32(sv + 0x34), p.u32(p.u32(sv + 0x2c) + 0x14)
+            ws = data + p.u32(blocks + 0x3c * 12 + 8)
+            if c.startswith('WSET'):
+                v = [int(n, 0) for n in c[4:].split(',')]
+                size = v[2] if len(v) > 2 else 4
+                for i in range(size):
+                    p.e.d.memory.write_byte(ws + v[0] + i, (v[1] >> (8 * i)) & 0xff)
+            p.say('WILDSAVE magic', hex(p.u32(ws)), 'daily', hex(p.u32(ws + 4)), 'swarm on', p.m[ws + 8], 'last tree',
+                  p.m[ws + 9], 'trees', [(p.u16(ws + 12 + 6 * t), p.m[ws + 14 + 6 * t], p.m[ws + 15 + 6 * t],
+                                          p.m[ws + 16 + 6 * t], p.m[ws + 17 + 6 * t]) for t in range(21)
+                                         if p.u16(ws + 12 + 6 * t) or p.m[ws + 16 + 6 * t]])
         elif c.startswith('TOUCH'):
             v = [int(n) for n in c[5:].split(',')]
             e.touch(v[0], v[1], v[2] if len(v) > 2 else 6, 20)

@@ -44,6 +44,9 @@ typedef unsigned int u32;
 #define RATE_RIPPLING_FISHING 6
 
 typedef struct { u16 species; u8 minLevel; u8 maxLevel; } Slot;
+#ifdef FEEBAS_FN
+#define FeebasSlot FN(u32 (*)(u32, Slot *), FEEBAS_FN)   /* PearlB2_Wild_FeebasSlot, the decomp's resident section */
+#endif
 
 u32 Rod_BagUse(u8 *work) {
     ROD_ITEM = (u16)*(u32 *)(work + BAG_SELECTED_ITEM);
@@ -74,13 +77,36 @@ u32 Rod_GenWilds(const u8 *enc, void *manager, u32 zone, void *out) {
     const Slot *own;
     Slot slots[12];
 
+#ifdef FEEBAS_FN
+    /* Pearl's Feebas (src/pearlb2/resident/wild.c): every rod, after its own bite, on the day's tiles */
+    if (rod != ITEM_OLD_ROD && rod != ITEM_GOOD_ROD) {
+        Slot feebas;
+        if (FeebasSlot(zone, &feebas)) {
+            FieldEncount_PrepareActiveSlots(enc, manager, zone, slots);
+            for (k = 0; k < 12; k++) slots[k] = feebas;
+            return FieldEncount_GenWildsCore(manager, slots, out);
+        }
+        return FieldEncount_GenWilds(enc, manager, zone, out);
+    }
+#else
     if (rod != ITEM_OLD_ROD && rod != ITEM_GOOD_ROD) return FieldEncount_GenWilds(enc, manager, zone, out);
+#endif
     if (!EncData_Load(table, *(void **)(enc - EVENTDATA_ENCDATA + EVENTDATA_ENCARC), (u16)zone, ROD_TABLE)) return 0;
     if (GFL_RandomLC(enc[RATE_FISHING] + 1) > table[rod == ITEM_OLD_ROD ? RATE_FISHING : RATE_RIPPLING_FISHING]) return 0;
     r = GFL_RandomLC(100);
     if (rod == ITEM_OLD_ROD) i = r < 60 ? 0 : r < 90 ? 1 : r < 95 ? 2 : r < 99 ? 3 : 4;
     else i = r < 40 ? 0 : r < 80 ? 1 : r < 95 ? 2 : r < 99 ? 3 : 4;
     own = (const Slot *)(table + (rod == ITEM_OLD_ROD ? ENC_FISHING : ENC_RIPPLING_FISHING)) + i;
+#ifdef FEEBAS_FN
+    {
+        Slot feebas;
+        if (FeebasSlot(zone, &feebas)) {
+            FieldEncount_PrepareActiveSlots(enc, manager, zone, slots);
+            for (k = 0; k < 12; k++) slots[k] = feebas;
+            return FieldEncount_GenWildsCore(manager, slots, out);
+        }
+    }
+#endif
     if (own->species == 0) return 0;
     FieldEncount_PrepareActiveSlots(enc, manager, zone, slots);
     for (k = 0; k < 12; k++) slots[k] = *own;

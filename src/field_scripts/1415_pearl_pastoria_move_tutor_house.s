@@ -55,17 +55,17 @@ P128_0066:
     pl_GetPartyMonSpecies PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P128_0116
-    pl_stub CheckHasLearnableReminderMoves  // Pearl 0x21F Unk021F 32780, 32773: not translated yet
+    pl_MoveReminderCheck PVAR_800C, PVAR_8005
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P128_010B
     pl_msg_talk 4
     pl_CloseMessage
-    pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
+// FadeScreen 6, 1, 0, 0x0: Black 2's party select fades itself
     pl_WaitFadeScreen
-    pl_stub OpenMoveReminderMenu  // Pearl 0x221 Unk0221 32773: not translated yet
-    pl_stub CheckLearnedReminderMove  // Pearl 0x223 Unk0223 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+    pl_OpenMoveReminderMenu PVAR_8005  // Black 2's remembering screen (it fades by itself)
+    pl_CheckLearnedReminderMove PVAR_800C
+// RestoreOverworld: Black 2's party select reopened the field itself
+// FadeScreen 6, 1, 1, 0x0: Black 2's party select fades itself
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_800C, 255
     pl_GoToIf 1, P128_005B

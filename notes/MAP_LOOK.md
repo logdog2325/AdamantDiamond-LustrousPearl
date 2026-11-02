@@ -474,6 +474,7 @@ shouldnt be black lines on top and the pokeball shouldnt be black the gyms and p
 
 
 ## People drawn into furniture (2026-10-20)
+(The sinking of counters and tables below is off since 2026-11-01: see "The upright depth" at the end of this file.)
 User (melonDS, twice): back from Lake Verity "your head is still in the kitchen counter like partially clipping into
 it". Pearl's script puts the player at (2,6) facing up in MAP_TWINLEAF_RIVAL_HOUSE_1F (Black 2 zone 520, chunk 185);
 the counter is row 5. HoennB2 had the same (its notes/INTERIORS.md "Indoor check"); ported here.
@@ -798,3 +799,164 @@ t3_fl_b/p/r/y.1, dun_sea, lakep.1) touch none of them. The user then chose Black
   Route 219's surf band is lighter than Black 2's sea), the indoor rooms' grass (the Eterna Gym).
 - pearl_mesh.write_model (a model with materials and shapes added or re-bound; every land model round-trips byte for
   byte) and pearl_render's A3I5/A5I3 alpha (it overflowed: every translucent texel decoded at ~14 %).
+
+## Seasons after Black 2's grass (2026-11-01)
+The user: "seasons aren't as visible as they were in previous updates". Offline (work/agents/looks2/season_sheet.py: every
+chunk as the build makes it, Black 2's tilted camera, midday; shots/seasons_before_after.png, seasons_north_before_after.png).
+- **Cause: 3cca6f6, the ground.** Before it spring and summer drew Pearl's vivid mint (10,31,18), so yellow autumn and pale
+  winter stood out. Black 2's own grounds lie close: spring (20,28,16), summer (17,27,22), autumn (28,28,16), winter
+  (23,27,19), spring and winter nearly alike. Mean screen difference (0-255) before -> 3cca6f6: Twinleaf spring-autumn 22.5
+  -> 11.3, spring-winter 20.0 -> 12.2; Route 201 39.5 -> 27.7, 35.4 -> 27.2; Route 203 40.3 -> 29.8, 37.0 -> 30.0. Spring
+  and summer differ now (about 10; identical before). No earlier commit is stronger than 8a946c3 .. 3cca6f6^ (no season,
+  texture-set or decal code changed between them). Not the cause: the decals (the same 2,994 snow, 685 leaf, 1,715 ribbon
+  in the build logs before and after; only chunk 164 over the limit, as before), autumn's SRT 47 (it has the water tracks).
+- **Bug: the north was green.** b2_look bound the north's ngrass to Aspertia's winter grass01ax, so Snowpoint, Routes
+  216/217, Acuity Lakefront and Mt. Coronet's mountainsides (Pearl area 14) had green ground all year. Now Black 2's snow
+  grass01ax (a/0/1/4 set 45, Icirrus; b2_look.grass_set).
+- **Winter's ground is snow everywhere (the user's choice among the sheets, 2026-11-01):** b2_look.grass_set gives every
+  outdoor map that grass01ax in winter. Pearl's art with grass in it follows (sinnoh_reskin + recolour.grass_over: path and lawn edges, tree
+  shadows, bare patches, flowers' grass take the snow at Pearl's relative brightness; stone and sand keep Black 2's winter
+  colours; the trees and tall grass keep theirs, Black 2's winter colours). Difference now: Twinleaf spring-winter 26.4,
+  Route 201 41.8, Route 203 41.9, above their old values. Snow patches stay (they show on paths; on the white ground hardly).
+- **Decals:** `ochiba_h` is Black 2's kisetu_hana of each season (patches/season_decals: pink and white blossoms, white
+  flowers, autumn's leaves, frost), on grass only; denser (P_LEAF 0.45 next to trees, P_LEAF_OPEN 0.05 elsewhere; P_SNOW
+  0.14 / 0.40 / 0.60). A full chunk thins its clusters and snow (every 2nd, 4th, 8th) instead of having none. Sweep over the
+  156 overworld chunks outside the north (estimated sizes): 3,853 snow, 1,480 clusters, 1,715 ribbon triangles kept; chunks
+  164, 165 and 171 have no room for any (they still change ground and trees); largest 104,056 B (limit 110,600).
+- **Left as it is:** spring-autumn in towns stays about 11 (Black 2's lime and yellow differ in red only; the user: no autumn
+  tint, Black 2's grass colours stay). Spring and summer trees and tall grass are the same (DECISIONS 2026-10-25).
+- **Seasons off** = spring all year (season_choice.c): Black 2's spring ground, now with its blossoms beside trees, all year;
+  the spring column of the sheet. To see in game.
+- Not in game yet (one combined build): for melonDS, winter (DS clock December) at Twinleaf and Snowpoint, spring blossoms
+  and summer flowers on Route 201.
+
+## The clear colour outdoors and under weather (2026-11-01)
+Black 2 clears the screen with each light table's 6th colour; Pearl to black. The overworld kept 140-143's sky blue past
+map edges and through 1-px cracks (Celestic's south cliff, Route 222's gatehouse, the Victory Road entrance), and every
+weather swaps in a whole table of a/0/6/1 with its own clear colour (Turnback Cave's sky-blue void under the mist: table 1
+clears to the day's sky). Now maplook.outdoor_light gives the overworld the outdoor rooms' copies of 140-143 clearing to
+black, and maplook.weather_lights_black clears all ten weather tables to black. Battles read only those tables' lights
+and material colours (field_light_status.c). Lights, fog colour and outlines unchanged. For melonDS: a black crack shows
+more than a blue one on bright ground, as in Pearl (the under-floor still backs most edges).
+
+## Sprite pass 2 (2026-11-01)
+- **Fly:** patches/pearl_player_sprites.apply_fly: Black 2's take-off and landing scenes (a/1/1/6 models 58, 66, 138, 142,
+  textures fly_hero.N / fly_heroine.N, 32 x 32) take Pearl's frames of the same pose (sphero: standing, crouched, ball
+  out, ball high; the landing's back views: Pearl's walking back stand), pixel for pixel, the palette in place. Black 2's HM cut-in
+  (effect 3) shows only the Pokemon: the "HM cut-in with Nate" reports were Fly's scene. Offline:
+  work/agents/looks2/shots/sprites_pass2_offline.png.
+- **Vent:** Pearl's venthole (mmodel 161) on code 143. **Snowball:** Pearl's whole frame (mmodel 381, r09_o01.1) on code
+  144's one-frame billboard. In Pearl it is one card tilted to the camera; Black 2's billboard stands upright, the picture the same. No break frames.
+
+## Checked, no change (2026-11-01; Pearl's own look)
+- Vista Lighthouse deck's shaft top: Pearl's own black top of the lift block, wider under Black 2's camera
+  (work/agents/looks2/shots/pair_deck.png, Pearl's look on top). Victory Road 2F's black east of the boulders is in
+  Pearl's look too (pair_vr2f.png). Galactic HQ: one offline pair only, at B1F (16,12), near the map's edge (pair_hqb1.png):
+  nothing drawn past the room in either look, more of the room in Black 2's wider view; not compared across the HQ. Only
+  Pearl's own room camera would show less of these voids (the user's camera decision 2026-10-26).
+- Route 210 North's thin beige bridge: Pearl's own 'nbridge' deck (one tile wide), the same stripe under Pearl's camera
+  (work/agents/looks2/shots/r210_overview.png).
+- The roof at north doors: on the door tile Pearl's camera shows only the cap too (work/agents/camera/shots/3col_1_*.png).
+- Trees along Valor Lakefront's row (718, 760-762): Pearl's trees cover the player's legs there too (offline,
+  shots/trees_valor_tilt_vs_pearl.png: an approximate person card). The lakes' arrivals and Acuity's south row were not compared.
+
+## Polygon load (the user, 2026-11-01: "frames drop when approaching Valley Windworks")
+Black 2 draws a 2 x 2 window of chunks round the player, each chunk whole (per chunk bounding-box cull, no finer), and each
+placed prop if its box is on screen. Black 2's own chunks: median 417 polygons, largest 2,133. Route 205 South's and its
+neighbours' cliffs are among the heaviest of Sinnoh, and the first the story reaches: Pearl's own 3,475 polygons in the window
+(5, 18) (chunks 42, 37, 33, 35), 3,175 in (5, 19) and 2,697 + 1,066 for the 9 windmills etc. in (6, 19), and the model fixes
+added ~60 % (T-junction splits ~40 %, the under-floor ~18 %): 5,912, 5,702 and 4,522 + 1,066. Top-six window of the whole overworld
+at the point the user was (only Sunyshore, Route 213 and Route 225 are heavier). Not the windmills: their joint animations
+aren't installed (plain props, 103 polygons each). Not limits: actors, chunk sizes (78 KB), SRT. No polygon can be culled
+ahead: each is in some camera view from a walkable tile, and north faces are only ~15 % (b2tools has no finer check).
+Fix: pearl_chunk.CHUNK_POLYS: an overworld chunk with over 1,000 polygons gives its T-junction splits back (the under-floor
+stays, so a crack on flat ground shows grass there, not the sky). DeSmuME has no geometry timing: the frame rate itself is for
+melonDS. Pearl's windmills don't turn here (their BCA isn't installed): not this bug.
+
+## Solid plant pots and the trash can (the user, 2026-11-01: "some trash cans look distorted")
+dustbox01 (build model 86; 19 room zones: Jubilife Pokétch Co. 3F, Old Chateau, Grand Lake rooms, Eterna, Floaroma's flower
+shop ...) shares plant01_mat with the plant pots plant01 and plant02 (85, 522). pearl_model_fix.is_tree took 'plant' for tree
+cards, so base_shift moved each wall 3.25 or 6.5 units along its normal by which side of x 0 it lies on: the can came out
+lopsided, 23 units across for its 16. SOLID_PLANTS keeps those materials out (work/agents/fixes/shots/dust_*_poketch3f.png).
+
+
+## The upright depth (2026-11-01): people drawn into furniture, the whole game's rooms
+The user kept seeing heads clipped into furniture. The cause (section "People drawn into furniture") is that a person is
+tested at ONE depth, their feet's less a margin, while on screen their head is level with what stands behind them. A
+bigger margin can't fix that without showing people through what is in front of them, so people's depth now stands up.
+- **The change.** Each person's own projection matrix: only z changes (m[1][2] = m[3][2] * sin(pitch) * slope / H, H the
+  eye's horizontal distance to the feet, and m[3][2] so the feet pass MARGIN + one depth step nearer than they are), which
+  is the z of a plane standing straight up at the feet. x, y and w stay, so no sprite pixel moves. What is behind the feet
+  in the world stays behind, what is in front stays in front, whatever its height. Decomp: src/pearlb2/resident/
+  people_depth.c (BlActScene_Draw with the matrix per actor), called from FieldRenderPhase2_Fieldmap in place of
+  BlActSys_Draw for the people and the grass quads, and PearlB2_ObjectProjectionMatrixOffset (notes the zone) in place of
+  GetObjectProjectionMatrixOffset; fieldmap.c's size unchanged (only call targets differ). Shadows and footprints stay
+  Black 2's. Grass quads stand 2 units north of the walker and must keep covering the legs, so they get the same lean
+  and 7 units more margin: ahead of the walker by 2-5 units over the whole screen (computed, not filmed).
+- **The switch: data/people_depth.json** (patches/people_depth.py makes the table, gPearlB2PeopleDepth; NULL or slope 0 =
+  Black 2's drawing): slope by Pearl map type, overworld, single Pearl zones by name; margin_16ths; furniture_fix;
+  solid_tiles. Diamond shares it. **New in the build's list: people_depth.** Taking it out: leave the patch out and set
+  furniture_fix to true (the old counters come back).
+- **Furniture back to Pearl's shapes** (furniture_fix false: pearl_model_fix.people_off): with the upright depth the sinking
+  adds nothing (with it: NPCs 9, player 36, should-stay-hidden 60 NPCs; without: 10, 34, 39). Stair models too: the stair
+  walk (`--kinds s`) has 0 findings of 336 walks with Pearl's stair models.
+- **Solid tiles**: Canalave Gym's two statues, (14,25) and (18,25), walkable in Pearl (solid_tiles, through
+  pearl_chunk.bed_solid). Their inspect events stay on those tiles (read from beside them: not tested). warp_check offline: no findings; scene_check
+  --all: none in that Gym.
+- **Checker** (pearl_rooms_view.py): new count `h`, should stay hidden: the first surface along a pixel more than 4 units
+  south of the feet, above floor level, yet the sprite passes (with the depth step in its favour; NPCs also with the camera up
+  to 9 rows south, where a k margin is largest). --upright, --margin, --offset, --offset1, --sweep, --jobs; defaults
+  as the build. Default zone list leaves out the Underground (Black 2 zones 633-651; in Pearl's room list only
+  MAP_UNDERGROUND, zone 633: the user, no furniture and nobody but the player): not measured, in no total below, and its
+  slope is 0. An agent tree now reads the lead's sprite sheets (it fell back to Black 2's: 8013 player findings, wrong).
+- **Candidates** (403 zones, hw; player and NPC findings = tiles or people with 6+ px; the Floaroma Meadow and Great Marsh
+  apart because their ~1400 tiles only swap classes: feet among flowers, a row of marsh plant, 14-17 px):
+
+  | candidate | NPC | NPC heads | player | player heads | hidden NPC (20+ px) | hidden player (20+ px) | meadow, marsh m / h |
+  |---|---|---|---|---|---|---|---|
+  | flat 0x136 / 0x1ee, furniture fix (before) | 167 | 79 | 490 | 238 | 15 (7) | 2 (0) | 1533 / 1054 |
+  | flat 0x1ee everywhere | 61 | 30 | 158 | 82 | 124 (37) | 4 (2) | 1533 / 1054 |
+  | flat 0x260 everywhere | 38 | 20 | 109 | 31 | 182 (85) | 39 (11) | 361 / 1055 |
+  | upright, k of 0x136 | 8 | 0 | 11 | 5 | 82 (11) | 121 (36) | 0 / 1417 |
+  | upright, margin 5.5 | 10 | 0 | 36 | 20 | 31 (5) | 50 (29) | 1414 / 0 |
+  | **upright, margin 6 (chosen)** | 10 | 0 | 34 | 20 | 39 (6) | 62 (29) | 0 / 1414 |
+  | upright, margin 7 | 5 | 0 | 7 | 5 | 71 (7) | 139 (36) | 0 / 1417 |
+  | upright 7/8 slope, margin 6 | 10 | 0 | 89 | 58 | 10 (0) | 2 (0) | 1414 / 0 |
+
+  The offset alone never gets there: 0x260 still cuts 20 NPC heads and already shows 85 NPCs through furniture. A constant
+  margin (not k * distance) keeps people high on the screen from gaining 12 units. Totals `python3 pearl_rooms_view.py`:
+  before npc 170 (heads 79), player 2020 (heads 240), hidden 15 / 1056; now npc 10 (heads 2, the lab's trio, below), player 32
+  (heads 20), hidden 39 / 1474 (1414 of them meadow and marsh). The lead's 2026-11-01 run with the Underground: npc 170, player
+  2014. Logs: work/agents/heads/logs (sw4/, after_hw.txt).
+- **Saturn's lab stays flat** (zones in the json, slope 0): the render showed Uxie over the lid of its containment unit: a lid
+  right over a person is behind an upright plane, and the user's decision of 2026-10-26 keeps their heads under the lids. The
+  checker now counts that kind too, `o`, a surface within 4 units of the feet in z and 20+ over them: 56 NPCs, 818 player
+  tiles (660 of them the Marsh's and Meadow's trees, 11 px at most). The large ones are what the fix means to do (a person flush
+  against a wall or door, drawn over it: Canalave Gym's back row 146 px, the Centers' 2F doors) or look the same in renders
+  before and after (HQ's sliding door halves in their walls, Gym guides beside statues). Only a few were looked at by eye, so
+  look for any other person meant to be inside something.
+- **Left, and why**: player heads 20: back-row tiles at door frames and wall recesses, 7-48 px, a band of 1-2 rows (Old Chateau
+  2F's 5 doors 48 px, looked at; Contest Hall lobby and Mansion lobby 29 px; the rest by their rows and positions). NPCs 10: the
+  lab's trio (above), Rowan at Spear Pillar's (29,36) on a solid tile by a column (the script moves him before adding him), people
+  in beds and at a table (Pearl's, feet only), Oreburgh North House 3F's worker at (2,11) (a solid tile outside that floor's model
+  in Pearl's data). Should stay hidden 20+ px, NPCs 6: HQ 4F_1's obj 1 and the card key prop 56, Hearthome Gym's guide and statue 44,
+  Floaroma Meadow house's tv 41, Sandgem's and Floaroma's Mart (9,6) and the shelf 37 (only with the camera far south). Player 29:
+  the same door frames. Battle Tower lobby's object_bt 14 px. The overworld stays flat (slope 0): the checker doesn't cover it;
+  "overworld" in the json turns it on to try. Floaroma's flower shop frame (work/agents/fixes/shots/tc1.png, the player at (10,5)):
+  the body behind the pot is right, the pot stands in front, and those pixels don't change. The woman at the counter: no finding now.
+- **Not proven yet (all offline)**: the two objects compile and fieldmap.o's functions keep their sizes; nothing has been linked
+  or run, so the layout check, the C on a DS and every number above (a model of melonDS's depth, not melonDS) wait for the combined
+  ROM. To watch there: fog (a sprite's fog comes from its depth, so a head may fog less than the feet in fog zones, up to ~30 units
+  of depth), tall grass over the legs, the exclamation mark and emotes.
+- Proofs (offline, hw model): work/agents/heads/shots/{mart,eterna2f,counter,fs_10_5}_{before,after}.png; lab_upright_regression.png
+  (why the lab stays flat).
+## The windmills (2026-11-01; "a long grey wedge" south of Valley Windworks' door)
+Nothing is wrong with the model: it's Pearl's, tower and pixels. The wedge is a rotor blade, seen edge-on. Valley Windworks' nine
+windmills (chunk 36, models d2_s01, d2_s01a, d2_s01b) have a rotor on its own joint, turned by a BCA we don't install, so they
+stand at frame 0, one blade up and north. From Black 2's close camera (eye 186 up, 142 south of the player) the one 6.5 tiles
+south of the door has its hub at the bottom of the screen and that blade reaching up over the player: a wireframe from those
+numbers reproduces the frame (work/agents/known/wind_sim_cam0.png). pearl_model_fix.windmill_pose turns the rotor 25 degrees round
+its hub at build time, the player at the door then uncovered (35 % -> 0 %; work/agents/known/wind_pose.py). Left: 2-5 tiles north of
+a windmill a blade or the tower still crosses the view, in any pose: that is this camera with a 130-unit-tall model nearby. Only
+Pearl's far camera or the blades turning would change that.
+

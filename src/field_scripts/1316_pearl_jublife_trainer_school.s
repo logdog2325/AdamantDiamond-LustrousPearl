@@ -345,7 +345,7 @@ P29_S12:
 P29_0408:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
-    pl_msg_talk 27
+    pl_msg_sys 27
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll

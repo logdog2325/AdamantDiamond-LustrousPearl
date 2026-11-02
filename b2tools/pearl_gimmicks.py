@@ -21,6 +21,7 @@ import functools, json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 
 GIMMICK_ID = 59                  # Black 2's gimmick ids end at 58; PearlB2's own start here (decomp gimmick_itcm.c)
 TILE = 16
@@ -135,7 +136,7 @@ def zone_chunks(zone):
 
 
 def land_props(chunk):
-    return json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{chunk:03d}.json')))['props']
+    return json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(chunk):03d}.json')))['props']
 
 
 def _at_chunk(zone, ux, uz):

@@ -21,7 +21,8 @@ a/0/8/9 and a/0/9/0 byte-identical to Black 2's, checked 2026-10-18):
   in-battle lines 13-16 (first damage, half HP, last Pokémon, last Pokémon at half HP: pokeplatinum
   trainer_message_types.txt) are Black 2's 17-20 (ov167 btl_client.c sTrainerHintMsgs: 0x11 not full HP, 0x12 half,
   0x13 last, 0x14 last at half). A double trainer's two defeat lines (4, 8) become one type 1 line (Black 2 shows type
-  1; its 8 is TRMSG_WIN). Rematch lines (17-19) and 11/12 (unused) are left out.
+  1; its 8 is TRMSG_WIN). Pearl's rematch lines 17-19 (one Trainer, either half of a double) take types 25-27, which
+  Black 2 doesn't use (PearlB2's global 3000 reads them: patches/vs_seeker.py); 11/12 (unused) are left out.
 - Classes: data/pearl_trainer_classes.json (the registry, fixed once given; `python3 pearl_trainers.py --classes`
   adds missing classes, never moves one). Pearl classes Black 2 also has keep Black 2's class (sinnoh_trainers.py
   CLASS_MAP 'same'/'near'); Gym Leaders take Black 2's Unova leader classes 112-119 (special: the leader battle
@@ -51,7 +52,7 @@ ARM9_BASE, CLASS_RESOURCES, SPECIAL_CLASSES = 0x02004000, 0x02092394, 0x020922bc
 OV036_BASE, SPECIAL_BGM, SPECIAL_ENCEFF = 0x0217f600, 0x021d28e4, 0x021d2900
 PLAIN_ENCEFF = 5
 TEXT_FILES = (381, 382, 383, 485)        # trainer messages, names, class names, class names with an article
-MSG_TYPE = {0: 0, 1: 1, 2: 2, 3: 3, 5: 5, 6: 6, 7: 7, 9: 9, 10: 10, 13: 17, 14: 18, 15: 19, 16: 20}
+MSG_TYPE = {0: 0, 1: 1, 2: 2, 3: 3, 5: 5, 6: 6, 7: 7, 9: 9, 10: 10, 13: 17, 14: 18, 15: 19, 16: 20, 17: 25, 18: 26, 19: 27}
 DOUBLE_DEFEAT = (4, 8)
 
 # Black 2 classes no Black 2 trainer or facility uses (pokebw2 res/trainers/data and facilities, counted 2026-10-18):
@@ -202,6 +203,11 @@ def wanted(ids):
             for o in pd.events(z)['object_events']:
                 if pearl_events.script_kind(o['script']) == 'trainer':
                     out.add(o['script'] - 2999 if o['script'] < 5000 else o['script'] - 4999)
+    # the Vs. Seeker's rematch Trainers of those (patches/vs_seeker.py)
+    import vs_seeker
+    for r in vs_seeker.records():
+        if r[0] in out:
+            out |= {t for t in r[1:] if t not in (vs_seeker.NONE, vs_seeker.END)}
     return sorted(t for t in out if str(t) in ids['trainers'])
 
 

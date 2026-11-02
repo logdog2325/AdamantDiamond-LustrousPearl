@@ -1,0 +1,9 @@
+{
+  "_doc": "People drawn into furniture (notes/MAP_LOOK.md 'The upright depth'; decomp resident/people_depth.c, patches/people_depth.py). slope: how far a person's z leans, in 256ths of a plane standing straight up at their feet, 0 = Black 2's flat drawing; by Pearl's map type (rooms), for the overworld, or for a Pearl zone by name. margin_16ths: the units the feet pass at, in 16ths. furniture_fix: pearl_model_fix's sinking of counters and tables (off: Pearl's own shapes, not needed with the upright depth; if the upright depth is taken out, turn it back on). The Underground (Black 2 zones 633-651) stays Black 2's: not measured, no furniture and nobody but the player. Saturn's lab too: the lake trio's heads stay under the lids of their containment units by Black 2's flat depth (notes/DECISIONS.md 2026-10-26). solid_tiles: {room chunk: [[tile x, tile z]]}: walkable in Pearl but inside furniture (pearl_chunk.bed_solid): Canalave Gym's two statues.",
+  "margin_16ths": 96,
+  "furniture_fix": false,
+  "overworld": 0,
+  "map_types": {"default": 255},
+  "zones": {"MAP_UNDERGROUND": 0, "MAP_VEILSTONE_GALACTIC_HEADQUARTERS_4F_BACK": 0},
+  "solid_tiles": {"224": [[14, 25], [18, 25]]}
+}

@@ -114,6 +114,11 @@ def apply(files):
     d = rp.load()
     ver = rp.version(d)
     rs = rp.rooms(ver)
+    # (the rooms' script is generated per version: it must be this build's, or the entries would be another version's rooms)
+    import version as build
+    script = next(p for p in build.sources(rp.SRC_SCRIPTS, '.s') if p.endswith('_ramanas_rooms.s'))
+    assert f'// Version {ver}.' in open(script, encoding='utf-8').read(), f'{script} is not version {ver}: run ramanas.py'
+    assert len(rs) == 9, f'{ver}: {len(rs)} rooms, expected 9'
     pd = pearl_story.PearlData()
     heights = pearl_events.Heights()
     planner = sinnoh_events.Planner()

@@ -1,6 +1,7 @@
 """Phase 1 reader: Pearl's zones, matrices, events and wild Pokémon, from the dump to JSON.
 
-    python3 gen4_extract.py [ROM] [OUT_DIR]      defaults: roms/pearl.nds, work/pearl
+    python3 gen4_extract.py [ROM] [OUT_DIR]      defaults: the version's dump and work/<version> (PEARL_VERSION=diamond:
+                                                 roms/diamond.nds, work/diamond)
 
 Formats follow pokediamond's MapHeader (include/map_header.h) and pokeplatinum's packers
 (tools/jsoncnv/map_matrix.py, event.py, encounter.py), read in reverse; the JSON keys are Platinum's, so the files can
@@ -13,6 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 from gen4rom import Rom, narc_members  # noqa: E402
+import version  # noqa: E402
 
 DIAMOND = os.path.join(ROOT, 'external', 'pokediamond')
 HEADER_SIZE = 24
@@ -131,10 +133,10 @@ def read_encounters(d, species):
 
 
 def main():
-    rom_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'roms', 'pearl.nds')
-    out_dir = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, 'work', 'pearl')
+    rom_path = sys.argv[1] if len(sys.argv) > 1 else version.SOURCE_DUMP
+    out_dir = sys.argv[2] if len(sys.argv) > 2 else version.WORK
     rom = Rom(rom_path)
-    assert rom.code == 'APAE', f'expected Pearl (APAE), got {rom.code}'
+    assert rom.code == version.SOURCE_GAME_CODE, f'expected {version.NAME} ({version.SOURCE_GAME_CODE}), got {rom.code}'
     zone_names = constants(os.path.join(DIAMOND, 'include', 'constants', 'maps.h'), 'MAP_')
     zone_names = [zone_names[i] for i in range(len(zone_names))]
     species = constants(os.path.join(DIAMOND, 'include', 'constants', 'species.h'), 'SPECIES_')
@@ -150,7 +152,7 @@ def main():
     events = narc_members(rom.read('fielddata/eventdata/zone_event_release.narc'))
     for i, e in enumerate(events):
         dump(f'events/{i:03d}.json', read_events(e))
-    encs = narc_members(rom.read('fielddata/encountdata/p_enc_data.narc'))
+    encs = narc_members(rom.read(version.ENCOUNTER_NARC))
     for i, d in enumerate(encs):
         dump(f'encounters/{i:03d}.json', read_encounters(d, species))
     print(f'{rom.title} {rom.code} rev {rom.revision}: header table at ROM 0x{table_off:x}; {len(zones)} zones, '

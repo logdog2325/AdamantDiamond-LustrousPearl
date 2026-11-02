@@ -49,7 +49,11 @@ u16 Choice_ZoneBGM(u16 zoneId, u8 season) {
 /* ---- story songs (UNOVA): where Black 2 starts a BGM ------------------------------------------------------------- */
 u32 Music_Redirect(u32 seq) {
     u32 i;
-    if (Music_IsHome()) return seq;
+    if (Music_IsHome()) {
+        for (i = 0; i < N_JINGLES; i++)   /* Pearl's jingles for Black 2's ME (patches/sinnoh_music.py JINGLES) */
+            if (kJingle[i][0] == seq) return kJingle[i][1];
+        return seq;
+    }
     for (i = 0; i < N_STORY; i++)
         if (kStory[i][0] == seq) return kStory[i][1];
     return seq;

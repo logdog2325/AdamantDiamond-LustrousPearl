@@ -44,9 +44,10 @@ P384_0057:
     pl_CloseMessage
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
-    pl_stub ShowDiplomaSinnoh  // Pearl 0x1EA RegisterSinnohPokedex : not translated yet
+    FieldClose
+    CallPokedexDiploma 0, 0  // Pearl's Sinnoh diploma: Black 2's, its words Pearl's (data/script_text_overrides.json)
     pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -62,9 +63,10 @@ P384_0095:
     pl_CloseMessage
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
-    pl_stub ShowDiplomaNationalDex  // Pearl 0x1EB RegisterNationalPokedex : not translated yet
+    FieldClose
+    CallPokedexDiploma 1, 0  // Pearl's National Pokédex diploma: Black 2's
     pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End

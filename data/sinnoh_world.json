@@ -3915,6 +3915,48 @@
     "pearl_area": 46,
     "pearl_matrix": 66,
     "b2_map_type": 16
+   },
+   "327": {
+    "name": "MAP_BATTLE_TOWER_ELEVATOR",
+    "b2_zone": 616,
+    "pearl_area": 21,
+    "pearl_matrix": 207,
+    "b2_map_type": 16
+   },
+   "328": {
+    "name": "MAP_BATTLE_TOWER_CORRIDOR_MULTI",
+    "b2_zone": 617,
+    "pearl_area": 33,
+    "pearl_matrix": 194,
+    "b2_map_type": 16
+   },
+   "329": {
+    "name": "MAP_BATTLE_TOWER_CORRIDOR_WIFI",
+    "b2_zone": 618,
+    "pearl_area": 33,
+    "pearl_matrix": 195,
+    "b2_map_type": 16
+   },
+   "330": {
+    "name": "MAP_BATTLE_TOWER_ARENA_MULTI",
+    "b2_zone": 619,
+    "pearl_area": 33,
+    "pearl_matrix": 197,
+    "b2_map_type": 16
+   },
+   "331": {
+    "name": "MAP_BATTLE_TOWER_ARENA_WIFI",
+    "b2_zone": 620,
+    "pearl_area": 33,
+    "pearl_matrix": 198,
+    "b2_map_type": 16
+   },
+   "493": {
+    "name": "MAP_BATTLE_TOWER_PARTNER_ROOM",
+    "b2_zone": 621,
+    "pearl_area": 33,
+    "pearl_matrix": 196,
+    "b2_map_type": 16
    }
   },
   "matrices": {
@@ -4982,6 +5024,31 @@
     "b2_matrix": 628,
     "width": 1,
     "height": 1
+   },
+   "194": {
+    "b2_matrix": 629,
+    "width": 1,
+    "height": 1
+   },
+   "195": {
+    "b2_matrix": 630,
+    "width": 1,
+    "height": 1
+   },
+   "197": {
+    "b2_matrix": 631,
+    "width": 1,
+    "height": 1
+   },
+   "198": {
+    "b2_matrix": 632,
+    "width": 1,
+    "height": 1
+   },
+   "196": {
+    "b2_matrix": 633,
+    "width": 1,
+    "height": 1
    }
   },
   "chunks": {
@@ -5330,7 +5397,12 @@
    "448": 1582,
    "450": 1583,
    "451": 1584,
-   "452": 1585
+   "452": 1585,
+   "266": 1586,
+   "267": 1587,
+   "269": 1588,
+   "270": 1589,
+   "268": 1590
   },
   "areas": {
    "22": {
@@ -7813,7 +7885,13 @@
    527,
    529,
    531,
-   532
+   532,
+   327,
+   328,
+   329,
+   330,
+   331,
+   493
   ],
   "event_rooms": [
    510

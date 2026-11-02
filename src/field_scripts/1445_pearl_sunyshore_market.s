@@ -79,7 +79,7 @@ P158_00A5:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P158_00D5
     pl_msg_talk 7
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
     pl_Call P158_00E0
     pl_ReleaseAll
@@ -112,31 +112,52 @@ P158_00E0:
     pl_End
 
 P158_0147:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 0: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 12  // Pearl SealsMart 0: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_Return
 
 P158_014D:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 1: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 12  // Pearl SealsMart 1: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_Return
 
 P158_0153:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 2: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 12  // Pearl SealsMart 2: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_Return
 
 P158_0159:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 3: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 12  // Pearl SealsMart 3: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_Return
 
 P158_015F:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 4: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 12  // Pearl SealsMart 4: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_Return
 
 P158_0165:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 5: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 12  // Pearl SealsMart 5: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_Return
 
 P158_016B:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 6: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 12  // Pearl SealsMart 6: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_Return
 
 P158_S4:
@@ -169,14 +190,6 @@ P158_01C5:
     pl_CloseMessage
     pl_ReleaseAll
     pl_End
-
-// ---- Pearl global script 205:20 (a subroutine here)
-C205_20_S20:
-C205_20_0F28:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 12  // Pearl bank 199 line 37
-    pl_ReturnCommonScript
-    VMReturn  // End: the sub-script ends
 
 PearlNoScript:
     VMHalt

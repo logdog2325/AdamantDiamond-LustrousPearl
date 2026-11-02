@@ -311,7 +311,7 @@ T205_28_1222:
     pl_LockAll
     pl_FacePlayer
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 7  // Pearl bank 199 line 67
+    pl_msg_sys 7  // Pearl bank 199 line 67
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -360,6 +360,7 @@ C375_4_039D:
     pl_msg_sys 11  // Pearl bank 334 line 19
     pl_CloseMessage
 // UseRockClimb PVAR_8004: 2 climb starts in this zone
+    pl_PlayHMCutIn PVAR_8004
     pl_GetPlayerMapPos PL_TMP, PL_TMP2
     pl_GetPlayerDir PL_TMP3
     WorkCmpConst PL_TMP, 747

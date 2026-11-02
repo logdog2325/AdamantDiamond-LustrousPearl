@@ -18,7 +18,7 @@ P1018_0012:
     pl_LockAll
     pl_FacePlayer
     pl_msg_sys 0
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
     pl_PokeMartCommon 1
     pl_ReleaseAll
@@ -29,7 +29,7 @@ P1018_002B:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
     pl_PokeMartCommon 1
     pl_ReleaseAll
@@ -40,9 +40,9 @@ P1018_0041:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
-    pl_PokeMartCommon 14  // Pearl SpecialMart 14: Black 2's normal Mart for now
+    pl_PokeMartSpecial 14  // Pearl SpecialMart 14
     pl_ReleaseAll
     pl_End
 
@@ -134,14 +134,6 @@ P1018_0174:
     pl_ReleaseAll
     pl_End
 
-// ---- Pearl global script 205:20 (a subroutine here)
-C205_20_S20:
-C205_20_0F28:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 10  // Pearl bank 199 line 37
-    pl_ReturnCommonScript
-    VMReturn  // End: the sub-script ends
-
 // ---- Pearl global script 205:45 (a subroutine here)
 C205_45_0336:
     pl_GetItemPocket PVAR_8004, PVAR_800C
@@ -195,14 +187,14 @@ C205_45_09C1:
     pl_CompareVarToValue PVAR_800C, 7
     pl_CallIf 5, C205_45_0A05
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 11  // Pearl bank 199 line 126
+    pl_msg_sys 10  // Pearl bank 199 line 126
     pl_Return
 
 C205_45_09F4:
     pl_BufferPlayerName 0
     pl_BufferItemName 1, PVAR_8004
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 12  // Pearl bank 199 line 28
+    pl_msg_sys 11  // Pearl bank 199 line 28
     pl_GoTo C205_45_0A2B
 
 C205_45_0A05:
@@ -216,7 +208,7 @@ C205_45_0A1D:
 
 C205_45_0A22:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 13  // Pearl bank 199 line 25
+    pl_msg_sys 12  // Pearl bank 199 line 25
     pl_GoTo C205_45_0A2B
 
 C205_45_0A2B:
@@ -325,42 +317,42 @@ C205_45_13AD:
 
 C205_45_13B5:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 14  // Pearl bank 199 line 110
+    pl_msg_sys 13  // Pearl bank 199 line 110
     pl_Return
 
 C205_45_13BA:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 15  // Pearl bank 199 line 111
+    pl_msg_sys 14  // Pearl bank 199 line 111
     pl_Return
 
 C205_45_13BF:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 16  // Pearl bank 199 line 112
+    pl_msg_sys 15  // Pearl bank 199 line 112
     pl_Return
 
 C205_45_13C4:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 17  // Pearl bank 199 line 113
+    pl_msg_sys 16  // Pearl bank 199 line 113
     pl_Return
 
 C205_45_13C9:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 18  // Pearl bank 199 line 114
+    pl_msg_sys 17  // Pearl bank 199 line 114
     pl_Return
 
 C205_45_13CE:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 19  // Pearl bank 199 line 115
+    pl_msg_sys 18  // Pearl bank 199 line 115
     pl_Return
 
 C205_45_13D3:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 20  // Pearl bank 199 line 116
+    pl_msg_sys 19  // Pearl bank 199 line 116
     pl_Return
 
 C205_45_13D8:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 21  // Pearl bank 199 line 117
+    pl_msg_sys 20  // Pearl bank 199 line 117
     pl_Return
 
 PearlNoScript:

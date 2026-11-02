@@ -71,6 +71,11 @@ def step_of(code):
 
 # (zone regex, finding regex, reason): checked and left on purpose (--all prints them too)
 ACCEPT = [
+    ('BATTLE_TOWER_CORRIDOR_WIFI', r'\(stand\) (person [0-3] at \((3|14), 1\)|people [01] and [23] share \((3|14), 1\))',
+     "Pearl's attendants and the two entrants in the corridor's doorways; the entrants are hidden until they walk out "
+     "(notes/BATTLE_ZONE.md)"),
+    ('BATTLE_TOWER_PARTNER_ROOM', r'\(stand\) person 0 at \(8, 1\)',
+     "Pearl's attendant in the partner room's doorway, who walks out with the player (notes/BATTLE_ZONE.md)"),
     # (2026-10-25: the Verity Lakefront ontrigger entry went with sinnoh_events.entrance_arrivals: arrivals through an
     # overworld entrance mat now land on the mat, Pearl's tile)
     ('RESORT_AREA', r'\(stand\) person 11 at \(819, 458\)',
@@ -404,6 +409,8 @@ class Checker:
             if zn.is_sign(o['id']) or pearl_events.object_skipped(o, zn.z):
                 continue
             x, z = o['x'], o['z']
+            if pearl_events.is_berry_patch(o):                 # (Pearl's soil is solid under its patch)
+                continue
             if zn.solid('b2', x, z) and (show_all or not o['hidden_flag']):
                 # (a person hidden by a flag on a solid tile is Pearl's own scene actor in a doorway or the grass:
                 # Barry at his door, Dawn at the lab's, the Starly at the lake; listed with --all)

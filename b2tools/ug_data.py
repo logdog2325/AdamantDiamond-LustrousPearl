@@ -138,12 +138,26 @@ def unlock_table():
     return kinds, values
 
 
+def bdsp():
+    """The build's list column ('sp' or 'bd'): only the build version picks it, nothing in the data."""
+    import version as build
+    return build.BDSP
+
+
+def grotto_items(d=None):
+    """data "grotto_items" with the build's own fossil in its slot."""
+    gi = dict((d or data())['grotto_items'])
+    own = gi['version_fossil'][bdsp()]
+    gi['a'] = [[own if i == 'VERSION_FOSSIL' else i for i in row] for row in gi['a']]
+    return gi
+
+
 def encounter_lists(version=None):
-    """(hideaway records, entries, rares) for the C table: each Hideaway's list in one version (data "version"),
+    """(hideaway records, entries, rares) for the C table: each Hideaway's list in one version (the build's, version.BDSP),
     identical lists shared. An entry: (species, stage | where << 4, weight); a rare: (species, weight). A record's
     spawns: the visible Pokémon a visit (resident/hideaway.c, pearlb2/underground.h UG_SPAWNS_*): BDSP's land minimum and
     maximum, its water maximum, 4 bits each."""
-    version = version or data()['version']
+    version = version or bdsp()
     entries, rares, recs, seen = [], [], [], {}
     for h in hideaways():
         p = h['pokemon']

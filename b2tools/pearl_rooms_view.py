@@ -2,12 +2,15 @@
 notes/INTERIORS.md "Indoor check", ported to the rooms sinnoh_rooms builds). notes/MAP_LOOK.md "People drawn into
 furniture".
 
-    python3 pearl_rooms_view.py [--model hw|exact|desmume] [--fixed 0|1] [--summary] [--kinds mn] [ZONE ...]
+    python3 pearl_rooms_view.py [--model hw|exact|desmume] [--fixed 0|1] [--upright N] [--summary] [--kinds mn] [--jobs N] [ZONE ...]
     python3 pearl_rooms_view.py --render OUT.png ZONE X,Z [DIR] [--model ...]   the room from the game camera with its
                                                            people and the player at zone tile X,Z facing DIR (0 up)
 
 ZONE: a Pearl zone id or name part (MAP_TWINLEAF_RIVAL_HOUSE_1F, rival_house_1f, 414); none = every room zone.
---fixed 0: Pearl's room models before pearl_model_fix.people_fix (the "before" counts).
+--fixed 1: the room models with pearl_model_fix.people_fix, the furniture fix; 0: Pearl's shapes. --upright SLOPE [--margin
+UNITS]: people's depth (sprite_depths; --upright 0 --fixed 1 = the flat depth and the fix, the state before 2026-11-01).
+Defaults: as the build (data/people_depth.json). --offset, --offset1: measure other flat offsets. --sweep: many candidates at
+once. --jobs N. The Underground (zones 633-651) is left out of the default list (the user: no furniture, nobody else there).
 
 What it builds (as sinnoh_rooms does): each chunk of the zone's matrix through pearl_chunk.fix_model (with its first
 matrix's neighbours) and its props from Pearl's build models through pearl_model_fix.fix_building, placed as Black 2
@@ -42,6 +45,12 @@ Kinds (one line per finding, "ZONE: (kind) detail"):
      The player: the room's own model (walls, counters, blocks) drawn over them, standing inside furniture, and
      slices (a band through the sprite with sprite drawn above it); a prop behind them covering the top of the head
      from above is Black 2's own look (HoennB2 --b2 baseline: 4 % of Black 2's tiles) and is listed with --covers.
+  h  (with m) should stay hidden: a person drawn over something truly in front of them: the first surface along the
+     pixel more than FRONT (4 units) south of the feet and above the floor-level pieces, yet the sprite passes (its
+     nearest depth, a depth step in its favour); NPCs also with the camera up to 9 rows south (their depth margin
+     largest). Totals: hidden_npc, hidden_player. This is the cost of a bigger margin.
+  o  (with m) right over their head: the same with the surface within FRONT of the feet in z and 20+ units over them (a
+     lid over someone inside a machine, a canopy, an arch). Totals: overhead_npc, overhead_player.
   n  a person whose feet are not on the drawn floor (the drawn surface under their tile's centre more than 3 units
      off the collision height).
   s  the stair walk (not in the default kinds; --kinds s checks only the zones with stairs): the player along Black
@@ -53,16 +62,19 @@ Kinds (one line per finding, "ZONE: (kind) detail"):
 import argparse, json, math, os, struct, sys
 from collections import Counter, defaultdict
 
+os.environ.setdefault('VECLIB_MAXIMUM_THREADS', '1')   # (--jobs forks: Accelerate's threads crash in a forked worker)
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, 'patches'))
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import pearl_mesh, pearl_render, pearl_buildings, pearl_chunk, pearl_model_fix  # noqa: E402
 
 PEARL = os.path.join(ROOT, 'work', 'pearl')
 VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
-SPRITE_FILES = [os.path.join(ROOT, 'work', 'rom_lead', 'files'), VANILLA]
+MAIN_TREE = os.path.abspath(os.path.join(ROOT, '..', '..', '..')) if os.path.basename(os.path.dirname(ROOT)) == 'wt' else ROOT
+SPRITE_FILES = [os.path.join(MAIN_TREE, 'work', 'rom_lead', 'files'), VANILLA]   # (an agent's tree has no lead's build)
 
 W, H = 256, 192
 COT = 2.75390625                       # projMtx[1][1] (fov y 39.9 degrees); [0][0] = COT / (4/3)
@@ -74,9 +86,11 @@ M22, M32 = -(FAR + NEAR) / (FAR - NEAR), -2 * FAR * NEAR / (FAR - NEAR)
 OBJ_OFFSET = {0: 0x136 / 4096, 1: 0x1ee / 4096}   # fieldmap.c GetObjectProjectionMatrixOffset, by projection type
 K_EXACT = {t: M32 / (M32 + M22 * d) for t, d in OBJ_OFFSET.items()}     # 0.9635, 0.9430
 K_DESMUME = {0: 0.959, 1: 0.943 - 0.0045}       # HoennB2 measured camera 0 (DeSmuME draws ~1 unit more)
+UPRIGHT = {'slope': 0, 'margin': 0.0}           # the upright depth: 256ths of the full slope, units (see sprite_depths)
 QUAD = 28.0
 ANCHOR_Y = -1.583
 FRONT, LOW = 4.0, 3.0
+OVERHEAD = 20.0                                # (the should-stay-hidden count's lids and canopies: this far over the feet)
 MIN_PX = 6
 BAD = ('inside', 'cut', 'wall')
 PLAYER_CODES = (231, 240)              # Lucas, Dawn (the player's sheets)
@@ -95,8 +109,54 @@ def tested_depth(d, proj, model):
     return d * k + (step(d) if model == 'hw' else 0.0)
 
 
+def set_offsets(off0=None, off1=None):
+    """Measure another objects' projection offset (fx32, fieldmap.c GetObjectProjectionMatrixOffset) for projection
+    type 0 (buildings) / type 1 (caves, outdoor rooms). DeSmuME keeps its measured distance from the exact k."""
+    for t, off in ((0, off0), (1, off1)):
+        if off is None: continue
+        was = K_EXACT[t] - K_DESMUME[t]
+        OBJ_OFFSET[t] = off / 4096
+        K_EXACT[t] = M32 / (M32 + M22 * OBJ_OFFSET[t])
+        K_DESMUME[t] = K_EXACT[t] - was
+
+
+def sprite_depths(d, u, h, proj, model):
+    """The depth each sprite pixel is tested with: d the anchor's view depth, u the pixels' height over the anchor in
+    view units (array), h the eye's horizontal distance to the anchor. Flat (slope 0): one depth (tested_depth). Upright
+    (the decomp's resident/people_depth.c): the z the DS gets is that of a plane standing straight up at the feet, by a
+    per-person projection matrix with m[1][2] = m[3][2] * sin(pitch) / h * slope, whole 1/4096 as the DS holds it, and
+    m[3][2] less m[1][2] * the anchor's view y; w and so the sprite's pixels don't change. The anchor passes MARGIN
+    units nearer than it is, plus one depth step (so at least MARGIN on the DS at any view distance); MARGIN 0: k as
+    Black 2's. Model 'hw' tests the sure side, one step less; 'exact' the other (should_hide uses it)."""
+    t = tested_depth(d, proj, model)
+    if not UPRIGHT['slope']: return np.full(np.shape(u), t)
+    if UPRIGHT['margin']:
+        base = M32 * d / (d - UPRIGHT['margin'] - step(d))
+    else:
+        base = M32 / K_EXACT.get(proj, K_EXACT[0])
+    m12 = int(base * (EYE[1] / np.linalg.norm(EYE)) * UPRIGHT['slope'] / 256 / max(h, 64.0) * 4096) / 4096   # (FX_Div truncates)
+    g = M32 * d / (base + m12 * np.asarray(u, float))
+    if model == 'desmume': return g - 1.0
+    return g + (step(g) if model == 'hw' else 0.0)
+
+
 # ------------------------------------------------------------------------------------------------ data
 _cache = {}
+
+
+def depth_config():
+    if 'depth' not in _cache:
+        _cache['depth'] = json.load(open(os.path.join(ROOT, 'data', 'people_depth.json')))
+    return _cache['depth']
+
+
+def set_room_depth(room, slope=None, margin=None):
+    """The upright depth as the build gives this room (data/people_depth.json), or the command line's."""
+    cfg = depth_config()
+    if slope is None:
+        slope = cfg['zones'].get(room.r['name'], cfg['map_types'].get(str(room.zone['map_type']), cfg['map_types']['default']))
+    UPRIGHT['slope'] = slope
+    UPRIGHT['margin'] = cfg['margin_16ths'] / 16 if margin is None else margin
 
 
 def world():
@@ -150,7 +210,8 @@ def heights():
 def zone_ids(args):
     w, zones = world()
     rooms = w['rooms']['zones']
-    if not args: return sorted(int(p) for p in rooms)
+    if not args: return sorted(int(p) for p, r in rooms.items() if not 633 <= r['b2_zone'] <= 651)   # (not the
+    #                                       Underground, the user 2026-11-01: no furniture, nobody but the player)
     out = []
     for a in args:
         if a.isdigit() and a in rooms: out.append(int(a)); continue
@@ -206,19 +267,25 @@ class Mesh:
         return self
 
 
+class furniture:
+    """With the furniture fix on or off whatever data/people_depth.json says (PEOPLE_FIX)."""
+    def __init__(self, fixed): self.fixed = fixed
+    def __enter__(self):
+        self.env = os.environ.get('PEOPLE_FIX')
+        os.environ['PEOPLE_FIX'] = 'on' if self.fixed else 'none'
+    def __exit__(self, *a):
+        if self.env is None: os.environ.pop('PEOPLE_FIX', None)
+        else: os.environ['PEOPLE_FIX'] = self.env
+
+
 def chunk_model(c, fixed=True):
-    """The chunk's map model as sinnoh_rooms installs it (pearl_chunk.fix_model in its first matrix); fixed=False:
-    without the people fix (PEOPLE_FIX=none), the before state."""
+    """The chunk's map model as sinnoh_rooms installs it (pearl_chunk.fix_model in its first matrix); fixed: with the
+    furniture fix (the state before the upright depth)."""
     key = ('chunk', c, fixed)
     if key not in _cache:
         m, x, z = first_cells()[c]
-        env = os.environ.get('PEOPLE_FIX')
-        if not fixed: os.environ['PEOPLE_FIX'] = 'none'
-        try:
+        with furniture(fixed):
             bmd, _ = pearl_chunk.fix_model(c, around=pearl_chunk.neighbours(m, x, z))
-        finally:
-            if env is None: os.environ.pop('PEOPLE_FIX', None)
-            else: os.environ['PEOPLE_FIX'] = env
         _cache[key] = pearl_mesh.Model(bmd)
     return _cache[key]
 
@@ -229,13 +296,8 @@ def prop_model(model_id, fixed=True):
     if key not in _cache:
         build, _ = pearl_rom()
         b = build[model_id]
-        env = os.environ.get('PEOPLE_FIX')
-        if not fixed: os.environ['PEOPLE_FIX'] = 'none'
-        try:
+        with furniture(fixed):
             bmd, _ = pearl_model_fix.fix_building(pearl_buildings.mdl_only(b))
-        finally:
-            if env is None: os.environ.pop('PEOPLE_FIX', None)
-            else: os.environ['PEOPLE_FIX'] = env
         _cache[key] = (pearl_mesh.Model(bmd), pearl_render.textures(pearl_buildings.btx0_of(b)))
     return _cache[key]
 
@@ -243,7 +305,9 @@ def prop_model(model_id, fixed=True):
 def room_props(c, land, fixed=True):
     """The chunk's props where the build places them (fixed: those riding a sunk counter or table moved with it,
     pearl_chunk.people_props_moved)."""
-    return pearl_chunk.people_props_moved(c, land['props']) if fixed else land['props']
+    if not fixed: return land['props']
+    with furniture(True):
+        return pearl_chunk.people_props_moved(c, land['props'])
 
 
 def prop_name(model_id):
@@ -255,6 +319,7 @@ class Room:
     def __init__(self, pid, fixed=True):
         w, zones = world()
         self.pid, self.fixed = pid, fixed
+        self.memo = {}
         self.r = w['rooms']['zones'][str(pid)]
         self.name = self.r['name'].replace('MAP_', '')
         self.zone = zones[pid]
@@ -278,7 +343,7 @@ class Room:
                 self.mesh.add_model(mm, tex, off, own, True)
                 P = [mm.units(v) for s in mm.shapes for poly in s.polys for v in poly]
                 if P: south.append(cz * 512 + 256 + max(p[2] for p in P))
-                land = json.load(open(os.path.join(PEARL, 'land', f'{c:03d}.json')))
+                land = json.load(open(os.path.join(PEARL, 'land', f'{land_id(c):03d}.json')))
                 for k, pr in enumerate(room_props(c, land, fixed)):
                     pm, ptex = prop_model(pr['model'], fixed)
                     self.mesh.add_model(pm, ptex, off + np.array(pr['pos'], float),
@@ -418,10 +483,15 @@ class View:
     def __init__(self, room, sprites, model='hw'):
         self.room, self.mesh, self.spr, self.model = room, room.mesh, sprites, model
 
-    def look(self, tile, code, d, eye, target, at=None):
-        """Hidden opaque pixels of the sprite at zone tile `tile` from (eye, target): {class: {owner: n}}, rows hit,
-        the slice count (bad pixels with sprite drawn above them in their column). at = (x, feet y, z): the person
-        there instead of standing on the tile (the stair walk)."""
+    def surface(self, tile, code, d, eye, target, at=None):
+        """The first surface along each pixel of the sprite's quad (kept per room: the depth models only compare)."""
+        key = (tile, code, d, tuple(np.round(eye, 3)), tuple(np.round(target, 3)), at)
+        memo = self.room.memo
+        if key in memo: return memo[key]
+        memo[key] = out = self._surface(tile, code, d, eye, target, at)
+        return out
+
+    def _surface(self, tile, code, d, eye, target, at):
         fr = self.spr.frame(code, d)
         if fr is None: return None
         mask, _ = fr
@@ -435,7 +505,6 @@ class View:
         c = R @ (np.array([px, fy + ANCHOR_Y, pz]) - eye)
         zq = -c[2]
         if zq < 2: return None
-        zt = tested_depth(zq, self.room.proj, self.model)
         qw, qh = QUAD * fw / 32, QUAD * fh / 32
         sx0, sx1 = W / 2 + FX * (c[0] - qw / 2) / zq, W / 2 + FX * (c[0] + qw / 2) / zq
         sy0, sy1 = H / 2 - FY * (c[1] + qh) / zq, H / 2 - FY * c[1] / zq
@@ -446,42 +515,76 @@ class View:
         opaque = np.zeros(gx.shape, bool)
         opaque[inside] = mask[v[inside], u[inside]]
         if not opaque.any(): return None
+        zb = np.full(gx.shape, np.inf); tb = np.full(gx.shape, -1, int)
         M = self.mesh
         near = ((M.hi[:, 0] >= px - 40) & (M.lo[:, 0] <= px + 40) & (M.hi[:, 2] >= pz - 64) &
                 (M.lo[:, 2] <= pz + 64) & (M.hi[:, 1] >= fy + LOW))
         idx = np.nonzero(near)[0]
         V = (M.T[idx] - eye) @ R.T
         z = -V[..., 2]
-        ok = (z > 1).all(axis=1) & (z.min(axis=1) < zt)
-        empty = dict(hidden={}, opaque=int(opaque.sum()), rows={}, slice=0, rect=(X0, Y0, X1, Y1))
-        if not ok.any(): return empty
-        idx = idx[ok]
-        Vk, zk = V[ok], z[ok]
-        sx = W / 2 + FX * Vk[..., 0] / zk; sy = H / 2 - FY * Vk[..., 1] / zk
-        over = (sx.max(1) >= X0) & (sx.min(1) <= X1) & (sy.max(1) >= Y0) & (sy.min(1) <= Y1)
-        zb = np.full(gx.shape, np.inf); tb = np.full(gx.shape, -1, int)
-        for t in np.nonzero(over)[0]:
-            (ax, bx, cx), (ay, by, cy) = sx[t], sy[t]
-            den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
-            if abs(den) < 1e-9: continue
-            w0 = ((by - cy) * (gx - cx) + (cx - bx) * (gy - cy)) / den
-            w1 = ((cy - ay) * (gx - cx) + (ax - cx) * (gy - cy)) / den
-            w2 = 1 - w0 - w1
-            m = (w0 >= -1e-4) & (w1 >= -1e-4) & (w2 >= -1e-4)
-            if not m.any(): continue
-            iz = 1 / zk[t]
-            q = w0 * iz[0] + w1 * iz[1] + w2 * iz[2]
-            dep = 1 / q
-            m &= dep < zb
-            if not m.any(): continue
-            ti = idx[t]
-            UV = M.UV[ti]
-            uu = (w0 * UV[0, 0] * iz[0] + w1 * UV[1, 0] * iz[1] + w2 * UV[2, 0] * iz[2]) / q
-            vv = (w0 * UV[0, 1] * iz[0] + w1 * UV[1, 1] * iz[1] + w2 * UV[2, 1] * iz[2]) / q
-            okt = _texel_ok(M, ti, uu, vv)
-            if okt is not None: m &= okt
-            zb[m] = dep[m]; tb[m] = ti
+        ok = (z > 1).all(axis=1)
+        if ok.any():
+            idx = idx[ok]
+            Vk, zk = V[ok], z[ok]
+            sx = W / 2 + FX * Vk[..., 0] / zk; sy = H / 2 - FY * Vk[..., 1] / zk
+            over = (sx.max(1) >= X0) & (sx.min(1) <= X1) & (sy.max(1) >= Y0) & (sy.min(1) <= Y1)
+            for t in np.nonzero(over)[0]:
+                (ax, bx, cx), (ay, by, cy) = sx[t], sy[t]
+                den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+                if abs(den) < 1e-9: continue
+                w0 = ((by - cy) * (gx - cx) + (cx - bx) * (gy - cy)) / den
+                w1 = ((cy - ay) * (gx - cx) + (ax - cx) * (gy - cy)) / den
+                w2 = 1 - w0 - w1
+                m = (w0 >= -1e-4) & (w1 >= -1e-4) & (w2 >= -1e-4)
+                if not m.any(): continue
+                iz = 1 / zk[t]
+                q = w0 * iz[0] + w1 * iz[1] + w2 * iz[2]
+                dep = 1 / q
+                m &= dep < zb
+                if not m.any(): continue
+                ti = idx[t]
+                UV = M.UV[ti]
+                uu = (w0 * UV[0, 0] * iz[0] + w1 * UV[1, 0] * iz[1] + w2 * UV[2, 0] * iz[2]) / q
+                vv = (w0 * UV[0, 1] * iz[0] + w1 * UV[1, 1] * iz[1] + w2 * UV[2, 1] * iz[2]) / q
+                okt = _texel_ok(M, ti, uu, vv)
+                if okt is not None: m &= okt
+                zb[m] = dep[m]; tb[m] = ti
+        return dict(R=R, eye=eye, px=px, pz=pz, fy=fy, c=c, zq=zq, v=v.astype(np.int16), opaque=opaque,
+                    zb=zb.astype(np.float32), tb=tb.astype(np.int32), rect=(X0, Y0, X1, Y1))
+
+    def look(self, tile, code, d, eye, target, at=None):
+        """Hidden opaque pixels of the sprite at zone tile `tile` from (eye, target): {class: {owner: n}}, rows hit,
+        the slice count (bad pixels with sprite drawn above them in their column), and the should-stay-hidden pixels
+        (shown: {owner: n}, shown_rows). at = (x, feet y, z): the person there instead of standing on the tile (the
+        stair walk)."""
+        s = self.surface(tile, code, d, eye, target, at)
+        if s is None: return None
+        M = self.mesh
+        R, eye, px, pz, fy, c, zq, v, opaque, zb, tb = (s[k] for k in
+            ('R', 'eye', 'px', 'pz', 'fy', 'c', 'zq', 'v', 'opaque', 'zb', 'tb'))
+        X0, Y0, X1, Y1 = s['rect']
+        zb = zb.astype(float)
+        gx, gy = np.meshgrid(np.arange(X0, X1) + 0.5, np.arange(Y0, Y1) + 0.5)
+        pixel_u = -(gy - H / 2) * zq / FY - c[1]
+        zt = sprite_depths(zq, pixel_u, eye[2] - pz, self.room.proj, self.model)
+        # (the should-stay-hidden count takes the sprite's nearest depth: on the DS a pixel may pass by up to a step)
+        zt_near = sprite_depths(zq, pixel_u, eye[2] - pz, self.room.proj, 'exact') if self.model == 'hw' else zt
         hid = opaque & (zb < zt)
+        # should stay hidden: the first surface along the pixel's ray stands more than FRONT south of the feet (the
+        # person is behind it in the world) and above the floor-level pieces, yet the sprite passes the depth test
+        shown, shown_rows, overhead = Counter(), set(), Counter()
+        over_it = opaque & (tb >= 0) & (zb >= zt_near)
+        if over_it.any():
+            hy, hx = np.nonzero(over_it)
+            dz = zb[hy, hx]
+            vx = (gx[hy, hx] - W / 2) * dz / FX; vy = -(gy[hy, hx] - H / 2) * dz / FY
+            Q = np.stack([vx, vy, -dz], 1) @ R + eye
+            front = (Q[:, 2] >= pz + FRONT) & (Q[:, 1] >= fy + LOW)
+            for o_, r_ in zip(M.own[tb[hy, hx]][front], v[hy, hx][front]):
+                shown[int(o_)] += 1; shown_rows.add(int(r_))
+            # over their head: right above their own tile's middle (a lid, a canopy), which a sprite standing upright passes
+            above = (np.abs(Q[:, 2] - pz) < FRONT) & (Q[:, 1] >= fy + OVERHEAD)
+            for o_ in M.own[tb[hy, hx]][above]: overhead[int(o_)] += 1
         out = defaultdict(Counter); rows = defaultdict(set)
         slice_px = 0
         if hid.any():
@@ -511,7 +614,8 @@ class View:
             above = np.maximum.accumulate(vis, axis=0)
             above = np.vstack([np.zeros((1, gx.shape[1]), bool), above[:-1]])
             slice_px = int((bad & above).sum())
-        return dict(hidden=out, opaque=int(opaque.sum()), rows=rows, slice=slice_px, rect=(X0, Y0, X1, Y1))
+        return dict(hidden=out, opaque=int(opaque.sum()), rows=rows, slice=slice_px, rect=(X0, Y0, X1, Y1),
+                    shown=shown, shown_rows=shown_rows, overhead=overhead)
 
     def cameras(self, tile, player=False):
         px, pz = tile[0] * 16 + 8, tile[1] * 16 + 8
@@ -535,6 +639,18 @@ class View:
                     if k not in seen: seen.add(k); out.append((e, t))
         return out
 
+    def far_cameras(self, tile):
+        """The camera 4 .. 9 rows south of a person (the screen shows ~9.6 rows north of the player): the person high on
+        the screen, the view distance and so the object depth margin at their largest. For the should-stay-hidden count."""
+        if not hasattr(self, '_rows'): self.cameras(tile)
+        out = []
+        for dz in range(4, 10):
+            xs = self._rows.get(tile[1] + dz)
+            if not xs: continue
+            tx = min(xs, key=lambda q: abs(q - tile[0]))
+            out.append(self.room.camera_at(tx * 16 + 8, self.room.feet_y((tx, tile[1] + dz)), (tile[1] + dz) * 16 + 8, False))
+        return out
+
     def score(self, r, player=False):
         if not player: return sum(sum(c.values()) for k, c in r['hidden'].items() if k in BAD)
         n = sum(v for k, c in r['hidden'].items() if k in BAD for o, v in c.items()
@@ -546,15 +662,30 @@ class View:
         return sum(v for k, c in r['hidden'].items() if k == 'cut' for o, v in c.items() if not self.mesh.is_room[o])
 
     def worst(self, tile, codes, dirs, player=False):
+        """The worst view of the person: (pixels of the bad classes, look, dir, code). self.most_shown: the most pixels
+        drawn over something that should hide them (the should-stay-hidden count), (n, look, dir, code)."""
         best = None
+        self.most_shown = None
+        self.most_over = None
         for code in codes:
             for d in dirs:
-                for eye, tgt in self.cameras(tile, player):
+                cams = self.cameras(tile, player)
+                for i, (eye, tgt) in enumerate(cams + ([] if player else self.far_cameras(tile))):
                     r = self.look(tile, code, d, eye, tgt)
                     if r is None: continue
+                    m = sum(r['shown'].values())
+                    if self.most_shown is None or m > self.most_shown[0]: self.most_shown = (m, r, d, code)
+                    m = sum(r['overhead'].values())
+                    if self.most_over is None or m > self.most_over[0]: self.most_over = (m, r)
+                    if i >= len(cams): continue
                     n = self.score(r, player)
                     if best is None or n > best[0]: best = (n, r, d, code)
         return best
+
+    def describe_shown(self, r):
+        rows = sorted(r['shown_rows'])
+        who = ', '.join(f'{self.mesh.owners[o]} ({n} px)' for o, n in r['shown'].most_common(3))
+        return f'drawn over {who} in front of them, sprite rows {rows[0]}-{rows[-1]}'
 
     def describe(self, r):
         parts = []
@@ -628,7 +759,7 @@ def zone_has_stairs(pid):
     for wp in ev['warp_events']:
         cx, cz = wp['x'] // 32, wp['z'] // 32
         if not (0 <= cz < m['height'] and 0 <= cx < m['width']) or m['maps'][cz][cx] == 0xffff: continue
-        land = json.load(open(os.path.join(PEARL, 'land', f"{m['maps'][cz][cx]:03d}.json")))
+        land = json.load(open(os.path.join(PEARL, 'land', f"{land_id(m['maps'][cz][cx]):03d}.json")))
         if land['behaviour'][wp['z'] % 32][wp['x'] % 32] in pearl_chunk.STAIR_DX: return True
     return False
 
@@ -667,14 +798,30 @@ def check_room(room, view, kinds, say, covers=False):
         for who, t, code, d in room.people(view.spr):
             w = view.worst(t, [code], [d])
             if w and w[0] >= MIN_PX:
-                say('m', f'{who} at {t} facing {"NSWE"[d] if d < 2 else "WE"[d - 2]}: {view.describe(w[1])}')
+                txt = view.describe(w[1])
+                say('m', f'{who} at {t} facing {"NSWE"[d] if d < 2 else "WE"[d - 2]}: {txt}')
                 found['npc'] += 1
+                found['npc_head'] += '(head)' in txt
+            if view.most_shown and view.most_shown[0] >= MIN_PX:
+                say('h', f'{who} at {t}: {view.describe_shown(view.most_shown[1])}')
+                found['hidden_npc'] += 1
+            if view.most_over and view.most_over[0] >= MIN_PX:
+                say('o', f"{who} at {t}: drawn over {', '.join(f'{view.mesh.owners[o]} ({n} px)' for o, n in view.most_over[1]['overhead'].most_common(3))} right over their head")
+                found['overhead_npc'] += 1
         for t in sorted(room.reachable()):
             w = view.worst(t, PLAYER_CODES, [0, 1], player=True)
             if w and w[0] >= MIN_PX:
-                say('m', f'the player at {t} facing {"north" if w[2] == 0 else "south"} (code {w[3]}): '
-                         f'{view.describe(w[1])}')
+                txt = view.describe(w[1])
+                say('m', f'the player at {t} facing {"north" if w[2] == 0 else "south"} (code {w[3]}): {txt}')
                 found['player'] += 1
+                found['player_head'] += '(head)' in txt
+                found['player_inside'] += 'stands inside' in txt
+            if view.most_shown and view.most_shown[0] >= MIN_PX:
+                say('h', f'the player at {t}: {view.describe_shown(view.most_shown[1])}')
+                found['hidden_player'] += 1
+            if view.most_over and view.most_over[0] >= MIN_PX:
+                say('o', f"the player at {t}: drawn over {', '.join(f'{view.mesh.owners[o]} ({n} px)' for o, n in view.most_over[1]['overhead'].most_common(3))} right over their head")
+                found['overhead_player'] += 1
             if covers:
                 cv = max((view.cover(view.look(t, code, d, *view.cameras(t, True)[0]) or
                                      dict(hidden={})) for code in PLAYER_CODES for d in (0, 1)), default=0)
@@ -709,7 +856,7 @@ def render(room, sprites, player=None, pdir=0, model='hw', scale=1, extra=(), bo
     for (cx, cz), c in room.cells.items():
         off = np.array([cx * 512 + 256.0, 0.0, cz * 512 + 256.0])
         pearl_render.draw_model(sc, chunk_model(c, room.fixed), tex, offset=off, setup=setup)
-        land = json.load(open(os.path.join(PEARL, 'land', f'{c:03d}.json')))
+        land = json.load(open(os.path.join(PEARL, 'land', f'{land_id(c):03d}.json')))
         for pr in room_props(c, land, room.fixed):
             pm, ptex = prop_model(pr['model'], room.fixed)
             pearl_render.draw_model(sc, pm, ptex, offset=off + np.array(pr['pos'], float), setup=setup)
@@ -736,50 +883,140 @@ def render(room, sprites, player=None, pdir=0, model='hw', scale=1, extra=(), bo
         gx, gy = np.meshgrid(np.arange(X0, X1) + 0.5, np.arange(Y0, Y1) + 0.5)
         u = ((gx - sx0) / (sx1 - sx0) * fw).astype(int).clip(0, fw - 1)
         vv = ((gy - sy0) / (sy1 - sy0) * fh).astype(int).clip(0, fh - 1)
-        zt = tested_depth(zq, room.proj, model)
+        zt = sprite_depths(zq, -(gy / scale - H / 2) * zq / FY - c[1], E[2] - (R.T @ c + E)[2], room.proj, model)
         m = mask[vv, u] & (zt < zb[Y0:Y1, X0:X1])
         reg = arr[Y0:Y1, X0:X1]; reg[m] = rgb[vv, u][m]
-        zb[Y0:Y1, X0:X1][m] = zt
+        zb[Y0:Y1, X0:X1][m] = zt[m]
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
 
 
 # ------------------------------------------------------------------------------------------------ main
+def _one(pid):
+    return _cache['one'](pid)
+
+
+def _pool_results(pids, jobs, zone_limit=1500):
+    """(_one(pid) for each pid), the workers forked. A worker that dies takes the pool's queued zones with it: they run
+    again in a new pool, once; a zone that stops the pool twice, or no result for zone_limit seconds, is reported and
+    left out (never a silent wait: the first sweep sat on 10 lost zones)."""
+    import multiprocessing as mp
+    from concurrent.futures import ProcessPoolExecutor, as_completed, TimeoutError as Late
+    from concurrent.futures.process import BrokenProcessPool
+    todo, tries = list(pids), Counter()
+    while todo:
+        ex = ProcessPoolExecutor(jobs, mp_context=mp.get_context('fork'))
+        futs = {ex.submit(_one, p): p for p in todo}
+        todo = []
+        try:
+            for f in as_completed(futs, timeout=zone_limit * len(futs)):
+                try:
+                    yield f.result()
+                except BrokenProcessPool:
+                    tries[futs[f]] += 1
+                    if tries[futs[f]] < 2: todo.append(futs[f])
+                    else: print(f'# zone {futs[f]}: LEFT OUT (its worker died twice)', flush=True)
+        except Late:
+            print(f'# LEFT OUT, no result in time: {[p for f, p in futs.items() if not f.done()]}', flush=True)
+        ex.shutdown(wait=False, cancel_futures=True)
+        jobs = max(1, jobs // 2) if todo else jobs
+
+
+def sweep(a, spr):
+    """Measure candidates (object offsets, upright or flat depth, the furniture fix on or off) over the same rooms."""
+    cands = [tuple(int(v, 0) for v in c.split(',')) for c in a.sweep.split(';')]
+    pids = zone_ids(a.zones)
+    with furniture(True):
+        pearl_model_fix.people_props()                  # (shared by the workers)
+    def one(pid):
+        rooms = {}
+        res = []
+        for off0, off1, up, fx, margin in cands:
+            room = rooms[fx] = rooms.get(fx) or Room(pid, bool(fx))
+            set_offsets(off0, off1)
+            UPRIGHT['slope'], UPRIGHT['margin'] = up, margin / 16
+            out = []
+            f = check_room(room, View(room, spr, a.model), a.kinds, lambda k, s: out.append((k, s)), False)
+            res.append((f, out))
+        return rooms[cands[0][3]].name, pid, res
+    _cache['one'] = one
+    import time
+    totals = [Counter() for _ in cands]
+    files = []
+    if a.sweep_out:
+        os.makedirs(a.sweep_out, exist_ok=True)
+        files = [open(os.path.join(a.sweep_out, '_'.join(hex(v) for v in c) + '.txt'), 'w') for c in cands]
+    t0 = time.time()
+    for i, (name, pid, res) in enumerate(_pool_results(pids, a.jobs)):
+        for j, (f, out) in enumerate(res):
+            totals[j].update(f)
+            if files:
+                for k, s in out: files[j].write(f'{name} ({pid}): ({k}) {s}\n')
+                files[j].flush()
+        print(f'{i + 1}/{len(pids)} {name} {time.time() - t0:.0f}s', flush=True)
+    for c, t in zip(cands, totals):
+        ln = f"offset {c[0]:#x}/{c[1]:#x} margin {c[4] / 16} {f'upright {c[2]}/256' if c[2] else 'flat'} furniture {'fixed' if c[3] else 'Pearl'} ({a.model}): " + \
+             ', '.join(f'{k} {v}' for k, v in sorted(t.items()))
+        print(ln, flush=True)
+        if files: files[0].write('# ' + ln + '\n')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', default='hw', choices=('hw', 'exact', 'desmume'))
-    ap.add_argument('--fixed', default='1')
+    ap.add_argument('--fixed', help='1: with the furniture fix, 0: Pearl\'s shapes (default: data/people_depth.json)')
     ap.add_argument('--kinds', default='mn')
     ap.add_argument('--summary', action='store_true')
     ap.add_argument('--covers', action='store_true')
     ap.add_argument('--render')
     ap.add_argument('--scale', type=int, default=1)
     ap.add_argument('--json')
+    ap.add_argument('--offset', type=lambda v: int(v, 0), help='the objects\' projection offset, buildings')
+    ap.add_argument('--offset1', type=lambda v: int(v, 0), help='the same, caves and outdoor rooms')
+    ap.add_argument('--upright', type=int, help="the upright depth's slope in 256ths (255: a plane straight up at the feet; 0: flat; default: as the build, data/people_depth.json)")
+    ap.add_argument('--margin', type=float, help='with --upright: the units a person passes at the feet (0: k of the --offset)')
+    ap.add_argument('--jobs', type=int, default=1)
+    ap.add_argument('--sweep', help='candidates "off0,off1,slope,fixed,margin in 16ths;...": one run measures them all on one mesh '
+                                    'per room; each gets OUT/<candidate>.txt with --sweep-out OUT')
+    ap.add_argument('--sweep-out')
     ap.add_argument('zones', nargs='*')
     a = ap.parse_args()
-    fixed = a.fixed == '1'
+    fixed = depth_config()['furniture_fix'] if a.fixed is None else a.fixed == '1'
+    set_offsets(a.offset, a.offset1)
     spr = Sprites()
     if a.render:
         pid = zone_ids(a.zones[:1])[0]
         room = Room(pid, fixed)
+        set_room_depth(room, a.upright, a.margin)
         player = tuple(map(int, a.zones[1].split(','))) if len(a.zones) > 1 else None
         pdir = int(a.zones[2]) if len(a.zones) > 2 else 0
         render(room, spr, player, pdir, a.model, a.scale).save(a.render)
         print(a.render)
         return
+    if a.sweep:
+        sweep(a, spr)
+        return
     total, lines, per = Counter(), [], {}
-    for pid in zone_ids(a.zones):
-        if a.kinds == 's' and not zone_has_stairs(pid): continue
+    pids = [p for p in zone_ids(a.zones) if a.kinds != 's' or zone_has_stairs(p)]
+    def one(pid):
         room = Room(pid, fixed)
-        view = View(room, spr, a.model)
+        set_room_depth(room, a.upright, a.margin)
         out = []
-        f = check_room(room, view, a.kinds, lambda k, s: out.append((k, s)), a.covers)
+        f = check_room(room, View(room, spr, a.model), a.kinds, lambda k, s: out.append((k, s)), a.covers)
+        return room.name, pid, f, out
+    if a.jobs > 1:
+        _cache['one'] = one
+        results = _pool_results(pids, a.jobs)
+    else:
+        results = map(one, pids)
+    for name, pid, f, out in results:
         total.update(f)
-        per[room.name] = dict(f)
+        per[name] = dict(f)
         for k, s in out:
-            ln = f'{room.name} ({pid}): ({k}) {s}'
+            ln = f'{name} ({pid}): ({k}) {s}'
             lines.append(ln)
             if not a.summary: print(ln, flush=True)
-    print(f"total ({a.model}, {'fixed' if fixed else 'before'}): " + ', '.join(f'{k} {v}' for k, v in sorted(total.items())))
+    print(f"total ({a.model}, furniture {'fixed' if fixed else 'Pearl'}, " +
+          (f'flat' if a.upright == 0 else 'upright') + "): " + ', '.join(f'{k} {v}' for k, v in sorted(total.items())))
     if a.json:
         json.dump(dict(total=total, per=per, lines=lines), open(a.json, 'w'), indent=1)
 

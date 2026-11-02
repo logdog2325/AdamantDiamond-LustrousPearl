@@ -71,7 +71,7 @@ P991_009A:
     pl_CheckFlag PFLAG_00F0
     pl_GoToIf 1, P991_00C4
     pl_SetFlag PFLAG_00F0
-// EnableSwarms : nothing in Black 2 (no Sinnoh swarms yet (notes/ENCOUNTERS.md))
+    pl_EnableSwarms
     pl_BufferPlayerName 0
     pl_msg_talk 4
     pl_WaitButton
@@ -81,9 +81,8 @@ P991_009A:
 
 P991_00C4:
     pl_BufferPlayerName 0
-    WorkSetConst PVAR_4001, 0
-    WorkSetConst PVAR_4000, 0  // GetSwarmMapAndSpecies
-    WordSetPlaceName 1, 527  // BufferMapName 1, PVAR_4001
+    pl_GetSwarmInfo PVAR_4001, PVAR_4000
+    pl_BufferMapName 1, PVAR_4001  // the swarm's place
     pl_BufferSpeciesName 2, PVAR_4000
     pl_GetPlayerGender PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0

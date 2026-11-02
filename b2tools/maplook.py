@@ -149,6 +149,8 @@ def strip_zone_fog(files, world):
 
 
 def outdoor_light(files, world):
+    black = outdoor_room_lights(files)     # (2026-11-01, as the outdoor rooms: 140-143 clearing to black, as Pearl)
+    weather = weather_lights_black(files)
     edges = pearl_edges(files, False)      # Pearl's outdoor outlines, all (4,4,4) (2026-10-20: Black 2's table 0
     path = arc_path(files, 13)             # drew building outlines up to (24,24,24) by polygon ID group)
     tab = bytearray(open(path, 'rb').read())
@@ -156,7 +158,7 @@ def outdoor_light(files, world):
     for a in world['areas'].values():
         for s in range(4):
             at = 10 * (a['b2_area_group'] + s)
-            want = (LIGHTS_OUTDOOR + s, edges, ACTOR_COLOURS_OUTDOOR)          # lightsId, edgeColorTableId,
+            want = (black[s], edges, ACTOR_COLOURS_OUTDOOR)                    # lightsId, edgeColorTableId,
             changed += tuple(tab[at + 7:at + 10]) != want                       # actorMatColorId
             tab[at + 7:at + 10] = bytes(want)
     open(path + '.tmp', 'wb').write(tab); os.replace(path + '.tmp', path)
@@ -171,8 +173,9 @@ def outdoor_light(files, world):
             out.append(sec)
         packs[a['b2_pack']] = gf_container_build(magic, out)
     narcio.save(files, 225, packs)
-    return (f'light tables {LIGHTS_OUTDOOR}-{LIGHTS_OUTDOOR + 3} by season and Pearl\'s outdoor outlines (edge table '
-            f'{edges}) on every overworld area ({changed} records changed; {nid} building materials off IDs 56-63)')
+    return (f'light tables {black} (Black 2\'s {LIGHTS_OUTDOOR}-{LIGHTS_OUTDOOR + 3} clearing to black) by season and '
+            f'Pearl\'s outdoor outlines (edge table {edges}) on every overworld area ({changed} records changed; {nid} '
+            f'building materials off IDs 56-63); {weather}')
 
 
 def _materials(bmd):
@@ -414,6 +417,7 @@ def pearl_indoor_lights(files, rom):
 # Meadow, ...) took 140-143, so wherever Black 2's wider camera sees past the map's edge it showed sky where Pearl's
 # void is black.
 CLEAR_AT = 50                                   # FieldLightEntry: u16 colour 5 of materials[] (the clear colour)
+ENTRY_SIZE, WEATHER_LIGHT_ARC = 52, 61          # sizeof(FieldLightEntry); a/0/6/1, the weather's tables
 
 
 def outdoor_room_light_data(season):
@@ -422,6 +426,24 @@ def outdoor_room_light_data(season):
     for k in range(len(e) // 52):
         struct.pack_into('<H', e, 52 * k + CLEAR_AT, 0)
     return bytes(e)
+
+
+def weather_lights_black(files):
+    """Black 2's weather swaps in a whole light table of a/0/6/1 (weather_particles.c etc., FieldLightStatus_GetWeatherLight),
+    and each clears to its own colour: the mist's and fog's the day's sky blue (Turnback Cave's void), rain's and snow's
+    a grey. All clear to black, as Pearl. Battles read these tables' lights and material colours only
+    (field_light_status.c FieldLightData), never the clear colour. No Unova zone is on weather here."""
+    tabs = narcio.load(files, WEATHER_LIGHT_ARC)
+    changed = 0
+    for i, d in enumerate(tabs):
+        assert len(d) % ENTRY_SIZE == 0, i
+        e = bytearray(d)
+        for k in range(len(d) // ENTRY_SIZE):
+            struct.pack_into('<H', e, k * ENTRY_SIZE + CLEAR_AT, 0)
+        changed += bytes(e) != d
+        tabs[i] = bytes(e)
+    narcio.save(files, WEATHER_LIGHT_ARC, tabs)
+    return f'the weather light tables clear to black ({changed} of {len(tabs)} changed)'
 
 
 def outdoor_room_lights(files):

@@ -1,39 +1,54 @@
 # Pokémon Adamant Diamond & Lustrous Pearl
 
-Sinnoh's Diamond and Pearl rebuilt inside Pokémon Black 2, in the Gen 5 style. Lustrous Pearl is out as an alpha;
-Adamant Diamond comes next. Releases are `.bps` patches only; no ROMs are ever included.
+Sinnoh's Diamond and Pearl rebuilt inside Pokémon Black 2, in the Gen 5 style. Version 1.0 has both games: Lustrous
+Pearl and Adamant Diamond. Releases are `.bps` patches only; no ROMs are ever included.
 
 ## Playing it
-1. Get a clean **Pokémon Black 2 (USA)** ROM from your own cartridge.
-2. Apply the release's `.bps` patch with any BPS patcher (Floating IPS, Rom Patcher JS).
+1. Get a clean **Pokémon Black 2 (USA)** ROM from your own cartridge (game code IREO, CRC32 D4427FD1).
+2. Apply the release's `.bps` patch for the version you want with a BPS patcher (Floating IPS, Rom Patcher JS), on a
+   computer: a 512 MB game is too much for a phone browser.
 3. Play it in melonDS or on hardware. DeSmuME hides some bugs that melonDS and hardware show.
 
-## Status: alpha 0.1
-- **Story:** Pearl's whole story, from Twinleaf to the Hall of Fame. Post-game: the National Pokédex at Champion,
-  the Battle Zone, Stark Mountain, Snowpoint Temple, Turnback Cave, Fullmoon and Newmoon Islands, and the event
-  Pokémon (Darkrai, Shaymin, Arceus, the Manaphy Egg) from the Pokémon Center deliveryman.
-- **Features:** the Grand Underground with wandering Pokémon; Pal Park with BDSP's Ramanas Park rooms; roaming
-  Mesprit and Cresselia; following Pokémon (Rowan's fourth question); Pearl's TMs, HMs, Rock Climb and Defog.
-- **Experimental (untested):** the Pokétch apps beyond the Digital Watch, and Pal Park's migration from a GBA game in
-  slot 2. Chapter 9b (Fullmoon, Newmoon, Routes 219-221, Trophy Garden, Rotom, Spiritomb) is in but hasn't been
-  played through yet.
-- **Not in yet:** the Battle Tower and the PWT, Super Contests, digging and Secret Bases in the Underground.
+## Status: 1.0
+- **Story:** the whole story, from Twinleaf to the Hall of Fame, with Palkia in Lustrous Pearl and Dialga in Adamant
+  Diamond, each with its version's wild Pokémon, Orb, title screen and Pokédex entries. Post-game: the National
+  Pokédex at Champion, the Battle Zone with the Battle Tower and the PWT, Stark Mountain, Snowpoint Temple, Turnback
+  Cave, Fullmoon and Newmoon Islands, and the event Pokémon (Darkrai, Shaymin, Arceus, the Manaphy Egg) from the
+  Pokémon Center deliveryman.
+- **Features:** Super Contests (Visual, Dance, Acting) with Accessories and Poffins; Secret Bases; the Grand
+  Underground with wandering Pokémon; the Pokétch; Pal Park with BDSP's Ramanas Park rooms; roaming Mesprit and
+  Cresselia; following Pokémon; seasons; TMs, HMs, Rock Climb and Defog.
+- **Known issues:** in Super Contests, hearts, Voltage and result bars are numbers rather than the original sprites,
+  the top screen shows numbers instead of the dressed Pokémon during Visual, and the curtain doesn't count in Visual's
+  score. Black 2's sounds stand in for the contests' and the Digger Drill's. Cooking Poffins is solo, with simplified
+  art. Secret Bases have no Radar or other players' bases, and a placed good can wall you in, as in the original: Move
+  Goods frees you.
+- **Not in yet:** digging in the Underground; online features.
+
+Please report bugs: this is a big game, and some parts have been tested only in an emulator.
 
 ## Screenshots
 | | |
 |---|---|
-| ![Following Pokémon](docs/screenshots/following_pokemon.png) | Following Pokémon: your first Pokémon walks behind you, and you can talk to it |
+| ![Lustrous Pearl's title](docs/screenshots/title_pearl_palkia.png) | Lustrous Pearl |
+| ![Adamant Diamond's title](docs/screenshots/title_diamond_dialga.png) | Adamant Diamond |
+| ![Black 2's water](docs/screenshots/water_route219.png) | Black 2's animated sea on Route 219 |
+| ![Winter in Snowpoint](docs/screenshots/winter_snowpoint.png) | Snowpoint City in winter |
+| ![Following Pokémon](docs/screenshots/follower_route201.png) | Following Pokémon on Route 201 in autumn |
+| ![Palkia at Spear Pillar](docs/screenshots/spear_pillar_palkia.png) | Spear Pillar in Lustrous Pearl |
+| ![Dialga at Spear Pillar](docs/screenshots/spear_pillar_dialga.png) | Spear Pillar in Adamant Diamond |
+| ![The Grand Underground](docs/screenshots/hideaway_wandering_pokemon.png) | The Grand Underground: Pokémon wandering in a Hideaway |
+| ![A Secret Base](docs/screenshots/secret_base_decorated.png) | A decorated Secret Base |
+| ![Ramanas Park](docs/screenshots/ramanas_raikou.png) | Meeting Raikou in Adamant Diamond's Johto Room |
 | ![Defog](docs/screenshots/defog_weather.png) | Weather: Route 210's fog, then cleared with Defog |
-| ![Black 2's water](docs/screenshots/black2_water.png) | Black 2's animated sea on Pearl's Route 219 |
 | ![Seasons](docs/screenshots/seasons.png) | Route 201 in summer and autumn |
-| ![The Grand Underground](docs/screenshots/underground_wandering.png) | The Grand Underground: Pokémon wandering in a Hideaway |
 | ![Hidden Grottos](docs/screenshots/hidden_grottos.png) | Hidden Grottos and the Hideaways |
-| ![Ramanas Park](docs/screenshots/ramanas_park.png) | Pal Park's Ramanas rooms; Giratina in Turnback Cave |
 | ![Summoning Kyogre](docs/screenshots/ramanas_summon.png) | Placing the Oceanic Slate: Kyogre appears |
 | ![Place names](docs/screenshots/place_banners.png) | Sinnoh's place names on arrival |
 
 ## For developers
 - Start with `notes/START_HERE.md` (open decisions and status), then `notes/PLAN.md` (feasibility and phases).
+- `notes/SETUP.md`: what is in this repo, where each tool came from, how to set up.
 - `notes/DECISIONS.md`: every decision, dated, with who made it.
 - The game's C changes live in a branch of the pokebw2 decomp (`pearlb2`), not published yet.
 

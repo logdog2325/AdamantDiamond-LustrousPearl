@@ -37,7 +37,8 @@ Code (every site checked against the decomp's build bytes before writing; addres
  7. ov142 key-item "Use" table (0x021a0980, 11 x {u16 first item, u16 count, handler}): the two Xtransceiver entries
     (621 and 626, same handler) become one {621, 6} (622-625 have no Use option); the freed entry is {216, 1,
     ExpShareToggle}. Where the decomp's itemmenu.c already made entry 8 the Explorer Kit's {428, 1} (the Grand
-    Underground, notes/UNDERGROUND.md: PearlB2 gives no Xtransceiver), entry 8 stays the Kit's.
+    Underground, notes/UNDERGROUND.md: PearlB2 gives no Xtransceiver), entry 8 stays the Kit's. The decomp also made
+    entry 9 the Vs. Seeker's, so the Exp. Share takes entry 5, the Vs. Recorder's (Pearl has none).
  8. ov035 EventFieldFirst_Create 0x0217cba2: `bl InitItemBag` -> `bl NewGame_InitBag` (ITCM): Black 2's new-game Bag,
     then the Exp. Share when PFLAG_010B is set (the intro's YES; the Bag is only made here, after the intro).
 Data:
@@ -382,8 +383,9 @@ def apply_code(code):
     if bytes(d[at:at + 8]) != kit:
         _patch(d, OV142_BASE, KEY_ITEM_USE_TABLE + 8 * 8, xtr, struct.pack('<HHI', 621, 6, 0x0219A481),
                'Xtransceiver 621')
-    _patch(d, OV142_BASE, KEY_ITEM_USE_TABLE + 9 * 8, struct.pack('<HHI', 626, 1, 0x0219A481),
-           struct.pack('<HHI', ITEM, 1, lo | 1), 'Xtransceiver 626 -> Exp. Share')
+    # entry 9 is the decomp's Vs. Seeker now (notes/DECISIONS.md); Pearl has no Vs. Recorder, so entry 5 is free
+    _patch(d, OV142_BASE, KEY_ITEM_USE_TABLE + 5 * 8, struct.pack('<HHI', 465, 1, 0x0219A3E5),
+           struct.pack('<HHI', ITEM, 1, lo | 1), 'Vs. Recorder -> Exp. Share')
     _save(path, d)
 
     # 8. ov035: the new game's Bag (+ the Exp. Share after Rowan's YES)

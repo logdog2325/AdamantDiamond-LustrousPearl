@@ -18,7 +18,7 @@ P86_000E:
     pl_FacePlayer
     pl_msg_talk 0
     pl_CloseMessageWithoutErasing
-    pl_PokeMartCommon 4  // Pearl SpecialMart 4: Black 2's normal Mart for now
+    pl_PokeMartSpecial 4  // Pearl SpecialMart 4
     pl_ReleaseAll
     pl_End
 

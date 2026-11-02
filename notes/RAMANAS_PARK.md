@@ -46,9 +46,9 @@ wording reached us only through search snippets ("Bulbapedia, quoted by search")
 | 8 | Stratospheric Room | Strange | Stratosph. Slate (127) | Rayquaza, 70 | Air Lock | Dragon Pulse, Hyper Voice, Rest, Fly | as 5 | Rowap, Jaboca Berries (no Roseli in Black 2) |
 | 9 | Genome Room | Strange | Genome Slate (128) | Mewtwo, 70 | hidden (Unnerve) | Psychic, Power Swap, Guard Swap, Mist | as 5 | - |
 
-Diamond version (version "bd", in the data, not built): the Johto Room (Raikou, Entei, Suicune; Johto Slate 131,
+Adamant Diamond (version "bd", built by `PEARL_VERSION=diamond`, not yet played): the Johto Room (Raikou, Entei, Suicune; Johto Slate 131,
 zone 661) instead of Kanto, the Rainbow Room (Ho-Oh; Rainbow Slate 132, zone 662) instead of Squall; the third tier
-then needs the beasts. Same entrances as the rooms they replace. `PEARL_VERSION=bd` switches every tool.
+then needs the beasts. Same entrances as the rooms they replace. The build version picks (version.BDSP); the rooms' script and text are generated for both (src/field_scripts/diamond/, src/text/script/diamond/).
 
 Newer moves become the closest Black 2 move in type, category and power (as the TMs did): Origin Pulse -> Hydro
 Pump (Water, special, 110 both), Precipice Blades -> Earthquake, Burn Up -> Overheat (130 both), Magnetic Flux ->

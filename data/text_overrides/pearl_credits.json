@@ -1,8 +1,8 @@
 {
  "_doc": "Pearl's staff credits (Pearl bank 493) on the first 216 lines of Black 2's staff roll text (res/text/system/title_15.txt), written by b2tools/pearl_credits.py (do not edit): the roll's command list (a/2/1/5 file 1, patches/game_clear.py) shows them by these numbers.",
  "title_15": {
-  "Title15_Text_Director": "Pokémon Diamond",
-  "Title15_Text_TakaoUnno": "Pokémon Pearl",
+  "Title15_Text_Director": "Pokémon Adamant Diamond",
+  "Title15_Text_TakaoUnno": "Pokémon Lustrous Pearl",
   "Title15_Text_PlanningDirector": "Credits",
   "Title15_Text_MasafumiSaito": "Director",
   "Title15_Text_ProgramDirector": "Junichi Masuda",

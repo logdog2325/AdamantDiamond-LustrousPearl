@@ -6,8 +6,7 @@ from the public lists copied as data in data/underground_sources/ (no game data)
 Sources (user and lead, 2026-10-26):
 - serebii_sp.json / serebii_bd.json: Serebii's Grand Underground page, each Hideaway type's Shining Pearl / Brilliant
   Diamond lists by stage (Beginning, Strength, Defog, Icicle Badge, Waterfall, National Pokédex) and its rare spawns
-  with their %; the MAIN source (user 2026-10-26). Both versions are kept (a Diamond version of PearlB2 may follow:
-  patches/underground.py VERSION picks one);
+  with their %; the MAIN source (user 2026-10-26). Both versions are kept (the build version picks one: version.BDSP);
 - bulbapedia_hideaways.json: Bulbapedia's 18 Hideaway pages (both versions, the stage, the rare spawns), the cross-check;
 - kaphotics_ugspecial.tsv: Kaphotics' table of BDSP's UgSpecialPokemon (pastebin KL36BBgZ): the rare spawns' raw
   weights per version, used for the weights (Serebii's % are these rounded, with two typos: Stargleam's Duskull 5

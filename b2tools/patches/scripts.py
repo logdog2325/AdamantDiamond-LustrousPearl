@@ -11,7 +11,7 @@ import glob, json, os, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
-import narcio  # noqa: E402
+import narcio, version  # noqa: E402
 
 SRC = os.path.join(ROOT, 'src', 'field_scripts')
 DECOMP = os.path.join(ROOT, 'external', 'pokebw2')
@@ -20,7 +20,7 @@ FLY = os.path.join(ROOT, 'work', 'world', 'fly.json')
 
 
 def defines():
-    out = ['-D', 'BLACK2']
+    out = ['-D', 'BLACK2', '-D', f'PEARLB2_GAME_VERSION={version.GAME_VERSION}']   # (GetGameVersion: pearl_story)
     if os.path.exists(FLY):
         for z, (x, y, zz) in json.load(open(FLY)).items():
             out += ['-D', f'FLY_{z}_X={x}', '-D', f'FLY_{z}_Y={y}', '-D', f'FLY_{z}_Z={zz}']
@@ -66,7 +66,7 @@ def apply(files):
     check_local_works()
     entries = narcio.load(files, 56)
     done = []
-    for src in sorted(glob.glob(os.path.join(SRC, '*.s'))):
+    for src in version.sources(SRC, '.s'):
         num = int(os.path.basename(src)[:4])
         while len(entries) <= num:
             entries.append(b'')

@@ -14,7 +14,7 @@ P432_0006:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_stub GetUnownFormsSeenCount  // Pearl 0x284 CountSeenUnown 16384: not translated yet
+    pl_GetUnownFormsSeenCount PVAR_4000
     pl_CompareVarToValue PVAR_4000, 26
     pl_GoToIf 4, P432_002A
     pl_msg_talk 1

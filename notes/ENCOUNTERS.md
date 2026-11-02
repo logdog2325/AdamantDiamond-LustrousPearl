@@ -104,6 +104,26 @@ every reset. The patch picks the rule whose expected number of battles on walks 
 - Y-menu names "Old Rod"/"Good Rod" (system text) are in the build; the Y popup with all three registered is not
   screenshotted yet.
 
+## Honey trees, swarms, Feebas, the Great Marsh (2026-11-01)
+Code: decomp `src/pearlb2/resident/wild.c` + `include/pearlb2/wild.h`, table from `patches/wild.py` (dump's arc/encdata_ex,
+each file's swarm slots, data/sinnoh_world.json), save in block 0x3C (notes/DATA.md), script sub-commands 0x60-0x65 (notes/EXT_COMMAND.md). `PearlB2_Roamers_GenWilds` is the one encounter hook; it asks `PearlB2_Wild_ReplaceSlots`. Pearl's rules from pokediamond's overlay asm (ov05_021F4CF8.s, overlay 6) and pokeplatinum's C of the same code.
+- **Honey trees**: Pearl's check is by prop in front of a player facing north; here two sign events on the tree's south row (`pearl_events.honey_tree_tiles`, Pearl's global script 2008 through a proxy, in every one of its 21 zones). Pearl's script word for word. A slather rolls group (10 % nothing / 20 % B / 70 % A; on the Trainer ID's four Munchlax trees 9 / 70 B / 20 A / 1 % C), slot (40/20/20/10/5/5), shakes; the same tree twice running keeps the group 90 %. The timer runs on ev_time.c's minutes (`PearlB2_Wild_MinutesPassed`): 24 h, Pokémon from 18 h left. Lv 5-15, top with Hustle / Vital Spirit / Pressure half the time. Tables: Pearl's members 5-7 (Cascoon; Diamond's 2-4 have Silcoon: `HONEY_MEMBERS`).
+- **Swarms**: `daily % 28` (pokediamond's 28 zones, Platinum has 22) picks a zone; its grass slots 0-1 become the file's two swarm species, once Barry's sister has told the player (Pearl's EnableSwarms; she does after flag 2400). `daily` is rerolled at midnight (`PearlB2_Wild_Midnight`, from ev_time.c). She names the zone and species (`pl_GetSwarmInfo`); Pearl's own TV has no swarm show.
+- **Found on the way**: Black 2's FLAG_SWARMS is flag 2400, the game clear, so at the Champion Black 2's own 19 swarms would have started on Unova's zone numbers, which are Sinnoh places here. `enc_pokeset.c`'s table now names no zone under PEARLB2.
+- **Feebas**: Mt. Coronet B1F (zone 328), all 528 tiles are Pearl's lake water, four of them each day (one from each group of 132, from `daily`'s four bytes). Half the bites on them are Feebas Lv 10-20, by any rod, after the rod's own bite roll (`src/code/rods.c` asks `PearlB2_Wild_FeebasSlot`; BtlSetup_CreateFishing's zone getter notes the field for the player's facing tile).
+- **Great Marsh**: slots 6-7 of the six areas' grass: `(daily >> 5 * area) & 31` into Pearl's table 9 with the National Dex (flag 2400 here) or 10 without. Pearl applies it only in its Safari Game; here the areas can only be entered through the gate, so always.
+- Not built: the honey tree's shaking (Pearl's tree animates by its shakes; Black 2's prop has no such animation yet: see OPEN_CONTENT).
+
+## Berry patches (2026-11-01)
+Code: decomp `src/pearlb2/resident/berry.c`, table and pictures `patches/wild.py`, save as above (notes/DATA.md), sub-commands 0x66-0x6D. Pearl's rules: pokeplatinum berry_patches.c / berry_patch_manager.c / scrcmd_berry.c; Pearl's numbers: the dump's nuts_data and its new game's table (overlay 52 at 0x218).
+- **People**: Pearl's soil objects (graphics 100, movement 47: 118 patches in 30 zones, at most 4 a zone) are people (`pearl_events.is_berry_patch`, 0x0F00 + patch number, the number in param 0) running Pearl's script (global 2800, word for word). `fldmmdl.c`'s code resolve gives today's picture code 0x0C00 + picture.
+- **Pictures**: 583 sheets appended to a/0/4/8 (413 KB of its 2 MB reserve), none in the object table (a/0/4/7 stays 1008 records, so `LoadTPokeData`'s whole-table read costs nothing): `GetNPCMdlInfoForOBJCODE` reads the template record (code 208, one-frame billboard) and puts in the picture's sheet, without a shadow. 0 blank, 1-3 Pearl's soil ring (dry, damp, wet), 4-6 the sprout, then each Berry's growing / blooming / fruit, 3 each by moisture. Pearl draws the ring flat on the ground beside its billboard, so here each picture has the ring flattened under the plant. Pearl's own pixels; the plant's first sway frame.
+- **Growth**: `PearlB2_Berry_MinutesPassed` on ev_time.c's minutes: Pearl's stages, moisture, yield rating, regrowth, mulch; a patch only grows once its person has been made (Pearl: once it has been in view). Pictures follow on the field (`FldAct_SwapObjCode`).
+- **Bag**: Black 2's Bag in its returning mode (`CallBag 1`), opened on Items for Mulch and on Berries to plant; it lists every pocket, so what isn't a Berry counts as no choice, and the script already refuses what isn't Mulch.
+- Black 2 has all of Pearl's Berries (items 149-212, the same ids, as HoennB2's BERRY_PLANTING found), the four Mulches (95-98), Honey (94), Sprayduck (448): none missing. Names: "Cheri" of "Cheri Berry" for Pearl's "Cheri Berry Plant".
+- The Pokétch's Berry Searcher reads `PearlB2_Berry_HasFruit` (the patch numbers are Pearl's, as its position table).
+- Not built: Pearl's watering pose and its walk along the row, the 2-frame sway, the growth sparkle.
+
 ## Open questions (for the user)
 1. ~~Morning and night Pokémon~~: answered (2026-10-18): the DS clock picks Pearl's morning/day/night Pokémon (small
    code change). Built; to test in game.
@@ -132,8 +152,7 @@ every reset. The patch picks the rule whose expected number of battles on walks 
   in Pearl) to plain floor without Black 2's encounter flag (0x04). Caves will have no wild battles until those tiles
   get an encounter class. Pearl's plain MUD tiles (0xa4/0xa5) become swamp with the encounter flag, but in Pearl only
   mud with grass (0xa6/0xa7) has encounters. Both are for the lead (`pearl_chunk.BEHAVIOURS`).
-- Not covered by a/1/2/7 (Pearl's `encdata_ex`, later): Honey trees, Great Marsh daily Pokémon, Trophy Garden daily
-  Pokémon (slots 6-7), Feebas tiles, roamers.
+- Pearl's `encdata_ex`: built, see "Honey trees, swarms, Feebas, the Great Marsh" (patches/wild.py); roamers and the Trophy Garden: patches/roamers.py.
 
 ## Pearl-only features and what each route loses
 "table" is the Black 2 table number (135 + Pearl file). The "lost" columns list species that are not anywhere else in

@@ -173,7 +173,7 @@ P11_01E0:
 
 P11_0210:
     pl_msg_talk 12
-// AddContestBackdrop 32772: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
+    pl_AddContestBackdrop PVAR_8004  // Pearl AddContestBackdrop (the Fashion Case)
     pl_msg_talk 13
     pl_WaitButton
     pl_CloseMessage

@@ -1,6 +1,7 @@
-"""Trade evolutions made in-game (trade_evos agent, 2026-10-07): data/trade_evos.json into Black 2's evolution table, item
-data and one Hoenn shop list. Data only (no code); every archive keeps its size, so the ROM layout and the savestates
-are unchanged. Must run after `shops` (it appends to a list that patch writes).
+"""Trade evolutions made in-game (HoennB2's trade_evos, 2026-10-07; PearlB2: always on, the user 2026-10-18 and 2026-11-01):
+data/trade_evos.json into Black 2's evolution table and item data. Data only (no code); every archive keeps its size.
+Pearl has no shop for the items yet (HoennB2 sells them at Lilycove): Pearl's item balls and wild held items give them
+once the item-ball pass is in (notes/OPEN_CONTENT.md).
 
 How Black 2 evolves (read in its code, arm9 CheckEvolveSpecies 0x02020788, b2tools/armdis.py; constants in the decomp's
 include/constants/pokemon.h, which match the code):
@@ -25,8 +26,10 @@ How the Bag makes a stone usable (ov142 func_ov142_0219a4d0, the Bag's Use; item
   +0x11 = 0x08 and +8 bit 5 = 0 (Give/Toss allowed). The trade items have 0/0/0 and the same +8, so they get the
   stones' three values and stay holdable (hold effect +2/+3, Fling +5/+6, pocket and sort bytes unchanged).
 
-Shop (a/2/8/2 list file id + 6, its count in a/2/8/3 file 0; b2tools/shops_data.py): the items Hoenn has no other
-source for are appended to data/trade_evos.json's shop list. a/2/8/2 keeps its original 1300 bytes (shops.py)."""
+Real trades (notes/LINK.md): with "keep_trade_methods" in data/trade_evos.json, Black 2's own trade entries (5/6/7) stay
+in each record after the new ones, so a link trade evolves as in Black 2 (the trade app, ov194, calls CheckEvolveSpecies
+mode 1 for the received Pokémon; the evolution scene removes a TRADE_WITH_ITEM item); modes 0, 2 and 3 never read
+methods 5-7, so the in-game ways above work exactly as before."""
 import os, re, sys, json, struct
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -47,9 +50,10 @@ def defines(path, prefix):
 
 def constants():
     inc = os.path.join(DECOMP, 'include', 'constants')
+    gen = os.path.join(DECOMP, 'build', 'include', 'generated', 'constants')   # (the build makes these two)
     c = defines(os.path.join(inc, 'pokemon.h'), 'EVO_METHOD_')
-    c.update(defines(os.path.join(inc, 'items.h'), 'ITEM_'))
-    c.update(defines(os.path.join(inc, 'species.h'), 'SPECIES_'))
+    c.update(defines(os.path.join(gen, 'items.h'), 'ITEM_'))
+    c.update(defines(os.path.join(gen, 'species.h'), 'SPECIES_'))
     return c
 
 
@@ -99,6 +103,7 @@ def apply(files):
     C = constants()
     trade = {C['EVO_METHOD_TRADE'], C['EVO_METHOD_TRADE_WITH_ITEM'], C['EVO_METHOD_TRADE_WITH_SPECIES']}
     new = table(data, C)
+    keep = data.get('keep_trade_methods', False)
     out = []
 
     # 1. evolutions: exactly the species with a trade method in Black 2's table, other evolutions kept
@@ -111,10 +116,11 @@ def apply(files):
         kept = [e for e in entries_of(vanilla[sp]) if e[0] not in trade]
         assert all(e in lst for e in kept), f'species {sp}: a non-trade evolution was lost: {kept} vs {lst}'
         assert not any(e[0] in trade for e in lst), f'species {sp}: still a trade method'
-        assert evo[sp] in (vanilla[sp], pack(lst)), f'species {sp}: evolution file changed by another patch'
-        evo[sp] = pack(lst)
+        full = lst + ([e for e in entries_of(vanilla[sp]) if e[0] in trade] if keep else [])
+        assert evo[sp] in (vanilla[sp], pack(lst), pack(full)), f'species {sp}: evolution file changed by another patch'
+        evo[sp] = pack(full)
     narcio.save(files, ARC_EVO, evo)
-    out.append(f'{len(new)} species')
+    out.append(f'{len(new)} species' + (" (+ Black 2's own trade methods)" if keep else ''))
 
     # 2. items an EVO_METHOD_ITEM evolution uses: the Bag "Use" of an evolution stone
     items = narcio.load(files, ARC_ITEM)
@@ -133,24 +139,4 @@ def apply(files):
     narcio.save(files, ARC_ITEM, items)
     out.append(f'Bag use like a stone: items {changed}')
 
-    # 3. the shop list (after the shops patch)
-    shop = data['shop']
-    f = shop['id'] + 6
-    lists, counts = narcio.load(files, ARC_SHOP), narcio.load(files, ARC_SHOP_COUNT)
-    sapphire = json.load(open(os.path.join(ROOT, 'data', 'hoenn_shops.json')))['shops'][str(shop['id'])]
-    assert sapphire['label'] == shop['label'], (sapphire['label'], shop['label'])
-    add = [C[x] for x in shop['add']]
-    cur = list(struct.unpack(f'<{len(lists[f]) // 2}H', lists[f]))
-    assert counts[0][f] == len(cur), (counts[0][f], len(cur))
-    if cur == sapphire['ids']:
-        cur += add
-    elif cur != sapphire['ids'] + add:
-        raise SystemExit(f'trade_evos: shop list {shop["id"]} is not Sapphire\'s {shop["label"]}: put trade_evos '
-                         f'after shops in the patch list')
-    lists[f] = struct.pack(f'<{len(cur)}H', *cur)
-    cnt = bytearray(counts[0]); cnt[f] = len(cur); counts[0] = bytes(cnt)
-    narcio.save(files, ARC_SHOP, lists); narcio.save(files, ARC_SHOP_COUNT, counts)
-    size0 = os.path.getsize(arc_path(VANILLA, ARC_SHOP))
-    _pad_to(arc_path(files, ARC_SHOP), size0)
-    out.append(f'shop {shop["id"]} ({shop["label"]}) + items {add}')
     return 'trade evolutions: ' + '; '.join(out)

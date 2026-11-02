@@ -42,4 +42,3 @@ PearlVeilstoneDepartmentStore2f_Text_040 = The {ff00:2}Color Changer{ff00:0} app
 PearlVeilstoneDepartmentStore2f_Text_041 = The {ff00:2}Matchup Checker{ff00:0} app shows the\naffinity of Pokémon to each other.{be01}
 PearlVeilstoneDepartmentStore2f_Text_042 = The {ff00:2}Stopwatch{ff00:0} app keeps precise\ntime.{be01}
 PearlVeilstoneDepartmentStore2f_Text_043 = The {ff00:2}Alarm Clock{ff00:0} app operates\non a 24-hour system.{be01}
-PearlVeilstoneDepartmentStore2f_Text_044 = Welcome!\nWhat do you need?

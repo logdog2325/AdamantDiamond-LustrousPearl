@@ -34,7 +34,7 @@ P302_002F:
     pl_LockAll
     pl_FacePlayer
     pl_PlayCry 492
-    pl_msg_talk 0
+    pl_msg_sys 0
     pl_CloseMessage
     pl_SetFlag PFLAG_008E
     pl_StartWildBattle 492, 30
@@ -50,7 +50,7 @@ P302_002F:
     pl_End
 
 P302_007A:
-    pl_msg_talk 1
+    pl_msg_sys 1
     pl_WaitButton
     pl_CloseMessage
     pl_ClearFlag PFLAG_026F

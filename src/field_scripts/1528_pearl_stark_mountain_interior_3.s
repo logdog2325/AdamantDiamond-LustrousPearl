@@ -108,7 +108,7 @@ P278_0152:
     pl_CallIf 0, P278_01CB
     pl_SetVarFromValue PVAR_409E, 2
     pl_PlayCry 485
-    pl_msg_talk 3
+    pl_msg_sys 3
     pl_CloseMessage
     pl_SetFlag PFLAG_008E
     pl_StartWildBattle 485, 70
@@ -125,7 +125,7 @@ P278_0152:
     pl_End
 
 P278_01B4:
-    pl_msg_talk 4
+    pl_msg_sys 4
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll

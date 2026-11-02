@@ -372,7 +372,7 @@ P69_0387:
 
 P69_S18:
 P69_039A:
-    WorkSetConst PVAR_800C, 11  // GetGameVersion: Pearl (pokediamond VERSION_PEARL 11)
+    WorkSetConst PVAR_800C, PEARLB2_GAME_VERSION  // GetGameVersion: the build's (patches/scripts.py)
     pl_CompareVarToValue PVAR_800C, 10
     pl_GoToIf 1, P69_03BC
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
@@ -988,7 +988,7 @@ T205_28_1222:
     pl_LockAll
     pl_FacePlayer
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 40  // Pearl bank 199 line 67
+    pl_msg_sys 40  // Pearl bank 199 line 67
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -1007,7 +1007,7 @@ T375_1_0042:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_1_008E
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 41  // Pearl bank 334 line 0
+    pl_msg_sys 41  // Pearl bank 334 line 0
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_1_009D
@@ -1016,7 +1016,7 @@ T375_1_0042:
 
 T375_1_008E:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 42  // Pearl bank 334 line 2
+    pl_msg_sys 42  // Pearl bank 334 line 2
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo T375_1_055B
@@ -1025,9 +1025,9 @@ T375_1_009D:
     PokePartyHasMoveAny PVAR_800C, 15  // FindPartySlotWithMove: the slot, 6 = none (the same in both games)
     pl_SetVarFromVar PVAR_8004, PVAR_800C
     pl_BufferPartyMonNickname 0, PVAR_800C
-    pl_msg_talk 43  // Pearl bank 334 line 1
+    pl_msg_sys 43  // Pearl bank 334 line 1
     pl_CloseMessage
-// PlayHMCutIn 32772: nothing in Black 2 (the field-move cut-in (with the HM work: Black 2's PlayHMCutInEffect needs its player sequence))
+    pl_PlayHMCutIn PVAR_8004
 // StartDestroyObstacleAnimation 0: no animation in Black 2
     pl_SetVarFromValue PVAR_8005, 1  // the animation is "over" at once (the script waits for it)
     pl_WaitTime 7, PVAR_800C

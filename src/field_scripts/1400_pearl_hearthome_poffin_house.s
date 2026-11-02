@@ -11,7 +11,7 @@
     ScriptEntry P113_S4
     ScriptEntry P113_S5
     ScriptEntry PearlArrive
-    ScriptEntry PearlNoScript
+    ScriptEntry PearlClosed_0
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
@@ -178,6 +178,10 @@ PearlProxy_9400:                  // Pearl global script 9400 (run by this zone'
 
 PearlProxy_10160:                  // Pearl global script 10160 (run by this zone's events)
     VMCall T1042_11_S11
+    VMHalt
+
+PearlClosed_0:                  // a Super Contest counter (src/field_scripts/1282_global_contests.s): object 3
+    RTCallGlobal 10788
     VMHalt
 
 // ---- Pearl global script 391:1 (a subroutine here)
@@ -387,23 +391,23 @@ T1042_11_0107:
 
 T1042_11_0165:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
-    ListMenuAdd 20, 65535, 255  // Pearl AddListMenuEntry 16, 255
-    ListMenuAdd 21, 65535, 255  // Pearl AddListMenuEntry 17, 255
-    ListMenuAdd 22, 65535, 255  // Pearl AddListMenuEntry 18, 255
-    ListMenuAdd 23, 65535, 255  // Pearl AddListMenuEntry 19, 255
-    ListMenuAdd 24, 65535, 255  // Pearl AddListMenuEntry 20, 255
-    ListMenuAdd 25, 65535, 255  // Pearl AddListMenuEntry 21, 255
-    ListMenuAdd 26, 65535, 255  // Pearl AddListMenuEntry 22, 255
-    ListMenuAdd 27, 65535, 255  // Pearl AddListMenuEntry 23, 255
-    ListMenuAdd 28, 65535, 255  // Pearl AddListMenuEntry 24, 255
-    ListMenuAdd 29, 65535, 255  // Pearl AddListMenuEntry 25, 255
-    ListMenuAdd 30, 65535, 255  // Pearl AddListMenuEntry 26, 255
-    ListMenuAdd 31, 65535, 255  // Pearl AddListMenuEntry 27, 255
-    ListMenuAdd 32, 65535, 255  // Pearl AddListMenuEntry 28, 255
-    ListMenuAdd 33, 65535, 255  // Pearl AddListMenuEntry 29, 255
-    ListMenuAdd 34, 65535, 255  // Pearl AddListMenuEntry 30, 255
-    ListMenuAdd 35, 65535, 255  // Pearl AddListMenuEntry 31, 255
-    ListMenuAdd 36, 65535, 255  // Pearl AddListMenuEntry 32, 255
+    ListMenuAdd 20, 65535, 1  // Pearl AddListMenuEntry 16, 1
+    ListMenuAdd 21, 65535, 2  // Pearl AddListMenuEntry 17, 2
+    ListMenuAdd 22, 65535, 3  // Pearl AddListMenuEntry 18, 3
+    ListMenuAdd 23, 65535, 4  // Pearl AddListMenuEntry 19, 4
+    ListMenuAdd 24, 65535, 5  // Pearl AddListMenuEntry 20, 5
+    ListMenuAdd 25, 65535, 6  // Pearl AddListMenuEntry 21, 6
+    ListMenuAdd 26, 65535, 7  // Pearl AddListMenuEntry 22, 7
+    ListMenuAdd 27, 65535, 8  // Pearl AddListMenuEntry 23, 8
+    ListMenuAdd 28, 65535, 9  // Pearl AddListMenuEntry 24, 9
+    ListMenuAdd 29, 65535, 10  // Pearl AddListMenuEntry 25, 10
+    ListMenuAdd 30, 65535, 11  // Pearl AddListMenuEntry 26, 11
+    ListMenuAdd 31, 65535, 12  // Pearl AddListMenuEntry 27, 12
+    ListMenuAdd 32, 65535, 13  // Pearl AddListMenuEntry 28, 13
+    ListMenuAdd 33, 65535, 14  // Pearl AddListMenuEntry 29, 14
+    ListMenuAdd 34, 65535, 15  // Pearl AddListMenuEntry 30, 15
+    ListMenuAdd 35, 65535, 16  // Pearl AddListMenuEntry 31, 16
+    ListMenuAdd 36, 65535, 17  // Pearl AddListMenuEntry 32, 17
     ListMenuShow
     pl_CompareVarToValue PVAR_8004, 65534
     pl_GoToIf 1, T1042_11_021F

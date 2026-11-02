@@ -130,7 +130,7 @@ P177_002C:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
     pl_PokeMartCommon 1
     pl_ReleaseAll
@@ -141,9 +141,9 @@ P177_0042:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
-    pl_PokeMartCommon 18  // Pearl SpecialMart 18: Black 2's normal Mart for now
+    pl_PokeMartSpecial 18  // Pearl SpecialMart 18
     pl_ReleaseAll
     pl_End
 
@@ -372,14 +372,6 @@ C205_3_11C8:
 C205_3_11E0:
     Move 1, 1  // FACE_SOUTH
     MoveEnd
-
-// ---- Pearl global script 205:20 (a subroutine here)
-C205_20_S20:
-C205_20_0F28:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 15  // Pearl bank 199 line 37
-    pl_ReturnCommonScript
-    VMReturn  // End: the sub-script ends
 
 // ---- Pearl global script 1:9 (a subroutine here)
 C1_9_S9:

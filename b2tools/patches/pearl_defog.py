@@ -5,13 +5,15 @@ List it after sinnoh_world / sinnoh_rooms (the zone headers) and season_weather:
 
 Pearl: the zones whose weather is WEATHER_DEFOG (14: Route 210 North, Mt. Coronet B1F, Turnback Cave, Victory Road 1F
 back 2) lie under a deep fog, which Defog used from the party menu clears until the player leaves (pokeplatinum
-field_move_tasks.c FieldMoves_CheckDefog: the Relic Badge; scripts_field_moves.s FieldMoves_UseDefogFromMenu).
+field_move.c FieldMove_CheckDefog: the Fen Badge, pokediamond's; Platinum's Relic; scripts_field_moves.s FieldMoves_UseDefogFromMenu).
+A Pokémon need not know it (the HM rule, 2026-11-01, the decomp's src/pearlb2/resident/field_moves.c): A under the fog,
+facing nothing else, offers it with Pearl's own line (bank 334 line 15, global 10018).
 Black 2 has no such fog; its closest weather is the mist (9: a 3D fog with a light tint, Routes 14 and 15).
 
 - apply: those zones' headers get weather 9 (PEARLB2_WEATHER_FOG). season_weather leaves them to their header
   (kind 1: neither north nor seasonal), so the field shows the mist there all year.
 - The code is the decomp's (src/pearlb2/defog_itcm.c, include/pearlb2.h): the party menu lists Defog, it works under
-  the mist with the Relic Badge, and its event runs global script 10016 (PEARLB2_SCRIPT_DEFOG).
+  the mist with the Fen Badge, and its event runs global script 10016 (PEARLB2_SCRIPT_DEFOG).
 - Sources (--sources, checked current by apply): src/field_scripts/1243_global_10000.s = Black 2's field-move scripts
   (a/0/5/6 1243, global 10000-10015: pokebw2 res/field/scripts/global_10000.s) with Script_17 (10016) added, Black 2's
   Flash script's steps with Pearl's line: "X used Defog!", Black 2's HM cut-in, then map-local flag 0x52 and
@@ -39,9 +41,12 @@ WEATHER_MASK = 0x3F
 SCRIPT_SRC = os.path.join(ROOT, 'src', 'field_scripts', '1243_global_10000.s')
 TEXT_SRC = os.path.join(ROOT, 'src', 'text', 'script', '1236_field_moves.txt')
 DEFOG_LINE_BANK, DEFOG_LINE = 334, 16
+DEFOG_OFFER_LINE = 15              # "A deep fog drapes the area...\nWould you like to use Defog?" (Pearl's unused script 375:6)
 LABEL = 'Global10000_Text_PearlUsedDefog'
 DEFOG_FLAG = 0x52                   # map-local: Defog cleared this zone's fog (include/pearlb2.h PEARLB2_FLAG_DEFOG)
 FOLLOWER_SCRIPT = 10017             # the following Pokémon's talk (patches/followers.py config scrId)
+VS_SEEKER_SCRIPT = 10018            # the Vs. Seeker's use (decomp resident/vs_seeker.c PEARLB2_SCRIPT_VS_SEEKER)
+VS_SEEKER_BANK, VS_SEEKER_LINES = 486, range(0, 3)   # Pearl's lines: the battery, no one in range, no one ready
 FOLLOWER_LINES_BANK, FOLLOWER_LINES = 236, range(13, 22)   # Pearl's Amity Square: "{name} is happily keeping up." ...
 
 
@@ -78,27 +83,38 @@ def sources():
     amity = gen4_text.bank(FOLLOWER_LINES_BANK)
     for k, i in enumerate(FOLLOWER_LINES):
         lines.append(f'Global10000_Text_PearlFollower{k} = {gen4_text.b2_line(amity[i])}')
+    seeker_id = len(lines)
+    seeker = gen4_text.bank(VS_SEEKER_BANK)
+    for k, i in enumerate(VS_SEEKER_LINES):
+        lines.append(f'Global10000_Text_PearlVsSeeker{k} = {gen4_text.b2_line(seeker[i])}')
+    offer_id = len(lines)
+    lines.append(f'Global10000_Text_PearlDefogOffer = {gen4_text.b2_line(gen4_text.bank(DEFOG_LINE_BANK)[DEFOG_OFFER_LINE])}')
     slot = pearl_var('PVAR_FOLLOWER_SLOT')
     s = open(os.path.join(DECOMP, 'res', 'field', 'scripts', 'global_10000.s'), encoding='utf-8').read()
     assert s.count('    ScriptEntry Script_16\n    ScriptEntriesEnd\n') == 1 and s.endswith('    .balign 4, 0\n')
     s = s.replace('    ScriptEntry Script_16\n    ScriptEntriesEnd\n',
-                  '    ScriptEntry Script_16\n    ScriptEntry Script_17\n    ScriptEntry Script_18\n    ScriptEntriesEnd\n')
+                  '    ScriptEntry Script_16\n    ScriptEntry Script_17\n    ScriptEntry Script_18\n    ScriptEntry Script_19\n    ScriptEntry Script_20\n'
+                  '    ScriptEntriesEnd\n')
     head = ('// Global scripts 10000-10017 (a/0/5/6 entry 1243): Black 2\'s field moves, pokebw2 res/field/scripts/\n'
             '// global_10000.s, with Script_17 (10016) added: Pearl\'s Defog from the party menu (b2tools/patches/\n'
             '// pearl_defog.py --sources writes this file; the decomp\'s src/pearlb2/defog_itcm.c runs it). Text: a/0/0/3\n'
             f'// file 1236 (src/text/script/1236_field_moves.txt: Black 2\'s lines, then line {defog_id}, Pearl\'s "used Defog!").\n'
             f'// Script_18 (10017): the following Pokémon talked to (patches/followers.py), lines {follower_id}-'
-            f'{follower_id + len(FOLLOWER_LINES) - 1}.\n')
+            f'{follower_id + len(FOLLOWER_LINES) - 1}.\n'
+            f'// Script_19 (10018): the Vs. Seeker (patches/vs_seeker.py), lines {seeker_id}-{seeker_id + 2}.\n\n'
+            f'// Script_20 (10019): Defog offered under the fog (field_moves.c, PEARLB2_SCRIPT_DEFOG_OFFER), line {offer_id}.\n')
     script = ('\n// PearlB2: Pearl\'s Defog (pokeplatinum FieldMoves_UseDefogFromMenu): Black 2\'s Flash steps with Pearl\'s line,\n'
               '// then the mist fades out (FieldSetWeather 0, not at once) and stays away until the player leaves the zone\n'
               'Script_17:\n'
               '    ActorsPauseAll\n'
+              'L_UseDefog:\n'
               '    WordSetPartyPokeName 0, 0x8000\n'
               f'    SystemMsg {defog_id}, 2                   // "X used Defog!"\n'
               '    InfoMsgClose\n'
               '    VMCall L_005C\n'
               '    PlayHMCutInEffect 0x8000\n'
               '    VMCall L_006C\n'
+              '    SEPlay SEQ_SE_FLD_02    // for SEQ_SE_DP_FBRADE: a Black 2 field-move sound stands in\n'
               f'    FlagSet {DEFOG_FLAG:#x}                    // (map-local: the clear sky stays through battles: '
               'PearlB2_ZoneWeather)\n'
               '    FieldSetWeather 0, 0\n'
@@ -120,6 +136,53 @@ def sources():
                '    PVWait\n'
                '    LastKeyWait\n'
                '    MsgWinCloseAll\n'
+               '    FinishAllEvents\n'
+               '    ActorsUnpauseAll\n'
+               '    VMHalt\n')
+    script += ('\n// PearlB2: the Vs. Seeker (pokeplatinum scripts_vs_seeker.s; decomp resident/vs_seeker.c, patches/vs_seeker.py;\n'
+               '// Pearl\'s sound and the player\'s pose with the device are Black 2 stand-ins): extension commands 0xA1, 0xA2\n'
+               'Script_19:\n'
+               '    ActorsPauseAll\n'
+               '    FieldCommand 351\n    .byte 0xA1\n    .2byte 0x8000\n    .2byte 0x8001   // 0 ok, 1 battery, 2 no one near; steps left\n'
+               '    WorkCmpConst 0x8000, 1\n'
+               '    VMJumpIf CMP_EQ, L_PearlVsBattery\n'
+               '    WorkCmpConst 0x8000, 2\n'
+               '    VMJumpIf CMP_EQ, L_PearlVsNone\n'
+               '    SEPlay SEQ_SE_BEEP\n'
+               '    FieldCommand 351\n    .byte 0xA2\n    .2byte 0x8000   // the Trainers\' "!": 0 somebody answered\n'
+               '    SEWait\n'
+               '    WorkCmpConst 0x8000, 0\n'
+               '    VMJumpIf CMP_EQ, L_PearlVsEnd\n'
+               f'    SystemMsg {seeker_id + 2}, 2\n'
+               '    VMJump L_PearlVsClose\n'
+               'L_PearlVsBattery:\n'
+               '    WordSetNumber 0, 0x8001, 3\n'
+               f'    SystemMsg {seeker_id}, 2\n'
+               '    VMJump L_PearlVsClose\n'
+               'L_PearlVsNone:\n'
+               f'    SystemMsg {seeker_id + 1}, 2\n'
+               'L_PearlVsClose:\n'
+               '    LastKeyWait\n'
+               '    InfoMsgClose\n'
+               'L_PearlVsEnd:\n'
+               '    FinishAllEvents\n'
+               '    ActorsUnpauseAll\n'
+               '    VMHalt\n'
+               '\n// PearlB2: nobody need know Defog (src/pearlb2/resident/field_moves.c): A under the fog offers it, Pearl\'s line;\n'
+               '// PokePartyHasMoveAny answers who shows it\n'
+               'Script_20:\n'
+               '    SEPlay SEQ_SE_MESSAGE\n'
+               '    ActorsPauseAll\n'
+               f'    SystemMsg {offer_id}, 2                   // "A deep fog drapes the area... use Defog?"\n'
+               '    YesNoWin 0x8010\n'
+               '    InfoMsgClose\n'
+               '    VMStackPush 0x8010\n'
+               '    VMStackPushConst 0\n'
+               '    VMStackCmp CMP_EQ\n'
+               '    VMJumpIf CMP_STACK, L_DefogNo\n'
+               '    PokePartyHasMoveAny 0x8000, 432\n'
+               '    VMJump L_UseDefog\n'
+               'L_DefogNo:\n'
                '    FinishAllEvents\n'
                '    ActorsUnpauseAll\n'
                '    VMHalt\n')
@@ -157,6 +220,37 @@ def apply(files):
     zoneheaders.save(files, headers, entries)
     return (f'pearl_defog: Black 2\'s mist (weather {B2_FOG}) in Pearl\'s deep-fog zones '
             + ', '.join(f'{n[4:]} ({b2})' for b2, n in sorted(zones.items())) + '; Defog: global 10016')
+
+
+# ---- Rock Climb from the party menu (decomp resident/leftovers.c gPearlB2RockClimb): the zones with a climb's sign event
+def rock_climb_zones():
+    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    climbs = json.load(open(os.path.join(ROOT, 'data', 'pearl_rock_climb.json')))
+    out = []
+    for z in zones:
+        if z['name'] in climbs:
+            r = world['zones'].get(str(z['id'])) or world['rooms']['zones'].get(str(z['id']))
+            if r is not None:
+                out.append(r['b2_zone'])
+    return sorted(set(out))
+
+
+def apply_code(code):
+    import struct
+    import decomp, resident
+    slot = decomp.symbol('gPearlB2RockClimb', code)
+    if slot is None:
+        return 'pearl_defog: no gPearlB2RockClimb in this decomp'
+    z = rock_climb_zones()
+    blob = struct.pack(f'<H{len(z)}H', len(z), *z)
+    old = struct.unpack('<I', resident.read(code, slot, 4))[0]
+    if old:
+        resident.write(code, old, blob)
+    else:
+        base, end, _ = resident.install(code, lambda b: (blob, {}))
+        resident.write(code, slot, struct.pack('<I', base))
+    return f'pearl_defog: Rock Climb from the party menu in {len(z)} zones'
 
 
 if __name__ == '__main__':

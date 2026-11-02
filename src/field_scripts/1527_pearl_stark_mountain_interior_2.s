@@ -358,7 +358,7 @@ T375_2_0139:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_2_018B
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 16  // Pearl bank 334 line 3
+    pl_msg_sys 16  // Pearl bank 334 line 3
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_2_019A
@@ -367,16 +367,16 @@ T375_2_0139:
 
 T375_2_018B:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 17  // Pearl bank 334 line 4
+    pl_msg_sys 17  // Pearl bank 334 line 4
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo T375_2_055B
 
 T375_2_019A:
     pl_BufferPartyMonNickname 0, PVAR_8004
-    pl_msg_talk 18  // Pearl bank 334 line 5
+    pl_msg_sys 18  // Pearl bank 334 line 5
     pl_CloseMessage
-// PlayHMCutIn 32772: nothing in Black 2 (the field-move cut-in (with the HM work: Black 2's PlayHMCutInEffect needs its player sequence))
+    pl_PlayHMCutIn PVAR_8004
 // StartDestroyObstacleAnimation 1: no animation in Black 2
     pl_SetVarFromValue PVAR_8005, 1  // the animation is "over" at once (the script waits for it)
     pl_WaitTime 10, PVAR_800C
@@ -410,7 +410,7 @@ T375_3_022A:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_3_0288
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 19  // Pearl bank 334 line 6
+    pl_msg_sys 19  // Pearl bank 334 line 6
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T375_3_0297
@@ -419,7 +419,7 @@ T375_3_022A:
 
 T375_3_0288:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 20  // Pearl bank 334 line 8
+    pl_msg_sys 20  // Pearl bank 334 line 8
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo T375_3_055B
@@ -429,10 +429,10 @@ T375_3_0297:
     PokePartyHasMoveAny PVAR_800C, 70  // FindPartySlotWithMove: the slot, 6 = none (the same in both games)
     pl_SetVarFromVar PVAR_8004, PVAR_800C
     pl_BufferPartyMonNickname 0, PVAR_800C
-    pl_msg_talk 21  // Pearl bank 334 line 10
-// PlayHMCutIn 32772: nothing in Black 2 (the field-move cut-in (with the HM work: Black 2's PlayHMCutInEffect needs its player sequence))
+    pl_msg_sys 21  // Pearl bank 334 line 10
+    pl_PlayHMCutIn PVAR_8004
     pl_CloseMessage
-    pl_msg_talk 22  // Pearl bank 334 line 11
+    pl_msg_sys 22  // Pearl bank 334 line 11
     pl_WaitButton
     pl_CloseMessage
     WorkSetConst PVAR_8004, 264  // GetCurrentMapID: Pearl map 264
@@ -441,7 +441,7 @@ T375_3_0297:
 
 T375_3_02D3:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 23  // Pearl bank 334 line 9
+    pl_msg_sys 23  // Pearl bank 334 line 9
     pl_WaitButton
     pl_CloseMessage
     pl_GoTo T375_3_055B
@@ -493,6 +493,7 @@ C375_4_039D:
     pl_msg_sys 27  // Pearl bank 334 line 19
     pl_CloseMessage
 // UseRockClimb PVAR_8004: 16 climb starts in this zone
+    pl_PlayHMCutIn PVAR_8004
     pl_GetPlayerMapPos PL_TMP, PL_TMP2
     pl_GetPlayerDir PL_TMP3
     WorkCmpConst PL_TMP, 52

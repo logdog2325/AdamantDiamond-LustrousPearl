@@ -28,6 +28,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import pearl_mesh  # noqa: E402
 
 LAND = os.path.join(ROOT, 'work', 'pearl', 'land')
@@ -334,7 +335,7 @@ def depth_pairs(chunk, cell, fixed=True, cache=None):
     cells.setdefault(chunk, cell)
     def model_of(c):
         if (c, fixed) not in cache:
-            bmd = open(os.path.join(LAND, f'{c:03d}.nsbmd'), 'rb').read()
+            bmd = open(os.path.join(LAND, f'{land_id(c):03d}.nsbmd'), 'rb').read()
             if fixed:
                 mm, xx, zz = cells.get(c, cell)
                 bmd, _ = pearl_chunk.fix_model(c, bmd, pearl_chunk.neighbours(mm, xx, zz))
@@ -403,7 +404,7 @@ def check(chunk, cell, fixed=False, cache=None):
     m, x, z = cell
     def model_of(c, where=None):
         if (c, fixed) not in cache:
-            bmd = open(os.path.join(LAND, f'{c:03d}.nsbmd'), 'rb').read()
+            bmd = open(os.path.join(LAND, f'{land_id(c):03d}.nsbmd'), 'rb').read()
             rep = {}
             if fixed:
                 mm, xx, zz = where or cells_of_cache[c]
@@ -436,7 +437,7 @@ def check(chunk, cell, fixed=False, cache=None):
             border += ar; border_pairs[(base(a.mat), base(b.mat))] += round(ar)
             continue
         fights[(base(a.mat), base(b.mat))] += 1
-    props = json.load(open(os.path.join(LAND, f'{chunk:03d}.json')))['props']
+    props = json.load(open(os.path.join(LAND, f'{land_id(chunk):03d}.json')))['props']
     total = 20 + size + 8196 + 4 + 16 * len(props)
     return dict(chunk=chunk, tj=len(tj), tj_border=tj_border, open=round(inner), unbacked=round(unbacked),
                 border=round(border), border_pairs=border_pairs.most_common(4), fights=sum(fights.values()),

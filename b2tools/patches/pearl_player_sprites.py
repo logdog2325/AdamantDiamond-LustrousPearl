@@ -143,8 +143,68 @@ def apply(files):
             sheets[sheet] = data; n += 1
     narcio.save(files, sprites.ARC_OW_SHEETS, sheets)
     backs = apply_backs(files)
+    fly = apply_fly(files)
     return (f'pearl_player_sprites: {n} player overworld sheets (Nate 231-239, Rosa 240-248) = Lucas and Dawn from '
-            f'Pearl; {backs}')
+            f'Pearl; {backs}; {fly}')
+
+
+# ------------------------------------------------------------------------------------------------- Fly's two scenes
+# Black 2's Fly (src/ov033/event_fly.c, src/ov036/fld3d_ci.c) plays 3D scenes of a/1/1/6 models with the player's own
+# textures: taking off effect 11 / 31 (model 58 / 138: 6 frames), landing effect 12 / 32 (model 66 / 142: 7 frames),
+# 32 x 32, 4 bpp, one palette per model (Nate's or Rosa's), switched by a pattern animation by texture name. Each takes
+# Pearl's frame of the same pose, pixel for pixel: Pearl's Poke Ball throw (mmodel sphero: standing, crouched, ball at
+# the side, ball held high) and, for the landing's back views, Pearl's walking back stand. Colours: the model's palette
+# takes the throw's 16 colours; the walking frames are matched to them (as the player's own sheets). No other Black 2
+# field effect carries the player: the HM cut-in (effect 3) shows the Pokemon only.
+FLY_MODELS = {58: (0, 'fly_hero'), 66: (0, 'fly_hero'), 138: (1, 'fly_heroine'), 142: (1, 'fly_heroine')}
+FLY_FRAMES = {58: {1: ('ball', 0), 3: ('ball', 1), 5: ('ball', 1), 7: ('ball', 2), 8: ('ball', 3), 9: ('ball', 3)},
+              66: {1: ('walk', 4), 2: ('walk', 0), 4: ('walk', 0), 6: ('walk', 0), 7: ('ball', 2), 8: ('ball', 3),
+                   9: ('ball', 3)}}
+FLY_FRAMES[138], FLY_FRAMES[142] = FLY_FRAMES[58], FLY_FRAMES[66]
+ARC_FIELD_MODELS = 0x74              # a/1/1/6
+
+
+def model_textures(bmd):
+    """(TEX0 offset, {texture: (w, h, absolute offset)}, {palette: absolute offset}) of a BMD0 with its textures."""
+    import struct
+    n = struct.unpack_from('<H', bmd, 0xE)[0]
+    t0 = next(o for o in struct.unpack_from(f'<{n}I', bmd, 0x10) if bmd[o:o + 4] == b'TEX0')
+    t = bmd[t0:]
+    texdict = struct.unpack_from('<H', t, 0xE)[0]
+    texdata = struct.unpack_from('<I', t, 0x14)[0]
+    paldict, paldata = struct.unpack_from('<II', t, 0x34)
+    tex = {}
+    for name, ent in sprites._dict(t, texdict):
+        q = struct.unpack_from('<I', ent, 0)[0]
+        tex[name] = (8 << (q >> 20 & 7), 8 << (q >> 23 & 7), q >> 26 & 7, t0 + texdata + ((q & 0xffff) << 3))
+    pals = {name: t0 + paldata + (struct.unpack_from('<H', ent, 0)[0] << 3) for name, ent in sprites._dict(t, paldict)}
+    return t0, tex, pals
+
+
+def fly_model(bmd, gender, name, frames, src):
+    """The Fly model with Pearl's frames; src = pearl_sheets(gender)."""
+    import struct
+    _, tex, pals = model_textures(bmd)
+    out = bytearray(bmd)
+    pal = src['ball'][1]
+    for k, (sheet, i) in frames.items():
+        w, h, fmt, off = tex[f'{name}.{k}']
+        assert (w, h, fmt) == (32, 32, 3), (name, k, w, h, fmt)
+        pix = src[sheet][0][i]
+        if sheet != 'ball': pix = remap(pix, src[sheet][1], pal)
+        out[off:off + w * h // 2] = sprites.pack4(shift(pix, SHIFT_DOWN))
+    assert {f'{name}.{k}' for k in frames} == {t for t in tex if t.startswith(name + '.')}, name
+    struct.pack_into('<16H', out, pals[name], *pal)
+    return bytes(out)
+
+
+def apply_fly(files):
+    models = narcio.load(files, ARC_FIELD_MODELS)
+    src = {g: pearl_sheets(g) for g in (0, 1)}
+    for mid, (gender, name) in FLY_MODELS.items():
+        models[mid] = fly_model(models[mid], gender, name, FLY_FRAMES[mid], src[gender])
+    narcio.save(files, ARC_FIELD_MODELS, models)
+    return f'Fly\'s {len(FLY_MODELS)} scene models = Pearl\'s frames'
 
 
 # ---------------------------------------------------------------------------------------------------- battle backs

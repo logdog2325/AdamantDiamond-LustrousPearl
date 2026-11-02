@@ -112,9 +112,9 @@ P139_0110:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
-    pl_PokeMartCommon 12  // Pearl SpecialMart 12: Black 2's normal Mart for now
+    pl_PokeMartSpecial 12  // Pearl SpecialMart 12
     pl_ReleaseAll
     pl_End
 
@@ -123,9 +123,9 @@ P139_0126:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
-    pl_PokeMartCommon 13  // Pearl SpecialMart 13: Black 2's normal Mart for now
+    pl_PokeMartSpecial 13  // Pearl SpecialMart 13
     pl_ReleaseAll
     pl_End
 
@@ -142,14 +142,6 @@ P139_013C:
 PearlElevatorInit:                // zone init (after Pearl's): an elevator (ELEVATOR_FLOORS_ABOVE)
     WorkSetConst PVAR_40CE, 2  // this floor's floors above (an elevator reads it)
     VMHalt
-
-// ---- Pearl global script 205:20 (a subroutine here)
-C205_20_S20:
-C205_20_0F28:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 12  // Pearl bank 199 line 37
-    pl_ReturnCommonScript
-    VMReturn  // End: the sub-script ends
 
 PearlNoScript:
     VMHalt

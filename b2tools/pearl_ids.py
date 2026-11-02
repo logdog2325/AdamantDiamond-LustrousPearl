@@ -23,6 +23,8 @@ Rules (Black 2 side: pokebw2 + HoennB2's survey of every flag/work Black 2's cod
   0x800D (the talked-to object) -> 0x8011 (Black 2's).
 - Trainers: Pearl's battled and partner trainers (work/pearl/b2_trainers/index.json) in Pearl's id order -> Black 2
   ids 1-813 without the ones Black 2 resets or reads (TRAINER_NEVER).
+- Rematches (DECISIONS 2026-10-19): the 146 Trainers only Pearl's Vs. Seeker table uses (patches/vs_seeker.py tier_ids)
+  -> what is left of 1-813; three more from REMATCH_EXTRA, whose defeat flags no Black 2 C or global script touches.
 - New ids Pearl keeps elsewhere: PVAR_STARTER (Pearl's save field for the starter species). New ids Pearl NDS needs
   for its own features: NEW_VARS (works), NEW_FLAGS (saved flags), NEW_DAILY_FLAGS (flags Black 2 clears at
   midnight) and NEW_ITEM_BALL_FLAGS (item balls' flags: Black 2's item-ball flags after Pearl's), the last three in
@@ -64,6 +66,10 @@ DAILY_FLAGS = [(2744, 2772), (2774, 2777), (2779, 2793)]
 TRAINER_NEVER = ({95, 96, 183, 184, 185, 186, 296, 299, 302, 303, 333, 752} | set(range(381, 386))
                  | {i for a, b in ((1, 3), (7, 9), (13, 15), (17, 18), (20, 30), (48, 132), (227, 251))
                     for i in range(a, b + 1)})
+# TRAINER_NEVER's ids came from a survey that also counted Black 2's Unova zone scripts, and global_3000's message types
+# written as Trainer names. These three have no reference in Black 2's C or global scripts (2026-11-01, the leftovers
+# agent), so nothing can touch their defeat flags in Sinnoh: Pearl's rematches take them after the free ids.
+REMATCH_EXTRA = [227, 228, 229]
 # Partner trainers that work/pearl/b2_trainers/index.json files as 'variant' (same class and name as a battled one),
 # so the rule below would skip them: Barry's three Spear Pillar teams (by the player's starter, set in a Call'd
 # subroutine before Pearl's StartTagBattle 0x8004, Mars 528, Jupiter 407: file 230 P230_09B0) (2026-10-26, chapter 7)
@@ -81,6 +87,10 @@ NEW_VARS = {                           # new saved works Pearl NDS needs: name -
                     'is given',
     'PVAR_PC_TOWN': 'the Pokémon Center 1F the player came up from (its Black 2 zone), so the one shared 2F sends '
                     'the player back down there (patches/pearl_centers.py, notes/LINK.md)',
+    'PVAR_VS_SEEKER_BATTERY': "the Vs. Seeker's battery, 0-100 steps (Pearl's VAR_VS_SEEKER_BATTERY_LEVEL): written by "
+                              'resident/vs_seeker.c',
+    'PVAR_VS_SEEKER_STEPS': "steps since the Vs. Seeker last woke Trainers, + 1; 0 = none waiting (Pearl's "
+                            'VAR_VS_SEEKER_STEP_COUNT and FLAG_VS_SEEKER_USED)',
     'PVAR_FOLLOWER_SLOT': 'the party slot of the Pokémon that follows the player (written by the follower module, '
                           'include/follower.h; its talk script, global 10017, names that Pokémon and plays its cry)',
     **{f'PVAR_HABITAT_VISITED_{i}': f'the Pokédex HABITAT list\'s visited places {16 * i}-{16 * i + 15} (one bit each, set '
@@ -298,6 +308,15 @@ def allocate(names=None):
         if tid in rt or (e['category'] not in ('battled', 'other') and int(tid) not in PARTNER_VARIANTS):
             continue
         rt[tid] = dict(b2=pool.pop(0), name=e['name'], pearl_class=e['pearl_class'], b2_class=e['b2_class'])
+    # the Vs. Seeker's rematch Trainers (patches/vs_seeker.py: Pearl's table, records whose base has an id)
+    sys.path.insert(0, os.path.join(HERE, 'patches'))
+    import vs_seeker
+    for t in vs_seeker.tier_ids(rt):
+        tid = str(t)
+        if tid not in rt:
+            e = index[tid]
+            rt[tid] = dict(b2=(pool or REMATCH_EXTRA).pop(0), name=e['name'], pearl_class=e['pearl_class'],
+                           b2_class=e['b2_class'])
     reg = {'_doc': 'Pearl flag/var/trainer -> Black 2 id registry, written by b2tools/pearl_ids.py (rules in its '
                    'docstring; notes/STORY.md "Ids"). An id once given is kept: edit only by rerunning the tool.',
            'flags': dict(sorted(rf.items())), 'vars': dict(sorted(rv.items())), 'new': rn, 'new_flags': rnf,

@@ -7,7 +7,7 @@
 2. Runs each named patch: patches/<name>.py defines apply(files_dir) (NitroFS files) and/or apply_code(code_dir)
    (decompressed arm9.bin / arm9_ovNNN.bin, a clone of the decomp's build dir; dsd recompresses them)
 3. Writes work/rom/rom_config.yaml (the decomp's config with absolute paths and our files_dir)
-4. Runs `dsd rom build` -> work/rom/pearl.nds
+4. Runs `dsd rom build` -> work/rom/pearl.nds (PEARL_VERSION=diamond: work/rom_diamond/diamond.nds)
 
 Only decomp.py's ninja writes into the decomp checkout (its build/); its extracted files are never modified. With no
 patches, the output matches the original dump's SHA1 (checked) when the decomp's C changes are off (decomp.py vanilla).
@@ -149,6 +149,9 @@ def write_config():
         key, val = m.group(1), m.group(2).strip()
         if key == 'files_dir':
             return f'{key}: {os.path.join(OUT, "files")}'
+        own = {'header': 'header.yaml', 'banner': 'banner/banner.yaml'}.get(key)   # the game's name (rom_identity.py,
+        if own and os.path.exists(os.path.join(code, 'rom_identity', own)):        # written by patches/pearl_title.py)
+            return f'{key}: {os.path.join(code, "rom_identity", own)}'
         if val in ('null', 'false', 'true') or val == '' or re.fullmatch(r'-?(0x[0-9a-fA-F]+|\d+)', val):
             return m.group(0)
         path = os.path.normpath(os.path.join(SRC_BUILD, val))
@@ -161,6 +164,7 @@ def write_config():
     return path
 
 def main(args):
+    version.check_inputs()
     clean = '--clean' in args
     pad = '--no-pad' not in args
     patches = [a for a in args if not a.startswith('--')]
@@ -228,7 +232,7 @@ def main(args):
         pad_archives(files, fresh=clean)
     step('write the ROM')
     cfg = write_config()
-    rom = os.path.join(OUT, 'pearl.nds')
+    rom = os.path.join(OUT, version.ROM_NAME)
     r = subprocess.run([DSD, 'rom', 'build', '--config', cfg, '--rom', rom],
                        capture_output=True, text=True)
     if r.returncode:

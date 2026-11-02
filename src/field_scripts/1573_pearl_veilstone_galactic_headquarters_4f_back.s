@@ -285,7 +285,7 @@ P339_035C:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_msg_talk 8
+    pl_msg_sys 8
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -296,7 +296,7 @@ P339_036F:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_msg_talk 9
+    pl_msg_sys 9
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -307,7 +307,7 @@ P339_0382:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_msg_talk 10
+    pl_msg_sys 10
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll

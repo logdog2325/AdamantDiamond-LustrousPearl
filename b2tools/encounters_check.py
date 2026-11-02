@@ -2,8 +2,8 @@
 
     python3 encounters_check.py [FILES_DIR]       default: $PEARL_BUILD_DIR/files, else work/rom/files
 
-Checks, from the built files only (a/1/2/7 and the zone headers a/0/1/2), against work/pearl/encounters/*.json and
-work/pearl/zones.json, with its own reading of Pearl's data (it does not use patches/sinnoh_encounters.py's code; it
+Checks, from the built files only (a/1/2/7 and the zone headers a/0/1/2), against work/<version>/encounters/*.json and
+work/<version>/zones.json (PEARL_VERSION: Pearl's or Diamond's tables), with its own reading of Pearl's data (it does not use patches/sinnoh_encounters.py's code; it
 only reads its ROD_LAYOUT setting):
 - Black 2's own 135 tables are unchanged (byte-equal to pokebw2's build).
 - Each Sinnoh zone (data/sinnoh_world.json "zones", plus the "rooms" whose header is on their own Black 2 matrix)
@@ -19,10 +19,10 @@ import importlib.util, json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
-import narcio, zoneheaders  # noqa: E402
+import narcio, version, zoneheaders  # noqa: E402
 
 VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORK
 B2_TABLES, NONE = 135, 0x1FFF
 # documented in notes/ENCOUNTERS.md: Pearl grass/surf rate -> Black 2 rule
 RULE = {10: 11, 15: 11, 20: 3, 25: 4, 30: 4, 35: 4}
@@ -103,8 +103,7 @@ def expected(enc, sp, layout, period='day', rod_table=False):
 
 
 def main():
-    files = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.environ.get('PEARL_BUILD_DIR') or
-                                                                os.path.join(ROOT, 'work', 'rom'), 'files')
+    files = sys.argv[1] if len(sys.argv) > 1 else os.path.join(version.build_dir(os.path.join(ROOT, 'work', 'rom')), 'files')
     world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
     pzones = json.load(open(os.path.join(PEARL, 'zones.json')))
     sp, names = pearl_species(), {}

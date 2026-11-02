@@ -24,6 +24,12 @@ EXT_CMD = 0x15F
 EXT_ARGS = {
     0x00: 0, 0x01: 2, 0x02: 2, 0x03: 4, 0x04: 0, 0x05: 0,   # the Pokétch (src/pearlb2/poketch_itcm.c)
     0x40: 3, 0x41: 2, 0x42: 2, 0x43: 2, 0x44: 0, 0x45: 4,   # Pal Park (src/pearlb2/resident/palpark.c)
+    0x60: 2, 0x61: 0, 0x62: 4, 0x63: 0, 0x64: 0, 0x65: 4, 0x66: 5, 0x67: 4, 0x68: 4, 0x69: 2, 0x6a: 2, 0x6b: 3, 0x6c: 1, 0x6d: 2,   # honey trees, swarms, berries (resident/wild.c, berry.c)
+    0x80: 2, 0x81: 2, 0x82: 2, 0x83: 4, 0x84: 4, 0x85: 0, 0x86: 4, 0x87: 2, 0x88: 0, 0x89: 8, 0x8a: 2, 0x8b: 2, 0x8c: 2, 0x8d: 0, 0x8e: 8, 0x8f: 2, 0x90: 4,   # the Battle Tower (resident/tower.c)
+    0xa0: 2, 0xa1: 4, 0xa2: 2, 0xa3: 6, 0xa4: 2, 0xa5: 2, 0xa6: 4,   # the smaller finishes (resident/leftovers.c, vs_seeker.c)
+    0xc0: 8, 0xc1: 10, 0xc2: 8, 0xc3: 4, 0xc4: 6, 0xc5: 2, 0xc6: 4, 0xc7: 2, 0xc8: 6, 0xc9: 2, 0xca: 3, 0xcb: 4, 0xcc: 3,   # Super Contests (resident/contest.c)
+    0xd8: 2, 0xd9: 2, 0xda: 2, 0xdb: 6, 0xdc: 14, 0xdd: 2,   # Poffins (resident/poffin.c)
+    **{sub: 2 for sub in range(0xe0, 0x100)},   # Secret Bases (resident/secret_base.c): one value-or-var each
 }
 _CMDS = _PERM = None
 
@@ -33,6 +39,14 @@ def commands():
     if _CMDS is None:
         _CMDS = {int(k): v for k, v in json.load(open(os.path.join(DECOMP, 'tools', 'script',
                                                                    'field_commands.json')))['commands'].items()}
+        # the overlay plugins' commands (1000+: the Battle Subway's, for the Battle Tower) are only in the macros
+        inc = open(os.path.join(DECOMP, 'include', 'asm', 'field_script.inc')).read()
+        for m in re.finditer(r'\.macro\s+(\S+)[^\n]*\n\s*FieldCommand (\d+)\n(.*?)\.endm', inc, re.S):
+            # the numbers are per plugin, so 1003 means ten things: PearlB2's scripts use only the Battle Subway's
+            if m.group(1) in ('Plugin1_Cmd1000', 'Plugin1_Cmd1001', 'Plugin1_Cmd1002', 'BSubwayCmd_Tool'):
+                kinds = {'.byte': 'u8', '.2byte': 'u16', '.4byte': 'u32', '.word': 'u32'}
+                args = [kinds[l.split()[0]] for l in m.group(3).split('\n') if l.split() and l.split()[0] in kinds]
+                _CMDS[int(m.group(2))] = {'handler': m.group(1), 'overlay': None, 'args': args}
     return _CMDS
 
 

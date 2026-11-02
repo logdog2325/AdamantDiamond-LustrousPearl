@@ -19,6 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, 'patches'))
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import narcio, nsbtx, recolour, maplook  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
 
@@ -117,7 +118,7 @@ def check(files=None):
         P = nsbtx._parse(pearl_sets[texset])
         pairs = set()
         for c in chunks:
-            pairs |= nsbtx.material_pairs(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.nsbmd'), 'rb').read())
+            pairs |= nsbtx.material_pairs(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.nsbmd'), 'rb').read())
         pairs = sorted((t, p) for t, p in pairs if t and p and t in dict(P['texs']) and p in dict(P['pals']))
         mine = {t: [(i, c) for i, c in texel_colours(P, t, p)] for t, p in pairs}
         for s in (range(4) if key[1] == NORTH else (2, 3)):

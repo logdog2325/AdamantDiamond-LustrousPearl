@@ -34,7 +34,7 @@ P309_0025:
     pl_GoToIf 1, P309_0073
     pl_SetFlag PFLAG_011A
     pl_BufferPlayerName 0
-    pl_msg_talk 1
+    pl_msg_sys 1
     pl_CloseMessage
 // ReleaseObject 0: nothing in Black 2 (Black 2 pauses all actors (LockAll) only)
 // ShakeObject 0, 8, 90, 3, 0: nothing in Black 2 (no one-person shake)
@@ -43,14 +43,14 @@ P309_0025:
 
 P309_0073:
     pl_BufferPlayerName 0
-    pl_msg_talk 0
+    pl_msg_sys 0
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     pl_End
 
 P309_0081:
-    pl_msg_talk 2
+    pl_msg_sys 2
     pl_CloseMessage
     pl_PlayCry 486
     pl_WaitCry
@@ -68,7 +68,7 @@ P309_0081:
     pl_End
 
 P309_00C6:
-    pl_msg_talk 3
+    pl_msg_sys 3
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll

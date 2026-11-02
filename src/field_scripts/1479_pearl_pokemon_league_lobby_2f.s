@@ -139,14 +139,14 @@ T207_2_0108:
 T207_2_012C:
     pl_msg_talk 82  // Pearl bank 207 line 1
     ListMenu_AnchorTopRight 31, 1, 1, 0, PVAR_800C  // Pearl InitGlobalTextListMenu 1, 1, 1, 1, PVAR_800C
-    ListMenuAdd 83, 65535, 255  // Pearl AddListMenuEntry 163, 255
-    ListMenuAdd 84, 65535, 255  // Pearl AddListMenuEntry 6, 255
-    ListMenuAdd 85, 65535, 255  // Pearl AddListMenuEntry 7, 255
-    ListMenuAdd 86, 65535, 255  // Pearl AddListMenuEntry 8, 255
-    ListMenuAdd 87, 65535, 255  // Pearl AddListMenuEntry 164, 255
-    ListMenuAdd 88, 65535, 255  // Pearl AddListMenuEntry 9, 255
-    ListMenuAdd 89, 65535, 255  // Pearl AddListMenuEntry 10, 255
-    ListMenuAdd 90, 65535, 255  // Pearl AddListMenuEntry 11, 255
+    ListMenuAdd 83, 65535, 250  // Pearl AddListMenuEntry 163, 250
+    ListMenuAdd 84, 65535, 0  // Pearl AddListMenuEntry 6, 0
+    ListMenuAdd 85, 65535, 1  // Pearl AddListMenuEntry 7, 1
+    ListMenuAdd 86, 65535, 2  // Pearl AddListMenuEntry 8, 2
+    ListMenuAdd 87, 65535, 250  // Pearl AddListMenuEntry 164, 250
+    ListMenuAdd 88, 65535, 3  // Pearl AddListMenuEntry 9, 3
+    ListMenuAdd 89, 65535, 4  // Pearl AddListMenuEntry 10, 4
+    ListMenuAdd 90, 65535, 5  // Pearl AddListMenuEntry 11, 5
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0

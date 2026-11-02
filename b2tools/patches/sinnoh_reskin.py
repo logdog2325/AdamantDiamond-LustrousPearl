@@ -22,6 +22,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import narcio, nsbtx, recolour, maplook, b2_look  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
 
@@ -33,7 +34,7 @@ def pearl_pairs(chunks):
     """Pearl texture -> palette name, from the overworld chunks' materials."""
     out = {}
     for c in chunks:
-        bmd = open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.nsbmd'), 'rb').read()
+        bmd = open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.nsbmd'), 'rb').read()
         for t, p in nsbtx.material_pairs(bmd):
             out.setdefault(t, p)
     return out
@@ -189,6 +190,14 @@ def reskin_sets(fixes=(), areas=None, chunks=None):
                     refs.setdefault(pal, set()).add(None)
             ground = _ground_anchors(section, P, pairs, b2, b2_set,
                                      seasonal if pearl_art else None) if 'transfer' in fixes else None
+            snow = None
+            if ground and pearl_art and b2_look.grass_on() and int(pa) != NORTH_AREA \
+                    and b2_look.grass_set(season) == b2_look.B2_SNOW_SET:
+                # winter's ground is Black 2's snow (b2_look.grass_set): edges, shadows and flowers' grass meet it, not
+                # the winter Aspertia colour this section's ngrass names (2026-11-01: green rims on white lawns)
+                snow = b2_look.grass_pairs(P, season)
+                if snow:
+                    ground['pairs'] = snow; ground['inner']['ngrass'] = snow[0]
             group_counts = {}   # 'transfer': palettes with the same main Black 2 texture (all trees) share anchors
             if 'transfer' in fixes:
                 from collections import Counter
@@ -255,6 +264,11 @@ def reskin_sets(fixes=(), areas=None, chunks=None):
                     ramps[pal] = (lambda q, k: (lambda data: recolour.grass_recolour(data, q, k)))(
                         list(ground['pairs']), kf)
                     edged += count * len(names)
+            if snow:            # their grass goes to the snow too, wherever their other colours go
+                for pal in list(ramps):
+                    if not any(b2_look.keeps_own_grass(n) for n in users.get(pal, ())):
+                        ramps[pal] = (lambda f, q, k: (lambda data: recolour.grass_over(data, f, q, k)))(
+                            ramps[pal], snow, all((ptex[n][0] >> 29) & 1 for n in users.get(pal, ()) if n in ptex))
             adds = []
             for name, _ in P['texs']:
                 pal = pairs.get(name)

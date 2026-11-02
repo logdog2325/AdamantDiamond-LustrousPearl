@@ -30,6 +30,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import pearl_mesh, nsbtx  # noqa: E402
 
 LIGHTS = {
@@ -265,7 +266,7 @@ def draw_model(scene, model, tex, offset=(0, 0, 0), setup=None, reverse=False):
 
 def chunk_model(chunk, fixed=False):
     land = os.path.join(ROOT, 'work', 'pearl', 'land')
-    bmd = open(os.path.join(land, f'{chunk:03d}.nsbmd'), 'rb').read()
+    bmd = open(os.path.join(land, f'{land_id(chunk):03d}.nsbmd'), 'rb').read()
     if fixed:
         import pearl_chunk, pearl_seams_check
         world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
@@ -292,7 +293,7 @@ def render(chunk, texset, at=None, light='pearl_indoor', edges='pearl_indoor', s
     eye = (x, y + 237 * math.sin(pitch), z + 237 * math.cos(pitch))
     setup = LIGHTS[light]
     build = narc_members(rom.read('fielddata/build_model/build_model.narc')) if extra_props else None
-    props = json.load(open(os.path.join(land, f'{chunk:03d}.json')))['props'] if extra_props else []
+    props = json.load(open(os.path.join(land, f'{land_id(chunk):03d}.json')))['props'] if extra_props else []
     def scene(reverse):
         sc = Scene(256 * scale, 192 * scale, eye, (x, y, z), quantize=flicker, shrink=cracks * scale)
         draw_model(sc, model, tex, setup=setup, reverse=reverse)

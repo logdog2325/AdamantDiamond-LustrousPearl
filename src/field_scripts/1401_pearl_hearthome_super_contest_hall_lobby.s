@@ -4,7 +4,6 @@
 #include "asm/field_script.inc"
 #include "pearl.h"
 #include "pearl_story.inc"
-#include "pearl_musical.inc"
 
     ScriptEntry P114_S1
     ScriptEntry P114_S2
@@ -333,7 +332,7 @@ P114_0378:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P114_036D
     pl_msg_talk 12
-    pl_stub CheckHasEmptyPoffinCaseSlot  // Pearl 0x28A Unk028A 32780: not translated yet
+    pl_PoffinHasRoom PVAR_800C  // Pearl 0x28A
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P114_03B6
     pl_Call P114_0425
@@ -358,7 +357,7 @@ P114_03C1:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P114_0416
     pl_msg_talk 12
-    pl_stub CheckHasEmptyPoffinCaseSlot  // Pearl 0x28A Unk028A 32780: not translated yet
+    pl_PoffinHasRoom PVAR_800C  // Pearl 0x28A
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P114_0407
     pl_Call P114_0425
@@ -385,7 +384,7 @@ P114_0416:
     pl_End
 
 P114_0425:
-    pl_stub GivePoffin  // Pearl 0x289 Unk0289 32780, 60, 30, 30, 30, 30, 40: not translated yet
+    pl_PoffinGive PVAR_800C, 60, 30, 30, 30, 30, 40  // Pearl 0x289 (spicy .. sour, smoothness)
     pl_PlayFanfare SEQ_ME_ITEM  // Pearl SEQ_FANFA4
     pl_BufferPlayerName 0
     MsgWinCloseAll  // another speaker: close the first window
@@ -867,7 +866,7 @@ W206_0BF2_0BFE:
     pl_CompareVarToValue PVAR_8004, 65535
     pl_GoToIf 1, W206_0BF2_0C3E
     pl_BufferPlayerName 0
-// BufferAccessoryName 1, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_BufferAccessoryWord 1, PVAR_8004  // Pearl BufferAccessoryName
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 36  // Pearl bank 203 line 80
     pl_SetVarFromValue PVAR_8005, 1
@@ -924,16 +923,16 @@ PearlProxy_10156:                  // Pearl global script 10156 (run by this zon
     VMCall T1042_7_S7
     VMHalt
 
-PearlClosed_0:                  // the Pokémon Musical's reception (data/pearl_closed_facilities.json "musical"): object 1
-    pl_musical_reception 167, 168
+PearlClosed_0:                  // a Super Contest counter (src/field_scripts/1282_global_contests.s): object 1
+    RTCallGlobal 10786
     VMHalt
 
-PearlClosed_1:                  // the Pokémon Musical's reception (data/pearl_closed_facilities.json "musical"): object 0
-    pl_musical_reception 167, 168
+PearlClosed_1:                  // a Super Contest counter (src/field_scripts/1282_global_contests.s): object 0
+    RTCallGlobal 10785
     VMHalt
 
-PearlClosed_2:                  // the Pokémon Musical's reception (data/pearl_closed_facilities.json "musical"): object 2
-    pl_musical_reception 167, 168
+PearlClosed_2:                  // a Super Contest counter (src/field_scripts/1282_global_contests.s): object 2
+    RTCallGlobal 10787
     VMHalt
 
 // ---- Pearl global script 205:48 (a subroutine here)
@@ -941,33 +940,19 @@ C205_48_S48:
 C205_48_0915:
     pl_Call C205_48_0922
     MsgWinCloseAll  // another speaker: close the first window
-    pl_CompareVarToValue PVAR_8004, 49
-    pl_GoToIf 1, C205_48_091B_App49
-    pl_msg_sys 38  // Pearl bank 199 line 127: another one (no caller here sets it)
-    pl_GoTo C205_48_091B_AppDone
-C205_48_091B_App49:
-    pl_msg_sys 39  // naming Glitter Powder
-    pl_GoTo C205_48_091B_AppDone
-C205_48_091B_AppDone:
+    pl_msg_sys 38  // Pearl bank 199 line 127, an Accessory by word
     pl_ReturnCommonScript
     VMReturn  // End: the sub-script ends
 
 C205_48_0922:
     pl_PlayFanfare SEQ_ME_ACCE  // Pearl SEQ_ACCE
-// AddAccessory 32772, 32773: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
-// BufferAccessoryName 0, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_AddAccessory PVAR_8004, PVAR_8005  // Pearl AddAccessory (the Fashion Case)
+    pl_BufferAccessoryWord 0, PVAR_8004  // Pearl BufferAccessoryName
     MsgWinCloseAll  // another speaker: close the first window
-    pl_CompareVarToValue PVAR_8004, 49
-    pl_GoToIf 1, C205_48_0931_App49
-    pl_msg_sys 40  // Pearl bank 199 line 25: another one (no caller here sets it)
-    pl_GoTo C205_48_0931_AppDone
-C205_48_0931_App49:
-    pl_msg_sys 41  // naming Glitter Powder
-    pl_GoTo C205_48_0931_AppDone
-C205_48_0931_AppDone:
+    pl_msg_sys 39  // Pearl bank 199 line 25, an Accessory by word
     pl_WaitFanfare
     pl_BufferPlayerName 0
-// BufferAccessoryName 1, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_BufferAccessoryWord 1, PVAR_8004  // Pearl BufferAccessoryName
     pl_Return
 
 // ---- Pearl global script 206:1 (a subroutine here)
@@ -1070,23 +1055,23 @@ T206_7_01FC:
     pl_SetVarFromValue PVAR_4003, 0
     pl_SetVarFromValue PVAR_8007, 2
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 42  // Pearl bank 203 line 3
+    pl_msg_talk 40  // Pearl bank 203 line 3
     pl_GoTo T206_7_023A
 
 T206_7_023A:
     pl_CompareVarToValue PVAR_4003, 1
     pl_GoToIf 1, T206_7_0250
-    pl_msg_talk 43  // Pearl bank 203 line 4
+    pl_msg_talk 41  // Pearl bank 203 line 4
     pl_GoTo T206_7_0253
 
 T206_7_0250:
-    pl_msg_talk 44  // Pearl bank 203 line 12
+    pl_msg_talk 42  // Pearl bank 203 line 12
 
 T206_7_0253:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 45, 65535, 0  // Pearl AddMenuEntryImm 8, 0
-    ListMenuAdd 46, 65535, 1  // Pearl AddMenuEntryImm 9, 1
-    ListMenuAdd 47, 65535, 2  // Pearl AddMenuEntryImm 10, 2
+    ListMenuAdd 43, 65535, 0  // Pearl AddMenuEntryImm 8, 0
+    ListMenuAdd 44, 65535, 1  // Pearl AddMenuEntryImm 9, 1
+    ListMenuAdd 45, 65535, 2  // Pearl AddMenuEntryImm 10, 2
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1100,7 +1085,7 @@ T206_7_0291:
     pl_SetVarFromValue PVAR_40D5, 0
     pl_ClearFlag PFLAG_0966
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 48  // Pearl bank 203 line 11
+    pl_msg_talk 46  // Pearl bank 203 line 11
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -1130,18 +1115,18 @@ T206_7_02F0:
     pl_GoTo T206_7_030E
 
 T206_7_0305:
-    pl_msg_talk 49  // Pearl bank 203 line 13
+    pl_msg_talk 47  // Pearl bank 203 line 13
     pl_GoTo T206_7_023A
 
 T206_7_030E:
-    pl_msg_talk 50  // Pearl bank 203 line 5
+    pl_msg_talk 48  // Pearl bank 203 line 5
 
 T206_7_0311:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 51, 65535, 0  // Pearl AddMenuEntryImm 96, 0
-    ListMenuAdd 52, 65535, 1  // Pearl AddMenuEntryImm 97, 1
-    ListMenuAdd 53, 65535, 2  // Pearl AddMenuEntryImm 98, 2
-    ListMenuAdd 54, 65535, 3  // Pearl AddMenuEntryImm 99, 3
+    ListMenuAdd 49, 65535, 0  // Pearl AddMenuEntryImm 96, 0
+    ListMenuAdd 50, 65535, 1  // Pearl AddMenuEntryImm 97, 1
+    ListMenuAdd 51, 65535, 2  // Pearl AddMenuEntryImm 98, 2
+    ListMenuAdd 52, 65535, 3  // Pearl AddMenuEntryImm 99, 3
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1156,23 +1141,23 @@ T206_7_0360:
     pl_GoTo T206_7_0381
 
 T206_7_0368:
-    pl_msg_talk 55  // Pearl bank 203 line 18
+    pl_msg_talk 53  // Pearl bank 203 line 18
     pl_GoTo T206_7_030E
 
 T206_7_0373:
-    pl_msg_talk 56  // Pearl bank 203 line 19
+    pl_msg_talk 54  // Pearl bank 203 line 19
     pl_GoTo T206_7_030E
 
 T206_7_037E:
-    pl_msg_talk 57  // Pearl bank 203 line 117
+    pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_7_0381:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 58, 65535, 0  // Pearl AddMenuEntryImm 36, 0
-    ListMenuAdd 59, 65535, 1  // Pearl AddMenuEntryImm 37, 1
-    ListMenuAdd 60, 65535, 2  // Pearl AddMenuEntryImm 38, 2
-    ListMenuAdd 61, 65535, 3  // Pearl AddMenuEntryImm 39, 3
-    ListMenuAdd 62, 65535, 4  // Pearl AddMenuEntryImm 40, 4
+    ListMenuAdd 56, 65535, 0  // Pearl AddMenuEntryImm 36, 0
+    ListMenuAdd 57, 65535, 1  // Pearl AddMenuEntryImm 37, 1
+    ListMenuAdd 58, 65535, 2  // Pearl AddMenuEntryImm 38, 2
+    ListMenuAdd 59, 65535, 3  // Pearl AddMenuEntryImm 39, 3
+    ListMenuAdd 60, 65535, 4  // Pearl AddMenuEntryImm 40, 4
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1186,29 +1171,29 @@ T206_7_0381:
     pl_GoTo T206_7_0311
 
 T206_7_03E1:
-    pl_msg_talk 63  // Pearl bank 203 line 14
+    pl_msg_talk 61  // Pearl bank 203 line 14
     pl_GoTo T206_7_037E
 
 T206_7_03EC:
-    pl_msg_talk 64  // Pearl bank 203 line 15
+    pl_msg_talk 62  // Pearl bank 203 line 15
     pl_GoTo T206_7_037E
 
 T206_7_03F7:
-    pl_msg_talk 65  // Pearl bank 203 line 16
+    pl_msg_talk 63  // Pearl bank 203 line 16
     pl_GoTo T206_7_037E
 
 T206_7_0402:
-    pl_msg_talk 66  // Pearl bank 203 line 17
+    pl_msg_talk 64  // Pearl bank 203 line 17
     pl_GoTo T206_7_037E
 
 T206_7_040D:
-    pl_msg_talk 67  // Pearl bank 203 line 27
+    pl_msg_talk 65  // Pearl bank 203 line 27
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 68, 65535, 0  // Pearl AddMenuEntryImm 105, 0
-    ListMenuAdd 69, 65535, 1  // Pearl AddMenuEntryImm 106, 1
-    ListMenuAdd 70, 65535, 2  // Pearl AddMenuEntryImm 107, 2
-    ListMenuAdd 71, 65535, 3  // Pearl AddMenuEntryImm 108, 3
-    ListMenuAdd 72, 65535, 4  // Pearl AddMenuEntryImm 109, 4
+    ListMenuAdd 66, 65535, 0  // Pearl AddMenuEntryImm 105, 0
+    ListMenuAdd 67, 65535, 1  // Pearl AddMenuEntryImm 106, 1
+    ListMenuAdd 68, 65535, 2  // Pearl AddMenuEntryImm 107, 2
+    ListMenuAdd 69, 65535, 3  // Pearl AddMenuEntryImm 108, 3
+    ListMenuAdd 70, 65535, 4  // Pearl AddMenuEntryImm 109, 4
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1239,14 +1224,14 @@ T206_7_049A:
 
 T206_7_04A8:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 73  // Pearl bank 203 line 28
+    pl_msg_talk 71  // Pearl bank 203 line 28
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 74, 65535, 0  // Pearl AddMenuEntryImm 110, 0
-    ListMenuAdd 75, 65535, 1  // Pearl AddMenuEntryImm 111, 1
-    ListMenuAdd 76, 65535, 2  // Pearl AddMenuEntryImm 112, 2
-    ListMenuAdd 77, 65535, 3  // Pearl AddMenuEntryImm 113, 3
-    ListMenuAdd 78, 65535, 4  // Pearl AddMenuEntryImm 114, 4
-    ListMenuAdd 79, 65535, 5  // Pearl AddMenuEntryImm 115, 5
+    ListMenuAdd 72, 65535, 0  // Pearl AddMenuEntryImm 110, 0
+    ListMenuAdd 73, 65535, 1  // Pearl AddMenuEntryImm 111, 1
+    ListMenuAdd 74, 65535, 2  // Pearl AddMenuEntryImm 112, 2
+    ListMenuAdd 75, 65535, 3  // Pearl AddMenuEntryImm 113, 3
+    ListMenuAdd 76, 65535, 4  // Pearl AddMenuEntryImm 114, 4
+    ListMenuAdd 77, 65535, 5  // Pearl AddMenuEntryImm 115, 5
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1282,8 +1267,8 @@ T206_7_0554:
     pl_GoTo T206_7_0562
 
 T206_7_0562:
-    pl_msg_talk 80  // Pearl bank 203 line 20
-    pl_msg_talk 81  // Pearl bank 203 line 21
+    pl_msg_talk 78  // Pearl bank 203 line 20
+    pl_msg_talk 79  // Pearl bank 203 line 21
     pl_CloseMessage
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
@@ -1311,7 +1296,7 @@ T206_7_05C1:
     pl_GoTo T206_7_0610
 
 T206_7_05E4:
-    pl_msg_talk 82  // Pearl bank 203 line 215
+    pl_msg_talk 80  // Pearl bank 203 line 215
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T206_7_0291
@@ -1332,12 +1317,12 @@ T206_7_0610:
 
 T206_7_0625:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 83  // Pearl bank 203 line 219
+    pl_msg_talk 81  // Pearl bank 203 line 219
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
-    ListMenuAdd 84, 65535, 0  // Pearl AddMenuEntryImm 13, 0
-    ListMenuAdd 85, 65535, 1  // Pearl AddMenuEntryImm 14, 1
-    ListMenuAdd 86, 65535, 2  // Pearl AddMenuEntryImm 5, 2
+    ListMenuAdd 82, 65535, 0  // Pearl AddMenuEntryImm 13, 0
+    ListMenuAdd 83, 65535, 1  // Pearl AddMenuEntryImm 14, 1
+    ListMenuAdd 84, 65535, 2  // Pearl AddMenuEntryImm 5, 2
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1347,7 +1332,7 @@ T206_7_0625:
     pl_GoTo T206_7_0291
 
 T206_7_0669:
-    pl_msg_talk 87  // Pearl bank 203 line 212
+    pl_msg_talk 85  // Pearl bank 203 line 212
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_7_0625
@@ -1366,7 +1351,7 @@ T206_7_06B3:
     pl_GoTo T206_7_0625
 
 T206_7_06BB:
-    pl_msg_talk 87  // Pearl bank 203 line 212
+    pl_msg_talk 85  // Pearl bank 203 line 212
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_7_0625
@@ -1596,23 +1581,23 @@ T206_8_021B:
     pl_SetVarFromValue PVAR_4003, 1
     pl_SetVarFromValue PVAR_8007, 2
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 88  // Pearl bank 203 line 7
+    pl_msg_talk 86  // Pearl bank 203 line 7
     pl_GoTo T206_8_023A
 
 T206_8_023A:
     pl_CompareVarToValue PVAR_4003, 1
     pl_GoToIf 1, T206_8_0250
-    pl_msg_talk 43  // Pearl bank 203 line 4
+    pl_msg_talk 41  // Pearl bank 203 line 4
     pl_GoTo T206_8_0253
 
 T206_8_0250:
-    pl_msg_talk 44  // Pearl bank 203 line 12
+    pl_msg_talk 42  // Pearl bank 203 line 12
 
 T206_8_0253:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 45, 65535, 0  // Pearl AddMenuEntryImm 8, 0
-    ListMenuAdd 46, 65535, 1  // Pearl AddMenuEntryImm 9, 1
-    ListMenuAdd 47, 65535, 2  // Pearl AddMenuEntryImm 10, 2
+    ListMenuAdd 43, 65535, 0  // Pearl AddMenuEntryImm 8, 0
+    ListMenuAdd 44, 65535, 1  // Pearl AddMenuEntryImm 9, 1
+    ListMenuAdd 45, 65535, 2  // Pearl AddMenuEntryImm 10, 2
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1626,7 +1611,7 @@ T206_8_0291:
     pl_SetVarFromValue PVAR_40D5, 0
     pl_ClearFlag PFLAG_0966
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 48  // Pearl bank 203 line 11
+    pl_msg_talk 46  // Pearl bank 203 line 11
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -1656,18 +1641,18 @@ T206_8_02F0:
     pl_GoTo T206_8_030E
 
 T206_8_0305:
-    pl_msg_talk 49  // Pearl bank 203 line 13
+    pl_msg_talk 47  // Pearl bank 203 line 13
     pl_GoTo T206_8_023A
 
 T206_8_030E:
-    pl_msg_talk 50  // Pearl bank 203 line 5
+    pl_msg_talk 48  // Pearl bank 203 line 5
 
 T206_8_0311:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 51, 65535, 0  // Pearl AddMenuEntryImm 96, 0
-    ListMenuAdd 52, 65535, 1  // Pearl AddMenuEntryImm 97, 1
-    ListMenuAdd 53, 65535, 2  // Pearl AddMenuEntryImm 98, 2
-    ListMenuAdd 54, 65535, 3  // Pearl AddMenuEntryImm 99, 3
+    ListMenuAdd 49, 65535, 0  // Pearl AddMenuEntryImm 96, 0
+    ListMenuAdd 50, 65535, 1  // Pearl AddMenuEntryImm 97, 1
+    ListMenuAdd 51, 65535, 2  // Pearl AddMenuEntryImm 98, 2
+    ListMenuAdd 52, 65535, 3  // Pearl AddMenuEntryImm 99, 3
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1682,23 +1667,23 @@ T206_8_0360:
     pl_GoTo T206_8_0381
 
 T206_8_0368:
-    pl_msg_talk 55  // Pearl bank 203 line 18
+    pl_msg_talk 53  // Pearl bank 203 line 18
     pl_GoTo T206_8_030E
 
 T206_8_0373:
-    pl_msg_talk 56  // Pearl bank 203 line 19
+    pl_msg_talk 54  // Pearl bank 203 line 19
     pl_GoTo T206_8_030E
 
 T206_8_037E:
-    pl_msg_talk 57  // Pearl bank 203 line 117
+    pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_8_0381:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 58, 65535, 0  // Pearl AddMenuEntryImm 36, 0
-    ListMenuAdd 59, 65535, 1  // Pearl AddMenuEntryImm 37, 1
-    ListMenuAdd 60, 65535, 2  // Pearl AddMenuEntryImm 38, 2
-    ListMenuAdd 61, 65535, 3  // Pearl AddMenuEntryImm 39, 3
-    ListMenuAdd 62, 65535, 4  // Pearl AddMenuEntryImm 40, 4
+    ListMenuAdd 56, 65535, 0  // Pearl AddMenuEntryImm 36, 0
+    ListMenuAdd 57, 65535, 1  // Pearl AddMenuEntryImm 37, 1
+    ListMenuAdd 58, 65535, 2  // Pearl AddMenuEntryImm 38, 2
+    ListMenuAdd 59, 65535, 3  // Pearl AddMenuEntryImm 39, 3
+    ListMenuAdd 60, 65535, 4  // Pearl AddMenuEntryImm 40, 4
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1712,29 +1697,29 @@ T206_8_0381:
     pl_GoTo T206_8_0311
 
 T206_8_03E1:
-    pl_msg_talk 63  // Pearl bank 203 line 14
+    pl_msg_talk 61  // Pearl bank 203 line 14
     pl_GoTo T206_8_037E
 
 T206_8_03EC:
-    pl_msg_talk 64  // Pearl bank 203 line 15
+    pl_msg_talk 62  // Pearl bank 203 line 15
     pl_GoTo T206_8_037E
 
 T206_8_03F7:
-    pl_msg_talk 65  // Pearl bank 203 line 16
+    pl_msg_talk 63  // Pearl bank 203 line 16
     pl_GoTo T206_8_037E
 
 T206_8_0402:
-    pl_msg_talk 66  // Pearl bank 203 line 17
+    pl_msg_talk 64  // Pearl bank 203 line 17
     pl_GoTo T206_8_037E
 
 T206_8_040D:
-    pl_msg_talk 67  // Pearl bank 203 line 27
+    pl_msg_talk 65  // Pearl bank 203 line 27
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 68, 65535, 0  // Pearl AddMenuEntryImm 105, 0
-    ListMenuAdd 69, 65535, 1  // Pearl AddMenuEntryImm 106, 1
-    ListMenuAdd 70, 65535, 2  // Pearl AddMenuEntryImm 107, 2
-    ListMenuAdd 71, 65535, 3  // Pearl AddMenuEntryImm 108, 3
-    ListMenuAdd 72, 65535, 4  // Pearl AddMenuEntryImm 109, 4
+    ListMenuAdd 66, 65535, 0  // Pearl AddMenuEntryImm 105, 0
+    ListMenuAdd 67, 65535, 1  // Pearl AddMenuEntryImm 106, 1
+    ListMenuAdd 68, 65535, 2  // Pearl AddMenuEntryImm 107, 2
+    ListMenuAdd 69, 65535, 3  // Pearl AddMenuEntryImm 108, 3
+    ListMenuAdd 70, 65535, 4  // Pearl AddMenuEntryImm 109, 4
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1765,14 +1750,14 @@ T206_8_049A:
 
 T206_8_04A8:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 73  // Pearl bank 203 line 28
+    pl_msg_talk 71  // Pearl bank 203 line 28
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 74, 65535, 0  // Pearl AddMenuEntryImm 110, 0
-    ListMenuAdd 75, 65535, 1  // Pearl AddMenuEntryImm 111, 1
-    ListMenuAdd 76, 65535, 2  // Pearl AddMenuEntryImm 112, 2
-    ListMenuAdd 77, 65535, 3  // Pearl AddMenuEntryImm 113, 3
-    ListMenuAdd 78, 65535, 4  // Pearl AddMenuEntryImm 114, 4
-    ListMenuAdd 79, 65535, 5  // Pearl AddMenuEntryImm 115, 5
+    ListMenuAdd 72, 65535, 0  // Pearl AddMenuEntryImm 110, 0
+    ListMenuAdd 73, 65535, 1  // Pearl AddMenuEntryImm 111, 1
+    ListMenuAdd 74, 65535, 2  // Pearl AddMenuEntryImm 112, 2
+    ListMenuAdd 75, 65535, 3  // Pearl AddMenuEntryImm 113, 3
+    ListMenuAdd 76, 65535, 4  // Pearl AddMenuEntryImm 114, 4
+    ListMenuAdd 77, 65535, 5  // Pearl AddMenuEntryImm 115, 5
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1808,8 +1793,8 @@ T206_8_0554:
     pl_GoTo T206_8_0562
 
 T206_8_0562:
-    pl_msg_talk 80  // Pearl bank 203 line 20
-    pl_msg_talk 81  // Pearl bank 203 line 21
+    pl_msg_talk 78  // Pearl bank 203 line 20
+    pl_msg_talk 79  // Pearl bank 203 line 21
     pl_CloseMessage
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
@@ -1837,7 +1822,7 @@ T206_8_05C1:
     pl_GoTo T206_8_0610
 
 T206_8_05E4:
-    pl_msg_talk 82  // Pearl bank 203 line 215
+    pl_msg_talk 80  // Pearl bank 203 line 215
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T206_8_0291
@@ -1858,12 +1843,12 @@ T206_8_0610:
 
 T206_8_0625:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 83  // Pearl bank 203 line 219
+    pl_msg_talk 81  // Pearl bank 203 line 219
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
-    ListMenuAdd 84, 65535, 0  // Pearl AddMenuEntryImm 13, 0
-    ListMenuAdd 85, 65535, 1  // Pearl AddMenuEntryImm 14, 1
-    ListMenuAdd 86, 65535, 2  // Pearl AddMenuEntryImm 5, 2
+    ListMenuAdd 82, 65535, 0  // Pearl AddMenuEntryImm 13, 0
+    ListMenuAdd 83, 65535, 1  // Pearl AddMenuEntryImm 14, 1
+    ListMenuAdd 84, 65535, 2  // Pearl AddMenuEntryImm 5, 2
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -1873,7 +1858,7 @@ T206_8_0625:
     pl_GoTo T206_8_0291
 
 T206_8_0669:
-    pl_msg_talk 87  // Pearl bank 203 line 212
+    pl_msg_talk 85  // Pearl bank 203 line 212
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_8_0625
@@ -1892,7 +1877,7 @@ T206_8_06B3:
     pl_GoTo T206_8_0625
 
 T206_8_06BB:
-    pl_msg_talk 87  // Pearl bank 203 line 212
+    pl_msg_talk 85  // Pearl bank 203 line 212
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_8_0625
@@ -2265,15 +2250,15 @@ T206_9_0E74:
     pl_SetVarFromValue PVAR_4003, 2
     pl_SetVarFromValue PVAR_8004, 0
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 89  // Pearl bank 203 line 111
+    pl_msg_talk 87  // Pearl bank 203 line 111
     pl_GoTo T206_9_0E93
 
 T206_9_0E93:
-    pl_msg_talk 90  // Pearl bank 203 line 112
+    pl_msg_talk 88  // Pearl bank 203 line 112
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 91, 65535, 0  // Pearl AddMenuEntryImm 113, 0
-    ListMenuAdd 92, 65535, 1  // Pearl AddMenuEntryImm 114, 1
-    ListMenuAdd 93, 65535, 2  // Pearl AddMenuEntryImm 115, 2
+    ListMenuAdd 89, 65535, 0  // Pearl AddMenuEntryImm 113, 0
+    ListMenuAdd 90, 65535, 1  // Pearl AddMenuEntryImm 114, 1
+    ListMenuAdd 91, 65535, 2  // Pearl AddMenuEntryImm 115, 2
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -2286,10 +2271,10 @@ T206_9_0E93:
 
 T206_9_0EE1:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 94, 65535, 0  // Pearl AddMenuEntryImm 155, 0
-    ListMenuAdd 95, 65535, 1  // Pearl AddMenuEntryImm 156, 1
-    ListMenuAdd 96, 65535, 2  // Pearl AddMenuEntryImm 157, 2
-    ListMenuAdd 97, 65535, 3  // Pearl AddMenuEntryImm 158, 3
+    ListMenuAdd 92, 65535, 0  // Pearl AddMenuEntryImm 155, 0
+    ListMenuAdd 93, 65535, 1  // Pearl AddMenuEntryImm 156, 1
+    ListMenuAdd 94, 65535, 2  // Pearl AddMenuEntryImm 157, 2
+    ListMenuAdd 95, 65535, 3  // Pearl AddMenuEntryImm 158, 3
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -2317,7 +2302,7 @@ T206_9_0F5E:
     pl_GoTo T206_9_1027
 
 T206_9_0F72:
-    pl_msg_talk 98  // Pearl bank 203 line 159
+    pl_msg_talk 96  // Pearl bank 203 line 159
     pl_WaitButton
     pl_GoTo T206_9_1393
 
@@ -2327,14 +2312,14 @@ T206_9_1027:
     pl_GoTo T206_9_103A
 
 T206_9_103A:
-    pl_msg_talk 99  // Pearl bank 203 line 160
+    pl_msg_talk 97  // Pearl bank 203 line 160
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 100, 65535, 0  // Pearl AddMenuEntryImm 161, 0
-    ListMenuAdd 101, 65535, 1  // Pearl AddMenuEntryImm 162, 1
-    ListMenuAdd 102, 65535, 2  // Pearl AddMenuEntryImm 163, 2
-    ListMenuAdd 103, 65535, 3  // Pearl AddMenuEntryImm 164, 3
-    ListMenuAdd 104, 65535, 4  // Pearl AddMenuEntryImm 165, 4
-    ListMenuAdd 105, 65535, 5  // Pearl AddMenuEntryImm 166, 5
+    ListMenuAdd 98, 65535, 0  // Pearl AddMenuEntryImm 161, 0
+    ListMenuAdd 99, 65535, 1  // Pearl AddMenuEntryImm 162, 1
+    ListMenuAdd 100, 65535, 2  // Pearl AddMenuEntryImm 163, 2
+    ListMenuAdd 101, 65535, 3  // Pearl AddMenuEntryImm 164, 3
+    ListMenuAdd 102, 65535, 4  // Pearl AddMenuEntryImm 165, 4
+    ListMenuAdd 103, 65535, 5  // Pearl AddMenuEntryImm 166, 5
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -2371,13 +2356,13 @@ T206_9_10E6:
 
 T206_9_10F4:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 106  // Pearl bank 203 line 167
+    pl_msg_talk 104  // Pearl bank 203 line 167
     pl_WaitButton
     pl_GoTo T206_9_1393
 
 T206_9_1101:
-    pl_msg_talk 107  // Pearl bank 203 line 175
-    pl_msg_talk 108  // Pearl bank 203 line 176
+    pl_msg_talk 105  // Pearl bank 203 line 175
+    pl_msg_talk 106  // Pearl bank 203 line 176
     pl_CloseMessage
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
@@ -2401,15 +2386,15 @@ T206_9_1146:
     pl_GoTo T206_9_070D
 
 T206_9_1169:
-    pl_msg_talk 57  // Pearl bank 203 line 117
+    pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_9_116C:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 109, 65535, 0  // Pearl AddMenuEntryImm 121, 0
-    ListMenuAdd 110, 65535, 1  // Pearl AddMenuEntryImm 118, 1
-    ListMenuAdd 111, 65535, 2  // Pearl AddMenuEntryImm 119, 2
-    ListMenuAdd 112, 65535, 3  // Pearl AddMenuEntryImm 120, 3
-    ListMenuAdd 113, 65535, 4  // Pearl AddMenuEntryImm 122, 4
+    ListMenuAdd 107, 65535, 0  // Pearl AddMenuEntryImm 121, 0
+    ListMenuAdd 108, 65535, 1  // Pearl AddMenuEntryImm 118, 1
+    ListMenuAdd 109, 65535, 2  // Pearl AddMenuEntryImm 119, 2
+    ListMenuAdd 110, 65535, 3  // Pearl AddMenuEntryImm 120, 3
+    ListMenuAdd 111, 65535, 4  // Pearl AddMenuEntryImm 122, 4
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -2423,14 +2408,14 @@ T206_9_116C:
     pl_GoTo T206_9_0E93
 
 T206_9_11CC:
-    pl_msg_talk 57  // Pearl bank 203 line 117
+    pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_9_11CF:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 114, 65535, 0  // Pearl AddMenuEntryImm 125, 0
-    ListMenuAdd 115, 65535, 1  // Pearl AddMenuEntryImm 126, 1
-    ListMenuAdd 116, 65535, 2  // Pearl AddMenuEntryImm 127, 2
-    ListMenuAdd 117, 65535, 3  // Pearl AddMenuEntryImm 129, 3
+    ListMenuAdd 112, 65535, 0  // Pearl AddMenuEntryImm 125, 0
+    ListMenuAdd 113, 65535, 1  // Pearl AddMenuEntryImm 126, 1
+    ListMenuAdd 114, 65535, 2  // Pearl AddMenuEntryImm 127, 2
+    ListMenuAdd 115, 65535, 3  // Pearl AddMenuEntryImm 129, 3
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -2442,30 +2427,30 @@ T206_9_11CF:
     pl_GoTo T206_9_123F
 
 T206_9_121E:
-    pl_msg_talk 118  // Pearl bank 203 line 130
+    pl_msg_talk 116  // Pearl bank 203 line 130
     pl_GoTo T206_9_11CC
 
 T206_9_1229:
-    pl_msg_talk 119  // Pearl bank 203 line 131
+    pl_msg_talk 117  // Pearl bank 203 line 131
     pl_GoTo T206_9_11CC
 
 T206_9_1234:
-    pl_msg_talk 120  // Pearl bank 203 line 132
+    pl_msg_talk 118  // Pearl bank 203 line 132
     pl_GoTo T206_9_11CC
 
 T206_9_123F:
     pl_GoTo T206_9_116C
 
 T206_9_1247:
-    pl_msg_talk 57  // Pearl bank 203 line 117
+    pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_9_124A:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 121, 65535, 0  // Pearl AddMenuEntryImm 135, 0
-    ListMenuAdd 122, 65535, 1  // Pearl AddMenuEntryImm 136, 1
-    ListMenuAdd 123, 65535, 2  // Pearl AddMenuEntryImm 137, 2
-    ListMenuAdd 124, 65535, 3  // Pearl AddMenuEntryImm 138, 3
-    ListMenuAdd 125, 65535, 4  // Pearl AddMenuEntryImm 139, 4
+    ListMenuAdd 119, 65535, 0  // Pearl AddMenuEntryImm 135, 0
+    ListMenuAdd 120, 65535, 1  // Pearl AddMenuEntryImm 136, 1
+    ListMenuAdd 121, 65535, 2  // Pearl AddMenuEntryImm 137, 2
+    ListMenuAdd 122, 65535, 3  // Pearl AddMenuEntryImm 138, 3
+    ListMenuAdd 123, 65535, 4  // Pearl AddMenuEntryImm 139, 4
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -2479,34 +2464,34 @@ T206_9_124A:
     pl_GoTo T206_9_12D6
 
 T206_9_12AA:
-    pl_msg_talk 126  // Pearl bank 203 line 140
+    pl_msg_talk 124  // Pearl bank 203 line 140
     pl_GoTo T206_9_1247
 
 T206_9_12B5:
-    pl_msg_talk 127  // Pearl bank 203 line 141
+    pl_msg_talk 125  // Pearl bank 203 line 141
     pl_GoTo T206_9_1247
 
 T206_9_12C0:
-    pl_msg_talk 128  // Pearl bank 203 line 142
+    pl_msg_talk 126  // Pearl bank 203 line 142
     pl_GoTo T206_9_1247
 
 T206_9_12CB:
-    pl_msg_talk 129  // Pearl bank 203 line 143
+    pl_msg_talk 127  // Pearl bank 203 line 143
     pl_GoTo T206_9_1247
 
 T206_9_12D6:
     pl_GoTo T206_9_116C
 
 T206_9_12DE:
-    pl_msg_talk 57  // Pearl bank 203 line 117
+    pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_9_12E1:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
-    ListMenuAdd 130, 65535, 0  // Pearl AddMenuEntryImm 145, 0
-    ListMenuAdd 131, 65535, 1  // Pearl AddMenuEntryImm 146, 1
-    ListMenuAdd 132, 65535, 2  // Pearl AddMenuEntryImm 147, 2
-    ListMenuAdd 133, 65535, 3  // Pearl AddMenuEntryImm 148, 3
-    ListMenuAdd 134, 65535, 4  // Pearl AddMenuEntryImm 149, 4
+    ListMenuAdd 128, 65535, 0  // Pearl AddMenuEntryImm 145, 0
+    ListMenuAdd 129, 65535, 1  // Pearl AddMenuEntryImm 146, 1
+    ListMenuAdd 130, 65535, 2  // Pearl AddMenuEntryImm 147, 2
+    ListMenuAdd 131, 65535, 3  // Pearl AddMenuEntryImm 148, 3
+    ListMenuAdd 132, 65535, 4  // Pearl AddMenuEntryImm 149, 4
     ListMenuShow
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
@@ -2520,27 +2505,27 @@ T206_9_12E1:
     pl_GoTo T206_9_136D
 
 T206_9_1341:
-    pl_msg_talk 135  // Pearl bank 203 line 150
+    pl_msg_talk 133  // Pearl bank 203 line 150
     pl_GoTo T206_9_12DE
 
 T206_9_134C:
-    pl_msg_talk 136  // Pearl bank 203 line 151
+    pl_msg_talk 134  // Pearl bank 203 line 151
     pl_GoTo T206_9_12DE
 
 T206_9_1357:
-    pl_msg_talk 137  // Pearl bank 203 line 152
+    pl_msg_talk 135  // Pearl bank 203 line 152
     pl_GoTo T206_9_12DE
 
 T206_9_1362:
-    pl_msg_talk 138  // Pearl bank 203 line 153
+    pl_msg_talk 136  // Pearl bank 203 line 153
     pl_GoTo T206_9_12DE
 
 T206_9_136D:
     pl_GoTo T206_9_116C
 
 T206_9_1375:
-    pl_msg_talk 139  // Pearl bank 203 line 124
-    pl_msg_talk 57  // Pearl bank 203 line 117
+    pl_msg_talk 137  // Pearl bank 203 line 124
+    pl_msg_talk 55  // Pearl bank 203 line 117
     pl_GoTo T206_9_116C
 
 T206_9_138E:
@@ -2621,7 +2606,7 @@ T1042_7_00D2:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_7_0214
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 140  // Pearl bank 562 line 0
+    pl_msg_talk 138  // Pearl bank 562 line 0
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_7_0107
@@ -2646,23 +2631,23 @@ T1042_7_0107:
 
 T1042_7_0165:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
-    ListMenuAdd 141, 65535, 255  // Pearl AddListMenuEntry 16, 255
-    ListMenuAdd 142, 65535, 255  // Pearl AddListMenuEntry 17, 255
-    ListMenuAdd 143, 65535, 255  // Pearl AddListMenuEntry 18, 255
-    ListMenuAdd 144, 65535, 255  // Pearl AddListMenuEntry 19, 255
-    ListMenuAdd 145, 65535, 255  // Pearl AddListMenuEntry 20, 255
-    ListMenuAdd 146, 65535, 255  // Pearl AddListMenuEntry 21, 255
-    ListMenuAdd 147, 65535, 255  // Pearl AddListMenuEntry 22, 255
-    ListMenuAdd 148, 65535, 255  // Pearl AddListMenuEntry 23, 255
-    ListMenuAdd 149, 65535, 255  // Pearl AddListMenuEntry 24, 255
-    ListMenuAdd 150, 65535, 255  // Pearl AddListMenuEntry 25, 255
-    ListMenuAdd 151, 65535, 255  // Pearl AddListMenuEntry 26, 255
-    ListMenuAdd 152, 65535, 255  // Pearl AddListMenuEntry 27, 255
-    ListMenuAdd 153, 65535, 255  // Pearl AddListMenuEntry 28, 255
-    ListMenuAdd 154, 65535, 255  // Pearl AddListMenuEntry 29, 255
-    ListMenuAdd 155, 65535, 255  // Pearl AddListMenuEntry 30, 255
-    ListMenuAdd 156, 65535, 255  // Pearl AddListMenuEntry 31, 255
-    ListMenuAdd 157, 65535, 255  // Pearl AddListMenuEntry 32, 255
+    ListMenuAdd 139, 65535, 1  // Pearl AddListMenuEntry 16, 1
+    ListMenuAdd 140, 65535, 2  // Pearl AddListMenuEntry 17, 2
+    ListMenuAdd 141, 65535, 3  // Pearl AddListMenuEntry 18, 3
+    ListMenuAdd 142, 65535, 4  // Pearl AddListMenuEntry 19, 4
+    ListMenuAdd 143, 65535, 5  // Pearl AddListMenuEntry 20, 5
+    ListMenuAdd 144, 65535, 6  // Pearl AddListMenuEntry 21, 6
+    ListMenuAdd 145, 65535, 7  // Pearl AddListMenuEntry 22, 7
+    ListMenuAdd 146, 65535, 8  // Pearl AddListMenuEntry 23, 8
+    ListMenuAdd 147, 65535, 9  // Pearl AddListMenuEntry 24, 9
+    ListMenuAdd 148, 65535, 10  // Pearl AddListMenuEntry 25, 10
+    ListMenuAdd 149, 65535, 11  // Pearl AddListMenuEntry 26, 11
+    ListMenuAdd 150, 65535, 12  // Pearl AddListMenuEntry 27, 12
+    ListMenuAdd 151, 65535, 13  // Pearl AddListMenuEntry 28, 13
+    ListMenuAdd 152, 65535, 14  // Pearl AddListMenuEntry 29, 14
+    ListMenuAdd 153, 65535, 15  // Pearl AddListMenuEntry 30, 15
+    ListMenuAdd 154, 65535, 16  // Pearl AddListMenuEntry 31, 16
+    ListMenuAdd 155, 65535, 17  // Pearl AddListMenuEntry 32, 17
     ListMenuShow
     pl_CompareVarToValue PVAR_8004, 65534
     pl_GoToIf 1, T1042_7_021F
@@ -2671,13 +2656,13 @@ T1042_7_0165:
 
 T1042_7_0214:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 158  // Pearl bank 562 line 2
+    pl_msg_talk 156  // Pearl bank 562 line 2
     pl_WaitButton
     pl_GoTo T1042_7_022A
 
 T1042_7_021F:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 159  // Pearl bank 562 line 1
+    pl_msg_talk 157  // Pearl bank 562 line 1
     pl_WaitButton
     pl_GoTo T1042_7_022A
 
@@ -2700,7 +2685,7 @@ C205_7_0480:
     pl_GoToIf 1, C205_7_04D4
     pl_stub OpenSaveInfo  // Pearl 0x2C1 ShowSaveStats : not translated yet
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 160  // Pearl bank 199 line 13
+    pl_msg_sys 158  // Pearl bank 199 line 13
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, C205_7_055E
@@ -2715,27 +2700,27 @@ C205_7_0480:
 
 C205_7_04D4:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 161  // Pearl bank 199 line 20
+    pl_msg_sys 159  // Pearl bank 199 line 20
     pl_WaitABPress
     pl_SetVarFromValue PVAR_800C, 0
     pl_Return
 
 C205_7_04E1:
-    pl_msg_sys 162  // Pearl bank 199 line 14
+    pl_msg_sys 160  // Pearl bank 199 line 14
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, C205_7_055E
 
 C205_7_04F5:
-    pl_msg_sys 163  // Pearl bank 199 line 21
+    pl_msg_sys 161  // Pearl bank 199 line 21
     pl_GoTo C205_7_051B
 
 C205_7_04FE:
-    pl_msg_sys 162  // Pearl bank 199 line 14
+    pl_msg_sys 160  // Pearl bank 199 line 14
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, C205_7_055E
-    pl_msg_sys 164  // Pearl bank 199 line 15
+    pl_msg_sys 162  // Pearl bank 199 line 15
     pl_GoTo C205_7_051B
 
 C205_7_051B:
@@ -2755,7 +2740,7 @@ C205_7_053B:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, C205_7_0568
     pl_BufferPlayerName 0
-    pl_msg_sys 165  // Pearl bank 199 line 16
+    pl_msg_sys 163  // Pearl bank 199 line 16
     pl_PlaySE SEQ_SE_SAVE  // Pearl SEQ_SE_DP_SAVE
     pl_WaitSE SEQ_SE_SAVE  // Pearl SEQ_SE_DP_SAVE
     VMSleep 30  // WaitABPressTime
@@ -2768,7 +2753,7 @@ C205_7_055E:
     pl_Return
 
 C205_7_0568:
-    pl_msg_sys 166  // Pearl bank 199 line 18
+    pl_msg_sys 164  // Pearl bank 199 line 18
     pl_WaitABPress
     pl_stub CloseSaveInfo  // Pearl 0x2C2 HideSaveStats : not translated yet
     pl_Return

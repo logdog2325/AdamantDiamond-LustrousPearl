@@ -165,7 +165,7 @@ def labels_for(file_no):
         o = os.path.join(t, 'x.o')
         r = subprocess.run([f'{LLVM}/clang', '--target=armv5te-none-eabi', '-x', 'assembler-with-cpp', '-c', *version.ASM_DEFINES,
                             '-I', f'{SP.DECOMP}/include', '-I', f'{SP.DECOMP}/lib/nitro/include', '-I', os.path.join(ROOT, 'src', 'include'),
-                            '-I', os.path.join(ROOT, 'src', 'field_scripts'), '-D', 'BLACK2', '-o', o, os.path.abspath(src)],
+                            '-I', os.path.join(ROOT, 'src', 'field_scripts'), '-D', 'BLACK2', '-D', f'PEARLB2_GAME_VERSION={version.GAME_VERSION}', '-o', o, os.path.abspath(src)],
                            capture_output=True, cwd=SP.DECOMP)
         if r.returncode: return {}, src
         nm = subprocess.run([f'{LLVM}/llvm-nm', '-n', '--defined-only', o], capture_output=True, text=True).stdout

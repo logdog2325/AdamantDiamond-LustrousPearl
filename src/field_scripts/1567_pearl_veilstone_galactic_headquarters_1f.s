@@ -120,14 +120,14 @@ P333_00DF:
     pl_CheckItem 440, 1, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P333_0107
-    pl_msg_talk 9
+    pl_msg_sys 9
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     pl_End
 
 P333_0107:
-    pl_msg_talk 10
+    pl_msg_sys 10
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P333_012A
@@ -137,7 +137,7 @@ P333_0107:
 
 P333_012A:
     pl_BufferPlayerName 0
-    pl_msg_talk 11
+    pl_msg_sys 11
     pl_WaitButton
     pl_WaitSE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_PlaySE SEQ_SE_OPEN1  // Pearl SEQ_SE_DP_DOOR10

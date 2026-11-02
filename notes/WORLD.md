@@ -97,6 +97,10 @@ textures, at the right place and height** (`work/twinleaf/field_2.png`; the wate
   warps as the step ends (frame 16), as does one onto the shared 2F's stairs down; holding left in Victory Road 1F from
   (6,37): (5,37) at frame 9, the stairs' foot (4,37) at 25, the warp at 41 as the step ends (no pause, as Pearl's push
   while held); a 2-frame tap onto Oreburgh Mine B2F's ladder (15,1) warps at frame 17 to B1F (12,21).
+- **A person on a warp tile (2026-11-01)**: Pearl's warp fires on the step onto its tile, so a person standing there keeps
+  the player out: Floaroma's two grunts on the meadow's mats (162-163, 641), Hearthome's (505, 726-727), Route 206's (299, 611),
+  the League's guards. Black 2 fires a walk-in warp at the bump, whoever stands there (the user: "you can walk through the
+  grunts"). CheckWallWarpEvent's last warp now asks PearlB2_WalkInWarp (the decomp's resident/field_moves.c): nobody in front.
 - **Place names**: `patches/sinnoh_names.py` (Pearl's 111 map sections on lines 4-114 of system text 109; zones'
   place + banner style).
 - **Re-skin** (`patches/sinnoh_reskin.py`, data/texture_map.json): per overworld area set and season, 403 textures
@@ -180,3 +184,6 @@ Route 210 S you stood on the bridge; on the road (590,591) -> (591,591) was refu
   carpet's surface minus FLOWER_LIFT (12): every walkable tile of those maps matches the BDHC (within 2 units) but 7
   enclosed one- and two-tile pockets in map 119 (unreachable; 6 of them were off before); the model is unchanged.
 - `BRIDGE_LEVELS=none` (environment): the one-layer converter as before.
+- **Roark's Gym's bridge (2026-11-01)**: pearl_chunk.gym_chunks kept every Gym out of two_levels for their gimmicks, so the
+  4 tiles under the bridge (4-7, 17) stood at the deck's height, a 32-unit wall from the pit's floor (the user: "you can't
+  go under the bridges"). Oreburgh's Gym has no gimmick: it's in two_levels now ('GC'), as the Eterna Gym's would be.

@@ -19,6 +19,7 @@ import functools, json, os, struct, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 from b2files import gf_container_build  # noqa: E402
 
 LAND = os.path.join(ROOT, 'work', 'pearl', 'land')
@@ -80,7 +81,7 @@ def _primitives(chunk):
     """((material name, triangles), ...) of land/NNN.nsbmd's triangle primitives, triangles as (p0, p1, p2) in
     chunk-centred units, via apicula's glTF export."""
     with tempfile.TemporaryDirectory() as t:
-        subprocess.run([APICULA, 'convert', os.path.join(LAND, f'{chunk:03d}.nsbmd'), '-o', t, '-f', 'gltf',
+        subprocess.run([APICULA, 'convert', os.path.join(LAND, f'{land_id(chunk):03d}.nsbmd'), '-o', t, '-f', 'gltf',
                         '--overwrite'], check=True, capture_output=True)
         name = next(f for f in os.listdir(t) if f.endswith('.gltf'))
         g = json.load(open(os.path.join(t, name)))
@@ -262,7 +263,7 @@ def stairs_of(chunk, around=None):
     plane at its centre) and the flight's height at chunk-centred (x, z): 'flight_y'(x, z). For the stair-walk check
     (pearl_rooms_view kind s)."""
     slopes, offsets = tables()
-    land = json.load(open(os.path.join(LAND, f'{chunk:03d}.json')))
+    land = json.load(open(os.path.join(LAND, f'{land_id(chunk):03d}.json')))
     tris = chunk_triangles(chunk, around)
     flowers = chunk_triangles(chunk, around, flower_triangles)
     heights, exact = {}, {}
@@ -307,12 +308,16 @@ def stair_walk(st):
 
 CHUNK_LIMIT = 110600        # Black 2's map chunk buffer (ov036 MAP_CONFIGS[0]; build_rom.py stops above it)
 CHUNK_BUDGET = 100000       # what the model fixes may fill a chunk to (headroom for later additions)
+# Overworld chunks: at most this many polygons with the T-junction splits, which add ~40 % (the user, 2026-11-01: "frames
+# drop when approaching Valley Windworks"; notes/MAP_LOOK.md "Polygon load"). Black 2 draws a 2 x 2 window of chunks, whole,
+# each frame; its own chunks: median 417 polygons, largest 2133.
+CHUNK_POLYS = 1000
 
 
 @functools.lru_cache(maxsize=None)
 def pearl_model(chunk):
     import pearl_mesh
-    return pearl_mesh.Model(open(os.path.join(LAND, f'{chunk:03d}.nsbmd'), 'rb').read())
+    return pearl_mesh.Model(open(os.path.join(LAND, f'{land_id(chunk):03d}.nsbmd'), 'rb').read())
 
 
 def fix_model(chunk, bmd=None, around=None, budget=CHUNK_BUDGET):
@@ -323,8 +328,8 @@ def fix_model(chunk, bmd=None, around=None, budget=CHUNK_BUDGET):
     Last, b2_look.swap: Black 2's water and grass (MAPLOOK_FIXES b2_water, b2_grass; the lakes' l_lake props move into
     the model: b2_look.placed_props leaves their placements out)."""
     import pearl_model_fix, b2_look
-    if bmd is None: bmd = open(os.path.join(LAND, f'{chunk:03d}.nsbmd'), 'rb').read()
-    props = json.load(open(os.path.join(LAND, f'{chunk:03d}.json')))['props']
+    if bmd is None: bmd = open(os.path.join(LAND, f'{land_id(chunk):03d}.nsbmd'), 'rb').read()
+    props = json.load(open(os.path.join(LAND, f'{land_id(chunk):03d}.json')))['props']
     if os.environ.get('MAP_FIXES') == 'none':
         out, look = b2_look.swap(bmd, chunk, props)
         return out, {'steps': [], 'b2_look': look}
@@ -337,7 +342,8 @@ def fix_model(chunk, bmd=None, around=None, budget=CHUNK_BUDGET):
     # 208, 225, 227: cracks. Such a chunk ends under 108,200 B + its signs, below CHUNK_LIMIT.)
     second = 4 + 8196 if two_levels(chunk) else 0
     near = [(pearl_model(c), dx, dz) for (dx, dz), c in sorted((around or {}).items())]
-    out, rep = pearl_model_fix.fix(bmd, near, lambda n: rest + n <= budget)
+    out, rep = pearl_model_fix.fix(bmd, near, lambda n: rest + n <= budget,
+                                   max_polys=None if chunk in room_chunks() else CHUNK_POLYS)
     if people:                                       # (on the model as the other fixes leave it)
         out2, blocks = pearl_model_fix.people_fix(out, people_tiles(chunk), bmd)
         rep['people'] = blocks
@@ -359,6 +365,9 @@ _FIXED = {}      # room chunks' fixed models (people_land and sinnoh_rooms ask f
 # body, pearl_rooms_view's "stands inside") is solid in the converted collision, except a tile holding a warp, an
 # object (people, items), a trigger or a sign / hidden item of a zone that uses the chunk, or one whose wall would
 # cut off any tile that was reachable from the zone's warps: those stay walkable and are listed (bed_tiles).
+# Scripts move these people into a bed, so no event marks the tile they are talked to from (Pearl zone -> tiles): Eldritch's
+# boy at (8, 6): only (7, 6), beside the bed, reaches him (2026-11-01, found in game: the Lunar Wing scene could not start)
+BED_TALK_SPOTS = {44: [(7, 6)]}
 BED_MODELS = ('bed',)            # build model names (Pearl's rooms use bed_h01 only: 23 placements, 13 chunks)
 
 
@@ -402,7 +411,7 @@ def _reach(m, ev, extra):
         cx, cz = x // 32, z // 32
         if not (0 <= cz < m['height'] and 0 <= cx < m['width']) or m['maps'][cz][cx] == 0xffff: return False
         c = m['maps'][cz][cx]
-        if c not in lands: lands[c] = json.load(open(os.path.join(LAND, f'{c:03d}.json')))
+        if c not in lands: lands[c] = json.load(open(os.path.join(LAND, f'{land_id(c):03d}.json')))
         L = lands[c]
         return (not L['collision'][z % 32][x % 32] and L['behaviour'][z % 32][x % 32] not in WATER_BEHAVIOURS
                 and (x % 32, z % 32) not in extra.get(c, ()))
@@ -424,7 +433,7 @@ def bed_tiles(chunk):
     """(frozenset of (tx, tz) made solid, (report lines, ...)) for a room chunk's beds (see BED_MODELS above).
     BED_FIX=none (environment): Pearl's collision as it is."""
     if chunk not in room_chunks() or os.environ.get('BED_FIX') == 'none': return frozenset(), ()
-    land = json.load(open(os.path.join(LAND, f'{chunk:03d}.json')))
+    land = json.load(open(os.path.join(LAND, f'{land_id(chunk):03d}.json')))
     names = build_model_names()
     cand = {}
     for k, pr in enumerate(land['props']):
@@ -449,6 +458,10 @@ def bed_tiles(chunk):
         for x, z in spots:
             if (x // 32, z // 32) in cells and (x % 32, z % 32) in cand:
                 keep.add((x % 32, z % 32)); notes.append(f'zone {pid} ({x}, {z}): an event on the bed tile, left walkable')
+    for pid, m, cells, ev in zs:                     # where a script's person in a bed is talked to (BED_TALK_SPOTS)
+        for x, z in BED_TALK_SPOTS.get(pid, ()):
+            if (x // 32, z // 32) in cells and (x % 32, z % 32) in cand:
+                keep.add((x % 32, z % 32)); notes.append(f'zone {pid} ({x}, {z}): the tile to talk from, left walkable')
     base = {pid: _reach(m, ev, {}) for pid, m, cells, ev in zs}
     done = set()
     walled = set(cand) - keep                        # (the bed's own tiles may be cut off: they become solid too)
@@ -469,8 +482,15 @@ def bed_tiles(chunk):
 
 
 def bed_solid(chunk):
-    """The tiles of a room chunk made solid under its beds (bed_tiles), as local (tx, tz)."""
-    return bed_tiles(chunk)[0]
+    """The tiles of a room chunk made solid under its beds (bed_tiles) and under furniture Pearl lets people stand in
+    (data/people_depth.json solid_tiles: {chunk: [[tx, tz], ...]}), as local (tx, tz)."""
+    return bed_tiles(chunk)[0] | _people_solid().get(chunk, frozenset())
+
+
+@functools.lru_cache(maxsize=None)
+def _people_solid():
+    cfg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'people_depth.json')))
+    return {int(c): frozenset(tuple(t) for t in ts) for c, ts in cfg.get('solid_tiles', {}).items()}
 
 
 @functools.lru_cache(maxsize=None)
@@ -603,7 +623,7 @@ def _room_people():
     zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
     lands = {}
     def land(c):
-        if c not in lands: lands[c] = json.load(open(os.path.join(LAND, f'{c:03d}.json')))
+        if c not in lands: lands[c] = json.load(open(os.path.join(LAND, f'{land_id(c):03d}.json')))
         return lands[c]
     out = {}
     for pid, r in world['rooms']['zones'].items():
@@ -752,7 +772,7 @@ WATER_UNDER = {0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x19, 0x22, 0x2a, 0x50, 0x51,
 def bdhc(chunk):
     """Pearl's BDHC of a chunk (gen4_land.read_bdhc_dp), or None."""
     from gen4_land import read_bdhc_dp
-    path = os.path.join(LAND, f'{chunk:03d}.bdhc')
+    path = os.path.join(LAND, f'{land_id(chunk):03d}.bdhc')
     return read_bdhc_dp(open(path, 'rb').read()) if os.path.exists(path) else None
 
 
@@ -769,13 +789,19 @@ def bdhc_levels(chunk, tx, tz):
     return out
 
 
+LOWER_ON_FLOOR = {228}      # Roark's Gym: its model's pit floor is at -2, its BDHC's at 0
+
+
 @functools.lru_cache(maxsize=None)
 def gym_chunks():
-    """Chunks of Pearl's Gym rooms: their floors that move (water, lifts, panels) are their gimmicks' (C), not here."""
+    """Chunks of Pearl's Gym rooms: their floors that move (water, lifts, panels) are their gimmicks' (C), not here.
+    Roark's Gym has no gimmick and has a bridge with a way under it (4 tiles, (4-7, 17)), as the Eterna Gym has none:
+    not in the list. (The user, 2026-11-01: "you can't go under the bridges": the tiles stood at the deck's height, a
+    32-unit wall from the pit's floor.)"""
     world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
     out = set()
     for r in world['rooms']['zones'].values():
-        if '_GYM' in r['name']:
+        if '_GYM' in r['name'] and r['name'] != 'MAP_OREBURGH_GYM':
             m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f"{r['pearl_matrix']:03d}.json")))
             out |= {c for row in m['maps'] for c in row if c != 0xffff}
     return frozenset(out)
@@ -789,7 +815,7 @@ def two_levels(chunk):
     {} for the Gyms'. A lower level nobody reaches is left out (Canalave's canal bed under its bridge, a seam of the
     Contest Hall's seats): no second layer for it."""
     if chunk in gym_chunks() or os.environ.get('BRIDGE_LEVELS') == 'none': return {}
-    land = json.load(open(os.path.join(LAND, f'{chunk:03d}.json')))
+    land = json.load(open(os.path.join(LAND, f'{land_id(chunk):03d}.json')))
     lv = {(tx, tz): bdhc_levels(chunk, tx, tz) for tz in range(32) for tx in range(32)
           if not land['collision'][tz][tx]}
     cand = {t: v[:2] for t, v in lv.items() if len(v) >= 2}
@@ -899,6 +925,15 @@ def lower_layer(chunk, land, cells, slopes, offsets):
         x, z = tx * 16 - 256 + 8, tz * 16 - 256 + 8
         a, b, got = plane_record(slopes, offsets, y, n, x, z)
         k = tz * 32 + tx
+        if chunk in LOWER_ON_FLOOR:
+            for dx, dz in ((0, 1), (0, -1), (1, 0), (-1, 0)):     # (the floor's own plane, so no 2-unit bump under it)
+                nx, nz = tx + dx, tz + dz
+                if 0 <= nx < 32 and 0 <= nz < 32 and (nx, nz) not in two and not land['collision'][nz][nx]:
+                    na, nb = struct.unpack_from('<HH', cells[nz * 32 + nx])
+                    h = plane_height(slopes, offsets, na >> 2, nb, x, z)
+                    if abs(h - got) <= 4:
+                        a, b, got = na, nb, h
+                        break
         top = struct.unpack_from('<I', cells[k], 4)[0]
         under = LOWER.get(land['behaviour'][tz][tx])
         if under and not (top >> 16) & 1:                        # (a solid deck stays solid under: bump warps)
@@ -912,7 +947,7 @@ def convert(chunk, slopes=None, offsets=None, around=None, solid_behaviours=()):
     """(WB container bytes, report dict) for Pearl land chunk `chunk`. `around` ({(dx, dz): chunk}, neighbours())
     lets a tile take its ground from a neighbour's model: Pearl's models overhang their chunk (Twinleaf: x to 324)."""
     if slopes is None: slopes, offsets = tables()
-    land = json.load(open(os.path.join(LAND, f'{chunk:03d}.json')))
+    land = json.load(open(os.path.join(LAND, f'{land_id(chunk):03d}.json')))
     model, fixes = fix_model(chunk, around=around)
     beds = bed_solid(chunk)
     plates = lift_plate(chunk)                        # (platform-lift plates: their bottom floor, _lift_plates)
@@ -935,6 +970,9 @@ def convert(chunk, slopes=None, offsets=None, around=None, solid_behaviours=()):
             s = ground(tris, flowers, x, z)
             if (tx, tz) in plates:
                 s = (float(plates[(tx, tz)]), [0.0, 1.0, 0.0])
+            if s is None and not solid:                    # no ground in the model (Route 228's bike slopes 0xda: its
+                lv = bdhc_levels(chunk, tx, tz)            # 3 bridges' ramps stood at height 0, a wall): Pearl's own
+                if lv: s = (float(lv[0][0]), list(lv[0][1]))   # level
             surf[(tx, tz)] = s
             if s is None:
                 nohit += not solid; a, b = 0, min(range(len(offsets)), key=lambda i: abs(offsets[i]))

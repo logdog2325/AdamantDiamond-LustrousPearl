@@ -33,6 +33,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import narcio, zoneheaders, pearl_chunk  # noqa: E402
 from zones import build_entities  # noqa: E402
 
@@ -110,7 +111,7 @@ class Planner:
         self._arrivals = {}
 
     def land(self, c):
-        if c not in self.lands: self.lands[c] = json.load(open(os.path.join(PEARL, 'land', f'{c:03d}.json')))
+        if c not in self.lands: self.lands[c] = json.load(open(os.path.join(PEARL, 'land', f'{land_id(c):03d}.json')))
         return self.lands[c]
 
     def matrix(self, mid):

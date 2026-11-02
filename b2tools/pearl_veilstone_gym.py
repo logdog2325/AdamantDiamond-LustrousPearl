@@ -4,9 +4,9 @@
 
 Pearl's own Gym (pokediamond, not Platinum's): Maylene's dojo has 12 wooden wall panels (build models 287-293,
 'gym_wall01'..'gym_wall07', texture 'toita') that slide along their row between two places when the player pushes
-them. As converted (2026-10-25) they do not exist: the Gym is open (the straight way up the middle reaches Maylene
-past two Black Belts) and the panels are not drawn. Decision (lead, 2026-10-25): Pearl's panels as Black 2 gimmick
-id 60 on chapter 6a's gimmick dispatcher (src/pearlb2/gimmick_itcm.c) once that is merged; this module is the data.
+them. The converted map has none of them (Pearl's code places them), so they are Black 2 gimmick id 60 (decomp
+src/pearlb2/resident/veilstone_gym.c, patches/veilstone_gym.py; offline reach check: b2tools/veilstone_gym_check.py);
+this module is the data.
 
 How Pearl does it (pokediamond):
 - InitVeilstoneGym (arm9 0x02064D4C; the Gym's zone script 1 calls it on every entry): the 12 state bits of the
@@ -18,7 +18,7 @@ How Pearl does it (pokediamond):
 - ov06_022426AC + ov06_0224249C (the player presses a direction while facing): standing on a push spot
   (ov06_0224F834: x, z, side, panel; 14 spots, ended by zeros), facing left (side 1) with the panel at B or right
   (side 0) with it at A, pushes it: ov06_0224252C flips its bit and starts ov06_02242744: sound 0x616
-  (SEQ_SE_DP_...), the player walks one tile that way (Pearl movement 0x0E west / 0x0F east) while the panel slides
+  (SEQ_SE_DP_TV_NOISE), the player walks one tile that way (Pearl movement 0x0E west / 0x0F east) while the panel slides
   2 units a frame to the other place; then its spans switch.
 Tables are read from the user's Pearl dump, found by their contents (they equal pokediamond's ov06_0224F834,
 ov06_0224F8B8, ov06_0224F918 and UNK_020F7E48).

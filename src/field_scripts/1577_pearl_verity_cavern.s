@@ -20,11 +20,12 @@ P344_0010:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_stub DrawPokemonPreview  // Pearl 0x208 ShowPokemonPic 481, 0: not translated yet
-    pl_WaitABPress
-    pl_stub RemovePokemonPreview  // Pearl 0x209 Unk0209 : not translated yet
+    MsgWinCloseAll  // (as Black 2's own uses: its window needs the message window gone)
+    CallPokemonPreview 481, 0, 0, 0  // ShowPokemonPic
+// WaitABPress: Black 2's Pokémon window waits itself
+// RemovePokemonPreview: Black 2's window closed itself
     pl_PlayCry 481
-    pl_msg_talk 0
+    pl_msg_sys 0
     pl_CloseMessage
     pl_SetFlag PFLAG_01FD
     pl_RemoveObject 0, PFLAG_01FD
@@ -47,7 +48,7 @@ P344_0010:
     pl_SetFlag PFLAG_01FD
     pl_RemoveObject 0, PFLAG_01FD
     pl_stub ActivateRoamingPokemon  // Pearl 0x21C CreateRoamer 0: not translated yet
-    pl_msg_talk 1
+    pl_msg_sys 1
     pl_CloseMessage
     pl_WaitTime 30, PVAR_800C
     pl_GetPlayerDir PVAR_800C
@@ -85,18 +86,18 @@ P344_0111:
     pl_ApplyMovement PL_PLAYER, P344_0198
     pl_WaitMovement
     pl_BufferPlayerName 0
-    pl_msg_talk 2
+    pl_msg_sys 2
     pl_CloseMessage
     pl_ApplyMovement 1, P344_0180
     pl_WaitMovement
     pl_BufferPlayerName 0
-    pl_msg_talk 3
+    pl_msg_sys 3
     pl_CheckPoketchAppRegistered 12, PVAR_800C  // Marking Map
     pl_CompareVarToValue PVAR_800C, 0
     pl_CallIf 1, P344_0172
     pl_BufferPlayerName 0
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 5
+    pl_msg_sys 5
     pl_CloseMessage
     pl_ApplyMovement 1, P344_0190
     pl_WaitMovement
@@ -106,7 +107,7 @@ P344_0111:
 
 P344_0172:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 4
+    pl_msg_sys 4
     pl_Return
 
     .balign 4, 0

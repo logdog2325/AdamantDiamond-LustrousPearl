@@ -26,6 +26,7 @@ import collections, json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 os.environ.setdefault('MAP_FIXES', 'none')
 import pearl_chunk  # noqa: E402
 from gen4_land import bdhc_dp_heights  # noqa: E402
@@ -62,7 +63,7 @@ class Grid:
         return self.m['maps'][cz][cx]
 
     def land(self, c):
-        if c not in self.lands: self.lands[c] = _json(PEARL, 'land', f'{c:03d}.json')
+        if c not in self.lands: self.lands[c] = _json(PEARL, 'land', f'{land_id(c):03d}.json')
         return self.lands[c]
 
     def pearl(self, x, z):

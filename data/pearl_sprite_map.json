@@ -1719,16 +1719,16 @@
  "118": {
   "pearl_name": "OBJ_EVENT_GFX_SNOWBALL",
   "code": 144,
-  "b2": "White ball (one frame, unused Black 2 sheet)",
+  "b2": "Pearl's snowball (OBJ_EVENT_GFX_SNOWBALL, a card with texture frames) on an unused one-frame sheet, its whole frame (patches/pearl_npc_sprites SNOWBALL)",
   "b2_const": "OBJ_CODE_144",
-  "stand_in": true,
+  "stand_in": false,
   "count": 18,
   "clones": 0,
   "zones": {
    "SNOWPOINT_GYM": 18
   },
   "more_zones": 0,
-  "note": "NO GOOD EQUIVALENT: Snowpoint Gym snowballs (script 2037); a white ball sheet no Black 2 zone uses; repaint"
+  "note": "Pearl's own picture; was White ball"
  },
  "120": {
   "pearl_name": "SPRITE_GINGABOSS / OBJ_EVENT_GFX_CYRUS",
@@ -2230,7 +2230,7 @@
   "clones": 0,
   "zones": {},
   "more_zones": 0,
-  "note": "Pokemon code 0x1218 (64 x 64). No object event uses the id: Spear Pillar's Diamond branch puts it in the dynamic sprite var 0x4021 (object 5, OBJ_EVENT_GFX_VAR_1), which Pearl never takes (GetGameVersion = Pearl). Added 2026-10-26 (chapter 7)"
+  "note": "Pokemon code 0x1218 (64 x 64). No object event uses the id: Spear Pillar's Diamond branch puts it in the dynamic sprite var 0x4021 (object 5, OBJ_EVENT_GFX_VAR_1). Adamant Diamond draws it with the dump's own pixels (patches/pearl_npc_sprites.py POKEMON). Added 2026-10-26 (chapter 7)"
  },
  "155": {
   "pearl_name": "SPRITE_SPPOKE5 / OBJ_EVENT_GFX_PALKIA",
@@ -2515,9 +2515,9 @@
  "182": {
   "pearl_name": "SPRITE_VENTHOLE / OBJ_EVENT_GFX_VENT",
   "code": 143,
-  "b2": "Grey ball (one frame, unused in zones)",
+  "b2": "Pearl's vent (mmodel 161 'venthole') on an unused one-frame sheet (patches/pearl_npc_sprites OBJECTS)",
   "b2_const": "OBJ_CODE_143",
-  "stand_in": true,
+  "stand_in": false,
   "count": 65,
   "clones": 3,
   "zones": {
@@ -2531,7 +2531,7 @@
    "ROUTE_209": 4
   },
   "more_zones": 10,
-  "note": "NO GOOD EQUIVALENT: Underground air vent (global script 2027, 62 on routes/towns). Repaint a one-frame sheet or make it a building prop + BG event"
+  "note": "Pearl's own picture; was Grey ball"
  },
  "183": {
   "pearl_name": "OBJ_EVENT_GFX_BOOK",
@@ -2822,8 +2822,6 @@
  "no_good_equivalent": [
   81,
   85,
-  118,
-  182,
   183,
   203,
   209

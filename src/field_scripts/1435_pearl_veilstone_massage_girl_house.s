@@ -48,7 +48,7 @@ P148_000E:
     pl_msg_talk 4
     pl_SetFlag PFLAG_0AAC
     PokePartyAdjustHappiness PVAR_4000, 3, 1  // AddPartyMonFriendship
-    WorkSetConst PVAR_8004, 65535  // Unk026C: no Accessory (no Super Contests)
+    pl_MassageGirlAccessory PVAR_8004  // Pearl 0x26C
     pl_CompareVarToValue PVAR_8004, 65535
     pl_GoToIf 1, P148_00F6
     pl_msg_talk 7
@@ -116,19 +116,19 @@ C205_48_S48:
 C205_48_0915:
     pl_Call C205_48_0922
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 11  // Pearl bank 199 line 127 (the Accessory from PVAR_8004: not known here)
+    pl_msg_sys 11  // Pearl bank 199 line 127, an Accessory by word
     pl_ReturnCommonScript
     VMReturn  // End: the sub-script ends
 
 C205_48_0922:
     pl_PlayFanfare SEQ_ME_ACCE  // Pearl SEQ_ACCE
-// AddAccessory 32772, 32773: nothing in Black 2 (no Super Contests (closed at first: DECISIONS.md))
-// BufferAccessoryName 0, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_AddAccessory PVAR_8004, PVAR_8005  // Pearl AddAccessory (the Fashion Case)
+    pl_BufferAccessoryWord 0, PVAR_8004  // Pearl BufferAccessoryName
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 12  // Pearl bank 199 line 25 (the Accessory from PVAR_8004: not known here)
+    pl_msg_sys 12  // Pearl bank 199 line 25, an Accessory by word
     pl_WaitFanfare
     pl_BufferPlayerName 0
-// BufferAccessoryName 1, PVAR_8004: the lines naming the Accessory have its name written in (Black 2 has no word for it: NAME_SOURCES)
+    pl_BufferAccessoryWord 1, PVAR_8004  // Pearl BufferAccessoryName
     pl_Return
 
 PearlNoScript:

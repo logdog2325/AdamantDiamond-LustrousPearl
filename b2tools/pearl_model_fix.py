@@ -32,6 +32,7 @@ import numpy as np
 
 import pearl_mesh
 from pearl_mesh import Vertex, lerp
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 
 GAP = 2.25             # HoennB2's 2-unit rule (exterior_layers MIN_GAP 2.0), plus a margin: pieces bent over
 #                        curved cliffs move as one and their planes differ by a few degrees
@@ -48,6 +49,10 @@ EPS = 0.05             # a vertex this close to an edge lies on it (HoennB2 tjun
 VIEW = np.array([0.0, math.sin(0x25D8 / 65536 * 2 * math.pi), math.cos(0x25D8 / 65536 * 2 * math.pi)])  # to the
 #                                                                    camera: Black 2 camera 0, pitch 0x25D8 (53.2 deg)
 TREES = ('tree', 'conttree', 'g1_tree', 'plant')
+# Indoor props' materials, not cards: solid pots and the trash can (dustbox01, which shares plant01_mat). As tree cards each
+# of their walls moved 3.25 or 6.5 units along its normal (base_shift), by which side of x 0 it lies: the can came out
+# lopsided, wider than its rim (the user, 2026-11-01: "some trash cans look distorted")
+SOLID_PLANTS = ('plant01_mat', 'plant02_lm')
 # rays toward the camera from a hidden layer's edge: pitches of the screen's bottom, middle and top rows, yaws of
 # its left, middle and right columns (camera 0: half-angles 20 degrees vertical, 26.6 horizontal)
 RAYS = [(math.cos(p) * math.sin(y), math.sin(p), math.cos(p) * math.cos(y))
@@ -55,7 +60,7 @@ RAYS = [(math.cos(p) * math.sin(y), math.sin(p), math.cos(p) * math.cos(y))
 
 
 def is_tree(name):
-    return any(t in name for t in TREES)
+    return any(t in name for t in TREES) and name not in SOLID_PLANTS
 
 
 class Item:
@@ -592,10 +597,11 @@ def near_items(near):
     return out
 
 
-def fix(bmd, near=(), fits=None, steps=STEPS):
+def fix(bmd, near=(), fits=None, steps=STEPS, max_polys=None):
     """(new BMD0 bytes, report) for a Pearl map model with its neighbours near = [(pearl_mesh.Model, dx, dz)].
     fits(n_bytes) -> bool: when the model comes out too big, the T-junction splits are given back, then the
-    under-floor (HoennB2 world.py chunk_fit's order: the under-floor goes last)."""
+    under-floor (HoennB2 world.py chunk_fit's order: the under-floor goes last). max_polys: with more polygons than
+    this the splits are given back too (the under-floor stays: what a crack shows is grass, not the sky)."""
     rep = {}
     others = near_items(near)
     tries = [steps] + [tuple(s for s in steps if s not in drop) for drop in (('split',), ('split', 'underfloor'))]
@@ -618,18 +624,58 @@ def fix(bmd, near=(), fits=None, steps=STEPS):
             rep['split_edges'], rep['split_added'] = split(model, [it for it in its if it.own], pts)
         out = model.encode()
         rep['steps'] = list(want)
+        if max_polys is not None and 'split' in want and \
+                sum(len(p) for s in model.shapes for _, p in s.groups) > max_polys:
+            rep['polys_over'] = True
+            continue
         if fits is None or fits(len(out)): return out, rep
     rep['over'] = True
     return out, rep
 
 
 # ------------------------------------------------------------------------------------------- placed buildings/props
+# ------------------------------------------------------------------------------------------- the windmills' rest pose
+# Valley Windworks' nine windmills (d2_s01, d2_s01a, d2_s01b, chunk 36) are right: Pearl's tower and pixels, drawn as Pearl
+# has them, with Pearl's joint turning a three-bladed rotor (node d2_s01_, material d2_s01tex_b) by a BCA we don't install, so
+# they stand at the model's frame 0. There one blade points 120 degrees round from south, up and north, and seen from Black 2's
+# close camera (eye 186 up, 142 south of the player) the windmill 6.5 tiles south of the door has its hub at the bottom of
+# the screen and this blade, edge-on, as a long grey wedge over the player at the door (work/agents/known/wind_sim_cam0.png
+# matches the game's frame). Only the rest angle is ours: 25 degrees round the hub leaves the player at the door uncovered
+# (work/agents/known/wind_pose.py: 35 % -> 0 %). Standing 3-5 tiles north of a windmill a blade still crosses the view: a blade
+# that high and that near that camera has to go somewhere.
+WINDMILL_MODELS, WINDMILL_ROTOR, WINDMILL_POSE = ('d2_s01', 'd2_s01a', 'd2_s01b'), 'd2_s01tex_b', 25.0
+
+
+def windmill_pose(bmd):
+    """The rotor's vertices and normals turned WINDMILL_POSE degrees round its hub (the node's x axis)."""
+    if pearl_mesh._ndict(bmd, struct.unpack_from('<I', bmd, 0x10)[0] + 8)[0][1] not in WINDMILL_MODELS:
+        return bmd
+    model = pearl_mesh.Model(bmd)
+    c, s = np.cos(np.radians(WINDMILL_POSE)), np.sin(np.radians(WINDMILL_POSE))
+
+    def turned(v):
+        y, z = v[1], v[2]
+        n = v[5]
+        if n is not None:
+            nx, ny, nz = pearl_mesh.normal_vec(n)
+            ny, nz = ny * c - nz * s, ny * s + nz * c
+            pack = lambda u: int(round(max(-1.0, min(0.998, u)) * 512)) & 0x3ff
+            n = pack(nx) | pack(ny) << 10 | pack(nz) << 20
+        return pearl_mesh.Vertex(v[0], int(round(y * c - z * s)), int(round(y * s + z * c)), v[3], v[4], n, v[6])
+
+    for sh in model.shapes:
+        if sh.material is not None and model.materials[sh.material] == WINDMILL_ROTOR:
+            sh.groups = [(t, [[turned(v) for v in p] for p in ps]) for t, ps in sh.groups]
+    return model.encode()
+
+
 def fix_building(bmd, people=True):
     """(new BMD0 bytes, pieces moved) for a placed building or prop model (pearl_buildings): its flat parts lying
     less than GAP above its base (y 0, where the ground under it is) move toward the camera until GAP clear: the
     buildings' shadow decals h_kage (1.0 over the base, alpha 9), the furniture's shade (0.5), door steps and plates
     (0-1.8), which fought the ground they stand on. The model unchanged when it is not a plain one-model BMD0.
     Then room furniture sinks and pulls back as its placements need (people_prop: people drawn into furniture)."""
+    bmd = windmill_pose(bmd)
     try:
         model = pearl_mesh.Model(bmd)
     except (AssertionError, IndexError, KeyError, struct.error):
@@ -686,7 +732,8 @@ def fix_pack(pack):
 # part of it stands more than PEOPLE_MARGIN in front of any person's quad where it overlaps the sprite on screen.
 # Rooms only: the room chunks' own blocks (pearl_chunk.fix_model, the people tiles from Pearl's collision and objects)
 # and the furniture props of the room packs (fix_building, one amount per model from all its room placements).
-# PEOPLE_FIX=none (environment): off (the checker's "before").
+# Off since the upright depth (2026-11-01, data/people_depth.json furniture_fix: it adds nothing to the findings once
+# people's z stands upright, and Pearl's shapes come back). PEOPLE_FIX=none / on (environment): the checker's comparisons.
 PEOPLE_SIN, PEOPLE_COS = 0.79430, 0.60752   # camera 0's pitch (eye 185.73 up, 142.05 south of the target: RAM)
 PEOPLE_ANCHOR = 1.583       # the quad's bottom below the feet (fieldmap.c: cos(pitch) * 4 - 4)
 PEOPLE_MARGIN = 5.5         # units a surface may stand in front of the quad: k 0.9635 less one depth step at a view
@@ -709,9 +756,20 @@ PEOPLE_JOIN = 2.25          # parts this close are one block (a counter's top ov
 PEOPLE_BAND = 4.0           # the top / front band of a block that moves rigidly (keeps the layers' GAP)
 
 
+_PEOPLE_FURNITURE = None
+
+
 def people_off():
-    import os
-    return os.environ.get('PEOPLE_FIX') == 'none'
+    """The furniture fix off: data/people_depth.json furniture_fix, or PEOPLE_FIX=none / on (the checker's comparisons).
+    Since the upright depth (notes/MAP_LOOK.md) Pearl's counters and tables keep their shapes."""
+    import json, os
+    env = os.environ.get('PEOPLE_FIX')
+    if env: return env == 'none'
+    global _PEOPLE_FURNITURE
+    if _PEOPLE_FURNITURE is None:
+        root = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+        _PEOPLE_FURNITURE = json.load(open(os.path.join(root, 'data', 'people_depth.json')))['furniture_fix']
+    return not _PEOPLE_FURNITURE
 
 
 PEOPLE_PROFILE = (0, 0, 3, 6, 7, 7, 8, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 9, 9, 9, 8, 6,
@@ -960,7 +1018,7 @@ def people_props():
     build = narc_members(Rom(os.path.join(root, 'roms', 'pearl.nds')).read('fielddata/build_model/build_model.narc'))
     uses = collections.defaultdict(list)          # model id -> [(people tiles in the prop's frame)]
     for c in sorted(int(k) for k in world['rooms']['chunks']):
-        land = json.load(open(os.path.join(pearl_chunk.LAND, f'{c:03d}.json')))
+        land = json.load(open(os.path.join(pearl_chunk.LAND, f'{land_id(c):03d}.json')))
         if not land['props']: continue
         tiles = pearl_chunk.people_tiles(c)
         for pr in pearl_chunk.people_props_moved(c, land['props'], props_too=False):   # (riding a sunk counter)
@@ -1103,7 +1161,7 @@ def stair_placements():
     names = pearl_chunk.build_model_names()
     out = collections.defaultdict(list)
     for c in sorted(int(k) for k in world['rooms']['chunks']):
-        land = json.load(open(os.path.join(pearl_chunk.LAND, f'{c:03d}.json')))
+        land = json.load(open(os.path.join(pearl_chunk.LAND, f'{land_id(c):03d}.json')))
         idx = [k for k, pr in enumerate(land['props']) if names.get(pr['model'], '').startswith(STAIR_MODELS)]
         if not idx: continue
         stairs = [st for st in pearl_chunk.stairs_of(c, pearl_chunk._room_around(c)) if 'flight_y' in st]
@@ -1132,7 +1190,7 @@ def stair_props():
     for mid, places in sorted(stair_placements().items()):
         pos = []
         for c, k, st in places:
-            land = json.load(open(os.path.join(pearl_chunk.LAND, f'{c:03d}.json')))
+            land = json.load(open(os.path.join(pearl_chunk.LAND, f'{land_id(c):03d}.json')))
             px, py, pz = land['props'][k]['pos']
             walk = pearl_chunk.stair_walk(st)
             pos += [(x - px, y - py, z - pz, cy - py) for x, y, z, cy, d in walk['leaving'] + walk['arriving']]

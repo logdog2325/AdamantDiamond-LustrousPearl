@@ -177,8 +177,8 @@ of the chapters before yours first. One section per chapter; never edit another 
 - Mt. Coronet north 1F room 1's boulders: after the boulders fix (1x1 Pearl boulders, DECISIONS 2026-10-26), check
   (18,39) (the way to Route 211 West), (29,30) (to B1F: Chapter 7's climb), (18,43) (to the tunnel room), (15,34)
   (an item) can be pushed as in Pearl.
-- Later chapters' beats in 5b's zones: the grandparents' house book (flag 0x15E: the elder shows Palkia's picture,
-  DrawPokemonPreview, stub), the Trophy Garden (Mr. Backlot with the National Pokédex: GetTrophyGardenSlot1Species,
+- Later chapters' beats in 5b's zones: the grandparents' house book (flag 0x15E: the elder shows the other game's legend: Dialga's picture in Pearl, Palkia's in
+  Diamond; CallPokemonPreview), the Trophy Garden (Mr. Backlot with the National Pokédex: GetTrophyGardenSlot1Species,
   AddTrophyGardenMon stubs; 9), Route 211 E / Coronet boulders (Strength), the café and the TM house (side; not
   played).
 ## Chapter 6

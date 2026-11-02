@@ -34,7 +34,7 @@
     ScriptEntry W363_013A_S
     ScriptEntry W364_01EA_S
     ScriptEntry PearlArrive
-    ScriptEntry PearlNoScript
+    ScriptEntry PearlClosed_0
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
@@ -122,7 +122,7 @@ P358_005E:
     pl_CallIf 1, P358_00C5
     pl_CompareVarToValue PVAR_40D8, 255
     pl_CallIf 1, P358_00C5
-    pl_stub 1E0  // Pearl 0x1E0 Unk01E0 16384: not translated yet
+    pl_SetVarFromValue PVAR_4000, 0  // Pearl 0x1E0: none here
     pl_CompareVarToValue PVAR_4000, 0
     pl_GoToIf 5, P358_00B3
     pl_SetFlag PFLAG_0207
@@ -150,7 +150,7 @@ P358_S23:
 P358_00C9:
     pl_CompareVarToValue PVAR_40D8, 1
     pl_GoToIf 5, P358_010E
-    pl_stub 1E0  // Pearl 0x1E0 Unk01E0 16384: not translated yet
+    pl_SetVarFromValue PVAR_4000, 0  // Pearl 0x1E0: none here
     pl_CompareVarToValue PVAR_4000, 0
     pl_GoToIf 5, P358_0110
     pl_CompareVarToValue PVAR_4000, 1
@@ -168,11 +168,11 @@ P358_0110:
     pl_End
 
 P358_0120:
-    pl_stub FreeBattleTower  // Pearl 0x1DC Unk01DC : not translated yet
+    Plugin1_Cmd1002  // FreeBattleTower
     pl_Return
 
 P358_0124:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 3, 0, 0: not translated yet
+    BSubwayCmd_Tool 2, 0, 0, 0  // Pearl tower function 3
     pl_Return
 
 P358_012E:
@@ -206,7 +206,7 @@ P358_0182:
     pl_Return
 
 P358_01A2:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 6, 0, 0: not translated yet
+// Pearl tower function 6: nothing to do
     pl_Call P358_0124
     pl_Return
 
@@ -222,14 +222,14 @@ P358_01B2:
 
 P358_01DE:
     pl_Call P358_01B2
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 6, 0, 0: not translated yet
+// Pearl tower function 6: nothing to do
     pl_Return
 
 P358_01EE:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 9, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 9: Wi-Fi only
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_023B
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 10, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 10: Wi-Fi only
     pl_SetVarFromVar PVAR_8000, PVAR_800C
     pl_BufferNumber 0, PVAR_8000
     pl_msg_sys 65
@@ -239,7 +239,7 @@ P358_S6:
 P358_0221:
     pl_LockAll
     pl_msg_sys 19
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 14, 0, 32780: not translated yet
+    BSubwayCmd_Tool 7, 0, 0, PVAR_800C  // Pearl tower function 14
     pl_CompareVarToValue PVAR_800C, 4
     pl_GoToIf 1, P358_01EE
 
@@ -310,19 +310,20 @@ P358_02D3:
 P358_02DD:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
-    pl_stub Warp  // to Pearl map 327: no Black 2 zone (not installed)
+    RTReserveScript 5  // the rest of this Pearl script runs there (continuation 5)
+    pl_Warp 616, 3, 6, 0  // Pearl map 327 (MAP_BATTLE_TOWER_ELEVATOR)
     pl_ReleaseAll
     pl_End
 
 P358_0305:
-    pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
-    pl_WaitFadeScreen
+// Pearl 0x0BC FadeScreen 6, 1, 0, 0: dropped (data/pearl_script_patches.json: Black 2's party screen fades by itself (as HoennB2's tower))
+// Pearl 0x0BD WaitFadeScreen : dropped (data/pearl_script_patches.json: (its wait))
     pl_CloseMessage
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 30, 0, 0: not translated yet
-    pl_ReturnToField
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 31, 0, 32780: not translated yet
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
-    pl_WaitFadeScreen
+    BSubwayCmd_Tool 300, 0, 0, 0  // Pearl tower function 30: the party screen
+// Pearl 0x0A1 ReturnToField : dropped (data/pearl_script_patches.json: Black 2's party screen reopens the field itself)
+    BSubwayCmd_Tool 301, 0, 0, PVAR_800C  // Pearl tower function 31: 1 = chosen
+// Pearl 0x0BC FadeScreen 6, 1, 1, 0: dropped (data/pearl_script_patches.json: (the fade back))
+// Pearl 0x0BD WaitFadeScreen : dropped (data/pearl_script_patches.json: (its wait))
     pl_Return
 
 P358_0333:
@@ -337,7 +338,7 @@ P358_0349:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub 0B3  // Pearl 0x0B3 Unk00B3 16384: not translated yet
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 16, 16385, 16384: not translated yet
+    pl_SetVarFromValue PVAR_4000, 0  // Pearl tower function 16: Wi-Fi only
     pl_SetVarFromVar PVAR_4001, PVAR_4000
     pl_ReturnToField
     pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
@@ -352,7 +353,7 @@ P358_037D:
     pl_Return
 
 P358_038D:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 11, 1, 0: not translated yet
+    pl_SetVarFromValue 0, 0  // Pearl tower function 11: Wi-Fi only
     pl_Call P358_01A2
     pl_msg_sys 56
     pl_Call P358_02C1
@@ -370,7 +371,7 @@ P358_S1:
 P358_03D6:
     pl_LockAll
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
-    pl_stub SetBattleTowerNull  // Pearl 0x1DA Unk01DA : not translated yet
+    Plugin1_Cmd1000  // SetBattleTowerNull
     pl_msg_talk 0
 
 P358_03E1:
@@ -407,21 +408,23 @@ P358_042A:
     pl_GoTo P358_0241
 
 P358_047B:
-    pl_stub InitBattleTower  // Pearl 0x1DB Unk01DB 0, 0: not translated yet
+    Plugin1_Cmd1001 0, 0  // InitBattleTower
 
 P358_0481:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 1, 0, 32780: not translated yet
+    pl_TowerCheckParty 255, PVAR_800C  // Pearl tower function 1 (0 Pokémon)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_04D1
-    pl_stub MessageSeenBanlistSpecies  // Pearl 0x1FF Unk01FF 88, 3, 0, 0: not translated yet
+    pl_BufferNumber 0, 3, 1  // MessageSeenBanlistSpecies line 88, 3 Pokémon
+    pl_msg_talk 88
     pl_GoTo P358_0246
 
 P358_04A6:
-    pl_stub InitBattleTower  // Pearl 0x1DB Unk01DB 0, 1: not translated yet
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 1, 0, 32780: not translated yet
+    Plugin1_Cmd1001 0, 1  // InitBattleTower
+    pl_TowerCheckParty 255, PVAR_800C  // Pearl tower function 1 (0 Pokémon)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_04D1
-    pl_stub MessageSeenBanlistSpecies  // Pearl 0x1FF Unk01FF 88, 4, 0, 0: not translated yet
+    pl_BufferNumber 0, 4, 1  // MessageSeenBanlistSpecies line 88, 4 Pokémon
+    pl_msg_talk 88
     pl_GoTo P358_0246
 
 P358_04D1:
@@ -429,30 +432,32 @@ P358_04D1:
     pl_Call P358_0305
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_0241
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 32, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 32: the party screen checks them
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 1
     pl_GoToIf 1, P358_0333
     pl_CompareVarToValue PVAR_8008, 2
     pl_GoToIf 1, P358_033E
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 43, 0, 32780: not translated yet
+    BSubwayCmd_Tool 21, 0, 0, PVAR_800C  // Pearl tower function 43
     pl_CompareVarToValue PVAR_800C, 4
     pl_GoToIf 1, P358_05AE
     pl_Call P358_012E
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 5, 0, 0: not translated yet
+// Pearl tower function 5: nothing to do
     pl_HealParty
     pl_Call P358_02B5
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_023B
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 57, 0, 32780: not translated yet
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 52, 0, 0: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 57
+    BSubwayCmd_Tool 359, 0, 0, 0  // Pearl tower function 52
+    BSubwayCmd_Tool 316, 0, 0, 0
+    BSubwayCmd_Tool 321, 0, 0, 0
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 11
     pl_WaitABPress
 
 P358_055C:
     pl_CloseMessage
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 43, 0, 32780: not translated yet
+    BSubwayCmd_Tool 21, 0, 0, PVAR_800C  // Pearl tower function 43
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 4
     pl_GoToIf 1, P358_109A
@@ -472,7 +477,7 @@ P358_05AE:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_023B
     pl_Call P358_012E
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 5, 0, 0: not translated yet
+// Pearl tower function 5: nothing to do
     pl_HealParty
     pl_CloseMessage
     pl_SetVarFromValue PVAR_4001, 0
@@ -491,15 +496,17 @@ P358_05EC:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_05EC
     pl_SetVarFromValue PVAR_40D8, 2
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 39, 0, 0: not translated yet
-    pl_stub FreeBattleTower  // Pearl 0x1DC Unk01DC : not translated yet
+    BSubwayCmd_Tool 306, 0, 0, 0  // Pearl tower function 39: the play block keeps the challenge
+    FieldSetNextZone 443, 1, 11, 0, 6
+    FlagSet 2405
+    Plugin1_Cmd1002  // FreeBattleTower
     pl_msg_talk 56
     pl_Call P358_02C1
     VMSleep 30  // WaitABPressTime
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_CloseMessage
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 2, 0, 0: not translated yet
+    BSubwayCmd_Tool 1, 0, 0, 0  // Pearl tower function 2
     pl_ReleaseAll
     pl_End
 
@@ -507,14 +514,14 @@ P358_S3:
 P358_064B:
     pl_LockAll
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
-    pl_stub SetBattleTowerNull  // Pearl 0x1DA Unk01DA : not translated yet
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 12, 0, 32780: not translated yet
+    Plugin1_Cmd1000  // SetBattleTowerNull
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 12: Wi-Fi only
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_0797
     pl_msg_talk 36
 
 P358_066B:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 15, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 15: Wi-Fi only
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_06CB
     pl_msg_talk 37
@@ -561,17 +568,17 @@ P358_072E:
     pl_GoToIf 5, P358_0241
     pl_stub 1E3  // Pearl 0x1E3 Unk01E3 32772, 32773: not translated yet
     pl_BufferNumber 0, PVAR_8004
-    pl_stub BufferVarPaddingDigits  // Pearl 0x280 Unk0280 1, 32773, 2, 3: not translated yet
+    pl_BufferNumber 1, PVAR_8005, 3  // BufferVarPaddingDigits
     pl_msg_talk 52
     pl_WaitABPress
     pl_GoTo P358_0246
 
 P358_077B:
-    pl_stub InitBattleTower  // Pearl 0x1DB Unk01DB 0, 4: not translated yet
+    Plugin1_Cmd1001 0, 4  // InitBattleTower
     pl_GoTo P358_0481
 
 P358_0789:
-    pl_stub InitBattleTower  // Pearl 0x1DB Unk01DB 0, 5: not translated yet
+    Plugin1_Cmd1001 0, 5  // InitBattleTower
     pl_GoTo P358_0481
 
 P358_0797:
@@ -596,7 +603,7 @@ P358_S2:
 P358_07E4:
     pl_LockAll
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
-    pl_stub SetBattleTowerNull  // Pearl 0x1DA Unk01DA : not translated yet
+    Plugin1_Cmd1000  // SetBattleTowerNull
     pl_msg_talk 20
 
 P358_07EF:
@@ -616,23 +623,24 @@ P358_082D:
     pl_GoTo P358_07EF
 
 P358_0838:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 1, 2, 32780: not translated yet
+    pl_TowerCheckParty 2, PVAR_800C  // Pearl tower function 1 (2 Pokémon)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_085D
-    pl_stub MessageSeenBanlistSpecies  // Pearl 0x1FF Unk01FF 88, 2, 0, 0: not translated yet
+    pl_BufferNumber 0, 2, 1  // MessageSeenBanlistSpecies line 88, 2 Pokémon
+    pl_msg_talk 88
     pl_GoTo P358_0246
 
 P358_085D:
-    pl_msg_talk 26
-    pl_ShowYesNoMenu PVAR_800C
+// Pearl 0x02C Message 26: dropped (data/pearl_script_patches.json: Would you like to communicate with a friend?)
+// Pearl 0x03E ShowYesNoMenu 32780: dropped (data/pearl_script_patches.json: its Yes/No)
     pl_CompareVarToValue PVAR_800C, 0
-    pl_GoToIf 1, P358_0885
-    pl_stub InitBattleTower  // Pearl 0x1DB Unk01DB 0, 2: not translated yet
+// Pearl 0x01C GoToIf 1, 2181: dropped (data/pearl_script_patches.json: its Yes branch (the wireless Multi))
+    Plugin1_Cmd1001 0, 2  // InitBattleTower
     pl_SetVarFromValue PVAR_4001, 0
     pl_GoTo P358_0899
 
 P358_0885:
-    pl_stub InitBattleTower  // Pearl 0x1DB Unk01DB 0, 3: not translated yet
+    Plugin1_Cmd1001 0, 3  // InitBattleTower
     pl_SetVarFromValue PVAR_4001, 1
     pl_GoTo P358_0899
 
@@ -641,7 +649,7 @@ P358_0899:
     pl_Call P358_0305
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_0241
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 32, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 32: the party screen checks them
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 1
     pl_GoToIf 1, P358_0333
@@ -650,13 +658,15 @@ P358_0899:
     pl_CompareVarToValue PVAR_4001, 1
     pl_GoToIf 1, P358_0928
     pl_Call P358_0148
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 5, 0, 0: not translated yet
+// Pearl tower function 5: nothing to do
     pl_HealParty
     pl_Call P358_02B5
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_023B
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 57, 0, 32780: not translated yet
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 52, 0, 0: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 57
+    BSubwayCmd_Tool 359, 0, 0, 0  // Pearl tower function 52
+    BSubwayCmd_Tool 316, 0, 0, 0
+    BSubwayCmd_Tool 321, 0, 0, 0
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 35
     pl_GoTo P358_055C
@@ -739,15 +749,15 @@ P358_0A27:
     pl_GoToIf 1, P358_0B03
     pl_stub ClearReceivedTempDataAllPlayers  // Pearl 0x136 Unk0136 : not translated yet
     pl_stub 135  // Pearl 0x135 Unk0135 2: not translated yet
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 57, 0, 32772: not translated yet
-    pl_stub GetCurNetID  // Pearl 0x207 Unk0207 32780: not translated yet
+    pl_SetVarFromValue PVAR_8004, 0  // Pearl tower function 57
+    pl_SetVarFromValue PVAR_800C, 0  // GetCurNetID: no link
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_0B2E
     pl_stub 1E2  // Pearl 0x1E2 Unk01E2 1, 16384: not translated yet
 
 P358_0A8B:
     pl_Call P358_0148
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 5, 0, 0: not translated yet
+// Pearl tower function 5: nothing to do
     pl_HealParty
     pl_msg_talk 69
     pl_Call P358_02C1
@@ -763,29 +773,31 @@ P358_0AB9:
 
 P358_0AC7:
     pl_Call P358_02D3
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 53, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 53: Wi-Fi only
     pl_BufferPartyMonSpecies 0, PVAR_800C
     pl_msg_talk 33
     pl_GoTo P358_023B
 
 P358_0AE5:
     pl_Call P358_02D3
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 53, 1, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 53: Wi-Fi only
     pl_BufferPartyMonSpecies 0, PVAR_800C
     pl_msg_talk 33
     pl_GoTo P358_023B
 
 P358_0B03:
     pl_Call P358_02D3
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 53, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 53: Wi-Fi only
     pl_BufferPartyMonSpecies 0, PVAR_800C
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 53, 1, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 53: Wi-Fi only
     pl_BufferPartyMonSpecies 1, PVAR_800C
     pl_msg_talk 34
     pl_GoTo P358_023B
 
 P358_0B2E:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 52, 0, 0: not translated yet
+    BSubwayCmd_Tool 359, 0, 0, 0  // Pearl tower function 52
+    BSubwayCmd_Tool 316, 0, 0, 0
+    BSubwayCmd_Tool 321, 0, 0, 0
     pl_stub 1E1  // Pearl 0x1E1 Unk01E1 1, 0: not translated yet
     pl_GoTo P358_0A8B
 
@@ -793,7 +805,7 @@ P358_S8:
 P358_0B44:
     pl_LockAll
     pl_Call P358_01DE
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 100, 0, 32780: not translated yet
+    pl_TowerIsNull PVAR_800C  // Pearl tower function 100
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_0241
     pl_msg_sys 56
@@ -804,21 +816,21 @@ P358_S4:
 P358_0B72:
     pl_LockAll
     pl_Call P358_01DE
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 100, 0, 32780: not translated yet
+    pl_TowerIsNull PVAR_800C  // Pearl tower function 100
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_0241
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 35, 0, 32780: not translated yet
+    BSubwayCmd_Tool 303, 0, 0, PVAR_800C  // Pearl tower function 35
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_0CA4
     pl_msg_sys 53
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 43, 0, 32780: not translated yet
+    BSubwayCmd_Tool 21, 0, 0, PVAR_800C  // Pearl tower function 43
     pl_SetVarFromVar PVAR_4000, PVAR_800C
     pl_SetVarFromVar PVAR_8008, PVAR_4000
     pl_CompareVarToValue PVAR_8008, 5
     pl_GoToIf 1, P358_0BEA
     pl_CompareVarToValue PVAR_8008, 4
     pl_GoToIf 1, P358_0C45
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 49, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 49: no ribbons
     pl_CompareVarToValue PVAR_800C, 1
     pl_CallIf 1, P358_0C0A
 
@@ -839,7 +851,7 @@ P358_0C0A:
     pl_Return
 
 P358_0C15:
-    pl_stub 1DF  // Pearl 0x1DF Unk01DF 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl 0x1DF: none here
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_023B
     pl_msg_sys 116
@@ -850,13 +862,13 @@ P358_0C15:
     pl_GoTo P358_0EFE
 
 P358_0C45:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 9, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 9: Wi-Fi only
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_0C62
     pl_GoTo P358_038D
 
 P358_0C62:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 10, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 10: Wi-Fi only
     pl_SetVarFromVar PVAR_8000, PVAR_800C
     pl_BufferNumber 0, PVAR_8000
     pl_msg_sys 65
@@ -865,7 +877,7 @@ P358_0C62:
 P358_0C80:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 12
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 46, 0, 32780: not translated yet
+    BSubwayCmd_Tool 313, 0, 0, PVAR_800C  // Pearl tower function 46
     pl_SetVarFromVar PVAR_8004, PVAR_800C
     pl_BufferPlayerName 0
     pl_BufferNumber 1, PVAR_8004
@@ -875,7 +887,7 @@ P358_0C80:
     pl_Return
 
 P358_0CA4:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 43, 0, 32780: not translated yet
+    BSubwayCmd_Tool 21, 0, 0, PVAR_800C  // Pearl tower function 43
     pl_SetVarFromVar PVAR_4000, PVAR_800C
     pl_CompareVarToValue PVAR_4000, 5
     pl_GoToIf 1, P358_0D07
@@ -883,7 +895,7 @@ P358_0CA4:
     pl_GoToIf 1, P358_0D12
     pl_CompareVarToValue PVAR_4000, 4
     pl_GoToIf 1, P358_0DD8
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 49, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 49: no ribbons
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 5, P358_0DA5
     pl_Call P358_0C80
@@ -900,15 +912,15 @@ P358_0D07:
     pl_GoTo P358_0CF4
 
 P358_0D12:
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 45, 0, 32780: not translated yet
+    BSubwayCmd_Tool 312, 0, 0, PVAR_800C  // Pearl tower function 45
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_0D66
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 46, 0, 32780: not translated yet
+    BSubwayCmd_Tool 313, 0, 0, PVAR_800C  // Pearl tower function 46
     pl_SetVarFromVar PVAR_4000, PVAR_800C
     pl_BufferPlayerName 0
     pl_BufferNumber 1, PVAR_4000
     pl_msg_sys 13
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 48, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 48: no ribbons
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_0D6C
     pl_msg_sys 84
@@ -923,7 +935,7 @@ P358_0D6C:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 14
     pl_Call P358_02C1
-    pl_stub 1DF  // Pearl 0x1DF Unk01DF 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl 0x1DF: none here
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_023B
     pl_msg_sys 116
@@ -935,7 +947,7 @@ P358_0D6C:
 
 P358_0DA5:
     pl_msg_sys 12
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 46, 0, 32780: not translated yet
+    BSubwayCmd_Tool 313, 0, 0, PVAR_800C  // Pearl tower function 46
     pl_SetVarFromVar PVAR_8004, PVAR_800C
     pl_BufferPlayerName 0
     pl_BufferNumber 1, PVAR_8004
@@ -949,22 +961,22 @@ P358_0DA5:
 
 P358_0DD8:
     pl_msg_sys 12
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 46, 0, 32780: not translated yet
+    BSubwayCmd_Tool 313, 0, 0, PVAR_800C  // Pearl tower function 46
     pl_SetVarFromVar PVAR_8004, PVAR_800C
     pl_BufferPlayerName 0
     pl_BufferNumber 1, PVAR_8004
     pl_msg_sys 58
     pl_PlayFanfare SEQ_ME_ITEM  // Pearl SEQ_FANFA4
     pl_WaitFanfare
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 54, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 54: Wi-Fi only
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_038D
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 10, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 10: Wi-Fi only
     pl_SetVarFromVar PVAR_4000, PVAR_800C
     pl_BufferPlayerName 0
     pl_BufferNumber 1, PVAR_4000
     pl_msg_sys 55
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 49, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 0  // Pearl tower function 49: no ribbons
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_038D
     pl_BufferNumber 0, PVAR_4000
@@ -977,16 +989,17 @@ P358_S5:
 P358_0E53:
     pl_LockAll
     pl_SetVarFromValue PVAR_40D8, 0
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 4, 0, 32780: not translated yet
+    BSubwayCmd_Tool 3, 0, 0, PVAR_800C  // Pearl tower function 4
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_0221
     pl_msg_sys 16
-    pl_stub InitBattleTower  // Pearl 0x1DB Unk01DB 1, 65535: not translated yet
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 43, 0, 32780: not translated yet
+    Plugin1_Cmd1001 1, 0  // InitBattleTower: the saved challenge
+    pl_TowerResumePartner
+    BSubwayCmd_Tool 21, 0, 0, PVAR_800C  // Pearl tower function 43
     pl_CompareVarToValue PVAR_800C, 2
     pl_GoToIf 1, P358_0EAF
     pl_Call P358_0168
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 5, 0, 0: not translated yet
+// Pearl tower function 5: nothing to do
     pl_Call P358_02C1
     pl_msg_sys 11
     pl_WaitABPress
@@ -994,9 +1007,9 @@ P358_0E53:
 
 P358_0EAF:
     pl_Call P358_0182
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 5, 0, 0: not translated yet
+// Pearl tower function 5: nothing to do
     pl_Call P358_02C1
-    pl_stub CallBattleTowerFunction  // Pearl 0x1DD Unk01DD 51, 0, 32780: not translated yet
+    pl_TowerGetPartner PVAR_800C  // Pearl tower function 51
     pl_SetVarFromVar PVAR_4009, PVAR_800C
     pl_msg_sys 32
     pl_WaitABPress
@@ -1012,7 +1025,7 @@ P358_0EEC:
     pl_LockAll
     pl_FacePlayer
     pl_SetVarFromValue PVAR_4001, 0
-    pl_stub 1DF  // Pearl 0x1DF Unk01DF 16386: not translated yet
+    pl_SetVarFromValue PVAR_4002, 0  // Pearl 0x1DF: none here
 
 P358_0EFE:
     pl_SetVarFromVar PVAR_8008, PVAR_4002
@@ -1070,7 +1083,7 @@ P358_0FAE:
     pl_LockAll
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
-    pl_stub OpenBattleTowerRecordsApp  // Pearl 0x1D9 Unk01D9 32768, 32769: not translated yet
+    BSubwayCmd_Tool 111, 0, 0, 0  // OpenBattleTowerRecordsApp: Black 2's records screen
     pl_ReturnToField
     pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
     pl_WaitFadeScreen
@@ -1330,6 +1343,10 @@ PearlProxy_10151:                  // Pearl global script 10151 (run by this zon
     VMCall T1042_2_S2
     VMHalt
 
+PearlClosed_0:                  // a closed place (data/pearl_closed_facilities.json): object 2
+    pl_closed_facility 157, 255
+    VMHalt
+
 // ---- Pearl global script 205:7 (a subroutine here)
 C205_7_S7:
 C205_7_0470:
@@ -1339,16 +1356,16 @@ C205_7_0470:
     VMReturn  // End: the sub-script ends
 
 C205_7_0480:
-    pl_stub CheckSaveType  // Pearl 0x12C CheckSaveStatus 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // CheckSaveType: a plain save
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, C205_7_04D4
-    pl_stub OpenSaveInfo  // Pearl 0x2C1 ShowSaveStats : not translated yet
+// OpenSaveInfo: no save details window here
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 128  // Pearl bank 199 line 13
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, C205_7_055E
-    pl_stub CheckSaveType  // Pearl 0x12C CheckSaveStatus 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // CheckSaveType: a plain save
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, C205_7_04F5
     pl_CompareVarToValue PVAR_800C, 2
@@ -1403,18 +1420,18 @@ C205_7_053B:
     pl_PlaySE SEQ_SE_SAVE  // Pearl SEQ_SE_DP_SAVE
     pl_WaitSE SEQ_SE_SAVE  // Pearl SEQ_SE_DP_SAVE
     VMSleep 30  // WaitABPressTime
-    pl_stub CloseSaveInfo  // Pearl 0x2C2 HideSaveStats : not translated yet
+// CloseSaveInfo: no save details window here
     pl_Return
 
 C205_7_055E:
-    pl_stub CloseSaveInfo  // Pearl 0x2C2 HideSaveStats : not translated yet
+// CloseSaveInfo: no save details window here
     pl_SetVarFromValue PVAR_800C, 0
     pl_Return
 
 C205_7_0568:
     pl_msg_sys 134  // Pearl bank 199 line 18
     pl_WaitABPress
-    pl_stub CloseSaveInfo  // Pearl 0x2C2 HideSaveStats : not translated yet
+// CloseSaveInfo: no save details window here
     pl_Return
 
 // ---- Pearl global script 205:47 (a subroutine here)
@@ -1428,11 +1445,11 @@ C205_47_0893:
 
 C205_47_08A0:
     pl_PlayFanfare SEQ_ME_ITEM  // Pearl SEQ_FANFA4
-    pl_stub SendGoodToPC  // Pearl 0x083 GiveSecretBaseDecoration 32772, 32773, 32780: not translated yet
-    pl_stub GetDecorationNameWithArticle  // Pearl 0x2C6 GetDecorationNameWithArticle 0, 32772: not translated yet
+    pl_SendGoodToPC PVAR_8004, PVAR_800C
+    pl_GetDecorationNameWithArticle 0, PVAR_8004
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 136  // Pearl bank 199 line 108
-    pl_stub BufferUndergroundGoodsName  // Pearl 0x0DF GetDecorationName 0, 32772: not translated yet
+    pl_BufferUndergroundGoodsName 0, PVAR_8004
     pl_WaitFanfare
     pl_Return
 
@@ -1499,23 +1516,23 @@ T1042_2_0107:
 
 T1042_2_0165:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
-    ListMenuAdd 138, 65535, 255  // Pearl AddListMenuEntry 16, 255
-    ListMenuAdd 139, 65535, 255  // Pearl AddListMenuEntry 17, 255
-    ListMenuAdd 140, 65535, 255  // Pearl AddListMenuEntry 18, 255
-    ListMenuAdd 141, 65535, 255  // Pearl AddListMenuEntry 19, 255
-    ListMenuAdd 142, 65535, 255  // Pearl AddListMenuEntry 20, 255
-    ListMenuAdd 143, 65535, 255  // Pearl AddListMenuEntry 21, 255
-    ListMenuAdd 144, 65535, 255  // Pearl AddListMenuEntry 22, 255
-    ListMenuAdd 145, 65535, 255  // Pearl AddListMenuEntry 23, 255
-    ListMenuAdd 146, 65535, 255  // Pearl AddListMenuEntry 24, 255
-    ListMenuAdd 147, 65535, 255  // Pearl AddListMenuEntry 25, 255
-    ListMenuAdd 148, 65535, 255  // Pearl AddListMenuEntry 26, 255
-    ListMenuAdd 149, 65535, 255  // Pearl AddListMenuEntry 27, 255
-    ListMenuAdd 150, 65535, 255  // Pearl AddListMenuEntry 28, 255
-    ListMenuAdd 151, 65535, 255  // Pearl AddListMenuEntry 29, 255
-    ListMenuAdd 152, 65535, 255  // Pearl AddListMenuEntry 30, 255
-    ListMenuAdd 153, 65535, 255  // Pearl AddListMenuEntry 31, 255
-    ListMenuAdd 154, 65535, 255  // Pearl AddListMenuEntry 32, 255
+    ListMenuAdd 138, 65535, 1  // Pearl AddListMenuEntry 16, 1
+    ListMenuAdd 139, 65535, 2  // Pearl AddListMenuEntry 17, 2
+    ListMenuAdd 140, 65535, 3  // Pearl AddListMenuEntry 18, 3
+    ListMenuAdd 141, 65535, 4  // Pearl AddListMenuEntry 19, 4
+    ListMenuAdd 142, 65535, 5  // Pearl AddListMenuEntry 20, 5
+    ListMenuAdd 143, 65535, 6  // Pearl AddListMenuEntry 21, 6
+    ListMenuAdd 144, 65535, 7  // Pearl AddListMenuEntry 22, 7
+    ListMenuAdd 145, 65535, 8  // Pearl AddListMenuEntry 23, 8
+    ListMenuAdd 146, 65535, 9  // Pearl AddListMenuEntry 24, 9
+    ListMenuAdd 147, 65535, 10  // Pearl AddListMenuEntry 25, 10
+    ListMenuAdd 148, 65535, 11  // Pearl AddListMenuEntry 26, 11
+    ListMenuAdd 149, 65535, 12  // Pearl AddListMenuEntry 27, 12
+    ListMenuAdd 150, 65535, 13  // Pearl AddListMenuEntry 28, 13
+    ListMenuAdd 151, 65535, 14  // Pearl AddListMenuEntry 29, 14
+    ListMenuAdd 152, 65535, 15  // Pearl AddListMenuEntry 30, 15
+    ListMenuAdd 153, 65535, 16  // Pearl AddListMenuEntry 31, 16
+    ListMenuAdd 154, 65535, 17  // Pearl AddListMenuEntry 32, 17
     ListMenuShow
     pl_CompareVarToValue PVAR_8004, 65534
     pl_GoToIf 1, T1042_2_021F

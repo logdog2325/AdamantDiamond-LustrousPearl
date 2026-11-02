@@ -1,0 +1,11 @@
+PearlBattleTowerArenaWifi_Text_000 = Thank you so much for participating!{be01}\nPlease wait while I save the game.\nDon’t turn off the power.
+PearlBattleTowerArenaWifi_Text_001 = We hope to see you again!
+PearlBattleTowerArenaWifi_Text_002 = Your Pokémon will be restored to\nfull health.
+PearlBattleTowerArenaWifi_Text_003 = Up next, opponent pair no. {0200:0}.\nAre you ready?
+PearlBattleTowerArenaWifi_Text_004 = Would you like to save and\nquit the game?
+PearlBattleTowerArenaWifi_Text_005 = Would you like to cancel your\nBattle Room challenge?
+PearlBattleTowerArenaWifi_Text_006 = You have chosen to retire from\nthis Battle Room challenge.
+PearlBattleTowerArenaWifi_Text_007 = Awaiting response from a friend...
+PearlBattleTowerArenaWifi_Text_008 = KEEP GOING
+PearlBattleTowerArenaWifi_Text_009 = REST
+PearlBattleTowerArenaWifi_Text_010 = RETIRE

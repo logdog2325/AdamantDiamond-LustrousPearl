@@ -47,12 +47,12 @@ P1017_002F:
 
 P1017_0060:
     pl_msg_talk 3
-    WorkSetConst PVAR_800C, 11  // GetGameVersion: Pearl (pokediamond VERSION_PEARL 11)
+    WorkSetConst PVAR_800C, PEARLB2_GAME_VERSION  // GetGameVersion: the build's (patches/scripts.py)
     pl_CompareVarToValue PVAR_800C, 10
     pl_CallIf 1, P1017_0092
     pl_CompareVarToValue PVAR_800C, 11
     pl_CallIf 1, P1017_009D
-    pl_stub RemovePokemonPreview  // Pearl 0x209 Unk0209 : not translated yet
+// RemovePokemonPreview: Black 2's window closed itself
     pl_SetFlag PFLAG_0145
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 6
@@ -62,13 +62,15 @@ P1017_0060:
     pl_End
 
 P1017_0092:
-    pl_stub DrawPokemonPreview  // Pearl 0x208 ShowPokemonPic 484, 0: not translated yet
+    MsgWinCloseAll  // (as Black 2's own uses: its window needs the message window gone)
+    CallPokemonPreview 484, 0, 0, 0  // ShowPokemonPic
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 4
     pl_Return
 
 P1017_009D:
-    pl_stub DrawPokemonPreview  // Pearl 0x208 ShowPokemonPic 483, 0: not translated yet
+    MsgWinCloseAll  // (as Black 2's own uses: its window needs the message window gone)
+    CallPokemonPreview 483, 0, 0, 0  // ShowPokemonPic
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 5
     pl_Return
@@ -107,7 +109,7 @@ P1017_00D7:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_msg_talk 9
+    pl_msg_sys 9
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll

@@ -75,6 +75,8 @@ B2_TABLES = 135                  # Black 2's own tables; Pearl file N -> table B
 PEARL_FILES = 183
 NO_ENCOUNTERS = 0x1FFF
 TABLE_SIZE = 0xE8
+PERSONAL_ARC, PERSONAL_ITEMS = 16, 0x0C        # a/0/1/6, PersonalData.items
+HELD_SPECIES = (125, 126, 239, 240, 466, 467)  # Electabuzz, Magmar, Elekid, Magby, Electivire, Magmortar
 PEARL = os.path.join(ROOT, 'work', version.VERSION)   # gen4_extract.py output (work/pearl)
 SPECIES_H = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'include', 'generated', 'constants', 'species.h')
 
@@ -271,9 +273,27 @@ def sinnoh_zones(world, headers):
     return out, skipped
 
 
+def held_items(files):
+    """The species whose wild held items differ between the games (notes/DIAMOND.md 4.1: the Electabuzz and Magmar lines),
+    from the version's own personal.narc: its common slot (bytes 12-13, 50 %) and rare slot (14-15, 5 %) into Black 2's
+    PersonalData.items[0] and [1] (+0x0C, the same odds; items[2], 1 %, stays)."""
+    if not version.HELD_ITEMS_FROM_DUMP:
+        return 0
+    from gen4rom import Rom, narc_members
+    theirs = narc_members(Rom(version.SOURCE_DUMP).read(version.PERSONAL_NARC))
+    ours = narcio.load(files, PERSONAL_ARC)
+    for sp in HELD_SPECIES:
+        rec = bytearray(ours[sp])
+        rec[PERSONAL_ITEMS:PERSONAL_ITEMS + 4] = theirs[sp][12:16]
+        ours[sp] = bytes(rec)
+    narcio.save(files, PERSONAL_ARC, ours)
+    return len(HELD_SPECIES)
+
+
 def apply(files):
     world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
     pzones = json.load(open(os.path.join(PEARL, 'zones.json')))
+    held = held_items(files)
     entries = narcio.load(files, ENC_ARC)
     if len(entries) not in (B2_TABLES, B2_TABLES + PEARL_FILES):
         raise SystemExit(f'a/1/2/7 has {len(entries)} tables: expected Black 2\'s {B2_TABLES} (run on a --clean build)')
@@ -296,7 +316,8 @@ def apply(files):
         wild += n is not None
     zoneheaders.save(files, headers, hentries)
     return (f'sinnoh_encounters: {PEARL_FILES} Pearl tables -> a/1/2/7 {B2_TABLES}..{B2_TABLES + PEARL_FILES - 1}; '
-            f'{len(zones)} zones set ({wild} with wild Pokémon), {skipped} rooms not installed yet; rods {ROD_LAYOUT}')
+            f'{len(zones)} zones set ({wild} with wild Pokémon), {skipped} rooms not installed yet; rods {ROD_LAYOUT}; '
+            f'{held} species\' held items from {version.NAME}\'s dump')
 
 
 # ---------------------------------------------------------------------------------------------------- report

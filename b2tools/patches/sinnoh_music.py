@@ -30,7 +30,32 @@ SEQ_DUMMY = 1000
 # installed like the zone songs; the scripts get their ids as SEQ_PEARL_<name> (scripts.defines(), env
 # PEARL_MUSIC_EVENTS set here, so only a build that ran this patch uses them; others keep Black 2's stand-ins).
 EVENT_SONGS = ('SEQ_THE_RIV', 'SEQ_THE_BOY', 'SEQ_THE_GIRL', 'SEQ_TSURETEKE', 'SEQ_THE_EVENT01', 'SEQ_THE_EVENT02',
-               'SEQ_THE_EVENT03', 'SEQ_SILENCE_DUNGEON', 'SEQ_OPENING2', 'SEQ_FUE', 'SEQ_D_SAFARI', 'SEQ_D_RYAYHY')
+               'SEQ_THE_EVENT03', 'SEQ_SILENCE_DUNGEON', 'SEQ_OPENING2', 'SEQ_FUE', 'SEQ_D_SAFARI', 'SEQ_D_RYAYHY',
+               # Super Contests (patches/contests.py: the screen's own, not a script's)
+               'SEQ_CO_DRESS', 'SEQ_CO_KASHI', 'SEQ_CO_TAKUMA', 'SEQ_CO_KEKKA', 'SEQ_CO_FANFA')
+
+
+# Pearl's jingles (DECISIONS 2026-10-25; Rowan's question answered Sinnoh: Music_Redirect, src/code/music_choice.c): Black 2's
+# ME -> Pearl's. pokeplatinum: items FANFA4, key items FANFA3, level up and a Pokémon received FANFA1, evolving and hatching
+# FANFA5; the others by name
+JINGLES = {'SEQ_ME_ASA': 'SEQ_ASA', 'SEQ_ME_LVUP': 'SEQ_FANFA1', 'SEQ_ME_ITEM': 'SEQ_FANFA4', 'SEQ_ME_KEYITEM': 'SEQ_FANFA3',
+           'SEQ_ME_POKEGET': 'SEQ_FANFA1', 'SEQ_ME_SHINKAOME': 'SEQ_FANFA5', 'SEQ_ME_TAMAGO_GET': 'SEQ_FANFA5',
+           'SEQ_ME_BADGE': 'SEQ_BADGE', 'SEQ_ME_WAZA': 'SEQ_WAZA', 'SEQ_ME_ACCE': 'SEQ_ACCE',
+           'SEQ_ME_WASURE': 'SEQ_WASURE', 'SEQ_ME_KINOMI': 'SEQ_KINOMI'}
+
+
+def b2_sound_ids():
+    """Black 2's sound constants from pokebw2's generated/sound.txt: `NAME` counts on from the last `NAME = n`."""
+    out, n = {}, 0
+    for line in open(os.path.join(ROOT, 'external', 'pokebw2', 'generated', 'sound.txt')):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        name, _, value = line.partition('=')
+        n = int(value, 0) if value else n
+        out[name.strip()] = n
+        n += 1
+    return out
 
 
 def apply(files):
@@ -51,7 +76,9 @@ def apply(files):
     pairs = {(song(pid), song(pid, 'music_night')) for pid in b2_of}
     pairs = {(d, n) for d, n in pairs if d is not None and n is not None and d != n}
     events = {P.index('seq', n) for n in EVENT_SONGS}
-    wanted = sorted({s for pid in b2_of for s in [song(pid)] if s is not None} | {n for _, n in pairs} | events)
+    jingles = {P.index('seq', n) for n in JINGLES.values()}
+    wanted = sorted({s for pid in b2_of for s in [song(pid)] if s is not None} | {n for _, n in pairs} | events | jingles)
+    sound = b2_sound_ids()
     free_seq = [i for i in range(4, len(B.info['seq'])) if B.info['seq'][i] is None]
     free_bank = [i for i in range(len(B.info['bank'])) if B.info['bank'][i] is None]
     free_wave = [i for i in range(len(B.info['wavearc'])) if B.info['wavearc'][i] is None]
@@ -64,7 +91,12 @@ def apply(files):
         f_seq, f_bank, f_wave = next_file, next_file + 1, next_file + 2
         next_file += 3
         new_files += [seq, bank, swar]
-        ents[('seq', sid)] = SDAT.seq_entry(f_seq, bid, volume=info['volume'])
+        if s in jingles:     # plays where Black 2's ME does: its player and priorities
+            me = B.info['seq'][sound[next(b for b, p in JINGLES.items() if P.index('seq', p) == s)]]
+            ents[('seq', sid)] = SDAT.seq_entry(f_seq, bid, volume=info['volume'], channel_prio=me['channel_prio'],
+                                                player_prio=me['player_prio'], player=me['player'])
+        else:
+            ents[('seq', sid)] = SDAT.seq_entry(f_seq, bid, volume=info['volume'])
         ents[('bank', bid)] = SDAT.bank_entry(f_bank, [wid])
         ents[('wavearc', wid)] = SDAT.wavearc_entry(f_wave)
         b2_seq[s] = sid; sizes[P.name('seq', s)] = info['size']
@@ -96,7 +128,8 @@ def apply(files):
     event_ids = {n: b2_seq[P.index('seq', n)] for n in EVENT_SONGS}
     os.environ['PEARL_MUSIC_EVENTS'] = json.dumps(event_ids)
     json.dump({'songs': {P.name('seq', s): {'b2_seq': b2_seq[s], 'bytes': sizes[P.name('seq', s)]} for s in wanted},
-               'zones': mapping, 'night_pairs': night, 'events': event_ids},
+               'zones': mapping, 'night_pairs': night, 'events': event_ids,
+               'jingles': sorted((sound[b], b2_seq[P.index('seq', p)]) for b, p in JINGLES.items())},
               open(os.path.join(ROOT, 'work', 'world', 'music.json'), 'w'), indent=1)
     over = [n for n, b in sizes.items() if b > pearl_music.BUDGET]
     return (f'sinnoh_music: {len(wanted)} Pearl songs added (seq {free_seq[0]}..), {len(mapping)} zones, '

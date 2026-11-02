@@ -10,4 +10,4 @@ PearlSunyshoreMarket_Text_008 = Ah, please, allow me a little of your\ntime, if 
 PearlSunyshoreMarket_Text_009 = See the Seal Merchant there?{be01}
 PearlSunyshoreMarket_Text_010 = He didn’t have the Seals I wanted\ntoday... Maybe tomorrow, I guess.
 PearlSunyshoreMarket_Text_011 = He came through with different Seals\ntoday! Just what I wanted to see!
-PearlSunyshoreMarket_Text_012 = Welcome!\nWhat do you need?
+PearlSunyshoreMarket_Text_012 = Our Seals haven’t arrived.\nPlease come again!

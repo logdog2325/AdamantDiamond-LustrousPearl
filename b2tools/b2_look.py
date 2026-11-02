@@ -21,7 +21,8 @@ l_lake, one plane per chunk): it moves into the chunk model (placed_props leaves
 animates it. Shores and edges (puddlep*, lakep.1, hamabe, beachp, seaside3, ...) stay Pearl's.
 
 Grass: outdoors (the overworld and the outdoor rooms) Pearl's ground grass ngrass takes Black 2's grass01ax of the
-season (64 x 64, one texel a unit, world-aligned; the record's texture size 64), its seasons Black 2's; Pearl's other
+season (64 x 64, one texel a unit, world-aligned; the record's texture size 64), its seasons Black 2's, winter's the
+snow grass01ax of Black 2's Icirrus (the north's all year: grass_set); Pearl's other
 art with grass in it takes Black 2's grass colours (patches/sinnoh_reskin.py); indoor rooms (the Eterna Gym) keep
 Pearl's.
 
@@ -32,6 +33,7 @@ import functools, json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import pearl_mesh  # noqa: E402
 
 VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
@@ -58,6 +60,8 @@ PEARL_WATER = {'sea': ('base', 'sea'), 'asasea': ('base', 'sea'), 'puddle_b': ('
 LAKE_PROPS = {311}               # Pearl build model l_lake (Lakes Verity, Valor, Acuity): moved into the chunk
 GRASS = ('ngrass', 'grass01ax', 'grass01ax_pl', (1, 1, 0, 64), 64)
 B2_SEASON_SETS = (2, 3, 4, 5)    # Black 2's spring..winter map texture sets (Aspertia's: its grass01ax per season)
+B2_SNOW_SET = 45                 # Black 2's Icirrus in winter: its grass01ax is snow (every map's winter ground, the
+                                 # north's all year; the user 2026-11-01)
 B2_CAVE_SET = 296                # a cave set with d0_miz and d0_miz2
 NORTH_AREA = 14                  # Pearl area 14 (the snowy north): winter all year (patches/sinnoh_reskin.py)
 
@@ -332,6 +336,13 @@ def placed_props(chunk, props):
 
 
 # ------------------------------------------------------------------------------------------------ texture sets
+def grass_set(season, north=False):
+    """Black 2's set whose grass01ax a map's ngrass takes: the season's in spring, summer and autumn, snow in winter
+    (the user 2026-11-01: Aspertia's pale winter ground nearly matched its spring ground), and snow all year in the
+    north (Pearl's ngrass there is snow; Aspertia's turned Snowpoint green from 3cca6f6 to 2026-11-01)."""
+    return B2_SNOW_SET if north or season == 3 else B2_SEASON_SETS[season]
+
+
 @functools.lru_cache(maxsize=None)
 def _b2_set(i):
     import narcio
@@ -344,7 +355,7 @@ def texture_adds(where, season=1, north=False):
     out = []
     if where == 'outdoor':
         s = B2_SEASON_SETS[3 if north else season]
-        if grass_on(): out.append((_b2_set(s), GRASS[1], GRASS[2]))
+        if grass_on(): out.append((_b2_set(grass_set(season, north)), GRASS[1], GRASS[2]))
         if water_on():
             for b2name in ('sea_mizu1', 'mizu_sita2', 'ike01'):
                 _, tex, pal, _ = B2_MATERIALS[b2name]
@@ -360,7 +371,7 @@ def grass_pairs(pearl_parsed, season, north=False):
     """[(Pearl ground grass colour, Black 2 grass01ax colour)]: the most used colour of each (recolour.transfer's
     ground anchor), for Pearl's art with grass in it beside the new ground."""
     import nsbtx, recolour
-    b2 = nsbtx._parse(_b2_set(B2_SEASON_SETS[3 if north else season]))
+    b2 = nsbtx._parse(_b2_set(grass_set(season, north)))
     pc = recolour.colour_counts(pearl_parsed, 'ngrass', 'grass').most_common(1)
     bc = recolour.colour_counts(b2, GRASS[1], GRASS[2]).most_common(1)
     return [(pc[0][0], bc[0][0])] if pc and bc else []
@@ -389,7 +400,7 @@ def room_water_areas():
     for c, pa in _room_chunk_areas().items():
         if str(c) not in _world()['rooms']['chunks']: continue
         texs = {t[0] for t in pearl_render.bindings(pearl_chunk.pearl_model(c))}
-        props = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.json')))['props']
+        props = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))['props']
         if texs & set(PEARL_WATER) or any(p['model'] in LAKE_PROPS for p in props): out.add(pa)
     return frozenset(out)
 

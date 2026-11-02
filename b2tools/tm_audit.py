@@ -174,10 +174,11 @@ def _moves_in_tutor(src, start):
 
 # ---- who learns what -----------------------------------------------------------------------------------------------
 def pearl_personal():
-    """The dump's personal_pearl.narc: [record] (0-493 the species, 494-495 eggs, 496-498 Deoxys's forms, 499-500
-    Wormadam's)."""
+    """The dump's personal.narc: [record] (0-493 the species, 494-495 eggs, 496-498 Deoxys's forms, 499-500 Wormadam's).
+    The version's own file: the two differ only in six species' held items (notes/DIAMOND.md 4.1), not in TM bits."""
+    import version
     from gen4rom import Rom, narc_members
-    return narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read('poketool/personal_pearl/personal.narc'))
+    return narc_members(Rom(version.SOURCE_DUMP).read(version.PERSONAL_NARC))
 
 
 def pearl_learns(rec):

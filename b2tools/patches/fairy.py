@@ -15,9 +15,9 @@ Pearl differs from HoennB2 in:
     game, so it never asks about the split: bit 12 stays 0 (a Hoenn host's classic split still applies in a link
     battle, through the sync);
   - no seasons code here: Rowan's seasons question (bit 15, the same meaning as HoennB2's) is patches/season_choice.py;
-  - the shop: HoennB2 sells the two items at Lilycove's Dept. Store; Pearl's shop is not chosen yet (SHOP_ID None: no
-    shop hook, the items exist but are not sold; proposal: Veilstone Dept. Store's battle-items clerk, pokediamond
-    arm9/src/scrcmd_mart.c's X-items list, once the specialty marts are ported);
+  - the shop: HoennB2 sells the two items at Lilycove's Dept. Store; Pearl NDS at the Veilstone Dept. Store's battle-items
+    clerk (DECISIONS 2026-10-19): Pearl's SpecialMart 10, the X-items list, shop 10 (patches/pearl_shops.py, which runs
+    before this patch);
   - the learnsets: HoennB2's additions as they are (one Fairy data set for both projects; Sinnoh-only additions are
     an open question for the user, notes/FAIRY.md).
 
@@ -147,9 +147,9 @@ ITEM_ICONS = {ITEM_PIXIE_PLATE: (619, 629), ITEM_FAIRY_GEM: (934, 944)}
 ITEM_ICON_TABLE = 0x02090d50
 # Where they are sold (with the toggle on only). HoennB2: Lilycove Dept. Store 3F's right clerk (shop id 15); that shop's
 # list file (SHOP_ID + 6) + the two items go to the empty list file 79 of a/2/8/2 (count byte 79 of a/2/8/3 file 0),
-# and Fairy_ShopShim reads that file instead while Fairy is on. Pearl NDS: no shop yet (None = no list, no ov036 hook;
-# Black 2's shop 15 is an herb seller here). Set it to the shop id of the clerk that should sell them.
-SHOP_ID, SHOP_FILE = None, 79
+# and Fairy_ShopShim reads that file instead while Fairy is on. Pearl NDS: shop 10, the Veilstone Dept. Store's X items
+# (DECISIONS 2026-10-19; patches/pearl_shops.py writes Pearl's list there first).
+SHOP_ID, SHOP_FILE = 10, 79
 OV036, SHOP_LIST_READ = 0x0217F600, 0x021ac77c
 ITEM_EVENTS, ITEM_EVENTS_COUNT = 0x021d8f28, 172
 

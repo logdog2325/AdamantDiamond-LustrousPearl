@@ -84,9 +84,13 @@ src/pearlb2/battle_music_itcm.c (branch pearlb2-music). `python3 b2tools/patches
   120 (Pearl's) over the zone's Black 2 song 1195. Sound heap free in those battles: 160-180 KB.
 
 ## Open
-- Fanfares (Pearl's jingles): Black 2's own for now.
-- Black 2's low-HP song (SEQ_BGM_BATTLEPINCH) still replaces the battle song at red HP with Sinnoh's music too (Pearl
-  keeps its battle song and beeps): a question for the user.
+- Fanfares: done 2026-11-01, Pearl's with Sinnoh's music (patches/sinnoh_music.py JINGLES, Music_Redirect in
+  src/code/music_choice.c); Black 2's with Black 2's music.
+- Low HP: done 2026-11-01 (DECISIONS 2026-10-25): with Sinnoh's music the battle song plays on and a beep repeats
+  (resident/leftovers.c PearlB2_GaugePinch; Black 2's SEQ_SE_BEEP stands in for SEQ_SE_DP_HINSI, once a second).
+- Pearl's plain music in double battles (pokeplatinum EncEffects_GetEffectPair): nothing to build. All 23 double Trainers are
+  of plain classes (Twins, Young Couple, Double Team, Sis and Bro, Belle & Pa, Interviewers), and only Team Galactic's keep
+  their own, as the class table does already.
 - The Black 2 music option (Rowan's question) and checking every place where Black 2 waits for a song to end
   (HoennB2's v16 freeze: a looping song where the game waits for a jingle; HoennB2 b2tools check_waits).
 - In-game listening test of the trimmed songs and the night themes: next full build.

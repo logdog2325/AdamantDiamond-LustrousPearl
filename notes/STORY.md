@@ -401,6 +401,8 @@ src/include/pearl_story.inc):
   no person was talked to (ov036 scrcmd_msg.c), and Valley Windworks' Mars scene is both his talk script and the
   trigger's. Its lines use the plain window.
 - SetBgEventPos (Pearl 0x18B) -> ObjInitPointGPos: the Windworks door's "It's locked" sign moves away once opened.
+- The Works Key (the user, 2026-11-01: "the door doesn't open automatically"; Pearl only moves the warp back): after "Ker-chunk!" the door opens, the
+  player walks in, the warp (pearl_story.SCENE_AFTER, lines added after one translated command).
 - data/pearl_speakers.json: Eterna Galactic Building 4F line 4 (said after Jupiter, the talked-to person, left),
   Floaroma's and Route 205 S's grunt pairs (one talk script, one line each), the Windworks door's "Ker-chunk!".
 - World: pearl_chunk.floor_mats (rooms): walkable warp mats sat on their door frames (Eterna Gym entrance (8, 2) 30
@@ -478,7 +480,7 @@ Area 6 (Chapter 5a), not the Solaceon Ruins. Beats of later chapters in these zo
 Cynthia's SecretPotion scene (5b), the Storage Key under the grunt Lake Acuity brings back (6b/7) and the warehouse's
 inner door.
 Generator and data additions (shared):
-- Story item balls: data/pearl_item_balls.json installs Pearl's 5 HM / key-item balls (HM02 and the Storage Key here;
+- Story item balls: (since 2026-11-01 all balls: b2tools/pearl_items.py) data/pearl_item_balls.json installed Pearl's 5 HM / key-item balls (HM02 and the Storage Key here;
   the Galactic Key, HM08, the Lunar Wing in Chapters 7, 6b, 9) as people with the item-ball sprite, each running
   Pearl's own item-ball script (file 370 n + 256) from an entry after PearlArrive (PearlData.item_ball_ids); the flag
   rule in one place (pearl_events.item_ball_flag); the ball's RemoveEvent sets its flag (pl_RemoveTalkedObject).
@@ -1077,5 +1079,4 @@ GetTrophyGardenSlot1Species on the new works PVAR_TROPHY_GARDEN_1/2 (Mr. Backlot
 species from encdata_ex 8). The Trophy Garden's grass slots 6-7: the encounter code (STORY_HANDOFFS 9b).
 Checked offline: scene_check chapter 9 (7 'stand': Pearl's dock bollards on both islands, the gate receptionist at
 (7, 11): to look at in game), warp_check offline 0, the offline story check 14 zones 0 problems, check_local_works.
-Not played in game (usage: the build on 5fb4b23 was stopped in the queue; the first one hit ITCM full before the
-resident section). Still stubbed: Cresselia's picture (DrawPokemonPreview) and blink, Route 221's berry soil.
+Played in game 2026-11-01 (the combined ROM). Still stubbed: Route 221's berry soil. Cresselia's picture and blink (2026-11-01): Black 2's Pokémon window (CallPokemonPreview, Black 2's picture of the Pokémon; it closes on A or B, so at Celestic a line Pearl prints over the picture follows it) and pl_FlickerObject; Pearl's seen mark in the Pokédex is not set by the window.

@@ -37,3 +37,23 @@ Needs: copy HoennB2's title_art.py / title_scene.c pieces (read-only source), a 
 - Open: Pearl's aura flashes on/off (its title alternates the aura brightness); here the texture animation runs but
   no flashing. Pearl's "© 2007 GAME FREAK inc." vs Black 2's "Developed by GAME FREAK inc.": Black 2's kept, as in
   the Hoenn games.
+
+## Pokémon Lustrous Pearl and Pokémon Adamant Diamond (user's new names and pick, 2026-11-01)
+- Logo: **draft C** of `b2tools/title_lustrous.py`, the whole name on one line on a plaque, with a string of pearls and the
+  Lustrous Orb below it (Diamond: steel plaque, a string of small cut diamonds, the Adamant Orb's cut gem). Black 2's wordmark, strip and PRESS START stay.
+  Drafts A (chrome stack) and B (orb emblem) stay in that file. Its letters are thresholded to whole pixels, not averaged
+  like title_art's earlier drafts, and rims go around the whole word so they can't fill a counter (a pale rim read as a
+  hollow second letter at 1x). `python3 title_lustrous.py use C` writes data/title/ and data/title/diamond/; draft C is
+  345 (Diamond 372) of 512 tiles, 31 (33) colours for the lettering. The old data/title/drafts/ are the Pearl-only logos.
+- Version: `PEARL_VERSION=diamond` makes pearl_title.py take data/title/diamond/ and titledemo files 6 + 19 (Dialga), cry 483.
+  Dialga's camera is its own (291, 103, -13 looking at -1, 103, -80): Dialga's model is not centred as Palkia's is (centre -1, 103, -80, 152 x 210 x 324 units; Palkia's camera shows only its legs). Chosen from an offline render with Black 2's frustum that reproduces the DeSmuME shot of Palkia's outline; not seen in game yet. `PEARL_VERSION=diamond b2tools/hwtest/title_tune.sh` tunes it. The Diamond dump must be roms/diamond.nds.
+- The name elsewhere, all from `b2tools/version.py` (TITLE, PUBLIC_NAME, HEADER_TITLE, game_names):
+  - ROM header "POKEMON LP" / "POKEMON AD", DS menu banner `Pokémon / Lustrous Pearl / Nintendo` with the dump's own icon
+    (Pearl's Poké Ball on pink): `b2tools/rom_identity.py`, installed by pearl_title.py, used by build_rom.write_config.
+    The game code stays IREO. `python3 rom_identity.py check ROM` reads a built ROM back (also the banner's CRCs).
+  - Credits: Pearl's "Pokémon Pearl" line (pearl_credits.py; regenerate data/text_overrides/pearl_credits.json with it).
+  - Pal Park migration text (Pearl's bank 403, patches/pal_park.py): the longest line is now 214 px (Diamond) in a 240 px window.
+- Left as they are: "Pearl" as an item or in Pearl's story; Pearl's banks 206 and 315 (options, demo: not used here); Black
+  2's lines naming Pokémon Black/White (Version) 2 (ability_handlers_2: Memory Link and Key exchange; 0092: Poké Transfer;
+  title_8: Xtransceiver, transfer; 0355 and questionnaire_answers: surveys; castelia_city_13): real carts or Black 2 features;
+  the copyright screen after the credits (a/2/0/5, Black 2's art and years) and "Developed by GAME FREAK inc.".

@@ -116,7 +116,7 @@ P196_0012:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
     pl_PokeMartCommon 1
     pl_ReleaseAll
@@ -176,14 +176,6 @@ PearlProxy_10201:                  // Pearl global script 10201 (run by this zon
     VMCall T373_2_S2
     VMHalt
 
-// ---- Pearl global script 205:20 (a subroutine here)
-C205_20_S20:
-C205_20_0F28:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 3  // Pearl bank 199 line 37
-    pl_ReturnCommonScript
-    VMReturn  // End: the sub-script ends
-
 // ---- Pearl global script 205:45 (a subroutine here)
 C205_45_0336:
     pl_GetItemPocket PVAR_8004, PVAR_800C
@@ -237,14 +229,14 @@ C205_45_09C1:
     pl_CompareVarToValue PVAR_800C, 7
     pl_CallIf 5, C205_45_0A05
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 4  // Pearl bank 199 line 126
+    pl_msg_sys 3  // Pearl bank 199 line 126
     pl_Return
 
 C205_45_09F4:
     pl_BufferPlayerName 0
     pl_BufferItemName 1, PVAR_8004
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 5  // Pearl bank 199 line 28
+    pl_msg_sys 4  // Pearl bank 199 line 28
     pl_GoTo C205_45_0A2B
 
 C205_45_0A05:
@@ -258,7 +250,7 @@ C205_45_0A1D:
 
 C205_45_0A22:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 6  // Pearl bank 199 line 25
+    pl_msg_sys 5  // Pearl bank 199 line 25
     pl_GoTo C205_45_0A2B
 
 C205_45_0A2B:
@@ -367,42 +359,42 @@ C205_45_13AD:
 
 C205_45_13B5:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 7  // Pearl bank 199 line 110
+    pl_msg_sys 6  // Pearl bank 199 line 110
     pl_Return
 
 C205_45_13BA:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 8  // Pearl bank 199 line 111
+    pl_msg_sys 7  // Pearl bank 199 line 111
     pl_Return
 
 C205_45_13BF:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 9  // Pearl bank 199 line 112
+    pl_msg_sys 8  // Pearl bank 199 line 112
     pl_Return
 
 C205_45_13C4:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 10  // Pearl bank 199 line 113
+    pl_msg_sys 9  // Pearl bank 199 line 113
     pl_Return
 
 C205_45_13C9:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 11  // Pearl bank 199 line 114
+    pl_msg_sys 10  // Pearl bank 199 line 114
     pl_Return
 
 C205_45_13CE:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 12  // Pearl bank 199 line 115
+    pl_msg_sys 11  // Pearl bank 199 line 115
     pl_Return
 
 C205_45_13D3:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 13  // Pearl bank 199 line 116
+    pl_msg_sys 12  // Pearl bank 199 line 116
     pl_Return
 
 C205_45_13D8:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 14  // Pearl bank 199 line 117
+    pl_msg_sys 13  // Pearl bank 199 line 117
     pl_Return
 
 // ---- Pearl global script 205:18 (a subroutine here)
@@ -414,7 +406,7 @@ C205_18_0B60:
 
 C205_18_0B6A:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 15  // Pearl bank 199 line 27
+    pl_msg_sys 14  // Pearl bank 199 line 27
     pl_WaitButton
     pl_Return
 
@@ -455,19 +447,19 @@ T373_2_0035:
 T373_2_007E:
     pl_BufferPlayerName 0
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 16  // Pearl bank 332 line 0
+    pl_msg_talk 15  // Pearl bank 332 line 0
     pl_GoTo T373_2_00A2
 
 T373_2_008A:
     pl_BufferPlayerName 0
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 17  // Pearl bank 332 line 1
+    pl_msg_talk 16  // Pearl bank 332 line 1
     pl_GoTo T373_2_00A2
 
 T373_2_0096:
     pl_BufferPlayerName 0
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 18  // Pearl bank 332 line 2
+    pl_msg_talk 17  // Pearl bank 332 line 2
     pl_GoTo T373_2_00A2
 
 T373_2_00A2:
@@ -478,36 +470,36 @@ T373_2_00A2:
     pl_BufferPlayerName 0  // MysteryGiftGive 5: the received line (MessageFromBank shows it)
     WorkCmpConst PVAR_DELIVERY, 0
     VMJumpIf CMP_NE, .Ldmc1_0
-    pl_msg_talk 19  // Pearl bank 332 line 14
+    pl_msg_talk 18  // Pearl bank 332 line 14
     VMJump .Ldmc1_end
 .Ldmc1_0:
     WorkCmpConst PVAR_DELIVERY, 1
     VMJumpIf CMP_NE, .Ldmc1_1
-    pl_msg_talk 20  // Pearl bank 332 line 15
+    pl_msg_talk 19  // Pearl bank 332 line 15
     VMJump .Ldmc1_end
 .Ldmc1_1:
     WorkCmpConst PVAR_DELIVERY, 2
     VMJumpIf CMP_NE, .Ldmc1_2
-    pl_msg_talk 21  // Pearl bank 332 line 16
+    pl_msg_talk 20  // Pearl bank 332 line 16
     VMJump .Ldmc1_end
 .Ldmc1_2:
-    pl_msg_talk 22  // Pearl bank 332 line 13
+    pl_msg_talk 21  // Pearl bank 332 line 13
 .Ldmc1_end:
     pl_WaitFanfare
-    pl_msg_talk 23  // Pearl bank 332 line 17
+    pl_msg_talk 22  // Pearl bank 332 line 17
     pl_WaitButton
     pl_DeliveryGive  // MysteryGiftGive 4: the next gift
     pl_GoTo T373_2_0103
 
 T373_2_00D8:
 // MysteryGiftGive 6: the can't-receive line (MessageFromBank shows it)
-    pl_msg_talk 24  // Pearl bank 332 line 4 (only the Egg can be refused: the key items always fit)
+    pl_msg_talk 23  // Pearl bank 332 line 4 (only the Egg can be refused: the key items always fit)
     pl_WaitButton
     pl_GoTo T373_2_00F9
 
 T373_2_00EE:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 25  // Pearl bank 332 line 3
+    pl_msg_talk 24  // Pearl bank 332 line 3
     pl_WaitButton
     pl_GoTo T373_2_00F9
 

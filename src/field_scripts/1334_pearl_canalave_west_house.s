@@ -166,23 +166,23 @@ T1042_10_0107:
 
 T1042_10_0165:
     ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
-    ListMenuAdd 82, 65535, 255  // Pearl AddListMenuEntry 16, 255
-    ListMenuAdd 83, 65535, 255  // Pearl AddListMenuEntry 17, 255
-    ListMenuAdd 84, 65535, 255  // Pearl AddListMenuEntry 18, 255
-    ListMenuAdd 85, 65535, 255  // Pearl AddListMenuEntry 19, 255
-    ListMenuAdd 86, 65535, 255  // Pearl AddListMenuEntry 20, 255
-    ListMenuAdd 87, 65535, 255  // Pearl AddListMenuEntry 21, 255
-    ListMenuAdd 88, 65535, 255  // Pearl AddListMenuEntry 22, 255
-    ListMenuAdd 89, 65535, 255  // Pearl AddListMenuEntry 23, 255
-    ListMenuAdd 90, 65535, 255  // Pearl AddListMenuEntry 24, 255
-    ListMenuAdd 91, 65535, 255  // Pearl AddListMenuEntry 25, 255
-    ListMenuAdd 92, 65535, 255  // Pearl AddListMenuEntry 26, 255
-    ListMenuAdd 93, 65535, 255  // Pearl AddListMenuEntry 27, 255
-    ListMenuAdd 94, 65535, 255  // Pearl AddListMenuEntry 28, 255
-    ListMenuAdd 95, 65535, 255  // Pearl AddListMenuEntry 29, 255
-    ListMenuAdd 96, 65535, 255  // Pearl AddListMenuEntry 30, 255
-    ListMenuAdd 97, 65535, 255  // Pearl AddListMenuEntry 31, 255
-    ListMenuAdd 98, 65535, 255  // Pearl AddListMenuEntry 32, 255
+    ListMenuAdd 82, 65535, 1  // Pearl AddListMenuEntry 16, 1
+    ListMenuAdd 83, 65535, 2  // Pearl AddListMenuEntry 17, 2
+    ListMenuAdd 84, 65535, 3  // Pearl AddListMenuEntry 18, 3
+    ListMenuAdd 85, 65535, 4  // Pearl AddListMenuEntry 19, 4
+    ListMenuAdd 86, 65535, 5  // Pearl AddListMenuEntry 20, 5
+    ListMenuAdd 87, 65535, 6  // Pearl AddListMenuEntry 21, 6
+    ListMenuAdd 88, 65535, 7  // Pearl AddListMenuEntry 22, 7
+    ListMenuAdd 89, 65535, 8  // Pearl AddListMenuEntry 23, 8
+    ListMenuAdd 90, 65535, 9  // Pearl AddListMenuEntry 24, 9
+    ListMenuAdd 91, 65535, 10  // Pearl AddListMenuEntry 25, 10
+    ListMenuAdd 92, 65535, 11  // Pearl AddListMenuEntry 26, 11
+    ListMenuAdd 93, 65535, 12  // Pearl AddListMenuEntry 27, 12
+    ListMenuAdd 94, 65535, 13  // Pearl AddListMenuEntry 28, 13
+    ListMenuAdd 95, 65535, 14  // Pearl AddListMenuEntry 29, 14
+    ListMenuAdd 96, 65535, 15  // Pearl AddListMenuEntry 30, 15
+    ListMenuAdd 97, 65535, 16  // Pearl AddListMenuEntry 31, 16
+    ListMenuAdd 98, 65535, 17  // Pearl AddListMenuEntry 32, 17
     ListMenuShow
     pl_CompareVarToValue PVAR_8004, 65534
     pl_GoToIf 1, T1042_10_021F

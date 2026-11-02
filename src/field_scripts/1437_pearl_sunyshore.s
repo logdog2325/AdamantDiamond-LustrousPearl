@@ -415,7 +415,7 @@ P150_0401:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    VMCall C205_20_S20  // CallCommonScript 2019 (Pearl file 205 script 20)
+// CallCommonScript 2019 (Pearl's Mart greeting): Black 2's Mart menu says it
     pl_CloseMessageWithoutErasing
     RTCGetWeekDay PVAR_800C
     pl_SetVarFromVar PVAR_8008, PVAR_800C
@@ -436,31 +436,52 @@ P150_0401:
     pl_End
 
 P150_0476:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 0: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 24  // Pearl SealsMart 0: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_GoTo P150_04BC
 
 P150_0480:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 1: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 24  // Pearl SealsMart 1: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_GoTo P150_04BC
 
 P150_048A:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 2: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 24  // Pearl SealsMart 2: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_GoTo P150_04BC
 
 P150_0494:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 3: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 24  // Pearl SealsMart 3: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_GoTo P150_04BC
 
 P150_049E:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 4: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 24  // Pearl SealsMart 4: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_GoTo P150_04BC
 
 P150_04A8:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 5: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 24  // Pearl SealsMart 5: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_GoTo P150_04BC
 
 P150_04B2:
-    pl_stub PokeMartSeal  // Pearl 0x14A SealsMart 6: not translated yet
+    MsgWinCloseAll
+    pl_msg_talk 24  // Pearl SealsMart 6: not built
+    pl_WaitButton
+    pl_CloseMessage
     pl_GoTo P150_04BC
 
 P150_04BC:
@@ -681,14 +702,14 @@ C205_45_09C1:
     pl_CompareVarToValue PVAR_800C, 7
     pl_CallIf 5, C205_45_0A05
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 24  // Pearl bank 199 line 126
+    pl_msg_sys 25  // Pearl bank 199 line 126
     pl_Return
 
 C205_45_09F4:
     pl_BufferPlayerName 0
     pl_BufferItemName 1, PVAR_8004
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 25  // Pearl bank 199 line 28
+    pl_msg_sys 26  // Pearl bank 199 line 28
     pl_GoTo C205_45_0A2B
 
 C205_45_0A05:
@@ -702,7 +723,7 @@ C205_45_0A1D:
 
 C205_45_0A22:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 26  // Pearl bank 199 line 25
+    pl_msg_sys 27  // Pearl bank 199 line 25
     pl_GoTo C205_45_0A2B
 
 C205_45_0A2B:
@@ -811,51 +832,43 @@ C205_45_13AD:
 
 C205_45_13B5:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 27  // Pearl bank 199 line 110
+    pl_msg_sys 28  // Pearl bank 199 line 110
     pl_Return
 
 C205_45_13BA:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 28  // Pearl bank 199 line 111
+    pl_msg_sys 29  // Pearl bank 199 line 111
     pl_Return
 
 C205_45_13BF:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 29  // Pearl bank 199 line 112
+    pl_msg_sys 30  // Pearl bank 199 line 112
     pl_Return
 
 C205_45_13C4:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 30  // Pearl bank 199 line 113
+    pl_msg_sys 31  // Pearl bank 199 line 113
     pl_Return
 
 C205_45_13C9:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 31  // Pearl bank 199 line 114
+    pl_msg_sys 32  // Pearl bank 199 line 114
     pl_Return
 
 C205_45_13CE:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 32  // Pearl bank 199 line 115
+    pl_msg_sys 33  // Pearl bank 199 line 115
     pl_Return
 
 C205_45_13D3:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 33  // Pearl bank 199 line 116
+    pl_msg_sys 34  // Pearl bank 199 line 116
     pl_Return
 
 C205_45_13D8:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 34  // Pearl bank 199 line 117
+    pl_msg_sys 35  // Pearl bank 199 line 117
     pl_Return
-
-// ---- Pearl global script 205:20 (a subroutine here)
-C205_20_S20:
-C205_20_0F28:
-    MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 35  // Pearl bank 199 line 37
-    pl_ReturnCommonScript
-    VMReturn  // End: the sub-script ends
 
 // ---- Pearl global script 205:28 (a subroutine here)
 T205_28_S28:
@@ -864,7 +877,7 @@ T205_28_1222:
     pl_LockAll
     pl_FacePlayer
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 36  // Pearl bank 199 line 67
+    pl_msg_sys 36  // Pearl bank 199 line 67
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -913,6 +926,7 @@ C375_4_039D:
     pl_msg_sys 40  // Pearl bank 334 line 19
     pl_CloseMessage
 // UseRockClimb PVAR_8004: 2 climb starts in this zone
+    pl_PlayHMCutIn PVAR_8004
     pl_GetPlayerMapPos PL_TMP, PL_TMP2
     pl_GetPlayerDir PL_TMP3
     WorkCmpConst PL_TMP, 890

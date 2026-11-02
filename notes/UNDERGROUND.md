@@ -48,7 +48,7 @@ with the game's compiler and the three hooks keep their files' sizes). Not built
   app's browser: it refuses the fetch tool); Kaphotics' table; Serebii's spawn counts. They agree except: Serebii
   has three more National-Dex species in Spacious Cave (Rhydon, Magnemite, Swablu: kept); Serebii's rare % has two
   typos (Stargleam's Duskull 5 for 25, Icy's Glalie 10 for 15: Kaphotics' raw weights used).
-- Both versions are kept (data `version`: "sp"; a Diamond version switches it).
+- Both versions are kept; the build version picks the list column (version.BDSP: "sp" or "bd"), nothing in the data.
 
 ## 3. Zones, ids, files (the lead's allocation)
 - Zones **633** (the tunnels: Pearl's zone 2 through allocate_sinnoh APPENDED, with the area's models overridden to
@@ -153,8 +153,8 @@ with the game's compiler and the three hooks keep their files' sizes). Not built
   starters of its theme (grass: Grassland, Sunlit; fire: Volcanic, Sandsear, Typhlo; water: Fountainspring,
   Riverbank, Still-Water, Swampy with Bulbasaur) or its rare spawns; 4 % and 1 % its rare spawns. Not held back to
   Champion (decision 2026-10-19: grotto starters from the Kit on; to confirm with the user). Items: Pearl's
-  Underground treasures, which have no other source here without digging: the 16 plates (1 %), the Armor Fossil
-  (Pearl's) and evolution stones (4 %), the four shards (10 %), Heart Scales (25 %); B: a slot kept for the Discovery
+  Underground treasures, which have no other source here without digging: the 16 plates (1 %), the version's fossil
+  (Pearl's Armor, Diamond's Skull) and evolution stones (4 %), the four shards (10 %), Heart Scales (25 %); B: a slot kept for the Discovery
   Slates (Heart Scale until Ramanas Park's ids), Star Pieces, Rare Bones, the weather rocks, Heart Scales.
 - The Kanto and Hoenn fossils (Pearl digs them up after the National Dex; here the National Pokédex comes at Champion,
   user 2026-10-26): two daily balls from Champion, in the two Oreburgh Mine rooms (Rocky Cave (13, 10), Sandsear Cave
@@ -162,6 +162,7 @@ with the game's compiler and the three hooks keep their files' sizes). Not built
   PFLAG_UG_FOSSIL_0..1, the daily range).
 
 ## 8. The Underground Man (Chapter 3's zone, generated)
+(2026-11-01: his missions go on past the first with the Secret Base, decorating and Flags: notes/SECRET_BASES.md. What follows is the first mission.)
 data/pearl_script_patches.json (a new generator table: single Pearl commands changed or dropped) and
 data/pearl_text_edits.json: the first mission (go down) completes with Pearl's line 6 without "Take these as
 rewards!", no traps given; from then on his line 29 ("So, my spelunker, are you going underground..."). Regenerated:

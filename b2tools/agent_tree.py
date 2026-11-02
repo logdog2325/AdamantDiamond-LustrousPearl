@@ -9,7 +9,7 @@ builds only there, and the lead merges its changes.
     python3 b2tools/agent_tree.py retire NAME     move the tree to the Trash and prune it from git
     python3 b2tools/agent_tree.py decomp NAME     NAME changes C: its own decomp tree (notes/DECOMP_WORKFLOW.md)
 
-In a tree: roms, external, tools, art_sources are links to the main tree's (read-only data); work/{pearl, encounters,
+In a tree: roms, external, tools, art_sources are links to the main tree's (read-only data); work/{pearl, diamond, encounters,
 texture_map, title, trainer_pics, world, maplook} are APFS clones (free until changed: builds rewrite work/world, so
 each tree has its own); work/pokebw2_mod is a link; work/.full_build.lock is the main tree's, so full builds still
 take turns. Build output goes to the main tree's work/agents/NAME/rom (PEARL_BUILD_DIR), shots to work/agents/NAME/.
@@ -20,7 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 WT = os.path.join(ROOT, 'work', 'wt')
 LINKS = ('roms', 'external', 'tools', 'art_sources')
-CLONES = ('pearl', 'encounters', 'texture_map', 'title', 'trainer_pics', 'world', 'maplook')
+CLONES = ('pearl', 'diamond', 'encounters', 'texture_map', 'title', 'trainer_pics', 'world', 'maplook')
 WORK_LINKS = ('pokebw2_mod', '.full_build.lock')
 
 

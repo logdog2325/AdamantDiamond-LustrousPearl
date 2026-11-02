@@ -950,7 +950,7 @@ T977_1_0239:
 
 T977_1_025E:
     pl_BufferPlayerName 0
-    WorkSetConst PVAR_800C, 11  // GetGameVersion: Pearl (pokediamond VERSION_PEARL 11)
+    WorkSetConst PVAR_800C, PEARLB2_GAME_VERSION  // GetGameVersion: the build's (patches/scripts.py)
     pl_CompareVarToValue PVAR_800C, 10
     pl_CallIf 1, T977_1_02A1
     pl_CompareVarToValue PVAR_800C, 11

@@ -126,7 +126,7 @@ def grotto_file(h, index, data):
     4 groups, both versions the same; items A (slots 3-6) and B (7-9) x 4 groups."""
     ids = ug_data.species_ids()
     lo, hi = data['grotto_levels']
-    version = data['version']
+    version = ug_data.bdsp()
     rares = [r['species'] for r in sorted(h['pokemon']['rare'], key=lambda r: -r[version]) if r[version]]
     starters = [ids[s] for s in h['grotto']['starters']]
     slot15 = starters or rares
@@ -144,7 +144,7 @@ def grotto_file(h, index, data):
         return (struct.pack('<4H', *sp) + bytes([hi + 1] * 4) + bytes([lo] * 4)
                 + bytes(female_below(s) for s in sp) + bytes(4) + bytes(2))
     slots = slot(slot1) + slot(slot4) + slot(slot15)        # slot 0 (1 %), 1 (4 %), 2 (15 %)
-    gi = data['grotto_items']
+    gi = ug_data.grotto_items(data)
 
     def items(rows, slate):
         out = []

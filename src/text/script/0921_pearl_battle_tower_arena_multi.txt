@@ -1,0 +1,17 @@
+PearlBattleTowerArenaMulti_Text_000 = Your Pokémon will be restored to\nfull health.
+PearlBattleTowerArenaMulti_Text_001 = You will be facing opponent no. {0200:0}.\nAre you ready?
+PearlBattleTowerArenaMulti_Text_002 = Would you like to save and\nquit the game?
+PearlBattleTowerArenaMulti_Text_003 = Would you like to cancel your\nBattle Room challenge?
+PearlBattleTowerArenaMulti_Text_004 = Saving...\nDon’t turn off the power.
+PearlBattleTowerArenaMulti_Text_005 = Your Pokémon will be restored to\nfull health.
+PearlBattleTowerArenaMulti_Text_006 = You will be facing opponent no. {0200:0}.\nAre you ready?
+PearlBattleTowerArenaMulti_Text_007 = Would you like to save and\nquit the game?
+PearlBattleTowerArenaMulti_Text_008 = Would you like to cancel your\nBattle Room challenge?
+PearlBattleTowerArenaMulti_Text_009 = Congratulations on your winning\nstreak, challenger!{be01}\nThe Tower Tycoon has sent word\nthat he is impressed with you.{be01}\nHe recognizes your skill, and he’d\nlike to challenge you to a battle!{be01}\nAre you ready to battle the Tower\nTycoon?
+PearlBattleTowerArenaMulti_Text_010 = Hi!\nMy name’s Palmer.{be01}\nI remember you from when you were\nin Twinleaf, {0100:0}.{be01}\nYou were always playing with my son\n{0100:1}, right?{be01}\nYou’ve grown up since then, and\nmost impressively, too!{be01}\nSo, I’d like you to show me.{be01}\nShow me the bond you’ve built\nwith your Pokémon.{be01}\nShow me the skill you’ve acquired\nas a Trainer!{be01}
+PearlBattleTowerArenaMulti_Text_011 = Palmer: So, you’ve come this far!{be01}\nAs the Tower Tycoon, I’ll have to\ngive you my best effort.{be01}\nThat’s how the best Trainers show\nrespect to each other.{be01}\nBy battling all out as dedicated\nstudents of Pokémon!{be01}
+PearlBattleTowerArenaMulti_Text_012 = Bravo!{be01}\nOne day, I imagine my son will come\nchallenge me just as you have.{be01}\nThat’s something I look forward\nto a great deal.{be01}\nYou will become even more skilled,\nthe very same way your father did.{be01}\nKeep battling Trainers from around\nthe world and keep growing greater{be00}\nin stature!{be01}
+PearlBattleTowerArenaMulti_Text_013 = Bravo!\nI feel inspired in my heart!{be01}\nIt brings back a memory of that day\nlong ago...{be01}\nI went out to the lake with your\nfather that day...{be01}\nWe were attacked by a wild Pokémon.{be01}\nWe fended it off, but I don’t recall \nhow. It was that desperate.{be01}\nThat was my first step as\na Trainer.{be01}\nI wonder if the professor is doing\nwell?{be01}\n...That’s enough reminiscing.{be01}\nMy young friend, the world and\nyour future hold infinite promise.{be01}\nGo on, you can be all that you\ndesire!{be01}\nThere is no limit to where you\ncan go!{be01}
+PearlBattleTowerArenaMulti_Text_014 = KEEP GOING
+PearlBattleTowerArenaMulti_Text_015 = REST
+PearlBattleTowerArenaMulti_Text_016 = RETIRE
