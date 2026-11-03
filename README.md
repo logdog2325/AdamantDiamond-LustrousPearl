@@ -14,7 +14,7 @@ Pearl and Adamant Diamond. Releases are `.bps` patches only; no ROMs are ever in
   Diamond, each with its version's wild Pokémon, Orb, title screen and Pokédex entries. Post-game: the National
   Pokédex at Champion, the Battle Zone with the Battle Tower and the PWT, Stark Mountain, Snowpoint Temple, Turnback
   Cave, Fullmoon and Newmoon Islands, and the event Pokémon (Darkrai, Shaymin, Arceus, the Manaphy Egg) from the
-  Pokémon Center deliveryman.
+  Poké Mart deliveryman.
 - **Features:** Super Contests (Visual, Dance, Acting) with Accessories and Poffins; Secret Bases; the Grand
   Underground with wandering Pokémon; the Pokétch; Pal Park with BDSP's Ramanas Park rooms; roaming Mesprit and
   Cresselia; following Pokémon; seasons; TMs, HMs, Rock Climb and Defog.
@@ -23,9 +23,16 @@ Pearl and Adamant Diamond. Releases are `.bps` patches only; no ROMs are ever in
   score. Black 2's sounds stand in for the contests' and the Digger Drill's. Cooking Poffins is solo, with simplified
   art. Secret Bases have no Radar or other players' bases, and a placed good can wall you in, as in the original: Move
   Goods frees you.
-- **Not in yet:** digging in the Underground; online features.
+- **Not in yet:** digging in the Underground; the Veilstone Game Corner; online features. Some people can't do their
+  job yet, including the Mining Museum's fossil restoring and in-game trades. Pal Park's migration from a GBA game is
+  in the build but unconfirmed. The full list is in [Known issues](docs/known-issues.md).
 
 Please report bugs: this is a big game, and some parts have been tested only in an emulator.
+
+## Player guide
+The [player guide](docs/README.md) lists each version's wild Pokémon, item locations, important trainers and post-game,
+plus Pal Park's rooms, the Underground, Secret Bases, Super Contests, Poffins, the Pokétch, TMs and more. It's made from
+the game's own data.
 
 ## Screenshots
 | | |
