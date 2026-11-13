@@ -8,12 +8,15 @@ says what and why (2026-10-26, chapter 9a). List it right after sinnoh_rooms (it
 - a/0/1/0 file 0: one entry per cell (matrix 0, kind 0, the path's event condition: values[0] -> values[1]).
 - work/world/heights_hidden.json: the revealed maps' heights, for the people standing on them (pearl_hidden_paths
   OBJECTS; sinnoh_events reads it through pearl_events).
+- Then b2tools/filler_heights.py: the filler cells Pearl draws raised (its matrices' altitudes) show copies of their
+  chunks moved up by as much, appended after the paths' chunks (Celestic's south edge drew black without them).
 """
 import json, os, struct, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import narcio  # noqa: E402
 import pearl_chunk, pearl_buildings, pearl_signs, maplook, pearl_hidden_paths  # noqa: E402
 from b2files import gf_container, gf_container_build  # noqa: E402
@@ -25,7 +28,7 @@ def convert(c, x, z, matrix, res_of, slopes, offsets, chosen):
     """(chunk bytes, report) of Pearl map c at matrix 0's cell (x, z), as sinnoh_world (+ maplook's relight)."""
     data, rep = pearl_chunk.convert(c, slopes, offsets, pearl_chunk.neighbours(matrix, x, z), pearl_chunk.ENTRANCES)
     magic, layers, part = pearl_chunk.terrains(data)
-    props = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.json')))['props']
+    props = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{c:03d}.json')))['props']
     place, bad = pearl_buildings.placements(props, res_of)
     assert not bad, (c, bad)
     signed = [pearl_signs.chunk(c, t, place, rep) for t in layers]
@@ -38,8 +41,8 @@ def convert(c, x, z, matrix, res_of, slopes, offsets, chosen):
 
 
 def apply(files):
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    matrix = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', '000.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    matrix = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', '000.json')))
     res_of = {int(k): v for k, v in world['building_res'].items()}
     rooms_last = max(world['rooms']['chunks'].values())
     chunks = narcio.load(files, CHUNK_ARC)
@@ -58,6 +61,11 @@ def apply(files):
             own = world['chunks'][str(matrix['maps'][z][x])]
             assert cells[z * w + x] == own, (path['name'], x, z, cells[z * w + x], own)
             blob, rep = convert(c, x, z, matrix, res_of, slopes, offsets, chosen)
+            if path.get('altitude'):                    # (the hiding map drawn raised, as Pearl's code draws it)
+                import filler_heights
+                magic, layers, part = pearl_chunk.terrains(blob)
+                blob = pearl_chunk.rebuild(magic, filler_heights.raise_model(part['model'], path['altitude'] * filler_heights.UNITS),
+                                           layers, part['props'])
             new = len(chunks)
             chunks.append(blob)
             if path['mode'] == 'reveal':
@@ -79,4 +87,6 @@ def apply(files):
     tmp = pearl_hidden_paths.HEIGHTS + '.tmp'
     json.dump(heights, open(tmp, 'w'))
     os.replace(tmp, pearl_hidden_paths.HEIGHTS)
-    return f'pearl_paths: {len(report)} chunks and map replacements ({"; ".join(report)})'
+    import filler_heights      # (then Pearl's raised filler cells: their copies go after the paths', b2tools/filler_heights.py)
+    return (f'pearl_paths: {len(report)} chunks and map replacements ({"; ".join(report)}); '
+            + filler_heights.apply(files))

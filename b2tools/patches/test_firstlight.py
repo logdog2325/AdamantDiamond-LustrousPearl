@@ -10,6 +10,7 @@ import os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import narcio, nsbtx  # noqa: E402
 from b2files import gf_container, gf_container_build  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
@@ -20,8 +21,8 @@ B2_TEXSETS = (210, 211, 212, 213)
 
 
 def apply(files):
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
-    land = narc_members(rom.read('fielddata/land_data/land_data_release.narc'))[PEARL_CHUNK]
+    rom = Rom(version.WORLD_DUMP)
+    land = narc_members(rom.read(version.ARCHIVE['land']))[PEARL_CHUNK]
     ta, pr, mo, _ = struct.unpack_from('<4I', land, 0)
     model = land[16 + ta + pr:16 + ta + pr + mo]
     chunks = narcio.load(files, 8)

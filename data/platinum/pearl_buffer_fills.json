@@ -1,0 +1,5 @@
+{
+ "_doc": "Word buffers a Platinum line reads that its own script never fills: Gen 4 keeps one word set for all of the field's scripts, so a line could use a name an earlier script put there; Black 2 makes a new word set for every script run, and the name would be empty (b2tools/text_check.py: 'filled by nothing before it'). {zone: {line of the zone's bank: {buffer: 'rival' | 'player'}}}: b2tools/pearl_story.py h_message fills it right before the line (pl_BufferRivalName, pl_BufferPlayerName). MAP_CANALAVE 1: the rival's line on the bridge after the battle ('{rival}: Yeah, yeah, you're just a bit better than me...'), whose battle script set his name; Pearl's build shows the same line with no name. MAP_JUBLIFE_CONDOMINIUMS_4F 0 (plat-ch2): the beauty's 'this {item} might be perfect', said before her script sets the item (Platinum's own script: its Message comes before SetVar VAR_0x8004, ITEM_FOCUS_BAND, so Platinum shows whatever word an earlier script left there): the Focus Band (item:230) she gives. 'item:N' fills the name of item N (pearl_story h_message).",
+ "MAP_CANALAVE": {"1": {"0": "rival"}},
+ "MAP_JUBLIFE_CONDOMINIUMS_4F": {"0": {"0": "item:230"}}
+}

@@ -229,23 +229,58 @@ T373_2_00A2:
     pl_msg_talk 7  // Pearl bank 332 line 16
     VMJump .Ldmc1_end
 .Ldmc1_2:
+    WorkCmpConst PVAR_DELIVERY, 3
+    VMJumpIf CMP_NE, .Ldmc1_3
     pl_msg_talk 8  // Pearl bank 332 line 13
+    VMJump .Ldmc1_end
+.Ldmc1_3:
+    WorkCmpConst PVAR_DELIVERY, 4
+    VMJumpIf CMP_NE, .Ldmc1_4
+    pl_msg_talk 9  // Pearl bank 332 line 18: the Pokétch app Matchup Checker
+    VMJump .Ldmc1_end
+.Ldmc1_4:
+    WorkCmpConst PVAR_DELIVERY, 5
+    VMJumpIf CMP_NE, .Ldmc1_5
+    pl_msg_talk 10  // Pearl bank 332 line 18: the Pokétch app Stopwatch
+    VMJump .Ldmc1_end
+.Ldmc1_5:
+    WorkCmpConst PVAR_DELIVERY, 6
+    VMJumpIf CMP_NE, .Ldmc1_6
+    pl_msg_talk 11  // Pearl bank 332 line 18: the Pokétch app Alarm Clock
+    VMJump .Ldmc1_end
+.Ldmc1_6:
+    WorkCmpConst PVAR_DELIVERY, 7
+    VMJumpIf CMP_NE, .Ldmc1_7
+    pl_msg_talk 12  // Pearl bank 332 line 7
+    VMJump .Ldmc1_end
+.Ldmc1_7:
+    WorkCmpConst PVAR_DELIVERY, 8
+    VMJumpIf CMP_NE, .Ldmc1_8
+    pl_msg_talk 12  // Pearl bank 332 line 7
+    VMJump .Ldmc1_end
+.Ldmc1_8:
+    WorkCmpConst PVAR_DELIVERY, 9
+    VMJumpIf CMP_NE, .Ldmc1_9
+    pl_msg_talk 12  // Pearl bank 332 line 7
+    VMJump .Ldmc1_end
+.Ldmc1_9:
+    pl_msg_talk 12  // Pearl bank 332 line 7
 .Ldmc1_end:
     pl_WaitFanfare
-    pl_msg_talk 9  // Pearl bank 332 line 17
+    pl_msg_talk 13  // Pearl bank 332 line 17
     pl_WaitButton
     pl_DeliveryGive  // MysteryGiftGive 4: the next gift
     pl_GoTo T373_2_0103
 
 T373_2_00D8:
 // MysteryGiftGive 6: the can't-receive line (MessageFromBank shows it)
-    pl_msg_talk 10  // Pearl bank 332 line 4 (only the Egg can be refused: the key items always fit)
+    pl_msg_talk 14  // Pearl bank 332 line 4 (only the Egg can be refused: the key items always fit)
     pl_WaitButton
     pl_GoTo T373_2_00F9
 
 T373_2_00EE:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 11  // Pearl bank 332 line 3
+    pl_msg_talk 15  // Pearl bank 332 line 3
     pl_WaitButton
     pl_GoTo T373_2_00F9
 

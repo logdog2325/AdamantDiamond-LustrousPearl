@@ -31,6 +31,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import narcio, zoneheaders  # noqa: E402
 from zones import parse_entities, build_entities  # noqa: E402
@@ -118,7 +119,8 @@ def apply(files):
     import version as build
     script = next(p for p in build.sources(rp.SRC_SCRIPTS, '.s') if p.endswith('_ramanas_rooms.s'))
     assert f'// Version {ver}.' in open(script, encoding='utf-8').read(), f'{script} is not version {ver}: run ramanas.py'
-    assert len(rs) == 9, f'{ver}: {len(rs)} rooms, expected 9'
+    want = 11 if rp.all_rooms(ver) else 9          # (Platinum, and since postdex Pearl and Diamond: all 11)
+    assert len(rs) == want, f'{ver}: {len(rs)} rooms, expected {want}'
     pd = pearl_story.PearlData()
     heights = pearl_events.Heights()
     planner = sinnoh_events.Planner()
@@ -196,7 +198,7 @@ def apply(files):
 
     # the doorways' opening (b2tools/ramanas.py door_opening): sinnoh_rooms builds Pal Park's pack with it; done again
     # here on the pack's texture set (idempotent), so a quick non-clean build takes a change of it too
-    w = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    w = json.load(open(version.data_path('sinnoh_world.json')))
     area = w['rooms']['areas'][str(park['area'])]
     tarc = 174 if area['exterior'] else 175                    # sinnoh_rooms: the building packs' texture sets
     texsets = narcio.load(files, tarc)

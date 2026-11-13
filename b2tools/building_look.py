@@ -26,6 +26,7 @@ import json, math, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 
 # Pearl data/area00light.txt at midday (27000) and Black 2's table 140 at midday: [(colour, direction)], material
 # colours (diffuse, ambient, specular, emission) used when a material's flags are cleared
@@ -121,7 +122,7 @@ def render(out, models):
     from PIL import Image
     from gen4rom import Rom, narc_members
     import pearl_buildings, pearl_render as R, maplook
-    build = narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read('fielddata/build_model/build_model.narc'))
+    build = narc_members(Rom(version.WORLD_DUMP).read('fielddata/build_model/build_model.narc'))
     rows = []
     for mid in models:
         b = pearl_buildings.mdl_only(build[mid])
@@ -167,7 +168,7 @@ def check(files):
     lit materials not on their own colours (flags cleared)."""
     import narcio, maplook, pearl_mesh
     from b2files import gf_container
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     packs = narcio.load(files, 225)
     black, global_, n = [], 0, 0
     for a in world['areas'].values():

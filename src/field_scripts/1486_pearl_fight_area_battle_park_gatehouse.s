@@ -51,7 +51,7 @@ P200_0066:
 
 P200_0071:
     pl_msg_talk 4
-    ListMenu_AnchorTopRight 31, 9, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 31, 9, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 9, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 31, 9, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 20, 65535, 0  // Pearl AddMenuEntryImm 20, 0
     ListMenuAdd 21, 65535, 1  // Pearl AddMenuEntryImm 21, 1
@@ -92,7 +92,7 @@ P200_00E4:
 
 P200_00EF:
     pl_msg_talk 9
-    ListMenu_AnchorTopRight 31, 11, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 31, 11, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 11, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 31, 11, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 23, 65535, 0  // Pearl AddMenuEntryImm 23, 0
     ListMenuAdd 24, 65535, 1  // Pearl AddMenuEntryImm 24, 1
@@ -126,7 +126,7 @@ P200_0148:
 
 P200_0153:
     pl_msg_talk 13
-    ListMenu_AnchorTopRight 31, 9, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 31, 9, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 9, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 31, 9, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 25, 65535, 0  // Pearl AddMenuEntryImm 25, 0
     ListMenuAdd 26, 65535, 1  // Pearl AddMenuEntryImm 26, 1

@@ -19,7 +19,7 @@ The Shapely, The Sharp, The Created, The Natural, The Colorful, The Solid, The B
 
 **Score:** hearts, from two things.
 
-- **Condition.** The contest's own stat, plus half of the two stats next to it and of Sheen. (Cool's neighbours are Tough and Beauty; the order is Cool, Beauty, Cute, Smart, Tough, in a circle.) A scarf held adds 10% when it's the contest's colour and 5% for a neighbour's colour: Red Cool, Blue Beauty, Pink Cute, Green Smart, Yellow Tough. The scarf man in Pastoria doesn't give them in 1.0, so a scarf has to come from a trade.
+- **Condition.** The contest's own stat, plus half of the two stats next to it and of Sheen. (Cool's neighbours are Tough and Beauty; the order is Cool, Beauty, Cute, Smart, Tough, in a circle.) A scarf held adds 10% when it's the contest's colour and 5% for a neighbour's colour: Red Cool, Blue Beauty, Pink Cute, Green Smart, Yellow Tough. The scarf man in Pastoria City gives each scarf once: show him a Pokémon with 200 or more of that colour's condition.
 - **Dress.** Each Accessory scores for the theme. Wearing any scoring Accessory gives a heart, and a higher total gives up to 3 more.
 
 Condition gives a heart for each step reached, up to 8; the steps rise with the rank:

@@ -156,7 +156,7 @@ P10_0057:
 
 P10_0062:
     pl_msg_sys 4
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8004
     pl_CheckPoketchEnabled PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P10_00A2
@@ -264,7 +264,7 @@ P10_01D8:
 
 P10_01E3:
     pl_msg_sys 6
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8004
     pl_CheckPoketchEnabled PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P10_0229
@@ -386,7 +386,7 @@ P10_0390:
 
 P10_039B:
     pl_msg_sys 8
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8004
     pl_CheckPoketchEnabled PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P10_03DB
@@ -494,7 +494,7 @@ P10_0511:
 
 P10_051C:
     pl_msg_sys 10
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8004
     pl_CheckPoketchEnabled PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P10_055C

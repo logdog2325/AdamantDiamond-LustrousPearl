@@ -24,8 +24,9 @@ Slots (both games pick slots with the same odds, so Pearl's slot order is kept 1
   (enc_pokeset.c ENCOUNTRATE_RND12 row 0) = Pearl's (pokeplatinum wild_encounters.c GetGroundEncounterSlot).
   Time of day: Pearl's base table is the morning one; by day slots 2-3 become "day", at night "night" (pokeplatinum
   WildEncounters_ReplaceTimedEncounters; the same slots in pokediamond's data). Black 2 has no time of day in its
-  tables, so slots 2-3 take **the day species** (user, 2026-10-18); the morning-only and night-only species are listed
-  in notes/ENCOUNTERS.md (open item). Pearl's grass and very tall grass both become Black 2 single-battle grass
+  tables, so each file holds a morning, a day and a night table (TIME_TABLES) and src/code/time_encounters.c loads the
+  one of the hour (user, 2026-10-18): every morning-only and night-only species is caught at its hour (the lists in
+  notes/ENCOUNTERS.md say which). Pearl's grass and very tall grass both become Black 2 single-battle grass
   (pearl_chunk.py classes 0x04 and 0x08), so both use this table.
 - Dark grass (12): a copy of the grass table and rate. pearl_chunk.py makes no dark grass today; if a tile ever becomes
   Black 2 dark grass it still gives Pearl's Pokémon (with Black 2's double battles there).
@@ -42,7 +43,8 @@ Slots (both games pick slots with the same odds, so Pearl's slot order is kept 1
   (pokeplatinum wild_encounters.c). Rippling surf/fishing rates 0 in tables 0-2: no rippling spots in Sinnoh (Pearl
   has none).
 - Swarms (slots 0-1), Poké Radar (4-5, 10-11), the GBA-slot species (8-9), Shellos/Gastrodon east-sea flags and
-  Unown letters: swarms, radar and GBA are Pearl features not installed (listed per route in notes/ENCOUNTERS.md);
+  Unown letters: swarms, radar and GBA are not in these tables (listed per route in notes/ENCOUNTERS.md; the swarms come
+  after the Champion in code, patches/wild.py, and so do the Radar's four that no build has otherwise, data/postgame_dex.json);
   Shellos/Gastrodon get form 1 (East Sea) where Pearl's file says so (rate_form0/1, pokeplatinum
   wild_encounters.c); Unown gets the room's letter where Pearl allows one or two, else form 31 (any letter; caves only).
 
@@ -291,7 +293,7 @@ def held_items(files):
 
 
 def apply(files):
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     pzones = json.load(open(os.path.join(PEARL, 'zones.json')))
     held = held_items(files)
     entries = narcio.load(files, ENC_ARC)
@@ -328,7 +330,7 @@ def short(name):
 
 def report():
     """Markdown lists for notes/ENCOUNTERS.md: rates, and what Black 2 does not get, per overworld zone."""
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     pzones = json.load(open(os.path.join(PEARL, 'zones.json')))
     lines = ['| Pearl rate (grass/surf) | Black 2 rule | worst error in expected battles (walks of 10-100 steps) |',
              '|---|---|---|']
@@ -337,7 +339,7 @@ def report():
     for r in rates:
         rule, err = b2_rule(r)
         lines.append(f'| {r} | {rule} | {err * 100:.0f} % |')
-    lines += ['', '| Zone (Pearl) | table | lost: morning-only | lost: night-only | swarm (slots 0-1) |'
+    lines += ['', '| Zone (Pearl) | table | morning only (table 0) | night only (table 2) | swarm (slots 0-1) |'
               ' Poké Radar (4-5, 10-11) | GBA slots R/S/E/FR/LG (8-9) |', '|---|---|---|---|---|---|---|']
     for pid, info in sorted(world['zones'].items(), key=lambda kv: kv[1]['name']):
         n = pzones[int(pid)]['encounters']

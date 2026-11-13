@@ -50,6 +50,73 @@
   },
   "0x32f": {
    "drop": "(its wait)"
+  },
+  "0xfb4": {
+   "drop": "Black 2's records screen fades by itself (the four record machines' subroutine; plat-tower 2026-11-08); the three results machines show a message on the field (plat-records)"
+  },
+  "0xfbe": {
+   "drop": "(its wait)"
+  },
+  "0xfc6": {
+   "drop": "Black 2's records screen reopens the field itself (a second FieldOpen loads overlay 35 again: An error has occurred); the results message never leaves the field"
+  },
+  "0xfc8": {
+   "drop": "(the fade back)"
+  },
+  "0xfd2": {
+   "drop": "(its wait)"
+  }
+ },
+ "159": {
+  "_why": "Julia (Sunyshore; 1.0.1, v101-test): Black 2 has no word picker, so ChooseCustomMessageWord (0x243) is a stub and the 'no word chosen' test after it read what RTCGetWeekDay had left in VAR_0x800C: the weekday, 0 on Sunday, so Sunday never gave the Smile Ribbon (Monday to Saturday gave theirs). Each day's test compares with 0xFFFF instead, so every day goes on to its ribbon, as a chosen word would.",
+  "0x1c7": {
+   "args": [
+    32780,
+    65535
+   ],
+   "why": "Sunday: never 'no word' (the stub chose none)"
+  },
+  "0x21b": {
+   "args": [
+    32780,
+    65535
+   ],
+   "why": "Monday: never 'no word' (the stub chose none)"
+  },
+  "0x26f": {
+   "args": [
+    32780,
+    65535
+   ],
+   "why": "Tuesday: never 'no word' (the stub chose none)"
+  },
+  "0x2c3": {
+   "args": [
+    32780,
+    65535
+   ],
+   "why": "Wednesday: never 'no word' (the stub chose none)"
+  },
+  "0x317": {
+   "args": [
+    32780,
+    65535
+   ],
+   "why": "Thursday: never 'no word' (the stub chose none)"
+  },
+  "0x36b": {
+   "args": [
+    32780,
+    65535
+   ],
+   "why": "Friday: never 'no word' (the stub chose none)"
+  },
+  "0x3bf": {
+   "args": [
+    32780,
+    65535
+   ],
+   "why": "Saturday: never 'no word' (the stub chose none)"
   }
  }
 }

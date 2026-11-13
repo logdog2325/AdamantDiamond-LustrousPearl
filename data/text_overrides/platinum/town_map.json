@@ -1,0 +1,12 @@
+{
+ "_doc": "Platinum's Town Map descriptions where its words differ from Pearl's (b2tools/platinum_text.py from the user's Platinum dump, bank 556's slot, through gen4_text): they replace those lines of data/text_overrides/town_map.json in a Platinum build only (patches/sinnoh_names.py text_overrides). Regenerate: PEARL_VERSION=platinum python3 b2tools/platinum_text.py",
+ "town_map": {
+  "TownMap_Text_Pearl018": "A canyon covered in untamed nature.\\nIt is always shrouded by a dense fog.",
+  "TownMap_Text_Pearl024": "Beyond the wall, one can see the\\nstately Pokémon Mansion and the\\nowner’s prized garden behind it.",
+  "TownMap_Text_Pearl063": "A town where hot-blooded Trainers\\ngather to work out and hone their\\nbattling skills.",
+  "TownMap_Text_Pearl064": "A town that attracts Trainers who\\nknow there are other ways of enjoying\\nPokémon than battling.",
+  "TownMap_Text_Pearl076": "Huge deposits of coal still sleep\\nunderneath the ground. The entrance\\nto the Oreburgh Mine is here.",
+  "TownMap_Text_Pearl102": "A tiny port city where Trainers who\\nlove battling more than eating gather.",
+  "TownMap_Text_Pearl129": "The Battle Frontier--where the best of\\nthe best Trainers gather to test\\ntheir skill--is located here."
+ }
+}

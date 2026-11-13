@@ -373,7 +373,12 @@ def pearl_light_entries(rom, name='data/area01light.txt'):
     """Pearl's light file as [(end time, [(on, (r, g, b), (dx, dy, dz))] * 4, [diffuse, ambient, specular, emission])]."""
     out = []
     import re
-    for block in re.split(r'\r?\n\s*\r?\n', rom.read(name).decode('ascii').strip()):
+    if name not in rom.files:       # Platinum keeps them in data/arealight.narc: Pearl's area 0 and 1 as members 0 and 1, area 2 as 3 (equal)
+        from gen4rom import narc_members
+        text = narc_members(rom.read('data/arealight.narc'))[{'0': 0, '1': 1, '2': 3}[name[len('data/area0')]]]
+    else:
+        text = rom.read(name)
+    for block in re.split(r'\r?\n\s*\r?\n', text.decode('ascii').strip()):
         nums = [int(x) for x in re.split(r'[,\s]+', block) if x.strip() and x.strip() != 'EOF']
         if len(nums) < 41: continue
         t, rest = nums[0], nums[1:]

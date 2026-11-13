@@ -23,8 +23,8 @@
     ScriptEntry W230_0458_S
     ScriptEntry W230_0FB0_S
     ScriptEntry PearlArrive
-    ScriptEntry PearlNoScript
-    ScriptEntry PearlNoScript
+    ScriptEntry RamanasExtra_legend_init
+    ScriptEntry RamanasExtra_legend
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
@@ -1653,6 +1653,77 @@ W230_0FB0_0FBC:
 
 PearlProxy_2039:                  // Pearl global script 2039 (run by this zone's events)
     VMCall C205_40_S40
+    VMHalt
+
+// (postdex) the other version's legendary by the build (version.POSTGAME_LEGEND_BY)
+#if PEARLB2_GAME_VERSION == 11     // pearl
+#define PG_LEGEND 483
+#define PG_LEVEL 47
+#define PG_ORB 135
+#define PG_CRY_LINE 32
+#define PG_GONE_LINE 34
+#elif PEARLB2_GAME_VERSION == 10     // diamond
+#define PG_LEGEND 484
+#define PG_LEVEL 47
+#define PG_ORB 136
+#define PG_CRY_LINE 33
+#define PG_GONE_LINE 35
+#endif
+
+RamanasExtra_legend_init:         // (postdex) zone init: the other version's legendary stands here after the Hall of Fame
+                                  // once this version's own is caught, until it is caught (b2tools/postgame_legend.py)
+    FlagSet 1073
+    WorkSetConst 0x401D, 0
+    FlagGet 2400, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LPG_2init_end
+    FlagGet 440, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LPG_2init_end
+    FlagGet 1074, 0x8057
+    WorkCmpConst 0x8057, 1
+    VMJumpIf CMP_EQ, .LPG_2init_end
+    FlagReset 1073
+    WorkSetConst 0x401D, 1
+.LPG_2init_end:
+    VMHalt
+
+RamanasExtra_legend:              // (postdex) the other version's legendary (version.POSTGAME_LEGEND)
+    pl_LockAll
+    WorkSetConst 0x401D, 0
+    pl_PlayCry PG_LEGEND
+    pl_msg_sys PG_CRY_LINE
+    pl_WaitABPress
+    pl_WaitCry
+    pl_CloseMessage
+    CallWildBattle PG_LEGEND, PG_LEVEL, 0
+    WildBattleIsVictory 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_NE, .LPG_3lost
+    ActorDelete 100
+    FlagSet 1073
+    CallWildBattleEnd
+    WildBattleGetResult 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_EQ, .LPG_1caught
+    pl_msg_sys PG_GONE_LINE
+    pl_WaitButton
+    pl_CloseMessage
+    VMJump .LPG_4done
+.LPG_1caught:
+    FlagSet 1074
+    VMStackPush 0x8000
+    VMStackPush 0x8001
+    WorkSetConst 0x8000, PG_ORB
+    WorkSetConst 0x8001, 1
+    RTCallGlobal 2801
+    VMStackPop 0x8001
+    VMStackPop 0x8000
+.LPG_4done:
+    pl_ReleaseAll
+    VMHalt
+.LPG_3lost:
+    CallWildLose
     VMHalt
 
 // ---- Pearl global script 205:40 (a subroutine here)

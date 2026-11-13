@@ -8,6 +8,16 @@ patches/sinnoh_names.py); this patch changes the code. Edits and addresses from 
   ADD_SPRITE (0x2a6c) and POKEMON_APPEAR (0x2f60) arguments, and the cry ov162 loads first (literal 0x021a0170).
 - No Aspertia flyover and no season card when a new game starts (EventGameOpening_Callback, ov035 0x0217c964: the
   season banner, the shared ChainNext and Event3DDemo_Create(5) become no-ops; Season_Set still runs).
+- No look at Twinleaf before the bedroom (1.0.1; the plat-test report, Pearl 1.0.1 the same): EventFieldFirst_Callback
+  (ov035 0x0217ca60) fades zone 427 in at state 4 (CallFieldMapEntranceInTransition 0, 0, 1: 4 frames) before it runs
+  script 30, which faded it out again (36 frames): Twinleaf showed for about 45 frames between Rowan's fade and the
+  bedroom's. Black 2 fades in there because its script 30 plays Mom's phone call in Aspertia. Ours only warps
+  (src/field_scripts/pearl/newgame.inc), so state 4's `bl CallFieldMapEntranceInTransition` becomes `b` to its own
+  state++ (0x0217cb10), and script 30 no longer fades out: the screens stay black (master brightness -16 since Rowan's
+  fade) until the bedroom's PearlArrive fades in, which sets the field's screens up itself (FieldFadeTCB type 2). The
+  transition's keepLCD setup is not needed for a field no one sees. Needs newgame.inc's script 30 (sinnoh_story): a
+  build without sinnoh_story runs another script 30 (1289_twinleaf_newgame.s still fades out from full light, Black
+  2's Aspertia plays Mom's call in the dark). Continue (EventFieldContinue_Callback) is untouched.
 - No season card when a save is continued (user 2026-10-18, question 2: "no season card on loading a save"):
   EventFieldContinue_Callback enters with transition 0 (the plain entrance), whose 5th argument must then be 1.
 - Rowan's start-of-game questions (user 2026-10-18, question 4: Fairy type, music, and later CLASSIC/NEW sprites;
@@ -39,7 +49,8 @@ ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
 import itcm  # noqa: E402
 
-MUNCHLAX, CINCCINO = 'be010000', '3d020000'     # u32 446, 573
+# The Pokémon from Rowan's Poké Ball: Pearl's Munchlax, Platinum's Buneary (pokeplatinum rowan_intro_app.c: SPECIES_BUNEARY, 427)
+MUNCHLAX, CINCCINO = 'ab010000' if __import__('version').PLATINUM else 'be010000', '3d020000'     # u32 446, 573
 
 PATCHES = {
     'arm9_ov162.bin': [(0x021a0170 - 0x0219ce80, CINCCINO, MUNCHLAX)],     # PokeVoice_Load species (literal pool)
@@ -48,6 +59,7 @@ PATCHES = {
     'arm9_ov035.bin': [(0x0217c9c8 - 0x0217c940, '02f0e2fa', 'c046c046'),   # bl EventSeasonBanner_CreateStandalone
                        (0x0217c9d0 - 0x0217c940, '9af6caf9', 'c046c046'),   # bl GameEvent_ChainNext (shared)
                        (0x0217c9e8 - 0x0217c940, 'e0f7aef8', 'c046c046'),   # bl Event3DDemo_Create (demo 5)
+                       (0x0217cb2e - 0x0217c940, '3bf02dfe', 'efe7c046'),   # FieldFirst state 4: b state++ (no fade-in)
                        (0x0217cd52 - 0x0217c940, '0322', '0022'),           # Continue: transition 3 (season card) -> 0
                        (0x0217cd4a - 0x0217c940, '0020', '0120')],          # ... with its 5th argument 1
 }
@@ -170,7 +182,8 @@ def apply_code(code):
         open(path + '.tmp', 'wb').write(data); os.replace(path + '.tmp', path)
         done.append(f'{name}: {len(edits)} edits')
     done.append(questions_code(code))
-    return 'pearl_intro: ' + '; '.join(done) + ' (Munchlax, no flyover, no season card on new game or Continue)'
+    return ('pearl_intro: ' + '; '.join(done) +
+            ' (Munchlax, no flyover, no Twinleaf fade-in, no season card on new game or Continue)')
 
 
 if __name__ == '__main__':      # python3 pearl_intro.py: the farewell script with the questions (from Black 2's ov294)

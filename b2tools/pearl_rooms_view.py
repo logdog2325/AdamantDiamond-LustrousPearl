@@ -68,10 +68,11 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, 'patches'))
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import pearl_mesh, pearl_render, pearl_buildings, pearl_chunk, pearl_model_fix  # noqa: E402
 
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
 MAIN_TREE = os.path.abspath(os.path.join(ROOT, '..', '..', '..')) if os.path.basename(os.path.dirname(ROOT)) == 'wt' else ROOT
 SPRITE_FILES = [os.path.join(MAIN_TREE, 'work', 'rom_lead', 'files'), VANILLA]   # (an agent's tree has no lead's build)
@@ -161,7 +162,7 @@ def set_room_depth(room, slope=None, margin=None):
 
 def world():
     if 'w' not in _cache:
-        _cache['w'] = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+        _cache['w'] = json.load(open(version.data_path('sinnoh_world.json')))
         _cache['z'] = json.load(open(os.path.join(PEARL, 'zones.json')))
     return _cache['w'], _cache['z']
 
@@ -169,7 +170,7 @@ def world():
 def pearl_rom():
     if 'rom' not in _cache:
         from gen4rom import Rom, narc_members
-        rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+        rom = Rom(version.WORLD_DUMP)
         _cache['rom'] = rom
         _cache['build'] = narc_members(rom.read('fielddata/build_model/build_model.narc'))
         _cache['sets'] = narc_members(rom.read('fielddata/areadata/area_map_tex/map_tex_set.narc'))
@@ -203,6 +204,9 @@ def first_cells():
 def heights():
     if 'h' not in _cache:
         p = os.path.join(ROOT, 'work', 'world', 'heights_rooms.json')
+        own = os.path.join(version.WORLD_WORK, 'heights', 'heights_rooms.json')   # (the version's own, when converted:
+        if os.path.exists(own):                                                     # platinum_events.py --heights)
+            p = own
         _cache['h'] = json.load(open(p)) if os.path.exists(p) else {}
     return _cache['h']
 
@@ -233,7 +237,13 @@ class Mesh:
         info = pearl_render.bindings(model)
         ps = model.pos_scale / 4096
         key = {}
-        for s in model.shapes:
+        # each shape where the DS draws it: its node's translation (pearl_mesh.shape_translations; 2026-11-02, plat-rooms:
+        # 43 of Platinum's land files draw shapes on translated nodes, Pearl's only 410 and 417, and the installed models
+        # keep their nodes, so the heights, which apply them, and these pictures agree; a node's rotation and scale, which
+        # rooms 609 and 200 use on a few nodes, are not applied: notes/PLATINUM_ROOMS.md)
+        moves = model.shape_translations()
+        for s, move in zip(model.shapes, moves):
+            offset_s = offset + np.array(move or (0, 0, 0), float)
             if s.material is None: continue
             tname, pname, teximg, diffamb, specemi, poly, flags = info[s.material]
             label = f'{owner}:{model.materials[s.material]}' if room else owner     # (the room's parts by material)
@@ -247,7 +257,7 @@ class Mesh:
             ii = key[(tname, pname)]
             wrap = ((teximg >> 16) & 1, (teximg >> 17) & 1, (teximg >> 18) & 1, (teximg >> 19) & 1)
             for p in s.polys:
-                P = np.array([v.pos for v in p], float) * ps + offset
+                P = np.array([v.pos for v in p], float) * ps + offset_s
                 UV = np.array([(v[3] / 16, v[4] / 16) for v in p])
                 for a, b, c in ((0, 1, 2), (0, 2, 3)) if len(p) == 4 else ((0, 1, 2),):
                     self.T.append(P[[a, b, c]]); self.UV.append(UV[[a, b, c]]); self.img.append(ii)
@@ -287,6 +297,8 @@ def chunk_model(c, fixed=True):
         with furniture(fixed):
             bmd, _ = pearl_chunk.fix_model(c, around=pearl_chunk.neighbours(m, x, z))
         _cache[key] = pearl_mesh.Model(bmd)
+        _cache[key].shape_offsets = _cache[key].shape_translations()   # (pearl_render.draw_model: --render draws
+        #                                                                   each shape where the DS does, as Mesh)
     return _cache[key]
 
 
@@ -305,9 +317,15 @@ def prop_model(model_id, fixed=True):
 def room_props(c, land, fixed=True):
     """The chunk's props where the build places them (fixed: those riding a sunk counter or table moved with it,
     pearl_chunk.people_props_moved)."""
-    if not fixed: return land['props']
+    # VILLA_FURNITURE=all: Platinum's Villa with every place of furniture owned (villa_furniture.extra_props; the build
+    # places them all and its gimmick hides the ones not bought); default: none bought, as a new game's
+    villa = []
+    if os.environ.get('VILLA_FURNITURE') == 'all':
+        import villa_furniture
+        villa = villa_furniture.extra_props(c)
+    if not fixed: return land['props'] + villa
     with furniture(True):
-        return pearl_chunk.people_props_moved(c, land['props'])
+        return pearl_chunk.people_props_moved(c, land['props']) + villa
 
 
 def prop_name(model_id):
@@ -414,9 +432,9 @@ def camera_below():
 
 def sprite_map():
     if 'smap' not in _cache:
-        d = json.load(open(os.path.join(ROOT, 'data', 'pearl_sprite_map.json')))
-        _cache['smap'] = {int(k): v['code'] for k, v in d.items()
-                          if k.isdigit() and isinstance(v, dict) and v.get('code') is not None}
+        import pearl_events               # (data/pearl_sprite_map.json, and Platinum's own ids in a Platinum run)
+        _cache['smap'] = {k: v['code'] for k, v in pearl_events.sprite_table().items()
+                          if isinstance(v, dict) and v.get('code') is not None}
     return _cache['smap']
 
 

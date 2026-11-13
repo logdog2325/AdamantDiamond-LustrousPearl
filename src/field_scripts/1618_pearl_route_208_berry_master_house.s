@@ -105,9 +105,9 @@ P405_0104:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_msg_talk 7
+    pl_msg_talk_low 7
     MoneyWinDisp 31, 1  // Pearl ShowMoney 20, 2 (Black 2's place)
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 5, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 14, 65535, 0  // Pearl AddMenuEntryImm 223, 0
     ListMenuAdd 15, 65535, 1  // Pearl AddMenuEntryImm 224, 1
     ListMenuAdd 16, 65535, 2  // Pearl AddMenuEntryImm 225, 2
@@ -124,7 +124,7 @@ P405_0104:
     pl_GoToIf 1, P405_0259
     pl_CompareVarToValue PVAR_8008, 3
     pl_GoToIf 1, P405_0265
-    pl_msg_talk 9
+    pl_msg_talk_low 9
     pl_GoTo P405_0225
 
 P405_017C:
@@ -153,8 +153,8 @@ P405_017C:
     pl_PlaySE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
     pl_AddItem PVAR_8001, 1, PVAR_800C
     pl_BufferItemName 0, PVAR_8001
-    pl_msg_talk 10
-    pl_msg_talk 8
+    pl_msg_talk_low 10
+    pl_msg_talk_low 8
     pl_GoTo P405_0225
 
 P405_0225:
@@ -165,11 +165,11 @@ P405_0225:
     pl_End
 
 P405_022F:
-    pl_msg_talk 11
+    pl_msg_talk_low 11
     pl_GoTo P405_0225
 
 P405_0238:
-    pl_msg_talk 12
+    pl_msg_talk_low 12
     pl_GoTo P405_0225
 
 P405_0241:

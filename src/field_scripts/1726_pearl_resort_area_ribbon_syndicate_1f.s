@@ -32,7 +32,7 @@ P1035_S7:
 P1035_003F:
     pl_LockAll
     pl_WaitTime 20, PVAR_800C
-    pl_stub CountPartyRibbons  // Pearl 0x22F CountTotalPartyRibbons 32772: not translated yet
+    pl_CountPartyRibbons PVAR_8004  // CountPartyRibbons
     pl_CompareVarToValue PVAR_8004, 10
     pl_GoToIf 0, P1035_0078
     pl_SetVarFromValue PVAR_40A7, 1
@@ -76,20 +76,21 @@ P1035_00D6:
     pl_GetFirstNonEggInParty PVAR_8000
     pl_BufferPlayerName 0
     pl_BufferPartyMonSpecies 2, PVAR_8000
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32768, 68: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8000, 0x29  // GetPartyMonRibbon: the Gorgeous Royal Ribbon
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P1035_022E
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32768, 67: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8000, 0x28  // GetPartyMonRibbon: the Royal Ribbon
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P1035_01D9
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32768, 66: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8000, 0x27  // GetPartyMonRibbon: the Gorgeous Ribbon
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P1035_0184
     pl_GoTo P1035_012F
 
 P1035_012F:
     MoneyWinDisp 31, 1  // Pearl ShowMoney 20, 2 (Black 2's place)
-    pl_msg_talk 3
+    pl_BufferPartyMonSpecies 2, PVAR_8000  // again: Black 2's money window wrote the money into word 2
+    pl_msg_talk_low 3
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P1035_0246
@@ -98,12 +99,13 @@ P1035_012F:
     pl_GoToIf 1, P1035_0239
     pl_RemoveMoney 10000
     MoneyWinUpdate
+    pl_BufferPartyMonSpecies 2, PVAR_8000  // again: Black 2's money window wrote the money into word 2
     pl_PlaySE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
     pl_WaitSE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
-    pl_msg_talk 7
-    pl_msg_talk 8
+    pl_msg_talk_low 7
+    pl_msg_talk_low 8
     pl_WaitButton
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32768, 66: not translated yet
+    pl_SetPartyMonRibbon PVAR_8000, 0x27  // SetPartyMonRibbon: the Gorgeous Ribbon
     pl_CloseMessage
     MoneyWinClose
     pl_ReleaseAll
@@ -111,22 +113,26 @@ P1035_012F:
 
 P1035_0184:
     MoneyWinDisp 31, 1  // Pearl ShowMoney 20, 2 (Black 2's place)
-    pl_msg_talk 4
+    pl_BufferPartyMonSpecies 2, PVAR_8000  // again: Black 2's money window wrote the money into word 2
+    pl_msg_talk_low 4
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P1035_0246
-    MoneyCheck PVAR_800C, 65535
+    pl_CheckMoneyBig PVAR_800C, 100000  // CheckMoney 100000 (in 60,000s)
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P1035_0239
     pl_RemoveMoney 65535
-    pl_RemoveMoney 34465
+    pl_RemoveMoney 15000
+    pl_RemoveMoney 15000
+    pl_RemoveMoney 4465
     MoneyWinUpdate
+    pl_BufferPartyMonSpecies 2, PVAR_8000  // again: Black 2's money window wrote the money into word 2
     pl_PlaySE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
     pl_WaitSE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
-    pl_msg_talk 9
-    pl_msg_talk 10
+    pl_msg_talk_low 9
+    pl_msg_talk_low 10
     pl_WaitButton
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32768, 67: not translated yet
+    pl_SetPartyMonRibbon PVAR_8000, 0x28  // SetPartyMonRibbon: the Royal Ribbon
     pl_CloseMessage
     MoneyWinClose
     pl_ReleaseAll
@@ -134,11 +140,12 @@ P1035_0184:
 
 P1035_01D9:
     MoneyWinDisp 31, 1  // Pearl ShowMoney 20, 2 (Black 2's place)
-    pl_msg_talk 5
+    pl_BufferPartyMonSpecies 2, PVAR_8000  // again: Black 2's money window wrote the money into word 2
+    pl_msg_talk_low 5
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P1035_0246
-    MoneyCheck PVAR_800C, 65535
+    pl_CheckMoneyBig PVAR_800C, 999999  // CheckMoney 999999 (in 60,000s)
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P1035_0239
     pl_RemoveMoney 65535
@@ -156,28 +163,30 @@ P1035_01D9:
     pl_RemoveMoney 65535
     pl_RemoveMoney 65535
     pl_RemoveMoney 65535
-    pl_RemoveMoney 16974
+    pl_RemoveMoney 15000
+    pl_RemoveMoney 1974
     MoneyWinUpdate
+    pl_BufferPartyMonSpecies 2, PVAR_8000  // again: Black 2's money window wrote the money into word 2
     pl_PlaySE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
     pl_WaitSE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
-    pl_msg_talk 11
-    pl_msg_talk 12
+    pl_msg_talk_low 11
+    pl_msg_talk_low 12
     pl_WaitButton
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32768, 68: not translated yet
+    pl_SetPartyMonRibbon PVAR_8000, 0x29  // SetPartyMonRibbon: the Gorgeous Royal Ribbon
     pl_CloseMessage
     MoneyWinClose
     pl_ReleaseAll
     pl_End
 
 P1035_022E:
-    pl_msg_talk 6
+    pl_msg_talk_low 6
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     pl_End
 
 P1035_0239:
-    pl_msg_talk 13
+    pl_msg_talk_low 13
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -185,7 +194,7 @@ P1035_0239:
     pl_End
 
 P1035_0246:
-    pl_msg_talk 14
+    pl_msg_talk_low 14
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose

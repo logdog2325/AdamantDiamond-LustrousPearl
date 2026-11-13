@@ -94,3 +94,62 @@ src/pearlb2/battle_music_itcm.c (branch pearlb2-music). `python3 b2tools/patches
 - The Black 2 music option (Rowan's question) and checking every place where Black 2 waits for a song to end
   (HoennB2's v16 freeze: a looping song where the game waits for a jingle; HoennB2 b2tools check_waits).
 - In-game listening test of the trimmed songs and the night themes: next full build.
+
+## Platinum (2026-11-07, plat-music; PEARL_VERSION=platinum)
+- **The converter.** Every music patch reads the version's own sound archive (data/sound/pl_sound_data.sdat), so a Platinum
+  build installs Platinum's bytes of every song, including the ten Pearl songs Platinum changed (SEQ_CITY11_D, the TV
+  jingles, SEQ_BF_TOWWER, SEQ_BA_AKAGI, BA_DPOKE2, BA_CHANP, SEQ_TITLE00/01, SEQ_PRESENT). Its 34 new sequences are
+  SEQ_PL_* 1189-1222 (28 .sseq files named SEQ_PL_* in the decomp, plus BATTLE_GIRATINA, BATTLE_REGI_TRIO and the Brains'
+  two; SEQ_PL_BICYCLE is SEQ_BICYCLE's file, SEQ_PL_DMY10 a dummy). All 44 go through pearl_music.trim offline
+  (work/agents/plat-music/tools/plat_songs.py): every one fits the budget (the biggest SEQ_PL_BA_GIRA, 228,000 B of
+  282,000), and for every (program, key) a song plays the trimmed bank gives the same note definition and wave bytes.
+- **Installed for Platinum** (where something plays them): the zone themes as sinnoh_music finds them in Platinum's zones
+  (the GTS and Global Terminal SEQ_PL_WIFITOWER, Sendoff Spring and the Spring Path SEQ_ROAD_F instead of Pearl's SEQ_D_03,
+  the Distortion World SEQ_PL_D_GIRATINA, the Frontier's four BF_* songs); the story songs (version.STORY_SONGS: Looker's
+  SEQ_PL_HANDSOME, the Villa's SEQ_PL_PIANO, SEQ_PL_AUDIO and music box SEQ_PL_TOWN02, Spear Pillar's SEQ_PL_EV_GIRA and
+  EV_GIRA2, Pearl's Poké Radar song SEQ_KUSAGASA); the Battle Hall's fanfare SEQ_PL_POINTGET3 (with Black 2's ME player, so
+  its WaitFanfare ends); the battle songs SEQ_PL_BA_GIRA and SEQ_PL_BA_REGI (battle_music).
+- **The Brains** (plat-frontier-rooms, 2026-11-07): SEQ_PL_BA_BRAIN and SEQ_PL_WINBRAIN are installed by battle_music
+  (data/battle_music.json "versions": battle and victory of Palmer's class 198 and the four Brains' classes 236-239, Platinum's
+  in both music modes: nothing in Black 2 has their notes, melody() at most 0.06). The Factory's and the Hall's tables take
+  their ids from it (patches/platinum_factory.py, platinum_hall.py). SEQ_PL_EYEBRAIN is not installed: nothing in Platinum
+  plays it (only its sound archive and the sound test list it); the Brains' cut-in plays SEQ_PL_BA_BRAIN.
+- **Not installed** (nothing plays them yet): the Frontier's fanfares
+  SEQ_PL_DON2, SEQ_PL_FRO and its SEQ_PL_BF_CASTLE02; Platinum's five contest dance songs SEQ_PL_MTKAKKO, MTKASHI, MTKAWA,
+  MTTAKMA, MTUTSUK (patches/contests.py keeps Pearl's two dance songs and grid, notes/CONTESTS.md); the Wi-Fi Plaza's and
+  its games' SEQ_PL_WIFIGAME, WIFIUNION, WIFIPARADE, WINMINI2, GURUGURU (Spin Trade), SEQ_PL_PTHAIFU. Each converts (above).
+- **Scripts** (pearl_story.py block "plat-music"): Platinum's sound ids past Pearl's take Platinum's names (the decomp's
+  pl_sound_data.json). SetBGM 1200 (CommonScript_SetLookerBGM: Jubilife, Veilstone, Route 213, Mt. Coronet 2F, Stark
+  Mountain 3) and PlayMusic 1197, 1198 (the Villa's piano and audio system) and SEQ_KUSAGASA (Route 202) play as
+  SEQ_PEARL_<name>; the music box is Black 2's BGMPlayPush SEQ_PEARL_PL_TOWN02 and BGMPop 0, 0 (the kept song back:
+  Platinum's GetCurrentBGM and SetFieldScene); Spear Pillar's cutscene (plat-ch9's 2FB lines) fades the song with line 22,
+  plays EV_GIRA before line 24 and EV_GIRA2 before line 26, and stops it at the end, as overlay 100 does. The coins' sound
+  SEQ_SE_PL_COIN is Black 2's cash register SEQ_SE_SYS_22 [guess]. SEQ_SE_PL_KUSARI (the red chains) and SEQ_SE_PL_SYUWA
+  (the Distortion World's portals) stay counted stubs: Black 2 has no sound found for them, and it plays only the sounds
+  its sound groups have loaded (Platinum's own would need C). Regenerate the 14 zones that change: `PEARL_VERSION=platinum
+  python3 b2tools/pearl_story.py zones MAP_JUBLIFE MAP_VEILSTONE MAP_VEILSTONE_GAME_CORNER MAP_MOUNT_CORONET_SPEAR_PILLAR
+  MAP_MOUNT_CORONET_SOUTH_2F MAP_STARK_MOUNTAIN_INTERIOR_3 MAP_TURNBACK_CAVE_GIRATINA_ROOM MAP_ROUTE_202 MAP_ROUTE_213
+  MAP_RESORT_AREA_SOUTHWEST_HOUSE MAP_BATTLE_HALL MAP_DISTORTION_WORLD_1F MAP_DISTORTION_WORLD_GIRATINA_ROOM
+  MAP_DISTORTION_WORLD_TURNBACK_CAVE_ROOM` (or `all`); each assembles and passes b2_script_check with and without the song ids.
+- **Alternate music** (pearl_alt_music): Platinum's SystemFlag_GetAltMusicForHeader is Pearl's sub_0205EF20 row for row (the
+  same 12 flags 0x984-0x995, the same zones under Platinum's names, the same songs); a Platinum build checks RULES against
+  the decomp's function (platinum_rules). Platinum's scripts set the same 10 flags (0x985 and 0x98A have no setter in either
+  game). Platinum's field music has two more rules (pokeplatinum field_bgm.c FieldBGM_GetEffective, GetForMapHeader), both
+  covered or left: (1) Route 206 entered from a Cycling Road gatehouse at x 299-306, z 576 or 681 plays the bike song: here
+  the player rides there anyway, and Black 2 plays its bike song while riding (zone_flags enableCycleSurfBGM, Pearl's 1.0
+  choice: Black 2's own bike and surf songs); (2) no surf song in the Distortion World's eleven zones: step 7's, by clearing
+  zone_flags' surf_bgm bit (14) for those zones. The Poké Radar's chain song is Pearl's rule too (the Radar is closed, as in
+  Pearl's 1.0).
+- **Battle music** (data/battle_music.json "versions"): Platinum's eye-contact table is Pearl's plus the Maid (Black 2's MAID
+  class: SEQ_EYE_FUN); Giratina SEQ_PL_BA_GIRA (Platinum's in both modes: no Black 2 counterpart), the Regi trio
+  SEQ_PL_BA_REGI (Black 2's music: its own SEQ_BGM_VS_REGI, the same tune, melody 0.68), the Kanto birds SEQ_BA_SECRET2. Not
+  the Platinum way: Platinum plays the plain wild theme for a Regi or a bird in Pal Park; the table has no zone, so a
+  migrated one in the Catching Show plays its legendary theme (C in PearlB2_DecideEnvWild). The trainer battles and
+  victories are Pearl's rules; Platinum's 28 double and 4 tag battles keep them (the Fight Area's Volkner and Flint: the
+  leader theme, as Platinum's ENCEFF_DOUBLE_LEADER).
+- **Rowan's question**: data/unova_music.json gives SEQ_PL_WIFITOWER the GTS row's Black 2 song (SEQ_BGM_GEAR_STATION); the
+  other new songs stay Platinum's with Black 2's music, as Pearl's story songs without a row do.
+- **Offline proof**: work/agents/plat-music/tools/music_dry.py runs sinnoh_music, battle_music, music_choice and pearl_alt_music
+  as the build calls them on a scratch copy of Black 2's archive: Platinum 116 songs, 496 zones, 25 night themes, 25 story
+  songs; battle 37 songs; music_choice's and battle_music's waits checks pass. Pearl and Diamond: the same archive, tables
+  and mapping as before (digests equal to HEAD's code).

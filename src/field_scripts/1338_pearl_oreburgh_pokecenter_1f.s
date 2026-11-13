@@ -160,7 +160,7 @@ P51_0060:
 P51_006C:
     pl_msg_talk 3
     pl_stub LoadTrainerAppearances  // Pearl 0x154 Unk0154 : not translated yet
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 8, 65535, 0  // Pearl AddMenuEntryImm 50, 0
     ListMenuAdd 9, 65535, 1  // Pearl AddMenuEntryImm 51, 1
     ListMenuAdd 10, 65535, 2  // Pearl AddMenuEntryImm 52, 2

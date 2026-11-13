@@ -28,6 +28,7 @@ import functools, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 
 GIMMICK_ID = 60                  # lead 2026-10-25: after chapter 6a's 59 (Black 2's ids end at 58)
 GYM_ZONE = 'MAP_VEILSTONE_GYM'
@@ -35,12 +36,15 @@ PANELS = 12
 MODELS = range(287, 294)         # Pearl build models 'gym_wall01'..'gym_wall07'
 SLIDE_SPEED = 2                  # units a frame (fx32 2 << 12)
 PUSH_SE = 0x616                  # Pearl's sound while a panel slides
+# Which Gym the version has: Pearl's and Diamond's sliding panels, or Platinum's own punching bags and tire stacks
+# (pokeplatinum src/overlay008/gym_features.c; notes/PORT_AUDIT.md, step 4). Only 'panels' is built so far.
+GYM_KIND = {'pearl': 'panels', 'diamond': 'panels', 'platinum': 'bags and tires'}[version.VERSION]
 
 
 @functools.lru_cache(None)
 def _rom():
     from gen4rom import Rom
-    return Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    return Rom(version.WORLD_DUMP)
 
 
 def _find(pat, what):

@@ -121,7 +121,7 @@ P28_00CC:
     pl_GoTo P28_00FF
 
 P28_00FF:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 16, 65535, 0  // Pearl AddMenuEntryImm 129, 0
     ListMenuAdd 17, 65535, 1  // Pearl AddMenuEntryImm 128, 1
     ListMenuAdd 18, 65535, 2  // Pearl AddMenuEntryImm 130, 2
@@ -140,7 +140,7 @@ P28_014A:
     pl_GoTo P28_0155
 
 P28_0155:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 19, 65535, 0  // Pearl AddMenuEntryImm 131, 0
     ListMenuAdd 20, 65535, 1  // Pearl AddMenuEntryImm 132, 1
     ListMenuAdd 21, 65535, 2  // Pearl AddMenuEntryImm 133, 2
@@ -212,8 +212,8 @@ P28_01E5:
     pl_stub TryStartGTSApp  // Pearl 0x0B2 Unk00B2 32772, 32780: not translated yet
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P28_02A6
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (2B2, 0B3, TryStartGTSApp: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_Call P28_004F
     pl_ReleaseAll
@@ -473,8 +473,8 @@ C205_26_11EA:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub 205  // Pearl 0x205 ShowGeonetScreen : not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (205: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     VMReturn  // End: the sub-script ends

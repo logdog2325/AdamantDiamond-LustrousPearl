@@ -37,22 +37,58 @@ POKEMON = [('Pikachu', 71, 69, 'pikachu'), ('Clefairy', 72, 70, 'pippi'), ('Jigg
            ('Drifloon', 185, 163, 'balloon'), ('Pachirisu', 204, 371, 'patiritusu'),
            ('Shroomish', 205, 372, 'kinococo'), ('Buneary', 206, 373, 'mimituto'), ('Happiny', 207, 374, 'kolucky'),
            ('Machop', 208, 375, 'wanriky'), ('Shaymin', 158, 137, 'sppoke8')]   # 2026-10-26: the following Pokémon
+# Platinum's Amity Square also lets the Sinnoh starters and their evolutions walk with the player (pokeplatinum
+# scripts_amity_square.s, AmitySquare_CheckPartyHasSpecies: Pikachu, Clefairy, Psyduck, Pachirisu, Drifloon, Buneary,
+# Happiny and the nine; Jigglypuff, Torchic, Skitty and Shroomish once the National Pokédex is obtained). Its own 16-frame
+# walkers, from Platinum's dump (mmodel 383-391), on codes no kept Black 2 zone, script, table or C names
+# (data/platinum/sprite_map.json 220-228; work/agents/plat-caves/tools/free_codes.py found them).
+PLATINUM_POKEMON = [('Turtwig', 220, 383, 'naetle'), ('Grotle', 221, 384, 'hayashigame'), ('Torterra', 222, 385, 'dodaitose'),
+                    ('Chimchar', 223, 386, 'hikozaru'), ('Monferno', 224, 387, 'moukazaru'), ('Infernape', 225, 388, 'goukazaru'),
+                    ('Piplup', 226, 389, 'pochama'), ('Prinplup', 227, 390, 'pottaishi'), ('Empoleon', 228, 391, 'emperte')]
 ARC_PWT = 247                                        # a/2/4/7: the PWT's trainers, u16 x 8 records, object code at +2
 WALK12 = [d * 4 + k for d in range(4) for k in (0, 1, 3)]
+
+
+# Platinum redrew Buneary and Happiny (its mmodel 373 and 374, the same members as Pearl's; 2026-11-07, step 6,
+# plat-sprites): a Platinum build takes them from its own dump. Pearl's other walkers are the same pixels in both.
+PLATINUM_REDRAWN = {206, 207}
+
+
+def walkers():
+    """[(Pokémon, graphics id, mmodel file, texture name, dump)] of the version's own walkers: Pearl's 13 (from
+    people_dump(); for Platinum, the two it redrew from its own), and for Platinum its starters (from its own dump)."""
+    import version
+    out = [(w, g, m, t, version.WORLD_DUMP if version.PLATINUM and g in PLATINUM_REDRAWN else people_dump())
+           for w, g, m, t in POKEMON]
+    if version.PLATINUM:
+        out += [(w, g, m, t, version.WORLD_DUMP) for w, g, m, t in PLATINUM_POKEMON]
+    return out
+
+
+def sprite_map():
+    """{graphics id (str): row}: data/pearl_sprite_map.json, with Platinum's own rows over it in a Platinum build."""
+    import version
+    smap = json.load(open(os.path.join(ROOT, 'data', 'pearl_sprite_map.json'), encoding='utf-8'))
+    if version.PLATINUM:
+        smap.update({k: v for k, v in json.load(open(os.path.join(ROOT, 'data', 'platinum', 'sprite_map.json'),
+                                                     encoding='utf-8')).items() if k != '_doc'})
+    return smap
 
 
 def apply(files):
     import version
     from gen4rom import Rom, narc_members
-    smap = json.load(open(os.path.join(ROOT, 'data', 'pearl_sprite_map.json'), encoding='utf-8'))
-    mm = narc_members(Rom(version.SOURCE_DUMP).read(MMODEL))
+    smap = sprite_map()
+    dumps = {}
     sheets = narcio.load(files, sprites.ARC_OW_SHEETS)
     table = sprites.ow_table(files)
     t = narcio.load(files, ARC_PWT)[0]
     pwt = {struct.unpack_from('<H', t, 16 * i + 2)[0] for i in range(len(t) // 16)}
     res1 = Counter(r['res1'] for r in table)
     done = []
-    for who, gfx, mid, tex in POKEMON:
+    for who, gfx, mid, tex, dump in walkers():
+        if dump not in dumps: dumps[dump] = narc_members(Rom(dump).read(MMODEL))
+        mm = dumps[dump]
         code = smap[str(gfx)]['code']
         users = [k for k, v in smap.items() if isinstance(v, dict) and v.get('code') == code]
         assert users == [str(gfx)], (who, code, users)
@@ -69,3 +105,10 @@ def apply(files):
         done.append(f'{who} = code {code} (sheet {sheet})')
     narcio.save(files, sprites.ARC_OW_SHEETS, sheets)
     return 'pearl_amity_sprites: ' + '; '.join(done)
+
+
+def people_dump():
+    """Platinum moved 59 of Pearl's sheets and changed others: until step 6 maps its own, its people are Pearl's (the base), from Pearl's
+    dump. Diamond's and Pearl's are their own."""
+    import version
+    return os.path.join(ROOT, 'roms', 'pearl.nds') if version.PLATINUM else version.SOURCE_DUMP

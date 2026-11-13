@@ -88,7 +88,7 @@ P144_00F6:
 P144_0105:
     pl_SetVarFromValue PVAR_8008, 0
     pl_SetVarFromValue PVAR_8009, 0
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextListMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextListMenu 1, 1, 0, 1, PVAR_800C
 
 P144_0119:
     pl_stub GetGameCornerPrizeData  // Pearl 0x2A6 GetPrizeItemIdAndCost 32776, 32768, 32769: not translated yet

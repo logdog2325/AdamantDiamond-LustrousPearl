@@ -1369,6 +1369,8 @@
 #define PFLAG_RP_CAUGHT_SUICUNE 1070 // Ramanas Park (Diamond version, reserved): Suicune caught
 #define PFLAG_RP_CAUGHT_HO_OH 1071 // Ramanas Park (Diamond version, reserved): Ho-Oh caught
 #define PFLAG_POKE_FOLLOWER 1072 // Rowan's following-Pokémon question (patches/pearl_intro.py, followers.py): set = the first
+#define PFLAG_PG_LEGEND_HIDDEN 1073 // Spear Pillar: the other version's legendary hidden (its person's flag; its zone init sets 
+#define PFLAG_PG_LEGEND_CAUGHT 1074 // Spear Pillar: the other version's legendary caught (the other Orb given)
 
 #define PTRAINER_1 4            // YOUNGSTER Tristan
 #define PTRAINER_2 5            // YOUNGSTER Logan

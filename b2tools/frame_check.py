@@ -212,10 +212,12 @@ def made_frames():
 def repainted_codes():
     """Codes whose sheets Pearl's own sprites replace whole (patches/pearl_npc_sprites, pearl_player_sprites)."""
     sys.path.insert(0, os.path.join(HERE, 'patches'))
-    smap = json.load(open(os.path.join(ROOT, 'data', 'pearl_sprite_map.json')))
-    import pearl_npc_sprites
+    import pearl_npc_sprites, version
+    smap = pearl_npc_sprites.sprite_map()          # (Platinum's own rows over Pearl's in a Platinum run)
     out = {smap[str(g)]['code'] for _, g, _, _ in pearl_npc_sprites.PEOPLE}
     out.add(smap[str(pearl_npc_sprites.DOOR[1])]['code'])
+    if version.PLATINUM:                # Platinum's new people and objects, all 12 frames theirs
+        out |= {smap[str(g)]['code'] for _, g, _, _ in pearl_npc_sprites.PLATINUM_PEOPLE}
     out |= {231, 240}                   # the players' walk + run sheets (pearl_player_sprites), also the counterpart
     return out
 
@@ -299,6 +301,8 @@ def people(pd, zones=None):
         if b2 is None:
             continue
         for o in pearl_events.kept_objects(pd, zone):
+            if pearl_events.is_berry_patch(o):     # (its picture is the patch's own, resolved in game: resident/berry.c)
+                continue
             code = pearl_events.sprite_code(o['graphics_id'], zone['name'])
             move, d = pearl_events.fit_move(o, code)
             yield zone, b2, o, code, move, d

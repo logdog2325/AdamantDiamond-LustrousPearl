@@ -26,6 +26,7 @@ import json, os, struct
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
+import version  # noqa: E402
 OV012, TABLE, COUNT, SIZE = 0x021503C0, 0x0216C33C, 82, 20
 HOME = ('MAP_TWINLEAF_RIVAL_HOUSE_1F', 'MAP_TWINLEAF', 8, 8)
 CENTERS = ['SANDGEM', 'FLOAROMA', 'SOLACEON', 'CELESTIC', 'JUBLIFE', 'CANALAVE', 'OREBURGH', 'ETERNA', 'HEARTHOME',
@@ -39,7 +40,7 @@ CENTER_ENTRIES = list(range(2, 18)) + [19]
 
 
 def zones():
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     out = {v['name']: v['b2_zone'] for v in world['zones'].values()}
     out.update({v['name']: v['b2_zone'] for v in world['rooms']['zones'].values()})
     return out

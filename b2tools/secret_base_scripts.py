@@ -13,6 +13,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 import secret_base_data as SB  # noqa: E402
+import version  # noqa: E402
 
 OPS = ['DRILL_CHECK', 'HOLE_SHOW', 'MAKE', 'ENTER', 'LEAVE', 'WORD', 'WORD_ARTICLE', 'LIST', 'SLOT', 'RECEIVE', 'STORE', 'TRASH',
        'COUNTS', 'HOLD', 'CURSOR', 'CURSOR_END', 'CAN_PLACE', 'PLACE', 'AT_CURSOR', 'REMOVE', 'MOVE_BEGIN', 'MOVE_END', 'SHOP',

@@ -347,11 +347,11 @@ T464_2_0124:
     pl_CompareVarToValue PVAR_800C, 3
     pl_GoToIf 1, T464_2_048C
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 31  // Pearl bank 492 line 15
+    pl_msg_talk_low 31  // Pearl bank 492 line 15
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T464_2_017E
-    pl_msg_talk 32  // Pearl bank 492 line 20
+    pl_msg_talk_low 32  // Pearl bank 492 line 20
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -365,7 +365,7 @@ T464_2_017E:
     pl_CountAliveMonsAndBoxMons PVAR_800C
     pl_CompareVarToValue PVAR_800C, 2
     pl_GoToIf 1, T464_2_02C2
-    pl_msg_talk 33  // Pearl bank 492 line 16
+    pl_msg_talk_low 33  // Pearl bank 492 line 16
     pl_CloseMessage
     MoneyWinClose
 // FadeScreen 6, 1, 0, 0x0: Black 2's party select fades itself
@@ -404,13 +404,13 @@ T464_2_01DE:
 
 T464_2_024C:
     pl_PlayCry PVAR_8001
-    pl_msg_talk 34  // Pearl bank 492 line 17
+    pl_msg_talk_low 34  // Pearl bank 492 line 17
     pl_WaitCry
     pl_GoTo T464_2_028C
 
 T464_2_025D:
     pl_PlayCry PVAR_8001
-    pl_msg_talk 35  // Pearl bank 492 line 36
+    pl_msg_talk_low 35  // Pearl bank 492 line 36
     pl_WaitButton
     pl_CloseMessage
     pl_WaitCry
@@ -419,7 +419,7 @@ T464_2_025D:
     VMReturn  // End: the sub-script ends
 
 T464_2_0272:
-    pl_msg_talk 36  // Pearl bank 492 line 35
+    pl_msg_talk_low 36  // Pearl bank 492 line 35
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -428,7 +428,7 @@ T464_2_0272:
 
 T464_2_027F:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 37  // Pearl bank 492 line 23
+    pl_msg_talk_low 37  // Pearl bank 492 line 23
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -436,14 +436,14 @@ T464_2_027F:
     VMReturn  // End: the sub-script ends
 
 T464_2_028C:
-    pl_msg_talk 38  // Pearl bank 492 line 18
+    pl_msg_talk_low 38  // Pearl bank 492 line 18
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T464_2_017E
     pl_GoTo T464_2_027F
 
 T464_2_02A8:
-    pl_msg_talk 39  // Pearl bank 492 line 31
+    pl_msg_talk_low 39  // Pearl bank 492 line 31
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -451,7 +451,7 @@ T464_2_02A8:
     VMReturn  // End: the sub-script ends
 
 T464_2_02B5:
-    pl_msg_talk 40  // Pearl bank 492 line 33
+    pl_msg_talk_low 40  // Pearl bank 492 line 33
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -459,7 +459,7 @@ T464_2_02B5:
     VMReturn  // End: the sub-script ends
 
 T464_2_02C2:
-    pl_msg_talk 41  // Pearl bank 492 line 34
+    pl_msg_talk_low 41  // Pearl bank 492 line 34
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -468,7 +468,7 @@ T464_2_02C2:
 
 T464_2_02CF:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 42  // Pearl bank 492 line 19
+    pl_msg_talk_low 42  // Pearl bank 492 line 19
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -477,7 +477,7 @@ T464_2_02CF:
 
 T464_2_02DC:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 43  // Pearl bank 492 line 25
+    pl_msg_talk_low 43  // Pearl bank 492 line 25
     pl_Return
 
 T464_2_02E1:
@@ -488,15 +488,15 @@ T464_2_02E1:
 
 T464_2_02F6:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 44  // Pearl bank 492 line 24
+    pl_msg_talk_low 44  // Pearl bank 492 line 24
     pl_SetVarFromValue PVAR_8000, 0
     pl_Call T464_2_02E1
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 38  // Pearl bank 492 line 18
+    pl_msg_talk_low 38  // Pearl bank 492 line 18
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T464_2_017E
-    pl_msg_talk 45  // Pearl bank 492 line 32
+    pl_msg_talk_low 45  // Pearl bank 492 line 32
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T464_2_0333
@@ -510,7 +510,7 @@ T464_2_0333:
     pl_SetVarFromValue PVAR_8001, 0
     pl_CompareVarToValue PVAR_800C, 2
     pl_GoToIf 1, T464_2_03AB
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8001  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8001
+    ListMenu_AnchorTopRight 31, 5, 0, 1, PVAR_8001  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8001
     pl_BufferDaycareNicknameLevelGender 0, 1, 0
     WorkCmpConst PL_DC_SEX, 1
     VMJumpIf CMP_EQ, T464_2_036D_Sex1
@@ -550,7 +550,7 @@ T464_2_037B_SexDone:
 
 T464_2_03AB:
     pl_BufferDaycarePriceBySlot PVAR_8004, PVAR_8001
-    pl_msg_talk 53  // Pearl bank 492 line 28
+    pl_msg_talk_low 53  // Pearl bank 492 line 28
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T464_2_03CB
@@ -560,7 +560,7 @@ T464_2_03CB:
     MoneyCheck PVAR_800C, PVAR_8004  // HasEnoughMoneyAddress (an amount in a var)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T464_2_03EB
-    pl_msg_talk 54  // Pearl bank 492 line 21
+    pl_msg_talk_low 54  // Pearl bank 492 line 21
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -575,10 +575,10 @@ T464_2_03EB:
     MoneyWinUpdate
     pl_PlaySE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
     pl_WaitSE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
-    pl_msg_talk 55  // Pearl bank 492 line 29
+    pl_msg_talk_low 55  // Pearl bank 492 line 29
     pl_PlayCry PVAR_8002
     pl_BufferPlayerName 1
-    pl_msg_talk 56  // Pearl bank 492 line 30
+    pl_msg_talk_low 56  // Pearl bank 492 line 30
     pl_WaitCry
     pl_GetDaycareState PVAR_800C
     pl_CompareVarToValue PVAR_800C, 2
@@ -586,14 +586,14 @@ T464_2_03EB:
     pl_GoTo T464_2_027F
 
 T464_2_0431:
-    pl_msg_talk 57  // Pearl bank 492 line 22
+    pl_msg_talk_low 57  // Pearl bank 492 line 22
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T464_2_0333
     pl_GoTo T464_2_027F
 
 T464_2_044B:
-    pl_msg_talk 58  // Pearl bank 492 line 26
+    pl_msg_talk_low 58  // Pearl bank 492 line 26
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -602,17 +602,17 @@ T464_2_044B:
 
 T464_2_048C:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 44  // Pearl bank 492 line 24
+    pl_msg_talk_low 44  // Pearl bank 492 line 24
     pl_SetVarFromValue PVAR_8000, 0
     pl_Call T464_2_02E1
     pl_SetVarFromValue PVAR_8000, 1
     pl_Call T464_2_02E1
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 45  // Pearl bank 492 line 32
+    pl_msg_talk_low 45  // Pearl bank 492 line 32
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T464_2_0333
-    pl_msg_talk 37  // Pearl bank 492 line 23
+    pl_msg_talk_low 37  // Pearl bank 492 line 23
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose

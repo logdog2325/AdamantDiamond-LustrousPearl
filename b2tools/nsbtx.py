@@ -203,10 +203,57 @@ def _pal_size(src, name):
     nxt = [x for x in offs if x > o]
     return (nxt[0] if nxt else len(src['pdata'])) - o
 
+def clear(btx, names):
+    """A texture set with the named textures drawn as nothing, in place: every texel 0 (alpha 0 in A3I5, A5I3 and direct
+    colour; palette colour 0 with colour 0 transparent in the palette formats). Sizes, palettes and every other texture
+    stay as they were; names the set lacks are skipped."""
+    t = tex0(btx)
+    base = len(btx) - len(t)
+    texdict, texdata = struct.unpack_from('<H', t, 0xE)[0], struct.unpack_from('<I', t, 0x14)[0]
+    cnt = t[texdict + 1]
+    tree = texdict + 4 + 8 + 4 * cnt
+    unit = struct.unpack_from('<H', t, tree)[0]
+    data_at, names_at = tree + 4, tree + 4 + unit * cnt
+    out = bytearray(btx)
+    spans = []
+    for j in range(cnt):
+        params = struct.unpack_from('<I', t, data_at + unit * j)[0]
+        fmt = (params >> 26) & 7; w = 8 << ((params >> 20) & 7); h = 8 << ((params >> 23) & 7)
+        size = 0 if fmt in (0, 5) else w * h * {1: 8, 2: 2, 3: 4, 4: 8, 6: 8, 7: 16}[fmt] // 8
+        name = t[names_at + 16 * j:names_at + 16 * j + 16].rstrip(b'\0').decode('ascii', 'replace')
+        spans.append((name, (params & 0xFFFF) << 3, size, fmt, data_at + unit * j, params))
+    for name, off, size, fmt, at, params in spans:
+        if name not in names: continue
+        assert fmt not in (0, 5), f'{name}: format {fmt} cannot be cleared'
+        assert not any(n != name and o < off + size and off < o + s for n, o, s, f, _, _ in spans if f != 5), \
+            f'{name}: texels shared with another texture'
+        out[base + texdata + off:base + texdata + off + size] = bytes(size)
+        if fmt in (2, 3, 4): struct.pack_into('<I', out, base + at, params | 1 << 29)
+    return bytes(out)
+
+def copy_texels(btx, copies):
+    """A texture set with each texture of copies ({texture: source texture}) drawn as its source, in place: the source's
+    texels over its own (same format and size; each keeps its own name and palette). Pairs the set lacks are skipped."""
+    t = tex0(btx)
+    base = len(btx) - len(t)
+    P = _parse(btx)
+    T = dict(P['texs'])
+    texdata = struct.unpack_from('<I', t, 0x14)[0]
+    out = bytearray(btx)
+    for dst, src in copies.items():
+        if dst not in T or src not in T: continue
+        (pd, _), (ps, _) = T[dst], T[src]
+        assert pd & ~0xFFFF == ps & ~0xFFFF and (pd >> 26) & 7 != 5, f'{dst}, {src}: not the same format and size'
+        raw, _ = _tex_bytes(P, ps)
+        at = base + texdata + ((pd & 0xFFFF) << 3)
+        out[at:at + len(raw)] = raw
+    return bytes(out)
+
 def merge(base, additions, keep_base=True):
     """base: BTX0 bytes. additions: [(src BTX0 bytes, texture name, palette name or None)], optionally
     (..., new texture name, new palette name): the copy goes in under those names (a texture and its palette are
     found by name only, so another set's same-named texture can stand beside the base's own: data/hoenn_ash.json).
+    A texture name None adds the palette alone (src, None, palette[, None, new palette name[, transform]]).
     keep_base=False: the base only gives the header; the result holds the additions alone (a set built from
     scratch: PearlB2's re-skin). Returns BTX0 bytes."""
     B = _parse(base)
@@ -222,6 +269,17 @@ def merge(base, additions, keep_base=True):
         S = cache.setdefault(id(src_bytes), _parse(src_bytes))
         recolor = renamed[2] if len(renamed) > 2 else None       # optional palette transform (BGR555 bytes -> bytes)
         renamed = renamed[:2]
+        if tname is None:   # a palette alone, for a texture the set has that some materials draw with a second palette
+            pnew = renamed[1] if len(renamed) > 1 and renamed[1] else pname   # (2026-11-07, plat-fixes: sinnoh_reskin)
+            if pnew in have_p: continue
+            o, flag = dict(S['pals'])[pname]
+            data = S['pdata'][o << 3:(o << 3) + _pal_size(S, pname)]
+            if recolor: data = recolor(data)
+            while len(pdata) % 8: pdata.append(0)
+            pals.append((pnew, struct.pack('<HH', len(pdata) >> 3, flag))); have_p.add(pnew)
+            pdata += data
+            if flag & 1: pflag |= 0x8000
+            continue
         name, pnew = (renamed + [None, None])[:2] if renamed else (tname, pname)
         assert len(name) <= 16 and (pnew is None or len(pnew) <= 16), f'{name}/{pnew}: names hold 16 characters'
         if name in have_t: continue

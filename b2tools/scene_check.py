@@ -81,6 +81,41 @@ ACCEPT = [
     ('RESORT_AREA', r'\(stand\) person 11 at \(819, 458\)',
      "Pearl's swimmer in the Resort Area's pool (\"I spend a lot of time in the pool\"): a water tile, as in "
      "Pearl (2026-10-26, chapter 9a)"),
+    ('JUBLIFE_TRAINER_SCHOOL', r'\(stand\) person 5 at \(4, 9\)',
+     "Platinum's notebook on the classroom's desk (graphics 183, a 3D-model actor since step 6's sprites): read from "
+     "beside the desk, as in Platinum (2026-11-07, plat-ch2)"),
+    ('ROUTE_208_BERRY_MASTER_HOUSE', r'\(stand\) person 3 at \(4, 6\)',
+     "Platinum's book on the Berry Master's table (graphics 183, the same 3D-model actor as the Trainers' School "
+     "notebook): read from beside the table, as in Platinum (2026-11-07, plat-ch4)"),
+    ('PASTORIA', r'\(place\) person (26 on screen at \(595, 821\) jumps to \(608, 814\)|27 on screen at \(595, 820\) jumps '
+                 r'to \(611, 810\))',
+     "Out of the Gym (script 19): Barry and Wake run off 8 tiles north of the player, then Platinum's SetPosition puts them "
+     "where they wait, (608, 814) and (611, 810): Platinum moves the live people too, off screen (2026-11-07, plat-ch6)"),
+    ('ROUTE_212_POKEMON_MANSION_LOBBY', r'\(stand\) people 2 and [45] share \(1, 7\)',
+     "Platinum's five-maid knockout: the maid and the boss wait hidden on the far-west maid's tile (the on-transition sets "
+     "their flags); she steps aside before each appears (2026-11-07, plat-ch6)"),
+    ('CELESTIC_CYNTHIA_GRANDPARENTS_HOUSE', r'\(stand\) person 3 at \(5, 6\)',
+     "Platinum's old book on the grandparents' table (graphics 183, the same 3D-model actor): read from beside the "
+     "table, as in Platinum (2026-11-07, plat-ch7)"),
+    ('VEILSTONE_GALACTIC_HEADQUARTERS_2F', r'\(stand\) person 6 at \(41, 17\)',
+     "Platinum's report on the Galactic HQ 2F's table (graphics 183, the same 3D-model book as the Trainers' School "
+     "notebook): read from beside the table, as in Platinum (2026-11-07, plat-ch9)"),
+    # (plat-ch11, 2026-11-07)
+    ('RESORT_AREA', r'\(stand\) person 11 at \(816, 455\)',
+     "Platinum's swimmer in the Resort Area's pool, moved by Platinum beside the Ribbon Syndicate: the pool's tiles are "
+     "solid, as Pearl's (shots/resort_swimmer.png in work/agents/plat-ch11) (2026-11-07, plat-ch11)"),
+    ('STARK_MOUNTAIN_INTERIOR_2', r'\(place\) person 14 on screen at \(42, 70\) jumps to \(42, 68\)',
+     "Buck's second meeting (FLAG_TALKED_TO_STARK_MOUNTAIN_ROOM_2_BUCK set): he stands at (42, 68) already, where the "
+     "player left him (CoordEvent_PlayerLeaveBuck walks him there) or his event tile on a new visit; (42, 70) is where the "
+     "first meeting ends, which this branch never follows (2026-11-07, plat-ch11)"),
+    # (plat-ch12, 2026-11-07)
+    ('ROTOMS_ROOM', r'\(stand\) person [57] at \((11, 9|13, 5)\)',
+     "Platinum's two notebooks on the room's tables (graphics 183, the 3D-model book, as the Galactic HQ 2F's report): read "
+     "from beside the table, as in Platinum (2026-11-07, plat-ch12)"),
+    ('(FULL|NEW)MOON_ISLAND_EXTERIOR', r'\(stand\) person [123] at \((40|151), 27[5-8]\)',
+     "the three bollards at the dock (graphics 192), on the dock's solid posts: the same in Pearl's 1.0 (2026-11-07, plat-ch12)"),
+    ('ROUTE_221_PAL_PARK_ENTRANCE', r'\(stand\) person 7 at \(7, 11\)',
+     "the worker behind the gate's counter: talked to across it, the same in Pearl's 1.0 (2026-11-07, plat-ch12)"),
 ]
 
 

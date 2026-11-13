@@ -146,10 +146,10 @@ P15_01EE:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub 0A6  // Pearl 0x0A6 DressupPokemon 16386, 32773, 32775: not translated yet
-    pl_ReturnToField
+// ReturnToField: the field stayed open (0A6: no Black 2 screen ran)
     pl_ApplyMovement PL_PLAYER, P15_0360
     pl_WaitMovement
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_8006, 0
     pl_GoToIf 1, P15_0247
@@ -205,8 +205,8 @@ P15_02C9:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32772: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P15_0326
@@ -247,8 +247,8 @@ P15_03CC:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 0, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -263,8 +263,8 @@ P15_0409:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 1, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -279,8 +279,8 @@ P15_0446:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 2, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -295,8 +295,8 @@ P15_0483:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 3, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -311,8 +311,8 @@ P15_04C0:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 4, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -327,8 +327,8 @@ P15_04FD:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 5, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -343,8 +343,8 @@ P15_053A:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 6, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -359,8 +359,8 @@ P15_0577:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 7, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -375,8 +375,8 @@ P15_05B4:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 8, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -391,8 +391,8 @@ P15_05F1:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 9, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -407,8 +407,8 @@ P15_062E:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ShowDressUpPhoto  // Pearl 0x0A7 ShowDressedPokemon 10, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ShowDressUpPhoto: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End

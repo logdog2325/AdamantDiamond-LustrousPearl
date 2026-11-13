@@ -16,6 +16,7 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import itcm, resident, narcio  # noqa: E402
 import pearl_gimmicks  # noqa: E402
@@ -25,7 +26,7 @@ ROOM = 32                     # the gym's collision maps: 32 x 32 tiles a floor
 
 
 def _world():
-    w = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    w = json.load(open(version.data_path('sinnoh_world.json')))
     b2 = {v['name']: v['b2_zone'] for v in list(w['zones'].values()) + list(w['rooms']['zones'].values())}
     chunks = {int(k): v for k, v in w['rooms']['chunks'].items()}
     chunks.update({int(k): v for k, v in w['chunks'].items()})
@@ -84,7 +85,7 @@ def apply(files):
 def request_work():
     """PVAR_GIMMICK_REQUEST (data/pearl_story_ids.json "new"): the work a script asks a scripted lift's ride through
     (Cynthia's room: pl_TriggerPlatformLiftRide; the C's PearlB2Platforms.requestWork, 2026-10-26, chapter 8)."""
-    reg = json.load(open(os.path.join(ROOT, 'data', 'pearl_story_ids.json')))
+    reg = json.load(open(version.data_path('pearl_story_ids.json')))
     return int(reg['new']['PVAR_GIMMICK_REQUEST']['b2'], 16)
 
 

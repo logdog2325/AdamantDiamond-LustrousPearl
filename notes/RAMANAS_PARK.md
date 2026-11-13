@@ -7,6 +7,12 @@ the name stays **Pal Park**; Shining Pearl's 9 rooms now, Brilliant Diamond's tw
 version (every version split data-switchable); Black 2's own overworld sprites on the pedestal for all 14 Pokémon;
 BDSP's exact movesets through a C hook; the park opens at **Champion** (not the National Pokédex).
 
+(2026-11-09, postdex: notes/POSTGAME_DEX.md) Lustrous Pearl and Adamant Diamond now have all 11 rooms (version.RAMANAS_ROOMS
+'sp+bd' / 'bd+sp'), each room keeping its own version's rule; the shared gate file's clerk picks the four shared third-tier
+rooms' rules by PEARLB2_GAME_VERSION. Diamond 1.0's clerk used Pearl's nine rooms (the gate's script is generated into
+Pearl's shared file), so it never sold the Johto or Rainbow Slate: fixed in 1.0.1 by the slate fix (Diamond's own clerk
+under the same #if), which the 11 rooms replace.
+
 State: **built and tested in a ROM** (2026-10-26, build 2 and quick rebuilds; section 5). Left: the black-out and the Altered Forme sprite's look, one quick build when the disk has room (section 6).
 
 ## 1. What BDSP does (sources)

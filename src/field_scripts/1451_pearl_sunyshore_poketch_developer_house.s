@@ -36,7 +36,7 @@ P164_002C:
     pl_GoTo P164_006B
 
 P164_006B:
-    pl_stub FindPartySlotWithNature  // Pearl 0x213 FindPartyMonWithNature 32768, 12: not translated yet
+    pl_FindPartySlotWithNature PVAR_8000, 12, WorkCmpConst  // a party loop: the slot, or 255
     pl_CompareVarToValue PVAR_8000, 255
     pl_GoToIf 5, P164_00C5
     pl_msg_talk 1
@@ -46,7 +46,7 @@ P164_006B:
     pl_End
 
 P164_0089:
-    pl_stub FindPartySlotWithNature  // Pearl 0x213 FindPartyMonWithNature 32768, 14: not translated yet
+    pl_FindPartySlotWithNature PVAR_8000, 14, WorkCmpConst  // a party loop: the slot, or 255
     pl_CompareVarToValue PVAR_8000, 255
     pl_GoToIf 5, P164_00E5
     pl_msg_talk 2
@@ -56,7 +56,7 @@ P164_0089:
     pl_End
 
 P164_00A7:
-    pl_stub FindPartySlotWithNature  // Pearl 0x213 FindPartyMonWithNature 32768, 24: not translated yet
+    pl_FindPartySlotWithNature PVAR_8000, 24, WorkCmpConst  // a party loop: the slot, or 255
     pl_CompareVarToValue PVAR_8000, 255
     pl_GoToIf 5, P164_0105
     pl_msg_talk 3

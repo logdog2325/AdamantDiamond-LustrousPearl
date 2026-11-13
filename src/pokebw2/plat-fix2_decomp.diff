@@ -1,0 +1,180 @@
+diff --git a/include/pearlb2/plat_frontier.h b/include/pearlb2/plat_frontier.h
+index 3689d8a8c8..1b06bb099d 100644
+--- a/include/pearlb2/plat_frontier.h
++++ b/include/pearlb2/plat_frontier.h
+@@ -26,6 +26,9 @@ enum {
+     FRONTIER_OP_STREAK_FLAG,    // facility (0 Factory, 1 Hall, 2 Castle, 3 Arcade), op (0 get, 1 set, 2 clear), bit, var
+     FRONTIER_OP_SCENE_VAR,      // op (0 keep, 1 give back), index 0-7, var: the scene manager's vars 0x8008-0x800f over a
+                                 // scene change (Platinum keeps them in its scene manager: RAM here too)
++    FRONTIER_OP_TOWER_DISQUALIFY,   // var (plat-fix2): Platinum's BT_FUNC_UNK_14 (sub_0204A064), a Tower challenge saved but
++                                // not continued: its round and room start again, its streak flag goes, its latest streak is 0;
++                                // var = the play mode
+     FRONTIER_OP_CORE_COUNT,
+ };
+ 
+diff --git a/src/pearlb2/resident/plat_frontier.c b/src/pearlb2/resident/plat_frontier.c
+index db91420889..6c158dc570 100644
+--- a/src/pearlb2/resident/plat_frontier.c
++++ b/src/pearlb2/resident/plat_frontier.c
+@@ -133,6 +133,23 @@ static BOOL Frontier_Core(VM *vm, FieldScriptEnv *env, u32 op) {
+             }
+         }
+         break;
++    case FRONTIER_OP_TOWER_DISQUALIFY: {
++        // (plat-fix2) Platinum's BT_FUNC_UNK_14 (pokeplatinum unk_02049D08.c sub_0204A064), after a reset without saving:
++        // the streak flag (bit 8 + mode) goes, the room number is 0, the latest streak is 0. Black 2's BSubwayCmd_Tool 7
++        // (func_ov033_0217b86c) does the first two (the round and the stage) but keeps the latest streak saved at the last
++        // loss or seven wins. Platinum's challenge seed (sub_0206C02C) has no counterpart: Black 2's generator draws.
++        BSubwayPlayData *play = SaveControl_GetBlockPtr(save, SAVE_BLOCK_BSUBWAY_PLAY);
++        BSubwayScoreData *score = SaveControl_GetBlockPtr(save, SAVE_BLOCK_BSUBWAY_SCORE);
++        u8 mode;
++
++        var = ScriptReadVar(vm, env);
++        mode = BSubwayPlayData_GetData(play, BSUBWAY_PLAY_MODE, NULL);
++        BSubwayPlayData_ResetRound(play);
++        BSubwayScoreData_ResetStage(score, mode);
++        BSubwayScoreData_SetStreak(score, mode, 0);
++        *var = mode;
++        break;
++    }
+     default:
+         GFL_ASSERT(FALSE);
+         VM_Halt(vm);
+diff --git a/include/pearlb2/plat_hall.h b/include/pearlb2/plat_hall.h
+index 4831edfe57..97fac473ae 100644
+--- a/include/pearlb2/plat_hall.h
++++ b/include/pearlb2/plat_hall.h
+@@ -237,6 +237,12 @@ enum {
+                                     // the Tower's: Black 2's Subway select)
+     PLATHALL_OP_RECORDS,            // what, var: 0 GetNumSpeciesWithBattleHallRecords, 1 GetBattleHallTotalSinglesRecord, 2
+                                     // CheckIfBattleHallStreakIs50
++    PLATHALL_OP_RECORD_LIST,        // (plat-fix2) type, letter group (0 ABC .. 8 YZ): the records machine's species list
++                                    // (ShowBattleHallRecordMonSelectionMenu): the species of the group with a record of the
++                                    // type, in Platinum's order, into the list menu the script opened (the script adds EXIT)
++    PLATHALL_OP_SPECIES_RECORD,     // (plat-fix2) type, species, latest var, record var: what the records screen shows for
++                                    // the species (OpenFrontierRecordsApp's DisplayBattleHallRecord): its latest streak (0
++                                    // unless it is the latest species of the type) and its record
+     PLATHALL_OP_COUNT,
+ };
+ 
+diff --git a/src/pearlb2/plat_hall/hall_field.c b/src/pearlb2/plat_hall/hall_field.c
+index 9454f9b10e..c835f5458c 100644
+--- a/src/pearlb2/plat_hall/hall_field.c
++++ b/src/pearlb2/plat_hall/hall_field.c
+@@ -27,6 +27,7 @@
+ #include "system/game_data.h"
+ #include "system/game_system.h"
+ #include "system/pms_data.h"
++#include "system/bmp_menuwork.h"     // (plat-fix2) the records machine's list
+ #include "system/vm.h"
+ #include "system/wordset.h"
+ 
+@@ -272,6 +273,83 @@ static void AddTypeRows(PlatHallWork *w, FieldScriptEnv *env, u16 summaryLine) {
+     GFL_MsgDataFree(types);
+ }
+ 
++// ---------------------------------------------------------------- the records machine (plat-fix2, 2026-11-11)
++// Platinum's ShowBattleHallRecordMonSelectionMenu (pokeplatinum overlay005/ov5_021F6454.c) lists, for the letters picked, the
++// species with a record of the challenge type, in its alphabetical lists: application/zukanlist/zkn_data/zukan_data.narc
++// members 18-26 (ABC .. YZ; together every species 1-493 once), read from Platinum's dump (sAlphaSpecies[sAlphaStart[g] ..
++// sAlphaStart[g + 1] - 1] is group g). Then EXIT (the script's own row). Its list holds 120 rows; Black 2's script list
++// menu 32, so a longer list gets a list of its own size (the largest group, STU, has 97 species)
++#define HALL_LETTER_GROUPS 9
++static const u16 sAlphaStart[10] = { 0, 87, 136, 191, 235, 303, 360, 457, 487, 493 };
++static const u16 sAlphaSpecies[493] = {
++    460, 63, 359, 142, 306, 190, 65, 334, 424, 181, 347, 24, 59, 493, 168, 348,
++    304, 144, 482, 184, 298, 371, 343, 354, 339, 411, 153, 267, 15, 374, 182, 69,
++    400, 399, 9, 257, 242, 438, 286, 437, 436, 406, 418, 1, 427, 412, 12, 331,
++    332, 323, 455, 318, 268, 351, 10, 251, 113, 6, 4, 5, 441, 421, 420, 152,
++    390, 358, 170, 433, 366, 344, 36, 35, 173, 91, 415, 256, 341, 222, 346, 408,
++    342, 488, 453, 169, 159, 104, 155, 491, 301, 225, 386, 87, 483, 50, 132, 85,
++    84, 232, 148, 149, 452, 147, 426, 425, 96, 51, 206, 356, 477, 355, 269, 133,
++    23, 125, 466, 309, 101, 239, 395, 244, 196, 102, 103, 295, 83, 22, 349, 160,
++    456, 180, 136, 419, 330, 205, 478, 162, 444, 475, 445, 282, 92, 423, 94, 74,
++    443, 203, 487, 471, 362, 431, 207, 472, 44, 42, 118, 55, 76, 368, 210, 75,
++    88, 388, 383, 253, 58, 326, 316, 130, 440, 297, 93, 485, 214, 449, 450, 107,
++    106, 237, 250, 430, 163, 187, 116, 229, 228, 367, 97, 174, 314, 392, 2, 39,
++    385, 135, 189, 124, 140, 141, 64, 14, 115, 352, 230, 99, 281, 109, 98, 401,
++    402, 382, 305, 171, 131, 246, 380, 381, 470, 166, 165, 463, 108, 345, 264, 271,
++    428, 270, 294, 448, 272, 249, 457, 337, 370, 404, 405, 68, 67, 66, 240, 219,
++    129, 126, 467, 81, 82, 462, 296, 473, 490, 310, 56, 226, 458, 179, 183, 105,
++    259, 284, 303, 308, 307, 154, 52, 481, 376, 375, 11, 151, 150, 262, 350, 241,
++    439, 312, 200, 429, 146, 391, 414, 122, 258, 89, 446, 198, 177, 34, 31, 29,
++    32, 30, 33, 290, 38, 291, 164, 299, 322, 274, 224, 43, 138, 139, 95, 417,
++    484, 46, 47, 279, 53, 231, 489, 172, 18, 17, 16, 25, 221, 204, 127, 393,
++    311, 186, 60, 61, 62, 77, 261, 137, 474, 233, 57, 394, 476, 54, 247, 432,
++    195, 156, 211, 26, 243, 280, 409, 78, 20, 19, 384, 378, 486, 377, 379, 369,
++    223, 112, 111, 464, 447, 315, 407, 479, 302, 373, 27, 28, 254, 212, 123, 117,
++    119, 364, 273, 86, 161, 336, 319, 492, 292, 372, 90, 422, 410, 275, 403, 285,
++    213, 353, 266, 227, 188, 300, 451, 435, 289, 287, 80, 199, 79, 218, 235, 238,
++    215, 143, 361, 459, 209, 338, 21, 363, 167, 327, 442, 325, 7, 234, 398, 397,
++    396, 121, 120, 208, 434, 185, 245, 192, 191, 283, 333, 317, 260, 277, 220, 276,
++    114, 465, 128, 216, 72, 73, 468, 175, 176, 255, 324, 389, 158, 454, 328, 252,
++    357, 387, 157, 248, 236, 197, 201, 217, 480, 134, 49, 48, 3, 416, 329, 71,
++    288, 45, 313, 100, 37, 320, 321, 365, 8, 461, 13, 70, 110, 340, 293, 40,
++    278, 202, 194, 413, 265, 360, 178, 193, 469, 335, 145, 263, 41,
++};
++
++static void AddRecordRows(SaveControl *save, FieldScriptEnv *env, u16 challengeType, u16 group) {
++    ScriptListMenu *menu = &env->subwork->listMenu;
++    MsgData *names;
++    StrBuf *row;
++    void *buffer;
++    u32 i, count = 0;
++    u16 species;
++
++    if (group >= HALL_LETTER_GROUPS) {
++        return;
++    }
++    buffer = WinRecords_Load(save);
++    for (i = sAlphaStart[group]; i < sAlphaStart[group + 1]; i++) {
++        if (PlatHall_GetRecordForSpecies(save, (u8)challengeType, sAlphaSpecies[i]) != 0) {
++            count++;
++        }
++    }
++    if (count + 1 + ListMenuCore_GetFirstFreeIndex(menu->options) > 32) {     // (the rows, EXIT; nothing was added yet)
++        ListMenuCore_FreeOptionList(menu->options);
++        menu->options = InitListMenuOptionHeap(count + 1, env->heapId);
++    }
++    names = GFL_MsgSysLoadData(FALSE, ARCID_SYSTEM_MESSAGE, TEXT_BANK_SPECIES_NAMES, HALL_HEAP);
++    row = GFL_StrBufCreate(32, HALL_HEAP);
++    for (i = sAlphaStart[group]; i < sAlphaStart[group + 1]; i++) {
++        species = sAlphaSpecies[i];
++        if (PlatHall_GetRecordForSpecies(save, (u8)challengeType, species) != 0) {
++            GFL_MsgDataLoadStrbuf(names, species, row);
++            AppendListMenuOption(menu->options, row, species, env->heapId);
++        }
++    }
++    GFL_StrBufFree(row);
++    GFL_MsgDataFree(names);
++    WinRecords_Free(save, buffer);
++}
++
+ // ---------------------------------------------------------------- the lobby (ScrCmd_CallBattleHallLobbyFunction)
+ static BOOL IsBanned(u16 species) {
+     u32 i;
+@@ -553,6 +631,24 @@ BOOL PlatHall_Op(VM *vm, FieldScriptEnv *env, u32 op) {
+             *var = PlatHall_GetStat(save, PlatHall_StatIndex(PLAT_HALL_SINGLE, PLAT_HALL_STAT_LATEST)) == PLAT_HALL_STREAK_SILVER;
+         }
+         break;
++    case PLATHALL_OP_RECORD_LIST:                          // (plat-fix2) ShowBattleHallRecordMonSelectionMenu's rows
++        a = ScriptReadAny(vm, env);                        // the challenge type
++        b = ScriptReadAny(vm, env);                        // the letter group
++        AddRecordRows(save, env, a, b);
++        break;
++    case PLATHALL_OP_SPECIES_RECORD:                       // (plat-fix2) DisplayBattleHallRecord's two numbers
++        a = ScriptReadAny(vm, env);                        // the challenge type
++        b = ScriptReadAny(vm, env);                        // the species
++        var = ScriptReadVar(vm, env);                      // the latest streak: 0 unless the species is the type's latest
++        *var = 0;
++        if (a <= PLAT_HALL_MULTI && PlatHall_GetStat(save, PlatHall_StatIndex((u8)a, PLAT_HALL_STAT_SPECIES)) == b) {
++            *var = PlatHall_GetStat(save, PlatHall_StatIndex((u8)a, PLAT_HALL_STAT_LATEST));
++        }
++        var = ScriptReadVar(vm, env);                      // the species' record (BattleHallWinRecords_GetRecordForSpecies)
++        buffer = WinRecords_Load(save);
++        *var = PlatHall_GetRecordForSpecies(save, (u8)a, b);
++        WinRecords_Free(save, buffer);
++        break;
+     default:
+         GFL_ASSERT(FALSE);
+         VM_Halt(vm);

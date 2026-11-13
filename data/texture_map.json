@@ -1,5 +1,5 @@
 {
- "_doc": "Pearl overworld texture -> Black 2 texture proposal (texture_map agent, 2026-10-18). Top-level keys: the 189 texture names of Pearl's 175 overworld chunks (work/pearl/overworld_textures.json). b2_set = a/0/1/4 index the texture is read from (summer set of its Black 2 area; season_sets = the four sets spring..winter when seasonal). size_match compares width x height. composite = parts to flatten/repaint into a new texture at the Pearl size (atlases, opaque tiles whose Black 2 art is a cut-out decal). 'derive' in a note = rotate/crop the Black 2 art into Pearl's edge/corner layout. north = area 14 (Routes 216-217, Acuity Lakefront, Snowpoint), Icirrus winter set 45 in all four seasons. keep_pearl = textures with no sensible Black 2 counterpart. Sheets: work/texture_map/.",
+ "_doc": "Pearl overworld texture -> Black 2 texture proposal (texture_map agent, 2026-10-18). Top-level keys: the 189 texture names of Pearl's 175 overworld chunks (work/pearl/overworld_textures.json). b2_set = a/0/1/4 index the texture is read from (summer set of its Black 2 area; season_sets = the four sets spring..winter when seasonal). size_match compares width x height. composite = parts to flatten/repaint into a new texture at the Pearl size (atlases, opaque tiles whose Black 2 art is a cut-out decal). 'derive' in a note = rotate/crop the Black 2 art into Pearl's edge/corner layout. north = area 14 (Routes 216-217, Acuity Lakefront, Snowpoint), Icirrus winter set 45 in all four seasons. keep_pearl = textures with no sensible Black 2 counterpart. Sheets: work/texture_map/. Platinum (2026-11-02, notes/MAP_LOOK.md \"Platinum's ground\"): its own seasonal textures (tree04_2, tree3_01, tree3_02, conttree3_2) are entries too; Pearl's sets never name them, so Pearl and Diamond read the same map as before.",
  "ngrass": {
   "b2": "grass01ax",
   "b2_set": 3,
@@ -1958,6 +1958,85 @@
   "seasonal": false,
   "keep_pearl": true,
   "note": "bike jump ramp (0xD8, Route 227/228 area): no Black 2 counterpart"
+ },
+ "tree04_2": {
+  "b2": "ki03bx",
+  "b2_set": 3,
+  "size_match": false,
+  "seasonal": true,
+  "pearl_size": "64x64",
+  "b2_size": "32x32",
+  "note": "Platinum: tree01's round tree dusted with snow (Twinleaf, Routes 201 and 202, Verity Lakefront), drawn with tree01's palette: as tree01 (a texture that shares a seasonal palette must be seasonal too, or the palette keeps its summer colours)",
+  "season_sets": [
+   2,
+   3,
+   4,
+   5
+  ],
+  "composite": [
+   "ki03bx",
+   "ki03dx",
+   "ki02c"
+  ]
+ },
+ "tree3_01": {
+  "b2": "ki03bx",
+  "b2_set": 3,
+  "size_match": false,
+  "seasonal": true,
+  "pearl_size": "64x64",
+  "b2_size": "32x32",
+  "note": "Platinum: the Battle Zone's palm (Fight Area, Routes 225-230, Survival and Resort Areas) where Pearl has tree2_01: as tree2_01",
+  "season_sets": [
+   2,
+   3,
+   4,
+   5
+  ],
+  "composite": [
+   "ki03bx",
+   "ki03dx",
+   "ki02c"
+  ]
+ },
+ "tree3_02": {
+  "b2": "ki03bx",
+  "b2_set": 3,
+  "size_match": false,
+  "seasonal": true,
+  "pearl_size": "64x64",
+  "b2_size": "32x32",
+  "note": "Platinum: the Battle Zone's smaller palm, where Pearl has tree2_01: as tree2_01",
+  "season_sets": [
+   2,
+   3,
+   4,
+   5
+  ],
+  "composite": [
+   "ki03bx",
+   "ki03dx",
+   "ki02c"
+  ]
+ },
+ "conttree3_2": {
+  "b2": "ki03bx",
+  "b2_set": 3,
+  "size_match": false,
+  "seasonal": true,
+  "pearl_size": "64x64",
+  "b2_size": "32x32",
+  "note": "Platinum: the Battle Zone's palm rows with trunks, where Pearl has conttree2_b/_t: as conttree2_b",
+  "season_sets": [
+   2,
+   3,
+   4,
+   5
+  ],
+  "composite": [
+   "ki03bx",
+   "ki03ax"
+  ]
  },
  "north": {
   "ngrass": {

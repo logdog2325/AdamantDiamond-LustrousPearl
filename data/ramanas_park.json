@@ -1,5 +1,5 @@
 {
- "_doc": "Ramanas Park (BDSP) in Pearl's Pal Park: the source of b2tools/ramanas.py (the rooms' script and text, the gate's and the park's extra entries) and b2tools/patches/ramanas_park.py (zones, events, items, the ITCM table). notes/RAMANAS_PARK.md has the plan and the sources (Serebii, checked against Gamer Guides and RankedBoost; no BDSP dump). A room's 'version' says which builds have it: the build version picks (b2tools/version.py BDSP): 'sp' = Lustrous Pearl (Shining Pearl's exclusives), 'bd' = Adamant Diamond (Brilliant Diamond's), 'both' = both. Species, moves and items are the decomp's names (generated/*.txt), resolved to numbers by the tools. Text: plain words, \\n a new line, \\r a new page (a Black 2 window shows 2 lines); {slate} {pokemon} {count} are filled by the tools.",
+ "_doc": "Ramanas Park (BDSP) in Pearl's Pal Park: the source of b2tools/ramanas.py (the rooms' script and text, the gate's and the park's extra entries) and b2tools/patches/ramanas_park.py (zones, events, items, the ITCM table). notes/RAMANAS_PARK.md has the plan and the sources (Serebii, checked against Gamer Guides and RankedBoost; no BDSP dump). A room's 'version' says which builds have it: the build version picks (b2tools/version.py BDSP): 'sp' = Lustrous Pearl (Shining Pearl's exclusives), 'bd' = Adamant Diamond (Brilliant Diamond's), 'both' = both; Griseous Platinum (column 'both') has all 11, with entrance_both for the two doorways the other versions share and the 'both' column of requires (the third tier opens after Kanto, Johto and Soul). Species, moves and items are the decomp's names (generated/*.txt), resolved to numbers by the tools. Text: plain words, \\n a new line, \\r a new page (a Black 2 window shows 2 lines); {slate} {pokemon} {count} are filled by the tools.",
  "pal_park": "MAP_PAL_PARK",
  "gate": "MAP_ROUTE_221_PAL_PARK_ENTRANCE",
  "files": {
@@ -260,6 +260,10 @@
     "x": 34,
     "z": 37
    },
+   "entrance_both": {
+    "x": 30,
+    "z": 24
+   },
    "pokemon": [
     {
      "species": "SPECIES_RAIKOU",
@@ -411,14 +415,26 @@
     "name": "Rainbow Slate",
     "icon": "ITEM_ICON_PALETTE_FLAME_PLATE"
    },
-   "requires": [
-    "johto",
-    "soul"
-   ],
+   "requires": {
+    "bd": [
+     "johto",
+     "soul"
+    ],
+    "both": [
+     "kanto",
+     "johto",
+     "soul"
+    ]
+   },
    "requires_flags": [],
    "entrance": {
     "x": 23,
     "z": 24
+   },
+   "entrance_both": {
+    "x": 44,
+    "z": 31,
+    "front_in_next_chunk": true
    },
    "pokemon": [
     {
@@ -447,10 +463,17 @@
     "name": "Squall Slate",
     "icon": "ITEM_ICON_PALETTE_ICICLE_PLATE"
    },
-   "requires": [
-    "kanto",
-    "soul"
-   ],
+   "requires": {
+    "sp": [
+     "kanto",
+     "soul"
+    ],
+    "both": [
+     "kanto",
+     "johto",
+     "soul"
+    ]
+   },
    "requires_flags": [],
    "entrance": {
     "x": 23,
@@ -489,6 +512,11 @@
      "soul"
     ],
     "bd": [
+     "johto",
+     "soul"
+    ],
+    "both": [
+     "kanto",
      "johto",
      "soul"
     ]
@@ -537,6 +565,11 @@
      "soul"
     ],
     "bd": [
+     "johto",
+     "soul"
+    ],
+    "both": [
+     "kanto",
      "johto",
      "soul"
     ]
@@ -588,6 +621,11 @@
     "bd": [
      "johto",
      "soul"
+    ],
+    "both": [
+     "kanto",
+     "johto",
+     "soul"
     ]
    },
    "requires_flags": [],
@@ -633,6 +671,11 @@
      "soul"
     ],
     "bd": [
+     "johto",
+     "soul"
+    ],
+    "both": [
+     "kanto",
      "johto",
      "soul"
     ]

@@ -1,0 +1,114 @@
+{
+ "_doc": "Chapter 1's beats in Platinum's order (notes/PLATINUM_CHAPTERS.md \"Chapter 1\"), for b2tools/platinum_flow_compare.py: zone = our map name, script = Platinum's label less its zone prefix (external/pokeplatinum res/field/scripts). next_start = chapter 2's TEST_SET (notes/PLATINUM_CHAPTERS.md) plus PFLAG_0087 (FLAG_TALKED_TO_MOM, set by Mom's first scene: that TEST_SET leaves it out).",
+ "start": "newgame",
+ "beats": [
+  {
+   "zone": "MAP_TWINLEAF_RIVAL_HOUSE_2F",
+   "script": "OnFrame_ConcludeSpecialProgram",
+   "note": "the bedroom: the TV special ends"
+  },
+  {
+   "zone": "MAP_TWINLEAF_RIVAL_HOUSE_2F",
+   "script": "CoordEvent_RivalNorth",
+   "note": "Barry runs up the stairs (one of four tiles)"
+  },
+  {
+   "zone": "MAP_TWINLEAF_RIVAL_HOUSE_1F",
+   "script": "OnFrame_RivalAlreadyLeft",
+   "note": "1F: Mom"
+  },
+  {
+   "zone": "MAP_TWINLEAF_RIVAL_HOUSE_1F",
+   "script": "CoordEvent_DontGoIntoTallGrass",
+   "note": "Mom at the door"
+  },
+  {
+   "zone": "MAP_TWINLEAF",
+   "script": "CoordEvent_RivalThud",
+   "note": "Barry's Thud!!"
+  },
+  {
+   "zone": "MAP_TWINLEAF_PLAYER_HOUSE_2F",
+   "script": "OnFrame_Rival",
+   "note": "Barry's room"
+  },
+  {
+   "zone": "MAP_TWINLEAF",
+   "script": "CoordEvent_RivalWasLookingForYou",
+   "not": true,
+   "note": "the north exit is open"
+  },
+  {
+   "zone": "MAP_ROUTE_201",
+   "script": "CoordEvent_ChooseStarterScene",
+   "note": "Route 201: Rowan and the assistant"
+  },
+  {
+   "zone": "MAP_ROUTE_201",
+   "script": "Briefcase",
+   "note": "the starter, Barry's first battle, the warp home"
+  },
+  {
+   "zone": "MAP_TWINLEAF_RIVAL_HOUSE_1F",
+   "script": "OnFrame_CutsceneAfterRivalBattle",
+   "note": "Mom's Running Shoes"
+  },
+  {
+   "zone": "MAP_ROUTE_201",
+   "script": "CoordEvent_RivalStartFollowing",
+   "note": "Barry follows"
+  },
+  {
+   "zone": "MAP_ROUTE_201",
+   "script": "CoordEvent_RivalStartFollowing",
+   "not": true,
+   "note": "only once"
+  },
+  {
+   "zone": "MAP_VERITY_LAKEFRONT",
+   "script": "CoordEvent_WereAtTheLake",
+   "note": "to the lake"
+  },
+  {
+   "zone": "MAP_LAKE_VERITY",
+   "script": "OnFrame_Cyrus",
+   "note": "Cyrus at Lake Verity; the follower ends"
+  },
+  {
+   "zone": "MAP_ROUTE_201",
+   "script": "CoordEvent_FollowingRivalStopPlayerSouth",
+   "not": true,
+   "note": "Barry no longer stops you"
+  },
+  {
+   "zone": "MAP_SANDGEM",
+   "script": "CoordEvent_CounterpartLeadToLab",
+   "note": "the assistant leads you to the lab"
+  },
+  {
+   "zone": "MAP_SANDGEM_ROWANS_LAB",
+   "script": "OnFrame_GetPokedex",
+   "note": "the Pokédex"
+  },
+  {
+   "zone": "MAP_SANDGEM",
+   "script": "OnFrame_ExitLab",
+   "note": "the town tour"
+  },
+  {
+   "zone": "MAP_TWINLEAF_RIVAL_HOUSE_1F",
+   "script": "Mom",
+   "note": "the Journal, then Barry's mom and the Parcel",
+   "expect": {
+    "FLAG_RECEIVED_PARCEL": true,
+    "VAR_PLAYER_HOUSE_STATE": 6
+   }
+  },
+  {
+   "zone": "MAP_TWINLEAF",
+   "arrive": true,
+   "note": "out of the house: Twinleaf's on-transition moves VAR_PLAYER_HOUSE_STATE 6 -> 7"
+  }
+ ],
+ "next_start": "PVAR_40F9=1,PVAR_40A5=1,PVAR_40A4=7,PVAR_4070=2,PVAR_40E6=1,PVAR_40A3=1,PVAR_4086=4,PVAR_4082=1,PVAR_4095=1,PVAR_4071=2,PVAR_40A6=1,PVAR_STARTER=387,PFLAG_0173,PFLAG_0174,PFLAG_01F2,PFLAG_00EA,PFLAG_0178,PFLAG_0179,PFLAG_017D,PFLAG_0172,PFLAG_0176,PFLAG_0196,PFLAG_0197,PFLAG_0177,PFLAG_0993,PFLAG_0090,PFLAG_0199,PFLAG_02C4,PFLAG_008F,PFLAG_0087,2403,2472,2473"
+}

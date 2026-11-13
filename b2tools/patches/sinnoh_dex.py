@@ -36,14 +36,15 @@ ARC_PERSONAL, FILE_REGIONAL = 16, 709      # a/0/1/6 file 709: u16 regional numb
 ARC_SORT, FILE_REGIONAL_ORDER = 97, 4      # a/0/9/7 file 4: species 1-649, the regional ones last in regional order
 NONE = 999
 VICTINI = 494
-SINNOH_COUNT = 151
+SINNOH_COUNT = 210 if version.PLATINUM else 151      # (Platinum's list: 210, ending Absol, Giratina; pokeplatinum pokedex.h)
+LAST_TWO = [359, 487] if version.PLATINUM else [484, 490]
 
 
 def sinnoh_order():
     """National numbers of Sinnoh #1..#151 (Pearl's order, from the user's dump)."""
     d = narc_members(Rom(version.SOURCE_DUMP).read('poketool/shinzukan.narc'))[0]
     order = list(struct.unpack_from(f'<{SINNOH_COUNT}H', d, 2))       # index 0 is unused
-    assert len(set(order)) == SINNOH_COUNT and order[0] == 387 and order[-2:] == [484, 490], order[:3]
+    assert len(set(order)) == SINNOH_COUNT and order[0] == 387 and order[-2:] == LAST_TWO, order[:3]
     return order
 
 
@@ -78,8 +79,9 @@ def apply(files):
 ARM9 = 0x02004000
 COMPLETE_LITERALS = (0x0200DA58, 0x0200DA70)     # the 297 of PokeDex_IsCompleteUnova / PokeDex_IsSeenAllUnova
 EXCLUSIONS = 0x0208F80C                          # UNOVA_DEX_COMPLETION_EXCLUSIONS: 4 u16
-UNOVA_COMPLETE, SINNOH_COMPLETE = 297, 150       # pokediamond Pokedex_SinnohDexIsComplete: seen (no Manaphy) >= 150
-KELDEO, MANAPHY = 647, 490
+UNOVA_COMPLETE, SINNOH_COMPLETE = 297, 210 if version.PLATINUM else 150   # pokediamond Pokedex_SinnohDexIsComplete: seen (no Manaphy) >= 150;
+KELDEO, MANAPHY = 647, 490                       # Platinum's LOCAL_DEX_GOAL: all 210, nothing excluded
+EXCLUDED = KELDEO if version.PLATINUM else MANAPHY # (Keldeo is Black 2's own: in no Sinnoh list, so it excludes nothing)
 
 
 def apply_code(code):
@@ -93,7 +95,7 @@ def apply_code(code):
     o = EXCLUSIONS - ARM9
     ex = list(struct.unpack_from('<4H', d, o))
     assert ex in ([KELDEO, 648, 649, VICTINI], [MANAPHY, 648, 649, VICTINI]), ex
-    struct.pack_into('<4H', d, o, MANAPHY, 648, 649, VICTINI)
+    struct.pack_into('<4H', d, o, EXCLUDED, 648, 649, VICTINI)
     if os.path.islink(p): os.unlink(p)
     open(p + '.tmp', 'wb').write(d); os.replace(p + '.tmp', p)
-    return f'sinnoh_dex: regional Pokédex complete = {SINNOH_COMPLETE} seen/caught without Manaphy (was Unova\'s 297)'
+    return f'sinnoh_dex: regional Pokédex complete = {SINNOH_COMPLETE} seen/caught (was Unova\'s 297)'

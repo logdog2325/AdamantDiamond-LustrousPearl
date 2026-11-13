@@ -1,0 +1,109 @@
+diff --git a/configure.py b/configure.py
+index da37b56..126ff83 100644
+--- a/configure.py
++++ b/configure.py
+@@ -644,7 +644,8 @@ def add_version(n: Writer, version: str, dsd: Path, bugfix: bool, shift: int) ->
+     # section, src/pearlb2/resident/ (read once at boot, never unloaded), and the Pokétch's, src/pearlb2/poketch/ (its
+     # system) and src/pearlb2/poketch/apps/ (one overlay each)
+     overlay_objects = {"resident": [], "system": [], "apps": [], "palpark": [], "contest": [], "platgym": [], "platrooms": [], "platparty": [], "platdw": [],
+-                       "platfactory": [], "plathall": [], "platcastle": []}    # (plat-frontier-rooms: the last three)
++                       "platfactory": [], "plathall": [], "platcastle": [],    # (plat-frontier-rooms: the last three)
++                       "platarcade": []}    # (plat-arcade)
+     for part, pattern in (("resident", "src/pearlb2/resident/*.c"), ("system", "src/pearlb2/poketch/*.c"),
+                           ("apps", "src/pearlb2/poketch/apps/*.c"), ("palpark", "src/pearlb2/palpark/*.c"),
+                           ("contest", "src/pearlb2/contest/*.c"), ("platgym", "src/pearlb2/plat_gyms/*.c"),
+@@ -652,7 +653,8 @@ def add_version(n: Writer, version: str, dsd: Path, bugfix: bool, shift: int) ->
+                           ("platdw", "src/pearlb2/plat_dw/*.c"),    # (plat-dw-core)
+                           ("platfactory", "src/pearlb2/plat_factory/*.c"),   # (plat-frontier-rooms)
+                           ("plathall", "src/pearlb2/plat_hall/*.c"),
+-                          ("platcastle", "src/pearlb2/plat_castle/*.c")):
++                          ("platcastle", "src/pearlb2/plat_castle/*.c"),
++                          ("platarcade", "src/pearlb2/plat_arcade/*.c")):    # (plat-arcade)
+         for source in sorted(Path(".").glob(pattern)):
+             obj = build_dir / source.with_suffix(".o")
+             n.build([obj], "mwcc", [source], variables={"defines": defines, "dep": obj.with_suffix(".d"),
+@@ -664,7 +666,8 @@ def add_version(n: Writer, version: str, dsd: Path, bugfix: bool, shift: int) ->
+                        *overlay_objects["palpark"], *overlay_objects["contest"], *overlay_objects["platgym"],
+                        *overlay_objects["platrooms"], *overlay_objects["platparty"], *overlay_objects["platdw"],
+                        *overlay_objects["platfactory"], *overlay_objects["plathall"],
+-                       *overlay_objects["platcastle"]]   # (plat-frontier-rooms)
++                       *overlay_objects["platcastle"],   # (plat-frontier-rooms)
++                       *overlay_objects["platarcade"]]   # (plat-arcade)
+         overlays_lcf, overlays_response = build_dir / "arm9_pearlb2_overlays.lcf", build_dir / "objects_pearlb2_overlays.txt"
+         n.build([overlays_lcf, overlays_response], "pearlb2_overlays", [link_lcf, link_response, *all_objects],
+                 implicit=["tools/pearlb2/link_overlays.py"],
+@@ -680,6 +683,7 @@ def add_version(n: Writer, version: str, dsd: Path, bugfix: bool, shift: int) ->
+                            "platfactory": " ".join(map(str, overlay_objects["platfactory"])),   # (plat-frontier-rooms)
+                            "plathall": " ".join(map(str, overlay_objects["plathall"])),
+                            "platcastle": " ".join(map(str, overlay_objects["platcastle"])),
++                           "platarcade": " ".join(map(str, overlay_objects["platarcade"])),   # (plat-arcade)
+                            "lcf_in": str(link_lcf), "objects_in": str(link_response)})
+         link_lcf, link_response = overlays_lcf, overlays_response
+         link_objects = [*link_objects, *map(str, all_objects)]
+@@ -952,7 +956,8 @@ def main():
+     n.rule("pearlb2_itcm", "$python tools/pearlb2/link_itcm.py $in $out", "Linking PearlB2's ITCM code")
+     n.rule("pearlb2_overlays", "$python tools/pearlb2/link_overlays.py $lcf_in $objects_in $out --resident $resident "
+            "--system $system --apps $apps --palpark $palpark --contest $contest --platgym $platgym --platrooms $platrooms --platparty $platparty --platdw $platdw "
+-           "--platfactory $platfactory --plathall $plathall --platcastle $platcastle", "Linking PearlB2's overlays")   # (plat-frontier-rooms: the last three)
++           "--platfactory $platfactory --plathall $plathall --platcastle $platcastle "
++           "--platarcade $platarcade", "Linking PearlB2's overlays")   # (plat-frontier-rooms: the last three; plat-arcade: --platarcade)
+ 
+     # The constant headers are generated from the committed lists in generated/, so that the C code, the data
+     # files and the scripts share one source of truth, and a mod only edits the list. Compiles depend on them
+diff --git a/tools/pearlb2/link_overlays.py b/tools/pearlb2/link_overlays.py
+index 690f546..192d03b 100644
+--- a/tools/pearlb2/link_overlays.py
++++ b/tools/pearlb2/link_overlays.py
+@@ -36,6 +36,9 @@ address (AFTER(PKTMEM), as OV376: PB2END after it too), and OV379, the Battle Ha
+ include/pearlb2/plat_hall.h), at the gimmick overlays' address (no Hall zone has a gimmick), and OV380, the Battle Castle
+ (plat-castle; src/pearlb2/plat_castle/*.c, include/pearlb2/plat_castle.h), at the same address. Their tables are in their own
+ .data, written by the build's b2tools/patches/platinum_factory.py, platinum_hall.py and platinum_castle.py.
++And (plat-arcade, 2026-11-07) OV381, the Battle Arcade (src/pearlb2/plat_arcade/*.c, include/pearlb2/plat_arcade.h), at the
++gimmick overlays' address too (no Arcade zone has a gimmick). Its op loads it and unloads it, except the board's op, which keeps
++it for as long as the board runs. Its table is in its own .data, written by b2tools/patches/platinum_arcade.py.
+ And OV376 (plat-tutors, 2026-11-07), Platinum's party commands (src/pearlb2/plat_party/*.c: the shard tutors' question,
+ the footprint type, contest conditions and ribbons; include/pearlb2/plat_party.h), at Pal Park's address (AFTER(PKTMEM),
+ PB2END after both): a script command loads it, runs and unloads it before it returns, while Pal Park's screen isn't
+@@ -61,6 +64,7 @@ PLATDW = 377       # (plat-dw-core) Platinum's Distortion World: at the gimmick
+ PLATFACTORY = 378  # (plat-frontier-rooms) Platinum's Battle Factory: at Pal Park's address, AFTER(PKTMEM)
+ PLATHALL = 379     # (plat-frontier-rooms) Platinum's Battle Hall: at the gimmick overlays' address, AFTER(OV084, OV085)
+ PLATCASTLE = 380   # (plat-frontier-rooms) Platinum's Battle Castle (plat-castle): the same address
++PLATARCADE = 381   # (plat-arcade) Platinum's Battle Arcade: the same address
+ # Pearl's apps in its order (include/pearlb2/poketch.h PoketchApp): src/pearlb2/poketch/apps/<name>.c
+ APPS = ("digital_watch", "calculator", "memo_pad", "pedometer", "party_status", "friendship_checker",
+         "dowsing_machine", "berry_searcher", "daycare_checker", "pokemon_history", "counter", "analog_watch",
+@@ -115,6 +119,7 @@ def main():
+     ap.add_argument("--platfactory", nargs="*", default=[])  # (plat-frontier-rooms)
+     ap.add_argument("--plathall", nargs="*", default=[])     # (plat-frontier-rooms)
+     ap.add_argument("--platcastle", nargs="*", default=[])   # (plat-frontier-rooms)
++    ap.add_argument("--platarcade", nargs="*", default=[])   # (plat-arcade)
+     a = ap.parse_args()
+ 
+     script = Path(a.lcf).read_text()
+@@ -137,8 +142,9 @@ def main():
+     platfactory = (f"OV{PLATFACTORY}", a.platfactory)    # (plat-frontier-rooms)
+     plathall = (f"OV{PLATHALL}", a.plathall)
+     platcastle = (f"OV{PLATCASTLE}", a.platcastle)
++    platarcade = (f"OV{PLATARCADE}", a.platarcade)       # (plat-arcade)
+     overlays = [resident] + poketch + [palpark, platparty, platfactory, contest, platgym, platrooms, platdw,
+-                                       plathall, platcastle]   # memory order
++                                       plathall, platcastle, platarcade]   # memory order (plat-arcade: the last)
+     by_id = sorted(overlays, key=lambda o: int(o[0][2:]))
+ 
+     # MEMORY: after OV290's line (the last of main memory's overlays). SPACE (ADDR(SPACE) is __CODE_HI) stays as dsd
+@@ -157,6 +163,7 @@ def main():
+     memory.append(f"    {platdw[0]} : ORIGIN = AFTER(OV084, OV085) > build/arm9_ov{PLATDW}.bin")
+     memory.append(f"    {plathall[0]} : ORIGIN = AFTER(OV084, OV085) > build/arm9_ov{PLATHALL}.bin")   # (plat-frontier-rooms)
+     memory.append(f"    {platcastle[0]} : ORIGIN = AFTER(OV084, OV085) > build/arm9_ov{PLATCASTLE}.bin")
++    memory.append(f"    {platarcade[0]} : ORIGIN = AFTER(OV084, OV085) > build/arm9_ov{PLATARCADE}.bin")   # (plat-arcade)
+     m = re.search(r"^    OV290 : ORIGIN = .*$", script, re.M)
+     if not m:
+         raise SystemExit(f"{a.lcf}: no OV290 in MEMORY")
+@@ -185,6 +192,7 @@ def main():
+     blocks += section_block(platdw[0], platdw[1], PLATDW_POOL_SIZE, "PEARLB2_PLATDW_POOL")
+     blocks += section_block(plathall[0], plathall[1])                # (plat-frontier-rooms)
+     blocks += section_block(platcastle[0], platcastle[1])
++    blocks += section_block(platarcade[0], platarcade[1])            # (plat-arcade)
+     m = re.search(r"^    SDK_AUTOLOAD_START = ", script, re.M)
+     if not m:
+         raise SystemExit(f"{a.lcf}: no SDK_AUTOLOAD_START")

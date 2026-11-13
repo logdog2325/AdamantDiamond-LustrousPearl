@@ -1,7 +1,8 @@
-"""Phase 1 reader: Pearl's zones, matrices, events and wild Pokémon, from the dump to JSON.
+"""Phase 1 reader: a Gen 4 game's zones, matrices, events and wild Pokémon, from the dump to JSON.
 
     python3 gen4_extract.py [ROM] [OUT_DIR]      defaults: the version's dump and work/<version> (PEARL_VERSION=diamond:
-                                                 roms/diamond.nds, work/diamond)
+                                                 roms/diamond.nds, work/diamond; PEARL_VERSION=platinum: roms/platinum.nds,
+                                                 work/platinum)
 
 Formats follow pokediamond's MapHeader (include/map_header.h) and pokeplatinum's packers
 (tools/jsoncnv/map_matrix.py, event.py, encounter.py), read in reverse; the JSON keys are Platinum's, so the files can
@@ -17,6 +18,7 @@ from gen4rom import Rom, narc_members  # noqa: E402
 import version  # noqa: E402
 
 DIAMOND = os.path.join(ROOT, 'external', 'pokediamond')
+PLATINUM = os.path.join(ROOT, 'external', 'pokeplatinum')
 HEADER_SIZE = 24
 
 
@@ -28,36 +30,72 @@ def constants(path, prefix):
     return names
 
 
+def zone_names():
+    """(names, decomp names) of every zone, by zone number. Pearl's constant names; Platinum's 559 first zones are the same
+    places under the same numbers, so they keep Pearl's name (data/*.json and the tools name zones that way), and Platinum's
+    decomp's name goes in the second list; its 34 new zones take that name with MAP_HEADER_ cut to MAP_."""
+    pearl = constants(os.path.join(DIAMOND, 'include', 'constants', 'maps.h'), 'MAP_')
+    pearl = [pearl[i] for i in range(len(pearl))]
+    if not version.PLATINUM:
+        return pearl, None
+    path = os.path.join(PLATINUM, 'generated', 'map_headers.txt')
+    theirs = [l.strip().replace('MAP_HEADER_', 'MAP_', 1) for l in open(path) if l.strip()][:version.ZONE_COUNT]
+    assert len(theirs) == version.ZONE_COUNT and len(pearl) == 559, f'{path}: {len(theirs)} names, Pearl {len(pearl)}'
+    return pearl + theirs[len(pearl):], theirs
+
+
+def species_names():
+    """{species number: constant}. Platinum's list is the same numbers (a Rotom form or Giratina Origin is a form, not a species)."""
+    return constants(os.path.join(DIAMOND, 'include', 'constants', 'species.h'), 'SPECIES_')
+
+
 def find_header_table(arm9, zone_count):
     """Offset of the map header table in arm9: entry 3 (Jubilife) uses matrix 0, scripts 2 and events 2, and every
-    entry's matrix id is below 245 (pokediamond arm9/src/map_header.c)."""
+    entry's matrix id is below 245 (pokediamond arm9/src/map_header.c), or below 289 in Platinum."""
     probe = struct.pack('<BBHH', 6, 0, 0, 2)
+    matrices = 289 if version.PLATINUM else 245
     start = 0
     while True:
         i = arm9.find(probe, start)
         if i < 0:
             raise SystemExit('map header table not found')
         base = i - 3 * HEADER_SIZE
-        ok = base >= 0 and all(struct.unpack_from('<H', arm9, base + z * HEADER_SIZE + 2)[0] < 245
+        ok = base >= 0 and all(struct.unpack_from('<H', arm9, base + z * HEADER_SIZE + 2)[0] < matrices
                                for z in range(zone_count))
         if ok and struct.unpack_from('<H', arm9, base + 3 * HEADER_SIZE + 16)[0] == 2:
             return base
         start = i + 1
 
 
-def read_headers(rom, zone_names):
+def read_header_flags(z, f):
+    """The fields that differ in the two games' header (pokeplatinum include/map_header.h): Platinum packs the place's text id
+    and banner window into one u16 and map type, battle background and the permissions into another (7 + 5 + 4 bits, with a
+    run bit Pearl doesn't have); Pearl has bytes."""
+    if not version.PLATINUM:
+        return {'mapsec': f[10], 'weather': f[11], 'camera': f[12], 'map_type': f[13], 'battle_bg': f[14] & 15,
+                'bike': bool(f[14] & 16), 'escape_rope': bool(f[14] & 64), 'fly': bool(f[14] & 128)}
+    bits = f[13] | f[14] << 8
+    # weather in Pearl's numbers: Platinum's day-by-day columns start at 32, Pearl's at 24; its 23-30 are new area effects (Eterna Forest's
+    # canopy, the dark of Mt. Coronet and Solaceon Ruins, ...) Pearl's zones don't have: 0 there, the effect kept as "pl_weather"
+    w = f[11] - 8 if f[11] >= 32 else 0 if 23 <= f[11] <= 30 else f[11]
+    return {'mapsec': f[10] & 0xff, 'label_window': f[10] >> 8, 'weather': w, 'pl_weather': f[11], 'camera': f[12], 'map_type': bits & 0x7f,
+            'battle_bg': bits >> 7 & 31, 'bike': bool(bits >> 12 & 1), 'running': bool(bits >> 13 & 1),
+            'escape_rope': bool(bits >> 14 & 1), 'fly': bool(bits >> 15 & 1)}
+
+
+def read_headers(rom, names, decomp_names=None):
     arm9_off, _, _, arm9_size = struct.unpack_from('<4I', rom.data, 0x20)
     arm9 = rom.data[arm9_off:arm9_off + arm9_size]
-    base = find_header_table(arm9, len(zone_names))
+    base = find_header_table(arm9, len(names))
     zones = []
-    for z in range(len(zone_names)):
+    for z in range(len(names)):
         f = struct.unpack_from('<BBHHHHHHHHHBBBB', arm9, base + z * HEADER_SIZE)
         zones.append({
-            'id': z, 'name': zone_names[z], 'area': f[0], 'move_models': f[1], 'matrix': f[2], 'scripts': f[3],
+            'id': z, 'name': names[z], 'area': f[0], 'move_models': f[1], 'matrix': f[2], 'scripts': f[3],
             'level_scripts': f[4], 'text_bank': f[5], 'music_day': f[6], 'music_night': f[7],
-            'encounters': None if f[8] == 0xffff else f[8], 'events': f[9], 'mapsec': f[10], 'weather': f[11],
-            'camera': f[12], 'map_type': f[13], 'battle_bg': f[14] & 15, 'bike': bool(f[14] & 16),
-            'escape_rope': bool(f[14] & 64), 'fly': bool(f[14] & 128)})
+            'encounters': None if f[8] == 0xffff else f[8], 'events': f[9], **read_header_flags(z, f)})
+        if decomp_names:
+            zones[-1]['pl_name'] = decomp_names[z]
     return arm9_off + base, zones
 
 
@@ -137,21 +175,48 @@ def main():
     out_dir = sys.argv[2] if len(sys.argv) > 2 else version.WORK
     rom = Rom(rom_path)
     assert rom.code == version.SOURCE_GAME_CODE, f'expected {version.NAME} ({version.SOURCE_GAME_CODE}), got {rom.code}'
-    zone_names = constants(os.path.join(DIAMOND, 'include', 'constants', 'maps.h'), 'MAP_')
-    zone_names = [zone_names[i] for i in range(len(zone_names))]
-    species = constants(os.path.join(DIAMOND, 'include', 'constants', 'species.h'), 'SPECIES_')
-    table_off, zones = read_headers(rom, zone_names)
+    species = species_names()
+    table_off, zones = read_headers(rom, *zone_names())
+    land = None
+    if version.PLATINUM:    # the tools name files by Pearl's numbers (platinum_maps.py): each number as a slot, its own one kept as "dump"
+        slots = {k: version.of_slot(a) for k, a in (('matrix', 'matrices'), ('events', 'events'), ('scripts', 'scripts'), ('level_scripts', 'scripts'),
+                                                     ('text_bank', 'banks'))}
+        land = version.of_slot('land')
+        for z in zones:
+            z['dump'] = {k: z[k] for k in slots}
+            z.update({k: slots[k][z[k]] for k in slots})
     os.makedirs(os.path.join(out_dir, 'matrices'), exist_ok=True)
     os.makedirs(os.path.join(out_dir, 'events'), exist_ok=True)
     os.makedirs(os.path.join(out_dir, 'encounters'), exist_ok=True)
     dump = lambda path, obj: json.dump(obj, open(os.path.join(out_dir, path), 'w'), indent=1)
     dump('zones.json', zones)
-    mats = narc_members(rom.read('fielddata/mapmatrix/map_matrix.narc'))
+    mats = version.slotted('matrices', narc_members(rom.read('fielddata/mapmatrix/map_matrix.narc')))
     for i, m in enumerate(mats):
-        dump(f'matrices/{i:03d}.json', read_matrix(m))
-    events = narc_members(rom.read('fielddata/eventdata/zone_event_release.narc'))
+        if m:
+            mat = read_matrix(m)
+            if land:
+                mat['maps'] = [[land[c] if c != 0xffff else c for c in row] for row in mat['maps']]
+            dump(f'matrices/{i:03d}.json', mat)
+    events = version.slotted('events', narc_members(rom.read(version.ARCHIVE['events'])))
     for i, e in enumerate(events):
-        dump(f'events/{i:03d}.json', read_events(e))
+        if e:
+            dump(f'events/{i:03d}.json', read_events(e))
+    # ---- plat-dw-world (2026-11-07): the Distortion World's floors get event files of their own, past the dump's: their
+    # events in the floor's own tiles and overlay 9's people (b2tools/platinum_dw_world.py zone_events)
+    if version.PLATINUM:
+        import platinum_dw_world
+        world = platinum_dw_world.read(rom)
+        dw_floors = {f['map']: f for f in platinum_dw_world.dwd.read_tables(rom)['floors']}
+        for k, z in enumerate(z for z in zones if z['id'] in dw_floors):
+            n = len(events) + k
+            dump(f'events/{n:03d}.json', platinum_dw_world.zone_events(z['id'], read_events(events[z['events']]) if
+                                                                       events[z['events']] else
+                                                                       {'bg_events': [], 'object_events': [],
+                                                                        'warp_events': [], 'coord_events': []},
+                                                                       world, dw_floors))
+            z['events'] = n
+        dump('zones.json', zones)
+    # ---- end plat-dw-world
     encs = narc_members(rom.read(version.ENCOUNTER_NARC))
     for i, d in enumerate(encs):
         dump(f'encounters/{i:03d}.json', read_encounters(d, species))

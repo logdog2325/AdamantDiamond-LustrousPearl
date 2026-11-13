@@ -1,0 +1,33 @@
+diff --git a/include/pearlb2.h b/include/pearlb2.h
+index 4c44b93..00deee6 100644
+--- a/include/pearlb2.h
++++ b/include/pearlb2.h
+@@ -375,6 +375,12 @@ void PearlB2_DrawWildEffects(struct BlActSys *sys, struct G3DCamera *camera, str
+ // include/pearlb2/plat_party.h; 0 = none)
+ u16 PearlB2_BattleTurnCounter(BtlServerFlow *flow);
+ 
++// (plat-castle, 2026-11-07) Platinum's Battle Castle (src/pearlb2/plat_castle/, overlay 380, include/pearlb2/plat_castle.h):
++// BtlMain_ProcMain's BtlMain_StorePartiesToSetup call (ov167 btl_main.c) comes here: the original, then, for the Castle's
++// battle only, the player's party as it left the battle into the setup, which Black 2 does only for wild and Trainer battles
++// (src/pearlb2/resident/plat_castle_ext.c): so the Castle's HP and PP carry from battle to battle
++void PearlB2_Castle_StoreParties(BtlMainModule *mainModule);
++
+ // (plat-dw-core, 2026-11-07) Platinum's Distortion World (src/pearlb2/plat_dw/, overlay 377, include/pearlb2/plat_dw.h).
+ // Two same-size calls come to the resident section first (src/pearlb2/resident/plat_dw_hooks.c): field_player_grid.c
+ // FieldPlayerGrid_UpdateMovement's FieldPlayerGrid_DecideCommand (PearlB2_DWDecideCommand) and fldmmdl_acmd.c
+diff --git a/src/ov167/btl_main.c b/src/ov167/btl_main.c
+index 3d36838..8585ba6 100644
+--- a/src/ov167/btl_main.c
++++ b/src/ov167/btl_main.c
+@@ -219,7 +219,11 @@ BOOL BtlMain_ProcMain(GameProc *proc, u32 *state, void *param, void *work) {
+             result = BtlMain_DetermineResult(mainModule);
+             BtlMain_StoreRecData(mainModule);
+             BtlMain_StoreResultStats(mainModule);
++#if PEARLB2
++            PearlB2_Castle_StoreParties(mainModule);    // the Castle's battle's party back as it left (plat-castle)
++#else
+             BtlMain_StorePartiesToSetup(mainModule);
++#endif
+             switch (result) {
+             case 1:
+                 mainModule->setup->unkA4 = mainModule->prizeMoney + GetBonusMoney(mainModule);

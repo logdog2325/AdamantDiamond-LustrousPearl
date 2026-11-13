@@ -406,7 +406,7 @@ P42_0572:
     pl_LockAll
     pl_msg_sys 47
     pl_msg_sys 48
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 54, 65535, 0  // Pearl AddMenuEntry 259, 0
     ListMenuAdd 55, 65535, 1  // Pearl AddMenuEntry 260, 1
     ListMenuAdd 56, 65535, 2  // Pearl AddMenuEntry 261, 2

@@ -67,7 +67,7 @@ P423_002B:
     pl_GoTo P423_0415
 
 P423_0100:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 0  // Pearl AddMenuEntryImm 209, 0
     ListMenuAdd 11, 65535, 1  // Pearl AddMenuEntryImm 44, 1
     ListMenuShow
@@ -77,7 +77,7 @@ P423_0100:
     pl_GoTo P423_04F1
 
 P423_012D:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 12, 65535, 0  // Pearl AddMenuEntryImm 210, 0
     ListMenuAdd 11, 65535, 1  // Pearl AddMenuEntryImm 44, 1
     ListMenuShow
@@ -87,7 +87,7 @@ P423_012D:
     pl_GoTo P423_04F1
 
 P423_015A:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 13, 65535, 0  // Pearl AddMenuEntryImm 211, 0
     ListMenuAdd 11, 65535, 1  // Pearl AddMenuEntryImm 44, 1
     ListMenuShow
@@ -97,7 +97,7 @@ P423_015A:
     pl_GoTo P423_04F1
 
 P423_0187:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 14, 65535, 0  // Pearl AddMenuEntryImm 212, 0
     ListMenuAdd 11, 65535, 1  // Pearl AddMenuEntryImm 44, 1
     ListMenuShow
@@ -107,7 +107,7 @@ P423_0187:
     pl_GoTo P423_04F1
 
 P423_01B4:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 0  // Pearl AddMenuEntryImm 209, 0
     ListMenuAdd 12, 65535, 1  // Pearl AddMenuEntryImm 210, 1
     ListMenuAdd 11, 65535, 2  // Pearl AddMenuEntryImm 44, 2
@@ -120,7 +120,7 @@ P423_01B4:
     pl_GoTo P423_04F1
 
 P423_01F2:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 0  // Pearl AddMenuEntryImm 209, 0
     ListMenuAdd 13, 65535, 1  // Pearl AddMenuEntryImm 211, 1
     ListMenuAdd 11, 65535, 2  // Pearl AddMenuEntryImm 44, 2
@@ -133,7 +133,7 @@ P423_01F2:
     pl_GoTo P423_04F1
 
 P423_0230:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 0  // Pearl AddMenuEntryImm 209, 0
     ListMenuAdd 14, 65535, 1  // Pearl AddMenuEntryImm 212, 1
     ListMenuAdd 11, 65535, 2  // Pearl AddMenuEntryImm 44, 2
@@ -146,7 +146,7 @@ P423_0230:
     pl_GoTo P423_04F1
 
 P423_026E:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 12, 65535, 0  // Pearl AddMenuEntryImm 210, 0
     ListMenuAdd 13, 65535, 1  // Pearl AddMenuEntryImm 211, 1
     ListMenuAdd 11, 65535, 2  // Pearl AddMenuEntryImm 44, 2
@@ -159,7 +159,7 @@ P423_026E:
     pl_GoTo P423_04F1
 
 P423_02AC:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 12, 65535, 0  // Pearl AddMenuEntryImm 210, 0
     ListMenuAdd 14, 65535, 1  // Pearl AddMenuEntryImm 212, 1
     ListMenuAdd 11, 65535, 2  // Pearl AddMenuEntryImm 44, 2
@@ -172,7 +172,7 @@ P423_02AC:
     pl_GoTo P423_04F1
 
 P423_02EA:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 13, 65535, 0  // Pearl AddMenuEntryImm 211, 0
     ListMenuAdd 14, 65535, 1  // Pearl AddMenuEntryImm 212, 1
     ListMenuAdd 11, 65535, 2  // Pearl AddMenuEntryImm 44, 2
@@ -185,7 +185,7 @@ P423_02EA:
     pl_GoTo P423_04F1
 
 P423_0328:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 0  // Pearl AddMenuEntryImm 209, 0
     ListMenuAdd 12, 65535, 1  // Pearl AddMenuEntryImm 210, 1
     ListMenuAdd 13, 65535, 2  // Pearl AddMenuEntryImm 211, 2
@@ -201,7 +201,7 @@ P423_0328:
     pl_GoTo P423_04F1
 
 P423_0377:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 0  // Pearl AddMenuEntryImm 209, 0
     ListMenuAdd 12, 65535, 1  // Pearl AddMenuEntryImm 210, 1
     ListMenuAdd 14, 65535, 2  // Pearl AddMenuEntryImm 212, 2
@@ -217,7 +217,7 @@ P423_0377:
     pl_GoTo P423_04F1
 
 P423_03C6:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 12, 65535, 0  // Pearl AddMenuEntryImm 210, 0
     ListMenuAdd 13, 65535, 1  // Pearl AddMenuEntryImm 211, 1
     ListMenuAdd 14, 65535, 2  // Pearl AddMenuEntryImm 212, 2
@@ -233,7 +233,7 @@ P423_03C6:
     pl_GoTo P423_04F1
 
 P423_0415:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 0  // Pearl AddMenuEntryImm 209, 0
     ListMenuAdd 12, 65535, 1  // Pearl AddMenuEntryImm 210, 1
     ListMenuAdd 13, 65535, 2  // Pearl AddMenuEntryImm 211, 2

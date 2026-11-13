@@ -7,9 +7,10 @@ import functools, json, os, re, struct
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
+import version  # noqa: E402
 DATA = os.path.join(ROOT, 'data', 'underground.json')
 POKEMON = os.path.join(ROOT, 'data', 'underground_pokemon.json')
-IDS = os.path.join(ROOT, 'data', 'pearl_story_ids.json')
+IDS = version.data_path('pearl_story_ids.json')
 ITEMS_TXT = os.path.join(ROOT, 'external', 'pokebw2', 'generated', 'items.txt')
 SPECIES_H = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'include', 'generated', 'constants', 'species.h')
 
@@ -147,9 +148,37 @@ def bdsp():
 def grotto_items(d=None):
     """data "grotto_items" with the build's own fossil in its slot."""
     gi = dict((d or data())['grotto_items'])
-    own = gi['version_fossil'][bdsp()]
-    gi['a'] = [[own if i == 'VERSION_FOSSIL' else i for i in row] for row in gi['a']]
+    import version as build
+    own = [gi['version_fossil'][c] for c in build.bdsp_columns()]     # (Platinum, the user 2026-11-01: both fossils)
+    gi['a'] = [[f for i in row for f in (own if i == 'VERSION_FOSSIL' else [i])] for row in gi['a']]
     return gi
+
+
+POSTGAME_STAGE = 6                     # the Champion's (data "unlock" 6: the game-clear flag 2400)
+COLUMN_OF = {'pearl': 'sp', 'diamond': 'bd'}
+
+
+def postgame_column():
+    """(postdex, 2026-11-09) The other version's column, whose entries the build's own column lacks come at stage 6
+    (version.POSTGAME_OTHER: Pearl takes Diamond's 'bd', Diamond Pearl's 'sp'); None: none (Platinum has both already)."""
+    import version as build
+    return COLUMN_OF.get(build.POSTGAME_OTHER)
+
+
+def entry_stage(e, column, post=None):
+    """The stage an entry appears at in a column ('sp', 'bd'; 'both', Platinum's: the two lists combined, so the earlier of the two).
+    post: the other version's column (postgame_column): an entry only there comes at the Champion's stage (6)."""
+    if column != 'both':
+        if not e[column] and post and e[post]:
+            return POSTGAME_STAGE
+        return e[column]
+    return min((v for v in (e['sp'], e['bd']) if v), default=0)
+
+
+def rare_weight(r, column):
+    """A rare's weight in a column. 'both': a species in only one version keeps its weight, one in both keeps the larger (the user
+    2026-11-01, notes/PLATINUM.md section 5; the rare spawn stays on the same share of visits, rare_per_mille)."""
+    return max(r['sp'], r['bd']) if column == 'both' else r[column]
 
 
 def encounter_lists(version=None):
@@ -158,14 +187,16 @@ def encounter_lists(version=None):
     spawns: the visible Pokémon a visit (resident/hideaway.c, pearlb2/underground.h UG_SPAWNS_*): BDSP's land minimum and
     maximum, its water maximum, 4 bits each."""
     version = version or bdsp()
+    post = postgame_column() if version != 'both' else None
     entries, rares, recs, seen = [], [], [], {}
     for h in hideaways():
         p = h['pokemon']
-        lst = tuple((e['species'], e[version] | e['where'] << 4, e['weight']) for e in p['entries'] if e[version])
+        lst = tuple((e['species'], entry_stage(e, version, post) | e['where'] << 4, e['weight']) for e in p['entries']
+                    if entry_stage(e, version, post))
         if lst not in seen:
             seen[lst] = len(entries)
             entries += lst
-        rare = [(r['species'], r[version]) for r in p['rare'] if r[version]]
+        rare = [(r['species'], rare_weight(r, version)) for r in p['rare'] if rare_weight(r, version)]
         rfirst = len(rares)
         rares += rare
         (lo, hi), water = p['spawns'], p['water_spawns']

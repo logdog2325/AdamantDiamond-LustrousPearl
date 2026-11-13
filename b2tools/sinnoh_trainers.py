@@ -37,13 +37,14 @@ import collections, glob, json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
 DECOMP = os.path.join(ROOT, 'external', 'pokebw2')
 sys.path.insert(0, DECOMP)
 from tools.data.trainer_data import trainer_bytes, NONE_TRAINER, NONE_PARTY  # noqa: E402
 from tools.data.narc import write_narc  # noqa: E402
 
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 OUT = os.path.join(PEARL, 'b2_trainers')
 DIAMOND_INC = os.path.join(ROOT, 'external', 'pokediamond', 'include', 'constants')
 B2_INC = os.path.join(DECOMP, 'build', 'include', 'generated', 'constants')
@@ -99,7 +100,16 @@ CLASS_MAP = {
     'PKMN_TRAINER_MARLEY': ('LASS', 'stand-in'), 'PKMN_TRAINER_BUCK': ('ROUGHNECK', 'stand-in'),
     'PKMN_TRAINER_MIRA': ('PRESCHOOLER_F', 'stand-in'), 'PKMN_TRAINER_LUCAS': ('HERO', 'stand-in'),
     'PKMN_TRAINER_DAWN': ('HEROINE', 'stand-in'), 'TOWER_TYCOON': ('GENTLEMAN', 'stand-in'),
+    # Platinum's new classes (spelled as gen4_trainers keeps them). The four Brains have Black 2 classes of their own past 236
+    # (version.NEW_TRAINER_CLASSES, data/platinum/pearl_trainer_classes.json); the stand-in here gives their eye-contact song
+    'MAID': ('MAID', 'same'), 'HALL_MATRON': ('LADY', 'stand-in'), 'FACTORY_HEAD': ('GENTLEMAN', 'stand-in'),
+    'ARCADE_STAR': ('SOCIALITE', 'stand-in'), 'CASTLE_VALET': ('GENTLEMAN', 'stand-in'),
+    'DP_PLAYER_MALE_2': ('HERO', 'stand-in'), 'DP_PLAYER_FEMALE_2': ('HEROINE', 'stand-in'),
 }
+# Platinum's AI bits (generated/ai_flags.txt, bit 0 = BASIC) by Black 2's names for the same bits (pokebw2 constants/tr_ai.h). Pearl
+# has bit 0 only. Platinum's bits 4 and 5 (RISKY, PRIORITIZE_EXTREMES: 58 trainers) have no Black 2 script: its 4 and 5 are other
+# things (TARGET_HP, FUSION_MOVES), so they aren't passed on.
+AI_BITS = {0: 'AI_FLAG_BASIC', 1: 'AI_FLAG_EVAL_ATTACK', 2: 'AI_FLAG_EXPERT', 3: 'AI_FLAG_SETUP_FIRST_TURN'}
 PLACEHOLDER_NAMES = {'Mickey', 'Angelica', 'Tara & Tim', '-', ''}
 
 
@@ -142,11 +152,11 @@ def default_moves(learnset, level):
 
 
 def prize_table(rom):
-    """Pearl's class prize multipliers (the table pokeplatinum names sTrainerClassPrizeMul; found in the dump)."""
+    """The class prize multipliers (the table pokeplatinum names sTrainerClassPrizeMul; found in the dump: Pearl's 98, Platinum's 105)."""
     probe = bytes([0, 0, 4, 4, 4, 4, 4, 8, 4, 8, 4, 8, 8, 8, 6, 12, 12, 12])
     at = rom.data.find(probe)
     assert at >= 0 and rom.data.find(probe, at + 1) < 0, 'prize table not found once in the dump'
-    return list(rom.data[at:at + 98]), at
+    return list(rom.data[at:at + (105 if version.PLATINUM else 98)]), at
 
 
 def categories(trainers, names):
@@ -161,7 +171,7 @@ def categories(trainers, names):
             elif 5000 <= s < 7000: ref.add(s - 4999)
     for f in glob.glob(os.path.join(PEARL, 'scripts', '*.txt')):
         for line in open(f):
-            m = re.match(r'\s*(Unk00E5|Unk02A0)\s+(.*?)\s+@', line)
+            m = re.match(r'\s*(Unk00E5|Unk02A0|FirstBattle)\s+(.*?)\s+@' if version.PLATINUM else r'\s*(Unk00E5|Unk02A0)\s+(.*?)\s+@', line)
             if m:
                 for a in m.group(2).split(','):
                     a = a.strip()
@@ -178,15 +188,21 @@ def categories(trainers, names):
 
 def main():
     keep_b2_moves = '--b2-moves' in sys.argv
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    rom = Rom(version.WORLD_DUMP)
     trainers = json.load(open(os.path.join(PEARL, 'trainers.json')))
-    ref = {t['index']: t for t in json.load(open(os.path.join(
-        ROOT, 'external', 'pokediamond', 'files', 'poketool', 'trainer', 'trdata.json')))['trdata']}
-    names = {i: ref[i]['name'].replace('{TRNAME}', '') for i in ref}
+    if version.PLATINUM:                                        # (read in by gen4_trainers, from res/trainers/data)
+        names = {t['index']: t.get('name', '') for t in trainers}
+    else:
+        ref = {t['index']: t for t in json.load(open(os.path.join(
+            ROOT, 'external', 'pokediamond', 'files', 'poketool', 'trainer', 'trdata.json')))['trdata']}
+        names = {i: ref[i]['name'].replace('{TRNAME}', '') for i in ref}
     _, p_species = defines(os.path.join(DIAMOND_INC, 'species.h'), 'SPECIES_')
     _, p_moves = defines(os.path.join(DIAMOND_INC, 'moves.h'), 'MOVE_')
     _, p_items = defines(os.path.join(DIAMOND_INC, 'items.h'), 'ITEM_')
     _, p_classes = defines(os.path.join(DIAMOND_INC, 'trainer_classes.h'), 'TRAINER_CLASS_')
+    if version.PLATINUM:                                        # (its classes 98-104 are not pokediamond's)
+        for i, l in enumerate(open(os.path.join(ROOT, 'external', 'pokeplatinum', 'generated', 'trainer_classes.txt'))):
+            p_classes.setdefault(l.strip(), i)
     b_species, _ = defines(os.path.join(B2_INC, 'species.h'), 'SPECIES_')
     b_moves, _ = defines(os.path.join(B2_INC, 'moves.h'), 'MOVE_')
     b_items, _ = defines(os.path.join(B2_INC, 'items.h'), 'ITEM_')
@@ -220,7 +236,8 @@ def main():
         party = []
         for m in t['party']:
             mon = {'species': b2_name('species', m['species'], p_species, b_species), 'form': m['form'],
-                   'level': m['level'], 'difficulty': m['difficulty'], 'gender': 0, 'ability': 0}
+                   'level': m['level'], 'difficulty': min(m['difficulty'], 255), 'gender': 0, 'ability': 0}
+                                 # (Platinum's Volkner has an Electivire at 2500, which its code reads as more than 31 IVs: 255 is 31)
             if 'item' in m:
                 mon['item'] = b2_name('item', m['item'], p_items, b_items)
             if 'moves' in m:
@@ -231,10 +248,10 @@ def main():
         data = {'$schema': 'trainer.schema.json', 'name': names[i], 'class': b2class,
                 'battle_style': 'BTL_STYLE_DOUBLE' if double else 'BTL_STYLE_SINGLE',
                 'items': [b2_name('item', it, p_items, b_items) for it in t['items']],
-                'ai_flags': ['AI_FLAG_BASIC'] if t['ai'] & 1 else [],
+                'ai_flags': [n for b, n in AI_BITS.items() if t['ai'] >> b & 1],
                 'heals': False, 'money': prize[p_classes[t['class']]] * (2 if double else 1),
                 'reward': 'ITEM_NONE', 'party': party, 'messages': []}
-        assert not t['ai'] & ~1, f'trainer {i}: AI flags {t["ai"]:#x}'
+        assert not t['ai'] & ~(63 if version.PLATINUM else 1), f'trainer {i}: AI flags {t["ai"]:#x}'
         rec, par = trainer_bytes(data, f'Pearl trainer {i}')
         records.append(rec); parties.append(par)
         json.dump(data, open(os.path.join(OUT, 'data', f'{i:03d}.json'), 'w'), indent=1, ensure_ascii=False)

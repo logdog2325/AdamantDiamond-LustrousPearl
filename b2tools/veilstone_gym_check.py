@@ -12,6 +12,7 @@ import collections, json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 import pearl_veilstone_gym as g  # noqa: E402
 
 CHUNK, ZONE = 234, 'MAP_VEILSTONE_GYM'
@@ -19,9 +20,9 @@ DIRS = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}
 
 
 def load():
-    collision = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{CHUNK:03d}.json')))['collision']
-    zs = {z['name']: z for z in json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))}
-    ev = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'events', f'{zs[ZONE]["events"]:03d}.json')))
+    collision = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{CHUNK:03d}.json')))['collision']
+    zs = {z['name']: z for z in json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))}
+    ev = json.load(open(os.path.join(version.WORLD_WORK, 'events', f'{zs[ZONE]["events"]:03d}.json')))
     return collision, ev
 
 

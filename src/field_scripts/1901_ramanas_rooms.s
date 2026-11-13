@@ -1,6 +1,6 @@
 // The slate rooms of Ramanas Park in Pal Park (notes/RAMANAS_PARK.md). Written by b2tools/ramanas.py from
 // data/ramanas_park.json: do not edit; rerun `python3 b2tools/ramanas.py`.
-// Version sp. Room i: entries 1-4 Discovery Room (zone 652), 5-8 Kanto Room (zone 653), 9-12 Soul Room (zone 654), 13-16 Distortion Room (zone 655), 17-20 Squall Room (zone 656), 21-24 Oceanic Room (zone 657), 25-28 Tectonic Room (zone 658), 29-32 Stratospheric Room (zone 659), 33-36 Genome Room (zone 660)
+// Version sp+bd. Room i: entries 1-4 Discovery Room (zone 652), 5-8 Kanto Room (zone 653), 9-12 Johto Room (zone 661), 13-16 Soul Room (zone 654), 17-20 Distortion Room (zone 655), 21-24 Rainbow Room (zone 662), 25-28 Squall Room (zone 656), 29-32 Oceanic Room (zone 657), 33-36 Tectonic Room (zone 658), 37-40 Stratospheric Room (zone 659), 41-44 Genome Room (zone 660)
 // (pedestal, zone init, name on arrival, the Catching Show block).
 #include "asm/field_script.inc"
 #include "pearl.h"
@@ -45,6 +45,14 @@
     ScriptEntry RP_Init_8
     ScriptEntry RP_Name_8
     ScriptEntry RP_Closed_8
+    ScriptEntry RP_Pedestal_9
+    ScriptEntry RP_Init_9
+    ScriptEntry RP_Name_9
+    ScriptEntry RP_Closed_9
+    ScriptEntry RP_Pedestal_10
+    ScriptEntry RP_Init_10
+    ScriptEntry RP_Name_10
+    ScriptEntry RP_Closed_10
     ScriptEntriesEnd
 
 RP_Pedestal_0:
@@ -427,10 +435,13 @@ RP_Closed_1:
 
 RP_Pedestal_2:
     pl_LockAll
-    FlagGet 1059, 0x8057
+    FlagGet 1068, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRP_33notdone
-    FlagGet 1060, 0x8057
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_33notdone
+    FlagGet 1070, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRP_33notdone
     pl_msg_sys 11
@@ -439,7 +450,7 @@ RP_Pedestal_2:
     pl_ReleaseAll
     VMHalt
 .LRP_33notdone:
-    ItemCheckAmount 122, 1, 0x8050
+    ItemCheckAmount 131, 1, 0x8050
     WorkCmpConst 0x8050, 1
     VMJumpIf CMP_EQ, .LRP_34have
     pl_msg_sys 12
@@ -452,28 +463,51 @@ RP_Pedestal_2:
     YesNoWin 0x8050
     WorkCmpConst 0x8050, 0
     VMJumpIf CMP_NE, .LRP_35end
-    pl_CloseMessage
-    pl_msg_sys 14
-    ListMenu_AnchorTopRight 31, 1, 0, 1, 0x8051
-    FlagGet 1059, 0x8057
+    WorkSetConst 0x8052, 0
+    FlagGet 1068, 0x8057
     WorkCmpConst 0x8057, 1
     VMJumpIf CMP_EQ, .LRP_37
-    WordSetPokeSpecies 0, 380
-    ListMenuAdd 15, 65535, 0
+    WorkAdd 0x8052, 1
 .LRP_37:
-    FlagGet 1060, 0x8057
+    FlagGet 1069, 0x8057
     WorkCmpConst 0x8057, 1
     VMJumpIf CMP_EQ, .LRP_38
-    WordSetPokeSpecies 0, 381
-    ListMenuAdd 15, 65535, 1
+    WorkAdd 0x8052, 1
 .LRP_38:
-    ListMenuShow
-    WorkCmpConst 0x8051, 2
-    VMJumpIf CMP_GE, .LRP_35end
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 1
+    VMJumpIf CMP_EQ, .LRP_39
+    WorkAdd 0x8052, 1
+.LRP_39:
+    Random 0x8053, 0x8052
+    FlagGet 1068, 0x8057
+    WorkCmpConst 0x8057, 1
+    VMJumpIf CMP_EQ, .LRP_40
+    WorkSetConst 0x8051, 0
+    WorkCmpConst 0x8053, 0
+    VMJumpIf CMP_EQ, .LRP_36chosen
+    WorkSub 0x8053, 1
+.LRP_40:
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 1
+    VMJumpIf CMP_EQ, .LRP_41
+    WorkSetConst 0x8051, 1
+    WorkCmpConst 0x8053, 0
+    VMJumpIf CMP_EQ, .LRP_36chosen
+    WorkSub 0x8053, 1
+.LRP_41:
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 1
+    VMJumpIf CMP_EQ, .LRP_42
+    WorkSetConst 0x8051, 2
+    WorkCmpConst 0x8053, 0
+    VMJumpIf CMP_EQ, .LRP_36chosen
+    WorkSub 0x8053, 1
+.LRP_42:
 .LRP_36chosen:
     pl_CloseMessage
-    ItemSub 122, 1, 0x8050
-    pl_msg_sys 16
+    ItemSub 131, 1, 0x8050
+    pl_msg_sys 14
     pl_WaitButton
     pl_CloseMessage
     ActorCmdExec PL_PLAYER, RP_MovStepBack
@@ -481,14 +515,14 @@ RP_Pedestal_2:
     FadeOutWhite
     FadeWait
     WorkCmpConst 0x8051, 0
-    VMJumpIf CMP_NE, .LRP_39
+    VMJumpIf CMP_NE, .LRP_43
     FlagReset 48
     ActorAdd 1
     FadeInWhite
     FadeWait
-    PVPlay 380, 0
+    PVPlay 243, 0
     PVWait
-    CallWildBattleEx 380, 70, 0, 1
+    CallWildBattleEx 243, 70, 0, 9
     WildBattleIsVictory 0x8050
     WorkCmpConst 0x8050, 1
     VMJumpIf CMP_NE, .LRP_lost_2
@@ -497,45 +531,21 @@ RP_Pedestal_2:
     CallWildBattleEnd
     WildBattleGetResult 0x8050
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_40
-    FlagSet 1059
-    pl_msg_sys 17
-    pl_WaitButton
-    pl_CloseMessage
-    VMStackPush 0x8000
-    VMStackPush 0x8001
-    WorkSetConst 0x8000, 204
-    WorkSetConst 0x8001, 1
-    RTCallGlobal 2801
-    VMStackPop 0x8001
-    VMStackPop 0x8000
-    FlagGet 1059, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_41
-    FlagGet 1060, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_41
-    VMStackPush 0x8000
-    VMStackPush 0x8001
-    WorkSetConst 0x8000, 225
-    WorkSetConst 0x8001, 1
-    RTCallGlobal 2801
-    VMStackPop 0x8001
-    VMStackPop 0x8000
-.LRP_41:
-.LRP_40:
+    VMJumpIf CMP_NE, .LRP_44
+    FlagSet 1068
+.LRP_44:
     pl_ReleaseAll
     VMHalt
-.LRP_39:
+.LRP_43:
     WorkCmpConst 0x8051, 1
-    VMJumpIf CMP_NE, .LRP_42
+    VMJumpIf CMP_NE, .LRP_45
     FlagReset 49
     ActorAdd 2
     FadeInWhite
     FadeWait
-    PVPlay 381, 0
+    PVPlay 244, 0
     PVWait
-    CallWildBattleEx 381, 70, 0, 1
+    CallWildBattleEx 244, 70, 0, 9
     WildBattleIsVictory 0x8050
     WorkCmpConst 0x8050, 1
     VMJumpIf CMP_NE, .LRP_lost_2
@@ -544,36 +554,35 @@ RP_Pedestal_2:
     CallWildBattleEnd
     WildBattleGetResult 0x8050
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_43
-    FlagSet 1060
-    pl_msg_sys 17
-    pl_WaitButton
-    pl_CloseMessage
-    VMStackPush 0x8000
-    VMStackPush 0x8001
-    WorkSetConst 0x8000, 205
-    WorkSetConst 0x8001, 1
-    RTCallGlobal 2801
-    VMStackPop 0x8001
-    VMStackPop 0x8000
-    FlagGet 1059, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_44
-    FlagGet 1060, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_44
-    VMStackPush 0x8000
-    VMStackPush 0x8001
-    WorkSetConst 0x8000, 225
-    WorkSetConst 0x8001, 1
-    RTCallGlobal 2801
-    VMStackPop 0x8001
-    VMStackPop 0x8000
-.LRP_44:
-.LRP_43:
+    VMJumpIf CMP_NE, .LRP_46
+    FlagSet 1069
+.LRP_46:
     pl_ReleaseAll
     VMHalt
-.LRP_42:
+.LRP_45:
+    WorkCmpConst 0x8051, 2
+    VMJumpIf CMP_NE, .LRP_47
+    FlagReset 50
+    ActorAdd 3
+    FadeInWhite
+    FadeWait
+    PVPlay 245, 0
+    PVWait
+    CallWildBattleEx 245, 70, 0, 9
+    WildBattleIsVictory 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_NE, .LRP_lost_2
+    ActorDelete 3
+    FlagSet 50
+    CallWildBattleEnd
+    WildBattleGetResult 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_48
+    FlagSet 1070
+.LRP_48:
+    pl_ReleaseAll
+    VMHalt
+.LRP_47:
 .LRP_35end:
     pl_CloseMessage
     pl_ReleaseAll
@@ -586,13 +595,14 @@ RP_Pedestal_2:
 RP_Init_2:
     FlagSet 48
     FlagSet 49
+    FlagSet 50
     VMHalt
 
 RP_Name_2:
     ActorsPauseAll
     WorkSetConst 0x401D, 1
     SEPlay SEQ_SE_MESSAGE
-    InfoMsg 18, 2
+    InfoMsg 15, 2
     VMSleep 60
     InfoMsgClose_0039
     FinishAllEvents
@@ -607,40 +617,60 @@ RP_Closed_2:
     FadeOutBlack
     FadeWait
     RTReserveScript PL_RAMANAS_PARK_ARRIVE
-    MapChangeCore PL_RAMANAS_PARK_ZONE, 27, 0, 36, 1
+    MapChangeCore PL_RAMANAS_PARK_ZONE, 30, 0, 25, 1
     FinishAllEvents
     ActorsUnpauseAll
     VMHalt
 
 RP_Pedestal_3:
     pl_LockAll
-    FlagGet 1066, 0x8057
+    FlagGet 1059, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_45notdone
-    pl_msg_sys 19
+    VMJumpIf CMP_EQ, .LRP_49notdone
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_49notdone
+    pl_msg_sys 16
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
-.LRP_45notdone:
-    ItemCheckAmount 123, 1, 0x8050
+.LRP_49notdone:
+    ItemCheckAmount 122, 1, 0x8050
     WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_EQ, .LRP_46have
-    pl_msg_sys 20
+    VMJumpIf CMP_EQ, .LRP_50have
+    pl_msg_sys 17
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
-.LRP_46have:
-    pl_msg_sys 21
+.LRP_50have:
+    pl_msg_sys 18
     YesNoWin 0x8050
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_47end
-    WorkSetConst 0x8051, 0
-.LRP_48chosen:
+    VMJumpIf CMP_NE, .LRP_51end
     pl_CloseMessage
-    ItemSub 123, 1, 0x8050
-    pl_msg_sys 22
+    pl_msg_sys 19
+    ListMenu_AnchorTopRight 31, 1, 0, 1, 0x8051
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 1
+    VMJumpIf CMP_EQ, .LRP_53
+    WordSetPokeSpecies 0, 380
+    ListMenuAdd 20, 65535, 0
+.LRP_53:
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 1
+    VMJumpIf CMP_EQ, .LRP_54
+    WordSetPokeSpecies 0, 381
+    ListMenuAdd 20, 65535, 1
+.LRP_54:
+    ListMenuShow
+    WorkCmpConst 0x8051, 2
+    VMJumpIf CMP_GE, .LRP_51end
+.LRP_52chosen:
+    pl_CloseMessage
+    ItemSub 122, 1, 0x8050
+    pl_msg_sys 21
     pl_WaitButton
     pl_CloseMessage
     ActorCmdExec PL_PLAYER, RP_MovStepBack
@@ -648,14 +678,14 @@ RP_Pedestal_3:
     FadeOutWhite
     FadeWait
     WorkCmpConst 0x8051, 0
-    VMJumpIf CMP_NE, .LRP_49
+    VMJumpIf CMP_NE, .LRP_55
     FlagReset 48
     ActorAdd 1
     FadeInWhite
     FadeWait
-    PVPlay 487, 0
+    PVPlay 380, 0
     PVWait
-    CallWildBattleEx 487, 100, 1, 1
+    CallWildBattleEx 380, 70, 0, 1
     WildBattleIsVictory 0x8050
     WorkCmpConst 0x8050, 1
     VMJumpIf CMP_NE, .LRP_lost_3
@@ -663,24 +693,85 @@ RP_Pedestal_3:
     FlagSet 48
     CallWildBattleEnd
     WildBattleGetResult 0x8050
-    WorkCmpConst 0x8050, 2
-    VMJumpIf CMP_NE, .LRP_50
-    FlagSet 1066
-    pl_msg_sys 23
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_56
+    FlagSet 1059
+    pl_msg_sys 22
     pl_WaitButton
     pl_CloseMessage
     VMStackPush 0x8000
     VMStackPush 0x8001
-    WorkSetConst 0x8000, 112
+    WorkSetConst 0x8000, 204
     WorkSetConst 0x8001, 1
     RTCallGlobal 2801
     VMStackPop 0x8001
     VMStackPop 0x8000
-.LRP_50:
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_57
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_57
+    VMStackPush 0x8000
+    VMStackPush 0x8001
+    WorkSetConst 0x8000, 225
+    WorkSetConst 0x8001, 1
+    RTCallGlobal 2801
+    VMStackPop 0x8001
+    VMStackPop 0x8000
+.LRP_57:
+.LRP_56:
     pl_ReleaseAll
     VMHalt
-.LRP_49:
-.LRP_47end:
+.LRP_55:
+    WorkCmpConst 0x8051, 1
+    VMJumpIf CMP_NE, .LRP_58
+    FlagReset 49
+    ActorAdd 2
+    FadeInWhite
+    FadeWait
+    PVPlay 381, 0
+    PVWait
+    CallWildBattleEx 381, 70, 0, 1
+    WildBattleIsVictory 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_NE, .LRP_lost_3
+    ActorDelete 2
+    FlagSet 49
+    CallWildBattleEnd
+    WildBattleGetResult 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_59
+    FlagSet 1060
+    pl_msg_sys 22
+    pl_WaitButton
+    pl_CloseMessage
+    VMStackPush 0x8000
+    VMStackPush 0x8001
+    WorkSetConst 0x8000, 205
+    WorkSetConst 0x8001, 1
+    RTCallGlobal 2801
+    VMStackPop 0x8001
+    VMStackPop 0x8000
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_60
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_60
+    VMStackPush 0x8000
+    VMStackPush 0x8001
+    WorkSetConst 0x8000, 225
+    WorkSetConst 0x8001, 1
+    RTCallGlobal 2801
+    VMStackPop 0x8001
+    VMStackPop 0x8000
+.LRP_60:
+.LRP_59:
+    pl_ReleaseAll
+    VMHalt
+.LRP_58:
+.LRP_51end:
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
@@ -691,13 +782,14 @@ RP_Pedestal_3:
 
 RP_Init_3:
     FlagSet 48
+    FlagSet 49
     VMHalt
 
 RP_Name_3:
     ActorsPauseAll
     WorkSetConst 0x401D, 1
     SEPlay SEQ_SE_MESSAGE
-    InfoMsg 24, 2
+    InfoMsg 23, 2
     VMSleep 60
     InfoMsgClose_0039
     FinishAllEvents
@@ -712,40 +804,40 @@ RP_Closed_3:
     FadeOutBlack
     FadeWait
     RTReserveScript PL_RAMANAS_PARK_ARRIVE
-    MapChangeCore PL_RAMANAS_PARK_ZONE, 30, 0, 13, 1
+    MapChangeCore PL_RAMANAS_PARK_ZONE, 27, 0, 36, 1
     FinishAllEvents
     ActorsUnpauseAll
     VMHalt
 
 RP_Pedestal_4:
     pl_LockAll
-    FlagGet 1061, 0x8057
+    FlagGet 1066, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_51notdone
+    VMJumpIf CMP_EQ, .LRP_61notdone
+    pl_msg_sys 24
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_61notdone:
+    ItemCheckAmount 123, 1, 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_EQ, .LRP_62have
     pl_msg_sys 25
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
-.LRP_51notdone:
-    ItemCheckAmount 124, 1, 0x8050
-    WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_EQ, .LRP_52have
+.LRP_62have:
     pl_msg_sys 26
-    pl_WaitButton
-    pl_CloseMessage
-    pl_ReleaseAll
-    VMHalt
-.LRP_52have:
-    pl_msg_sys 27
     YesNoWin 0x8050
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_53end
+    VMJumpIf CMP_NE, .LRP_63end
     WorkSetConst 0x8051, 0
-.LRP_54chosen:
+.LRP_64chosen:
     pl_CloseMessage
-    ItemSub 124, 1, 0x8050
-    pl_msg_sys 28
+    ItemSub 123, 1, 0x8050
+    pl_msg_sys 27
     pl_WaitButton
     pl_CloseMessage
     ActorCmdExec PL_PLAYER, RP_MovStepBack
@@ -753,14 +845,14 @@ RP_Pedestal_4:
     FadeOutWhite
     FadeWait
     WorkCmpConst 0x8051, 0
-    VMJumpIf CMP_NE, .LRP_55
+    VMJumpIf CMP_NE, .LRP_65
     FlagReset 48
     ActorAdd 1
     FadeInWhite
     FadeWait
-    PVPlay 249, 0
+    PVPlay 487, 0
     PVWait
-    CallWildBattleEx 249, 70, 0, 9
+    CallWildBattleEx 487, 100, 1, 1
     WildBattleIsVictory 0x8050
     WorkCmpConst 0x8050, 1
     VMJumpIf CMP_NE, .LRP_lost_4
@@ -768,14 +860,24 @@ RP_Pedestal_4:
     FlagSet 48
     CallWildBattleEnd
     WildBattleGetResult 0x8050
-    WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_56
-    FlagSet 1061
-.LRP_56:
+    WorkCmpConst 0x8050, 2
+    VMJumpIf CMP_NE, .LRP_66
+    FlagSet 1066
+    pl_msg_sys 28
+    pl_WaitButton
+    pl_CloseMessage
+    VMStackPush 0x8000
+    VMStackPush 0x8001
+    WorkSetConst 0x8000, 112
+    WorkSetConst 0x8001, 1
+    RTCallGlobal 2801
+    VMStackPop 0x8001
+    VMStackPop 0x8000
+.LRP_66:
     pl_ReleaseAll
     VMHalt
-.LRP_55:
-.LRP_53end:
+.LRP_65:
+.LRP_63end:
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
@@ -807,39 +909,39 @@ RP_Closed_4:
     FadeOutBlack
     FadeWait
     RTReserveScript PL_RAMANAS_PARK_ARRIVE
-    MapChangeCore PL_RAMANAS_PARK_ZONE, 23, 0, 25, 1
+    MapChangeCore PL_RAMANAS_PARK_ZONE, 30, 0, 13, 1
     FinishAllEvents
     ActorsUnpauseAll
     VMHalt
 
 RP_Pedestal_5:
     pl_LockAll
-    FlagGet 1062, 0x8057
+    FlagGet 1071, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_57notdone
+    VMJumpIf CMP_EQ, .LRP_67notdone
     pl_msg_sys 30
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
-.LRP_57notdone:
-    ItemCheckAmount 125, 1, 0x8050
+.LRP_67notdone:
+    ItemCheckAmount 132, 1, 0x8050
     WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_EQ, .LRP_58have
+    VMJumpIf CMP_EQ, .LRP_68have
     pl_msg_sys 31
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
-.LRP_58have:
+.LRP_68have:
     pl_msg_sys 32
     YesNoWin 0x8050
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_59end
+    VMJumpIf CMP_NE, .LRP_69end
     WorkSetConst 0x8051, 0
-.LRP_60chosen:
+.LRP_70chosen:
     pl_CloseMessage
-    ItemSub 125, 1, 0x8050
+    ItemSub 132, 1, 0x8050
     pl_msg_sys 33
     pl_WaitButton
     pl_CloseMessage
@@ -848,7 +950,197 @@ RP_Pedestal_5:
     FadeOutWhite
     FadeWait
     WorkCmpConst 0x8051, 0
-    VMJumpIf CMP_NE, .LRP_61
+    VMJumpIf CMP_NE, .LRP_71
+    FlagReset 48
+    ActorAdd 1
+    FadeInWhite
+    FadeWait
+    PVPlay 250, 0
+    PVWait
+    CallWildBattleEx 250, 70, 0, 9
+    WildBattleIsVictory 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_NE, .LRP_lost_5
+    ActorDelete 1
+    FlagSet 48
+    CallWildBattleEnd
+    WildBattleGetResult 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_72
+    FlagSet 1071
+.LRP_72:
+    pl_ReleaseAll
+    VMHalt
+.LRP_71:
+.LRP_69end:
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_lost_5:
+    WorkSetConst 0x40B1, 0
+    CallWildLose
+    VMHalt
+
+RP_Init_5:
+    FlagSet 48
+    VMHalt
+
+RP_Name_5:
+    ActorsPauseAll
+    WorkSetConst 0x401D, 1
+    SEPlay SEQ_SE_MESSAGE
+    InfoMsg 34, 2
+    VMSleep 60
+    InfoMsgClose_0039
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+RP_Closed_5:
+    pl_LockAll
+    pl_msg_sys 5
+    pl_WaitButton
+    pl_CloseMessage
+    FadeOutBlack
+    FadeWait
+    RTReserveScript PL_RAMANAS_PARK_ARRIVE
+    MapChangeCore PL_RAMANAS_PARK_ZONE, 44, 0, 32, 1
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+RP_Pedestal_6:
+    pl_LockAll
+    FlagGet 1061, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_73notdone
+    pl_msg_sys 35
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_73notdone:
+    ItemCheckAmount 124, 1, 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_EQ, .LRP_74have
+    pl_msg_sys 36
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_74have:
+    pl_msg_sys 37
+    YesNoWin 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_75end
+    WorkSetConst 0x8051, 0
+.LRP_76chosen:
+    pl_CloseMessage
+    ItemSub 124, 1, 0x8050
+    pl_msg_sys 38
+    pl_WaitButton
+    pl_CloseMessage
+    ActorCmdExec PL_PLAYER, RP_MovStepBack
+    ActorCmdWait
+    FadeOutWhite
+    FadeWait
+    WorkCmpConst 0x8051, 0
+    VMJumpIf CMP_NE, .LRP_77
+    FlagReset 48
+    ActorAdd 1
+    FadeInWhite
+    FadeWait
+    PVPlay 249, 0
+    PVWait
+    CallWildBattleEx 249, 70, 0, 9
+    WildBattleIsVictory 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_NE, .LRP_lost_6
+    ActorDelete 1
+    FlagSet 48
+    CallWildBattleEnd
+    WildBattleGetResult 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_78
+    FlagSet 1061
+.LRP_78:
+    pl_ReleaseAll
+    VMHalt
+.LRP_77:
+.LRP_75end:
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_lost_6:
+    WorkSetConst 0x40B1, 0
+    CallWildLose
+    VMHalt
+
+RP_Init_6:
+    FlagSet 48
+    VMHalt
+
+RP_Name_6:
+    ActorsPauseAll
+    WorkSetConst 0x401D, 1
+    SEPlay SEQ_SE_MESSAGE
+    InfoMsg 39, 2
+    VMSleep 60
+    InfoMsgClose_0039
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+RP_Closed_6:
+    pl_LockAll
+    pl_msg_sys 5
+    pl_WaitButton
+    pl_CloseMessage
+    FadeOutBlack
+    FadeWait
+    RTReserveScript PL_RAMANAS_PARK_ARRIVE
+    MapChangeCore PL_RAMANAS_PARK_ZONE, 23, 0, 25, 1
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+RP_Pedestal_7:
+    pl_LockAll
+    FlagGet 1062, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_79notdone
+    pl_msg_sys 40
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_79notdone:
+    ItemCheckAmount 125, 1, 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_EQ, .LRP_80have
+    pl_msg_sys 41
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_80have:
+    pl_msg_sys 42
+    YesNoWin 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_81end
+    WorkSetConst 0x8051, 0
+.LRP_82chosen:
+    pl_CloseMessage
+    ItemSub 125, 1, 0x8050
+    pl_msg_sys 43
+    pl_WaitButton
+    pl_CloseMessage
+    ActorCmdExec PL_PLAYER, RP_MovStepBack
+    ActorCmdWait
+    FadeOutWhite
+    FadeWait
+    WorkCmpConst 0x8051, 0
+    VMJumpIf CMP_NE, .LRP_83
     FlagReset 48
     ActorAdd 1
     FadeInWhite
@@ -858,15 +1150,15 @@ RP_Pedestal_5:
     CallWildBattleEx 382, 70, 0, 1
     WildBattleIsVictory 0x8050
     WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_NE, .LRP_lost_5
+    VMJumpIf CMP_NE, .LRP_lost_7
     ActorDelete 1
     FlagSet 48
     CallWildBattleEnd
     WildBattleGetResult 0x8050
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_62
+    VMJumpIf CMP_NE, .LRP_84
     FlagSet 1062
-    pl_msg_sys 34
+    pl_msg_sys 44
     pl_WaitButton
     pl_CloseMessage
     VMStackPush 0x8000
@@ -890,35 +1182,35 @@ RP_Pedestal_5:
     RTCallGlobal 2801
     VMStackPop 0x8001
     VMStackPop 0x8000
-.LRP_62:
+.LRP_84:
     pl_ReleaseAll
     VMHalt
-.LRP_61:
-.LRP_59end:
+.LRP_83:
+.LRP_81end:
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
-.LRP_lost_5:
+.LRP_lost_7:
     WorkSetConst 0x40B1, 0
     CallWildLose
     VMHalt
 
-RP_Init_5:
+RP_Init_7:
     FlagSet 48
     VMHalt
 
-RP_Name_5:
+RP_Name_7:
     ActorsPauseAll
     WorkSetConst 0x401D, 1
     SEPlay SEQ_SE_MESSAGE
-    InfoMsg 35, 2
+    InfoMsg 45, 2
     VMSleep 60
     InfoMsgClose_0039
     FinishAllEvents
     ActorsUnpauseAll
     VMHalt
 
-RP_Closed_5:
+RP_Closed_7:
     pl_LockAll
     pl_msg_sys 5
     pl_WaitButton
@@ -931,35 +1223,35 @@ RP_Closed_5:
     ActorsUnpauseAll
     VMHalt
 
-RP_Pedestal_6:
+RP_Pedestal_8:
     pl_LockAll
     FlagGet 1063, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_63notdone
-    pl_msg_sys 36
+    VMJumpIf CMP_EQ, .LRP_85notdone
+    pl_msg_sys 46
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
-.LRP_63notdone:
+.LRP_85notdone:
     ItemCheckAmount 126, 1, 0x8050
     WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_EQ, .LRP_64have
-    pl_msg_sys 37
+    VMJumpIf CMP_EQ, .LRP_86have
+    pl_msg_sys 47
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
-.LRP_64have:
-    pl_msg_sys 38
+.LRP_86have:
+    pl_msg_sys 48
     YesNoWin 0x8050
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_65end
+    VMJumpIf CMP_NE, .LRP_87end
     WorkSetConst 0x8051, 0
-.LRP_66chosen:
+.LRP_88chosen:
     pl_CloseMessage
     ItemSub 126, 1, 0x8050
-    pl_msg_sys 39
+    pl_msg_sys 49
     pl_WaitButton
     pl_CloseMessage
     ActorCmdExec PL_PLAYER, RP_MovStepBack
@@ -967,7 +1259,7 @@ RP_Pedestal_6:
     FadeOutWhite
     FadeWait
     WorkCmpConst 0x8051, 0
-    VMJumpIf CMP_NE, .LRP_67
+    VMJumpIf CMP_NE, .LRP_89
     FlagReset 48
     ActorAdd 1
     FadeInWhite
@@ -977,15 +1269,15 @@ RP_Pedestal_6:
     CallWildBattleEx 383, 70, 0, 1
     WildBattleIsVictory 0x8050
     WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_NE, .LRP_lost_6
+    VMJumpIf CMP_NE, .LRP_lost_8
     ActorDelete 1
     FlagSet 48
     CallWildBattleEnd
     WildBattleGetResult 0x8050
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_68
+    VMJumpIf CMP_NE, .LRP_90
     FlagSet 1063
-    pl_msg_sys 40
+    pl_msg_sys 50
     pl_WaitButton
     pl_CloseMessage
     VMStackPush 0x8000
@@ -1009,218 +1301,11 @@ RP_Pedestal_6:
     RTCallGlobal 2801
     VMStackPop 0x8001
     VMStackPop 0x8000
-.LRP_68:
+.LRP_90:
     pl_ReleaseAll
     VMHalt
-.LRP_67:
-.LRP_65end:
-    pl_CloseMessage
-    pl_ReleaseAll
-    VMHalt
-.LRP_lost_6:
-    WorkSetConst 0x40B1, 0
-    CallWildLose
-    VMHalt
-
-RP_Init_6:
-    FlagSet 48
-    VMHalt
-
-RP_Name_6:
-    ActorsPauseAll
-    WorkSetConst 0x401D, 1
-    SEPlay SEQ_SE_MESSAGE
-    InfoMsg 41, 2
-    VMSleep 60
-    InfoMsgClose_0039
-    FinishAllEvents
-    ActorsUnpauseAll
-    VMHalt
-
-RP_Closed_6:
-    pl_LockAll
-    pl_msg_sys 5
-    pl_WaitButton
-    pl_CloseMessage
-    FadeOutBlack
-    FadeWait
-    RTReserveScript PL_RAMANAS_PARK_ARRIVE
-    MapChangeCore PL_RAMANAS_PARK_ZONE, 33, 0, 12, 1
-    FinishAllEvents
-    ActorsUnpauseAll
-    VMHalt
-
-RP_Pedestal_7:
-    pl_LockAll
-    FlagGet 1064, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_69notdone
-    pl_msg_sys 42
-    pl_WaitButton
-    pl_CloseMessage
-    pl_ReleaseAll
-    VMHalt
-.LRP_69notdone:
-    ItemCheckAmount 127, 1, 0x8050
-    WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_EQ, .LRP_70have
-    pl_msg_sys 43
-    pl_WaitButton
-    pl_CloseMessage
-    pl_ReleaseAll
-    VMHalt
-.LRP_70have:
-    pl_msg_sys 44
-    YesNoWin 0x8050
-    WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_71end
-    WorkSetConst 0x8051, 0
-.LRP_72chosen:
-    pl_CloseMessage
-    ItemSub 127, 1, 0x8050
-    pl_msg_sys 45
-    pl_WaitButton
-    pl_CloseMessage
-    ActorCmdExec PL_PLAYER, RP_MovStepBack
-    ActorCmdWait
-    FadeOutWhite
-    FadeWait
-    WorkCmpConst 0x8051, 0
-    VMJumpIf CMP_NE, .LRP_73
-    FlagReset 48
-    ActorAdd 1
-    FadeInWhite
-    FadeWait
-    PVPlay 384, 0
-    PVWait
-    CallWildBattleEx 384, 70, 0, 1
-    WildBattleIsVictory 0x8050
-    WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_NE, .LRP_lost_7
-    ActorDelete 1
-    FlagSet 48
-    CallWildBattleEnd
-    WildBattleGetResult 0x8050
-    WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_74
-    FlagSet 1064
-    pl_msg_sys 46
-    pl_WaitButton
-    pl_CloseMessage
-    VMStackPush 0x8000
-    VMStackPush 0x8001
-    WorkSetConst 0x8000, 212
-    WorkSetConst 0x8001, 1
-    RTCallGlobal 2801
-    VMStackPop 0x8001
-    VMStackPop 0x8000
-    VMStackPush 0x8000
-    VMStackPush 0x8001
-    WorkSetConst 0x8000, 211
-    WorkSetConst 0x8001, 1
-    RTCallGlobal 2801
-    VMStackPop 0x8001
-    VMStackPop 0x8000
-.LRP_74:
-    pl_ReleaseAll
-    VMHalt
-.LRP_73:
-.LRP_71end:
-    pl_CloseMessage
-    pl_ReleaseAll
-    VMHalt
-.LRP_lost_7:
-    WorkSetConst 0x40B1, 0
-    CallWildLose
-    VMHalt
-
-RP_Init_7:
-    FlagSet 48
-    VMHalt
-
-RP_Name_7:
-    ActorsPauseAll
-    WorkSetConst 0x401D, 1
-    SEPlay SEQ_SE_MESSAGE
-    InfoMsg 47, 2
-    VMSleep 60
-    InfoMsgClose_0039
-    FinishAllEvents
-    ActorsUnpauseAll
-    VMHalt
-
-RP_Closed_7:
-    pl_LockAll
-    pl_msg_sys 5
-    pl_WaitButton
-    pl_CloseMessage
-    FadeOutBlack
-    FadeWait
-    RTReserveScript PL_RAMANAS_PARK_ARRIVE
-    MapChangeCore PL_RAMANAS_PARK_ZONE, 37, 0, 12, 1
-    FinishAllEvents
-    ActorsUnpauseAll
-    VMHalt
-
-RP_Pedestal_8:
-    pl_LockAll
-    FlagGet 1065, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRP_75notdone
-    pl_msg_sys 48
-    pl_WaitButton
-    pl_CloseMessage
-    pl_ReleaseAll
-    VMHalt
-.LRP_75notdone:
-    ItemCheckAmount 128, 1, 0x8050
-    WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_EQ, .LRP_76have
-    pl_msg_sys 49
-    pl_WaitButton
-    pl_CloseMessage
-    pl_ReleaseAll
-    VMHalt
-.LRP_76have:
-    pl_msg_sys 50
-    YesNoWin 0x8050
-    WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_77end
-    WorkSetConst 0x8051, 0
-.LRP_78chosen:
-    pl_CloseMessage
-    ItemSub 128, 1, 0x8050
-    pl_msg_sys 51
-    pl_WaitButton
-    pl_CloseMessage
-    ActorCmdExec PL_PLAYER, RP_MovStepBack
-    ActorCmdWait
-    FadeOutWhite
-    FadeWait
-    WorkCmpConst 0x8051, 0
-    VMJumpIf CMP_NE, .LRP_79
-    FlagReset 48
-    ActorAdd 1
-    FadeInWhite
-    FadeWait
-    PVPlay 150, 0
-    PVWait
-    CallWildBattleEx 150, 70, 0, 9
-    WildBattleIsVictory 0x8050
-    WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_NE, .LRP_lost_8
-    ActorDelete 1
-    FlagSet 48
-    CallWildBattleEnd
-    WildBattleGetResult 0x8050
-    WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRP_80
-    FlagSet 1065
-.LRP_80:
-    pl_ReleaseAll
-    VMHalt
-.LRP_79:
-.LRP_77end:
+.LRP_89:
+.LRP_87end:
     pl_CloseMessage
     pl_ReleaseAll
     VMHalt
@@ -1237,7 +1322,7 @@ RP_Name_8:
     ActorsPauseAll
     WorkSetConst 0x401D, 1
     SEPlay SEQ_SE_MESSAGE
-    InfoMsg 52, 2
+    InfoMsg 51, 2
     VMSleep 60
     InfoMsgClose_0039
     FinishAllEvents
@@ -1245,6 +1330,213 @@ RP_Name_8:
     VMHalt
 
 RP_Closed_8:
+    pl_LockAll
+    pl_msg_sys 5
+    pl_WaitButton
+    pl_CloseMessage
+    FadeOutBlack
+    FadeWait
+    RTReserveScript PL_RAMANAS_PARK_ARRIVE
+    MapChangeCore PL_RAMANAS_PARK_ZONE, 33, 0, 12, 1
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+RP_Pedestal_9:
+    pl_LockAll
+    FlagGet 1064, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_91notdone
+    pl_msg_sys 52
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_91notdone:
+    ItemCheckAmount 127, 1, 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_EQ, .LRP_92have
+    pl_msg_sys 53
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_92have:
+    pl_msg_sys 54
+    YesNoWin 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_93end
+    WorkSetConst 0x8051, 0
+.LRP_94chosen:
+    pl_CloseMessage
+    ItemSub 127, 1, 0x8050
+    pl_msg_sys 55
+    pl_WaitButton
+    pl_CloseMessage
+    ActorCmdExec PL_PLAYER, RP_MovStepBack
+    ActorCmdWait
+    FadeOutWhite
+    FadeWait
+    WorkCmpConst 0x8051, 0
+    VMJumpIf CMP_NE, .LRP_95
+    FlagReset 48
+    ActorAdd 1
+    FadeInWhite
+    FadeWait
+    PVPlay 384, 0
+    PVWait
+    CallWildBattleEx 384, 70, 0, 1
+    WildBattleIsVictory 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_NE, .LRP_lost_9
+    ActorDelete 1
+    FlagSet 48
+    CallWildBattleEnd
+    WildBattleGetResult 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_96
+    FlagSet 1064
+    pl_msg_sys 56
+    pl_WaitButton
+    pl_CloseMessage
+    VMStackPush 0x8000
+    VMStackPush 0x8001
+    WorkSetConst 0x8000, 212
+    WorkSetConst 0x8001, 1
+    RTCallGlobal 2801
+    VMStackPop 0x8001
+    VMStackPop 0x8000
+    VMStackPush 0x8000
+    VMStackPush 0x8001
+    WorkSetConst 0x8000, 211
+    WorkSetConst 0x8001, 1
+    RTCallGlobal 2801
+    VMStackPop 0x8001
+    VMStackPop 0x8000
+.LRP_96:
+    pl_ReleaseAll
+    VMHalt
+.LRP_95:
+.LRP_93end:
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_lost_9:
+    WorkSetConst 0x40B1, 0
+    CallWildLose
+    VMHalt
+
+RP_Init_9:
+    FlagSet 48
+    VMHalt
+
+RP_Name_9:
+    ActorsPauseAll
+    WorkSetConst 0x401D, 1
+    SEPlay SEQ_SE_MESSAGE
+    InfoMsg 57, 2
+    VMSleep 60
+    InfoMsgClose_0039
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+RP_Closed_9:
+    pl_LockAll
+    pl_msg_sys 5
+    pl_WaitButton
+    pl_CloseMessage
+    FadeOutBlack
+    FadeWait
+    RTReserveScript PL_RAMANAS_PARK_ARRIVE
+    MapChangeCore PL_RAMANAS_PARK_ZONE, 37, 0, 12, 1
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+RP_Pedestal_10:
+    pl_LockAll
+    FlagGet 1065, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRP_97notdone
+    pl_msg_sys 58
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_97notdone:
+    ItemCheckAmount 128, 1, 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_EQ, .LRP_98have
+    pl_msg_sys 59
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_98have:
+    pl_msg_sys 60
+    YesNoWin 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_99end
+    WorkSetConst 0x8051, 0
+.LRP_100chosen:
+    pl_CloseMessage
+    ItemSub 128, 1, 0x8050
+    pl_msg_sys 61
+    pl_WaitButton
+    pl_CloseMessage
+    ActorCmdExec PL_PLAYER, RP_MovStepBack
+    ActorCmdWait
+    FadeOutWhite
+    FadeWait
+    WorkCmpConst 0x8051, 0
+    VMJumpIf CMP_NE, .LRP_101
+    FlagReset 48
+    ActorAdd 1
+    FadeInWhite
+    FadeWait
+    PVPlay 150, 0
+    PVWait
+    CallWildBattleEx 150, 70, 0, 9
+    WildBattleIsVictory 0x8050
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_NE, .LRP_lost_10
+    ActorDelete 1
+    FlagSet 48
+    CallWildBattleEnd
+    WildBattleGetResult 0x8050
+    WorkCmpConst 0x8050, 0
+    VMJumpIf CMP_NE, .LRP_102
+    FlagSet 1065
+.LRP_102:
+    pl_ReleaseAll
+    VMHalt
+.LRP_101:
+.LRP_99end:
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LRP_lost_10:
+    WorkSetConst 0x40B1, 0
+    CallWildLose
+    VMHalt
+
+RP_Init_10:
+    FlagSet 48
+    VMHalt
+
+RP_Name_10:
+    ActorsPauseAll
+    WorkSetConst 0x401D, 1
+    SEPlay SEQ_SE_MESSAGE
+    InfoMsg 62, 2
+    VMSleep 60
+    InfoMsgClose_0039
+    FinishAllEvents
+    ActorsUnpauseAll
+    VMHalt
+
+RP_Closed_10:
     pl_LockAll
     pl_msg_sys 5
     pl_WaitButton

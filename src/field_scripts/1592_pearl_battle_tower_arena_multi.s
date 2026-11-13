@@ -104,7 +104,7 @@ P362_015D:
     BSubwayCmd_Tool 307, 0, 0, 0  // Pearl tower function 40
     pl_Call P362_0456
     BSubwayCmd_Tool 352, 0, 1, 0  // PrintBattleTowerIntroMessage
-    pl_WaitABPress
+// WaitABPress: the Tower opponent's balloon waited for A itself
     pl_CloseMessage
     pl_Call P362_0478
     BSubwayCmd_Tool 309, 0, 0, 0  // Pearl tower function 42: the battle

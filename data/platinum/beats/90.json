@@ -1,0 +1,242 @@
+{
+ "_doc": "Chapter 90 (every Pokémon Center 1F) and Sandgem's Center, for b2tools/platinum_flow_compare.py: each beat from the start (fresh): the nurse, and Platinum's daily Trainers (pokemon_center_daily_trainers.s: file 1138, scripts 10401/10402, the Center's zone init 10400 picks them by the weekday once the Vs. Seeker is unlocked) on the days they stand there (optional). The battled Trainer is compared by Platinum's number.",
+ "start": "PFLAG_097F",
+ "start_zone": "MAP_JUBLIFE_POKECENTER_1F",
+ "beats": [
+  {
+   "zone": "MAP_JUBLIFE_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_JUBLIFE_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_JUBLIFE_POKECENTER_1F",
+   "script": 10402,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 2 (on its days)"
+  },
+  {
+   "zone": "MAP_CANALAVE_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_CANALAVE_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_OREBURGH_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_OREBURGH_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_ETERNA_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_ETERNA_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_ETERNA_POKECENTER_1F",
+   "script": 10402,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 2 (on its days)"
+  },
+  {
+   "zone": "MAP_HEARTHOME_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_HEARTHOME_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_HEARTHOME_POKECENTER_1F",
+   "script": 10402,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 2 (on its days)"
+  },
+  {
+   "zone": "MAP_PASTORIA_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_PASTORIA_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_VEILSTONE_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_VEILSTONE_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_VEILSTONE_POKECENTER_1F",
+   "script": 10402,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 2 (on its days)"
+  },
+  {
+   "zone": "MAP_SUNYSHORE_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_SUNYSHORE_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_SNOWPOINT_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_SNOWPOINT_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_POKEMON_LEAGUE_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_FIGHT_AREA_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_FIGHT_AREA_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_FIGHT_AREA_POKECENTER_1F",
+   "script": 10402,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 2 (on its days)"
+  },
+  {
+   "zone": "MAP_FLOAROMA_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_FLOAROMA_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_SOLACEON_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_SOLACEON_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_CELESTIC_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_CELESTIC_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_SURVIVAL_AREA_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_RESORT_AREA_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  },
+  {
+   "zone": "MAP_RESORT_AREA_POKECENTER_1F",
+   "script": 10401,
+   "fresh": true,
+   "optional": true,
+   "note": "the daily Trainer 1 (on its days)"
+  },
+  {
+   "zone": "MAP_SANDGEM_POKECENTER_1F",
+   "script": "Nurse",
+   "fresh": true,
+   "note": "the nurse heals"
+  }
+ ]
+}

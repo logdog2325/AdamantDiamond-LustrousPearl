@@ -32,5 +32,21 @@
   {"talk": true, "bg": 0, "text": "The Quick Tram is being prepared.\nPlease come again!"} ],
  "MAP_GREAT_MARSH_AREA_6": [
   {"talk": true, "bg": 0, "text": "The Quick Tram is being prepared.\nPlease come again!"}
+ ],
+ "MAP_GLOBAL_TERMINAL_2F": [
+  {"talk": true, "bg": 2, "text": "The Box Data machines are closed.\nPlease come again!"},
+  {"talk": true, "bg": 3, "text": "The Box Data machines are closed.\nPlease come again!"},
+  {"talk": true, "bg": 8, "text": "The Box Data machines are closed.\nPlease come again!"},
+  {"talk": true, "bg": 9, "text": "The Box Data machines are closed.\nPlease come again!"},
+  {"talk": true, "bg": 4, "text": "The Dress-Up Data machines are\nclosed. Please come again!"},
+  {"talk": true, "bg": 5, "text": "The Dress-Up Data machines are\nclosed. Please come again!"},
+  {"talk": true, "bg": 6, "text": "The Dress-Up Data machines are\nclosed. Please come again!"},
+  {"talk": true, "bg": 7, "text": "The Dress-Up Data machines are\nclosed. Please come again!"}
+ ],
+ "MAP_GLOBAL_TERMINAL_3F": [
+  {"talk": true, "bg": 2, "text": "The Battle Video machines are\nclosed. Please come again!"},
+  {"talk": true, "bg": 3, "text": "The Battle Video machines are\nclosed. Please come again!"},
+  {"talk": true, "bg": 4, "text": "The Battle Video machines are\nclosed. Please come again!"},
+  {"talk": true, "bg": 5, "text": "The Battle Video machines are\nclosed. Please come again!"}
  ]
 }

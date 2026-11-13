@@ -206,6 +206,10 @@ pearl_trainer_pics` (work/rom_lead).
 - `data/text_overrides/pearl_intro.json`: Black 2's intro lines carry Rowan's speech (pokediamond narc_0341), the
   rival's default name Barry. `patches/pearl_intro.py`: Munchlax (Pearl's intro Pokémon) instead of Cinccino, no
   Aspertia flyover or season card on a new game, no season card on Continue (HoennB2's hoenn_intro edits).
+- 1.0.1 (newgame-flash, 2026-11-08): Twinleaf no longer shows between Rowan's fade and the bedroom (Pearl 1.0.1:
+  about 45 frames). Black 2 fades zone 427 in before script 30 (its Mom's call is seen there); pearl_intro skips that
+  fade-in and newgame.inc's script 30 no longer fades out, so the screens stay black until the bedroom fades in, as in
+  Pearl and Platinum.
 - Tested in game: the whole intro with Rowan's words, Munchlax from the Poké Ball, naming the rival ("Barry..., is
   it? That's your friend's name?"), the farewell, then straight into the bedroom.
 - **Rowan's questions (2026-10-18; details and tests: notes/FAIRY.md "Rowan's questions")**: after
@@ -926,6 +930,17 @@ Additions:
     whole tail); "Fin" replaces DEVELOPED BY.
   - 12 greyscale Sinnoh photos without the player, plus a colour final picture of the player's room
     (b2tools/credits_photos.py, data/credits/; specs in work/agents/ch8/photos/credits_spec.json).
+  - Platinum (2026-11-07, plat-music): its own 237 staff lines (the dump's bank, in its order; pearl_credits._LAYOUT:
+    pages Director; Art Director, Game Design Leader; Graphic Leader; the scroll Programming Leader .. Producers; its three
+    "Executive Producer" roles and names on Black 2's four executive lines and two more, the roll still 21,172 frames;
+    "Pokémon Griseous Platinum" where the roll stops, "FIN" for DEVELOPED BY), text in
+    data/text_overrides/platinum/pearl_credits.json. The photos: Pearl's until Platinum's are shot (an emulator: the
+    combined ROM). The places that Platinum changed (data/platinum/worklist.json): Sunyshore City and its walkways (3
+    models, a ground cell), the League's south, plateau and front (a model, a ground cell), Victory Road (models in some
+    rooms), the lobby and the four Elite Four rooms (their floors), the final picture's room (Twinleaf's player house 2F, a
+    model). The Sunyshore Gym is the same. Shots -> `PEARL_VERSION=platinum python3 b2tools/credits_photos.py SPEC.json`
+    writes data/platinum/credits/ ("keep:NN_<slug>.png" keeps Pearl's photo of a place Platinum didn't change), which
+    game_clear then reads.
 - Smaller:
   - GetLeagueVictories = RecordGet 71.
   - CheckPlatformLiftNotUsedWhenEnteredMap.

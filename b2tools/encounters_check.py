@@ -104,7 +104,7 @@ def expected(enc, sp, layout, period='day', rod_table=False):
 
 def main():
     files = sys.argv[1] if len(sys.argv) > 1 else os.path.join(version.build_dir(os.path.join(ROOT, 'work', 'rom')), 'files')
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     pzones = json.load(open(os.path.join(PEARL, 'zones.json')))
     sp, names = pearl_species(), {}
     for k, v in pearl_species().items(): names.setdefault(v, k[8:].title())

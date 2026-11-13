@@ -116,11 +116,21 @@ The user chose Pearl's own pictures for the 46 classes (question 1, A). They are
   file number: sprite × 8 + 0..7. The battle's MCSS (`GetTrainerSpriteResIDs`, `mcss_tool.c`) and the still-picture
   loaders use them. HoennB2 found that the Hall of Fame, trainer card and PWT pictures also go through it.
 - The archive read takes any file number the archive has. So **new sprite ids work with no code change, up to 255**:
-  the `sprite` field and the function's return value are both a u8. Ids 234-255 are still free.
+  the `sprite` field and the function's return value are both a u8. Ids 234-255 are still free (Platinum's build: 234-237 are
+  its four Frontier Brains, 238-255 free).
 - HoennB2's `sprite_switch` already appends sprites after Black 2's 188 in the same way, and checks they stay below
   256.
 - A class number must be below `TRAINER_CLASS_COUNT` (236). A higher class gets sprite 0. So the Sinnoh classes must
   reuse Black 2's class slots 0-235, as HoennB2 did with spare classes.
+- **Classes past 236** (plat-frontier-rooms, 2026-11-07): every spare class is Pearl's, so Platinum's four Frontier Brains got
+  classes 236-239 (Hall Matron, Factory Head, Arcade Star, Castle Valet: version.NEW_TRAINER_CLASSES, registry
+  data/platinum/pearl_trainer_classes.json "how": "new"). The decomp's `TrainerClass_GetSex`, `GetTrSpriteBaseDatID` and
+  `GetTrainerClassEyeBGMID` ask `src/pearlb2/resident/trainer_class.c`, which reads Black 2's table below 236 and
+  `gPearlB2TrainerClassExt` from 236 on (patches/pearl_trainers.py fills it; NULL in Pearl and Diamond: Black 2's
+  behaviour). Their names are lines 236-239 of system text 383 and 485 (the clone's class list grows). Class ids stay below
+  256 (u8 in `SpecialTrainerClass`, the Subway's save and the field Trainer record). Black 2 has no prize rate per class:
+  money is each trainer record's (`TRAINER_PARAM_MONEY`), and a facility battle (battle type 2) pays none, as Platinum's
+  Brains (rate 0).
 - **To show a picture:** set the class's byte at `0x02092394 + 4 × class` to the id in `trainer_pics.json` (in an
   `apply_code`, as HoennB2's `patches/trainers.py` does with its class "edits"). Also set the sex byte (0 male,
   1 female) for the class.

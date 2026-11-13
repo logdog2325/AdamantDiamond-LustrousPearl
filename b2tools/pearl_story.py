@@ -3,6 +3,7 @@
     python3 pearl_story.py zones NAME|ID ...    translate those Pearl zones into src/field_scripts/NNNN_pearl_<zone>.s and
                                                  their text into src/text/script/NNNN_pearl_<zone>.txt (and assemble)
     python3 pearl_story.py chapter 1            the zones of a chapter (CHAPTERS below)
+    python3 pearl_story.py all                  every installed zone (PEARL_VERSION=platinum: into work/platinum/src)
     python3 pearl_story.py report               translate every Pearl zone's script file offline into
                                                  work/pearl/b2_scripts/ (not installed), assemble each, and write the
                                                  coverage report there (report.txt)
@@ -38,15 +39,23 @@ import b2font
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
 import gen4_script  # noqa: E402
 
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 PLATINUM = os.path.join(ROOT, 'external', 'pokeplatinum')
-SRC_SCRIPTS = os.path.join(ROOT, 'src', 'field_scripts')
-SRC_TEXT = os.path.join(ROOT, 'src', 'text', 'script')
+SRC_SCRIPTS = version.generated_folder(os.path.join(ROOT, 'src', 'field_scripts'))
+SRC_TEXT = version.generated_folder(os.path.join(ROOT, 'src', 'text', 'script'))
 OFFLINE = os.path.join(PEARL, 'b2_scripts')
-SPEAKERS = os.path.join(ROOT, 'data', 'pearl_speakers.json')
+SPEAKERS = version.data_path('pearl_speakers.json')   # (Platinum: data/platinum/, by its own line and object numbers)
+# A line's word buffer that Gen 4 filled in an earlier script (its field keeps one word set for every script) and Black 2
+# doesn't (a word set per script run): {"MAP_X": {"<line>": {"<buffer>": "rival" | "player"}}}, filled right before the
+# line (h_message). Only Platinum has rows (data/platinum/pearl_buffer_fills.json; b2tools/text_check.py finds them).
+# (plat-ch2, 2026-11-07) "item:N" fills an item's name (N: the script's item number), for a line whose script names the
+# item only after it.
+BUFFER_FILLS = version.data_path('pearl_buffer_fills.json')
+FILL_MACROS = {'rival': 'pl_BufferRivalName', 'player': 'pl_BufferPlayerName'}
 # Closed places (2026-10-25, chapters 4a/5a: the Contest counters, Amity Square, the Great Marsh): places Pearl has and
 # this game does not build yet. data/pearl_closed_facilities.json, keyed by Pearl map name ("MAP_..."), a list of rows:
 #   {"x", "z", "w", "h", "dir", "text"}      a step trigger (work 0: always) on those tiles; walking onto it shows text in
@@ -80,6 +89,8 @@ ELEVATOR_FLOORS_ABOVE = {11: 3, 12: 2, 13: 1, 14: 0,                 # Jubilife 
                          137: 4, 138: 3, 139: 2, 140: 1, 141: 0,     # Veilstone Department Store 1F-5F
                          150: 1, 164: 0,                             # Sunyshore, the Vista Lighthouse deck
                          461: 1, 462: 0}                             # Resort Area Ribbon Syndicate 1F/2F
+if version.PLATINUM:                                                 # (2026-11-02, plat-rooms) Platinum's own floor:
+    ELEVATOR_FLOORS_ABOVE[566] = 5                                   # Veilstone Store B1F (field_menu.c, the same table)
 FIRST_SCRIPT_FILE = 1290        # a/0/5/6: Black 2 has 0-1288, 1289 = 1289_twinleaf_newgame.s; Pearl zone files after
 FIRST_TEXT_FILE = 676           # a/0/0/3: Black 2 has 0-675; Pearl zone text files after
 NEWGAME_ZONE = 'MAP_TWINLEAF'   # Black 2 loads zone 427 first and runs its scripts 29 and 30 (notes/WORLD.md)
@@ -124,28 +135,34 @@ CHAPTERS = {
                                             'FLOAROMA', 'SOLACEON', 'CELESTIC', 'SURVIVAL_AREA', 'RESORT_AREA')],
 }
 
-# Chapters 3-9 (and 'skip'): data/story_chapters.json (b2tools/story_chapters.py, notes/STORY_CHAPTERS.md)
-_CH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'story_chapters.json')
+# Chapters 3-9 (and 'skip'): data/story_chapters.json (b2tools/story_chapters.py, notes/STORY_CHAPTERS.md). Platinum: every
+# chapter, 1, 2 and 90 too, from data/platinum/story_chapters.json (its own order: notes/PLATINUM_CHAPTERS.md)
+_CH = version.data_path('story_chapters.json')
 if os.path.exists(_CH):
     for _k, _v in json.load(open(_CH)).items():
-        if _k != '_doc':
-            CHAPTERS.setdefault(int(_k) if _k.isdigit() else _k, _v)
+        if not _k.startswith('_'):
+            _k = int(_k) if _k.isdigit() else _k
+            if version.PLATINUM:
+                CHAPTERS[_k] = _v
+            else:
+                CHAPTERS.setdefault(_k, _v)
 
 
 # ---------------------------------------------------------------- Pearl data
 
 class PearlData:
     def __init__(self):
-        rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
-        self.files = narc_members(rom.read('fielddata/script/scr_seq_release.narc'))
+        rom = Rom(version.WORLD_DUMP)
+        self.files = version.slotted('scripts', narc_members(rom.read(version.ARCHIVE['scripts'])))
         self.table = gen4_script.load_table()
         self.zones = json.load(open(os.path.join(PEARL, 'zones.json')))
         self.by_name = {z['name']: z for z in self.zones}
-        self.world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+        self.world = json.load(open(version.data_path('sinnoh_world.json')))
         self.b2_zone = {int(k): v['b2_zone'] for k, v in self.world['zones'].items()}
         self.b2_zone.update({int(k): v['b2_zone'] for k, v in self.world['rooms']['zones'].items()})
         self.level_files = {z['level_scripts'] for z in self.zones}
         self._dis, self._ev = {}, {}
+        self._addrs, self._pearl_files, self._pearl_table, self._pearl_zones = {}, None, None, None
         script_files = sorted({z['scripts'] for z in self.zones})
         self.script_file_no = {f: FIRST_SCRIPT_FILE + i for i, f in enumerate(script_files)}
         banks = sorted({z['text_bank'] for z in self.zones})
@@ -154,6 +171,83 @@ class PearlData:
         self._own_zone = None                       # script_file(), text_file(): zones on a shared script file
         self.names = platinum_names()
         self._warps = None
+
+    def pearl_addr(self, f, a):
+        """Pearl's address of Platinum's command or movement list at (slot f, a), the same in both by aligning the two files (None: Pearl's
+        file has none like it). So Pearl's fixes keyed by file and address stay on the same command when a file changed around it."""
+        if not version.PLATINUM:
+            return a
+        if f not in self._addrs:
+            self._addrs[f] = self._align_addrs(f)
+        return self._addrs[f].get(a)
+
+    def platinum_addr(self, f, pearl_a):
+        """Platinum's address of Pearl's command at (slot f, pearl_a): for a fix's jump target."""
+        if not version.PLATINUM:
+            return pearl_a
+        self.pearl_addr(f, 0)
+        return next(a for a, p in dict(self._addrs[f]).items() if p == pearl_a)
+
+    def zone_same(self, zone, script_path=None, text_path=None):
+        """Platinum: does this zone keep Pearl's generated files, with every fix in them (notes/PLATINUM.md section 3)? Its script file and level
+        scripts equal Pearl's, what we'd generate shows the same text as Pearl's file, and its people run the same scripts (the same events,
+        or a generated file equal to Pearl's). script_path, text_path: this run's generated files."""
+        if not version.PLATINUM or zone['id'] >= version.PEARL_ZONES:
+            return False
+        if self._pearl_zones is None:
+            self._pearl_zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+            self._align_addrs(0)
+            self._pearl_events = narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read('fielddata/eventdata/zone_event_release.narc'))
+            self._plat_events = version.slotted('events', narc_members(Rom(version.WORLD_DUMP).read(version.ARCHIVE['events'])))
+        p = self._pearl_zones[zone['id']]
+        if self._pearl_files[p['scripts']] != self.files[zone['scripts']] or self._pearl_files[p['level_scripts']] != self.files[zone['level_scripts']]:
+            return False
+        if script_path is None:
+            return True
+        base = os.path.join(ROOT, 'src')
+        pearl_s = os.path.join(base, 'field_scripts', os.path.basename(script_path))
+        pearl_t = os.path.join(base, 'text', 'script', os.path.basename(text_path))
+        if not (os.path.exists(pearl_s) and os.path.exists(pearl_t)):
+            return False
+        ours, theirs = open(text_path, 'rb').read().split(b'\n'), open(pearl_t, 'rb').read().split(b'\n')
+        if not self._shows_lines(zone['scripts']):      # (a zone with no lines of its own sits on Jubilife's bank: only what follows it counts)
+            import gen4_text
+            ours = [l.split(b' = ', 1)[-1] for l in ours[len(gen4_text.bank(zone['text_bank'])):]]
+            theirs = [l.split(b' = ', 1)[-1] for l in theirs[len(gen4_text.bank_text(p['text_bank'], os.path.join(ROOT, 'roms', 'pearl.nds'))):]]
+        if ours != theirs:
+            return False
+        # (and the generated file is Pearl's: other proxies, common scripts or labels would leave the people's script numbers off)
+        return self._pearl_events[p['events']] == self._plat_events[zone['events']] and open(pearl_s, 'rb').read() == open(script_path, 'rb').read()
+
+    def _align_addrs(self, f):
+        import difflib
+        if self._pearl_files is None:
+            self._pearl_files = narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read('fielddata/script/scr_seq_release.narc'))
+            self._pearl_table = json.load(open(os.path.join(HERE, 'data', 'gen4_script_cmds.json')))
+        if f >= len(self._pearl_files) or not self._pearl_files[f]:
+            return {}
+        if self._pearl_files[f] == self.files[f]:
+            return collections.defaultdict(lambda: None, {a: a for a in self.disasm(f).insns} | {a: a for a in self.disasm(f).movement})
+        def tokens(d, table):
+            out = []
+            for a in sorted(set(d.insns) | set(d.movement)):
+                if a in d.movement:
+                    out.append((a, ('mov', tuple(d.movement[a]))))
+                else:
+                    _, op, args = d.insns[a]
+                    out.append((a, (table[op]['name'], tuple(v for t, v in args if t not in ('rel', 'mov')))))
+            return out
+        try:
+            p = tokens(gen4_script.Disasm(self._pearl_files[f], self._pearl_table), self._pearl_table)
+        except Exception:
+            return {}
+        t = tokens(self.disasm(f), self.table)
+        sm = difflib.SequenceMatcher(None, [x[1] for x in t], [x[1] for x in p], autojunk=False)
+        out = {}
+        for i, j, n in sm.get_matching_blocks():
+            for k in range(n):
+                out[t[i + k][0]] = p[j + k][0]
+        return out
 
     def disasm(self, f):
         if f not in self._dis:
@@ -198,6 +292,10 @@ class PearlData:
     def script_file(self, zone):
         """a/0/5/6 number of a zone's script file: its Pearl file's (FIRST_SCRIPT_FILE + rank), or for a zone on a
         shared file (shared_file_zones) its own, after the last Pearl file's."""
+        if version.PLATINUM:        # Pearl's number for a shared zone (Pearl's src/ files are the base), new numbers after them for the new zones
+            kept = version.id_map('zone_files')
+            top = max(v[0] for v in kept.values()) + 1
+            return kept[zone['id']][0] if zone['id'] in kept else top + zone['id'] - version.PEARL_ZONES
         own = self.shared_file_zones().get(zone['id'])
         if own is not None:
             return FIRST_SCRIPT_FILE + len(self.script_file_no) + own
@@ -216,6 +314,9 @@ class PearlData:
         scripts' lines to its own text file: so a script file on a bank another file also uses gets its own number
         after the last bank's, unless it is the one that shows the bank's lines (2026-10-25, chapter 3: Ravaged
         Path's Rock Smash lines)."""
+        if version.PLATINUM:        # (the same; 1320 on: a/0/0/3's 1236-1310 are other things)
+            kept = version.id_map('zone_files')
+            return kept[zone['id']][1] if zone['id'] in kept else 1320 + zone['id'] - version.PEARL_ZONES
         if self._own_text is None:
             users = collections.defaultdict(set)
             for z in self.zones:
@@ -353,6 +454,18 @@ class PearlData:
         k, = self._extra_ids(pearl_map, 1, skip=skip)
         return k
 
+    def villa_init(self, pearl_map):
+        """(script id, lines) of the day's Villa visitor's zone-init entry (VILLA_VISITOR_ZONES, Platinum only), run before
+        the zone's own zone init (pearl_events.map_script_table), after the zone's other extra entries; else None."""
+        zone = self.zones[pearl_map]
+        if zone['name'] not in VILLA_VISITOR_ZONES:
+            return None
+        skip = len(self.closed(zone)) + (1 if self.elevator_init(pearl_map) else 0) + \
+            len(self.ramanas_ids(pearl_map)) + (2 if self.game_clear_ids(pearl_map) else 0) + \
+            (1 if self.turnback_doors(pearl_map) else 0)
+        k, = self._extra_ids(pearl_map, 1, skip=skip)
+        return k, villa_visitor_lines(self, k)
+
     def files_using(self, cmd):
         """Pearl script files (zone files) that use a command."""
         if not hasattr(self, '_using'):
@@ -429,6 +542,11 @@ PEARL_BLACKOUT_HOME_SCRIPT = 2020
 GAME_CLEAR_ZONE = 'MAP_POKEMON_LEAGUE_HALL_OF_FAME'
 
 
+if version.PLATINUM:                # (first id, script file, text bank): Platinum's ranges, in slots (platinum_maps.py)
+    import json as _json
+    SCRIPT_RANGES = [tuple(r) for r in _json.load(open(os.path.join(ROOT, 'data', 'platinum', 'id_map.json')))['ranges']]
+
+
 def script_location(sid):
     """(file, text bank, 1-based entry) of a Pearl script id >= 2000."""
     for first, f, bank in SCRIPT_RANGES:
@@ -475,6 +593,10 @@ SOUND = {
     'SEQ_THE_EVENT01': 'SEQ_BGM_E_DOCTOR',       # [guess] Rowan
     'SEQ_SE_DP_W025': 'SEQ_SE_W026_01',             # [guess] Spear Pillar, the new galaxy (Pearl's Mega Kick; Black 2 has no W025)
     'SEQ_SE_DP_W060C': 'SEQ_SE_W095_01',            # [guess] Spear Pillar, the lake trio's power (Pearl's Psybeam; no W060)
+    # Platinum's rooms (2026-11-02, plat-rooms; Pearl never plays these)
+    'SEQ_SE_DP_KON': 'SEQ_SE_KON',                  # a knock (Rotom's Room): Black 2 has the same name
+    'SEQ_SE_DP_W062': 'SEQ_SE_SHINKA_W062',         # the Secret Key opens Rotom's Room's wall: Black 2's own copy of W062
+    'SEQ_SE_DP_DENDOU': 'SEQ_SE_SW_PKWOOD_AUD_01',  # [guess] the grunts cheer Cyrus (Galactic HQ hall): a studio audience
 }
 _SEQ = None
 PEARL_SONGS = ('SEQ_THE_RIV', 'SEQ_THE_BOY', 'SEQ_THE_GIRL', 'SEQ_TSURETEKE', 'SEQ_THE_EVENT01', 'SEQ_THE_EVENT02',
@@ -517,6 +639,10 @@ class Job:
         self.speakers = {}
         if os.path.exists(SPEAKERS):
             self.speakers = {int(k): v for k, v in json.load(open(SPEAKERS)).get(self.name, {}).items()}
+        self.buffer_fills = {}                            # BUFFER_FILLS: {line: {buffer: whose name}}
+        if os.path.exists(BUFFER_FILLS):
+            self.buffer_fills = {int(k): {int(i): w for i, w in v.items()}
+                                 for k, v in json.load(open(BUFFER_FILLS)).get(self.name, {}).items()}
         import pearl_events
         self.init_level = pearl_events.map_script_table(pd, zone, ids)[1]   # {script: feature level} of map scripts
         # Pearl global scripts that a map script runs through a proxy entry: (file, entry) -> that feature level, so
@@ -609,7 +735,16 @@ class FileTr:
         # objects this file makes follow the player (SetMovementType X, 0x30): Black 2 renames a follower 0xFE
         self.follow_uids = {args[0][1] for a, (e, op, args) in d.insns.items()
                             if job.pd.cmd_name(op) == 'SetMovementType' and args[1][1] == FOLLOW and args[0][1] < 0xF0}
+        if version.PLATINUM:                     # (plat-test, 2026-11-08) one made to follow through a var (Amity Square's
+            fvars = {args[0][1] for a, (e, op, args) in d.insns.items()   # walking Pokemon: PVAR_8002 = 5): the
+                     if job.pd.cmd_name(op) == 'SetMovementType' and args[1][1] == FOLLOW and args[0][1] >= 0x4000}
+            self.follow_uids |= {args[1][1] for a, (e, op, args) in d.insns.items()   # var's constant values
+                                 if job.pd.cmd_name(op) == 'SetVarFromValue' and args[0][1] in fvars and args[1][1] < 0xF0}
         self.flow()
+        # the entries whose flow shows the money window (ShowMoney): their talk balloons and menus take Black 2's places
+        # for a money window (money_layout)
+        self.money_entries = {k for b, (e, op, args) in d.insns.items() if job.pd.cmd_name(op) == 'ShowMoney'
+                              for k in self.reach_from[b]}
 
     @property
     def zone_file(self):
@@ -823,7 +958,9 @@ class FileTr:
                 nst = frozenset(b for b in st if b[0] != idx)
                 if name in NAME_SOURCES:
                     v = args[1][1]
-                    if v >= 0x4000:                 # a var set just before (Route 206's gate: 0x8004 = 96)
+                    if name == 'BufferValuePaddingDigits':
+                        v = f'{v}/{args[3][1]}'       # (a u32 value and its digits, "value/digits": no var)
+                    elif v >= 0x4000:               # a var set just before (Route 206's gate: 0x8004 = 96)
                         k = self.const_before(x, v)
                         v = ('var', v) if k is None else k
                     nst |= {(idx, (name, v))}
@@ -894,7 +1031,7 @@ class FileTr:
             prev_end = None if fl in ('end', 'jump', 'return') or op == 0xBE else end
         for m in movs:
             out += ['', '    .balign 4, 0', f'{self.label(m)}:']
-            fix = path_fixes().get((self.f, m))
+            fix = path_fixes().get((self.f, self.job.pd.pearl_addr(self.f, m)))
             if fix is not None:
                 out.append(f'// path fix (data/pearl_path_fixes.json): {fix["why"]}')
             for cmd, n in (fix['moves'] + [(0xFE, 0)] if fix is not None else d.movement[m]):
@@ -923,14 +1060,14 @@ class FileTr:
         if name in TOWER_ONLY_HANDLERS and self.job.zone['name'] not in TOWER_ZONES:
             h = None                                   # (b2tools/tower_script.py: these stay stubs elsewhere)
         vals = [v for ty, v in args]
-        patch = script_patches().get((self.f, a))      # (data/pearl_script_patches.json: one command changed)
+        patch = script_patches().get((self.f, self.job.pd.pearl_addr(self.f, a)))      # (data/pearl_script_patches.json: one command changed)
         if patch is not None:
             if 'drop' in patch:
                 self.job.insn_status[(self.f, a)] = (name, 'done')
                 return [f'// Pearl 0x{op:03X} {name} {", ".join(map(str, vals))}: dropped '
                         f'(data/pearl_script_patches.json: {patch["drop"]})']
             assert len(patch['args']) == len(vals), (self.f, hex(a), name, patch)
-            vals = list(patch['args'])
+            vals = [self.job.pd.platinum_addr(self.f, v) if ty in ('rel', 'mov') else v for (ty, _), v in zip(args, patch['args'])]
             args = [(ty, v) for (ty, _), v in zip(args, vals)]
         if h is None:
             self.job.insn_status[(self.f, a)] = (name, 'stub')
@@ -939,11 +1076,31 @@ class FileTr:
                     f': not translated yet']
         before = sum(self.job.stubs.values())
         r = h(self, a, vals, name)
-        if (self.f, a) in SCENE_AFTER:
-            r = r + SCENE_AFTER[(self.f, a)](self)
+        if (self.f, self.job.pd.pearl_addr(self.f, a)) in SCENE_AFTER:
+            r = r + SCENE_AFTER[(self.f, self.job.pd.pearl_addr(self.f, a))](self)
+        if self.money_entries and self.reach_from[a] & self.money_entries:
+            r = [money_layout(line) for line in r]     # (a script that shows the money window: money_layout)
+        for line in r:                                 # (MONEY_WORD: the last buffer written into word 2)
+            if re.match(rf'\s*pl_Buffer\w+ {MONEY_WORD},', line):
+                self.money_word_buf = line.split('//')[0].strip()
+        if name in ('ShowMoney', 'UpdateMoneyDisplay') and getattr(self, 'money_word_buf', None):
+            r = r + [f'{self.money_word_buf}  // again: Black 2\'s money window wrote the money into word {MONEY_WORD}']
         self.job.done[name] += 1
         self.job.insn_status[(self.f, a)] = (name, 'stub' if sum(self.job.stubs.values()) > before else 'done')
         return r
+
+
+# ---- the money window's layout (v101-test, 2026-11-08). Black 2 puts the money window at the top right (MoneyWinDisp
+# 31, 1) and, while it shows, the talk balloon at the bottom (ActorMsg pos 2: Black 2's own balloons go to the top when
+# the speaker stands above the player, ov036 ActorMsgWin_CalcWinPosAuto) and a menu under the money window (31, 5):
+# black_city_5.s. Pearl's scripts show their menus at the top left with the money at the right, so in Black 2 the
+# Game Corner's coin menu and money window lay under the clerk's balloon and the Dept. Store 5F's and the Berry Master's
+# menus over their money windows. In a script whose flow shows the money window: talk lines with the balloon at the
+# bottom, a menu at row 5 or lower.
+def money_layout(line):
+    line = re.sub(r'^(\s*)pl_msg_talk (\S)', r'\1pl_msg_talk_low \2', line)
+    line = re.sub(r'^(\s*)pl_msg_actor (\S)', r'\1pl_msg_actor_low \2', line)
+    return re.sub(r'^(\s*ListMenu_AnchorTopRight 31, )([0-4])(,)', r'\g<1>5\3', line)
 
 
 # ---- script patches: single Pearl commands changed or dropped (data/pearl_script_patches.json; 2026-10-26: the
@@ -1221,6 +1378,11 @@ def speaker(tr, a, line):
     """('talk' | 'actor' | 'sys', uid) of a Message."""
     if tr.zone_file and line in tr.job.speakers:
         who = tr.job.speakers[line]
+        if who != 'sys' and who not in tr.job.object_index and version.PLATINUM:
+            # (a person the zone doesn't install yet, as Platinum's Looker until his sprite is mapped: Black 2's ActorMsg
+            # skips the line for a missing actor, so the plain window shows it, with Platinum's "Looker:" in front)
+            tr.job.approx['a speaker not installed yet (data/platinum/pearl_speakers.json): the plain window'] += 1
+            return ('sys', None)
         return ('sys', None) if who == 'sys' else ('actor', who)   # 'sys': a narration line (the plain window)
     if not tr.is_talk(a):
         return ('sys', None)
@@ -1246,7 +1408,9 @@ def switch_window(tr, kind, uid):
 @handler('Message', 'MessageNoSkip', 'MessageInstant')
 def h_message(tr, a, vals, name):
     n = vals[0]
-    out = []
+    out = [(f'pl_BufferItemName {i}, {item_value(int(who[5:]))[0]}' if who.startswith('item:') else f'{FILL_MACROS[who]} {i}')
+           + '  // a buffer Gen 4 filled earlier (BUFFER_FILLS)'
+           for i, who in (tr.job.buffer_fills.get(n, {}) if tr.zone_file else {}).items()]
     kind, uid = speaker(tr, a, n)
     src = tr.job.gen4_text.bank(tr.bank)[n]
     cp = tuple(sorted(i for i in tr.cp_bufs.get(a, set()) if i in tr.job.gen4_text.buffers(src)))
@@ -1347,16 +1511,27 @@ def h_counterpart(tr, a, vals, name):
 # Black 2's case): Pokétch apps (BufferPoketchAppName), Contest Accessories (GetFashionName, with an article:
 # GetFashionNameWithArticle; 2026-10-25, chapter 4a: Keira's "Obtained the Glitter Powder!" in the Contest Hall).
 NAME_SOURCES = {'BufferPoketchAppName': (406, True), 'BufferAccessoryName': (338, False),
-                'GetFashionNameWithArticle': (339, False)}
+                'GetFashionNameWithArticle': (339, False),
+                # Platinum's (2026-11-02, the dialogue step): a Trainer's name by its id (bank 559: the Pokémon Mansion's
+                # maid names her challenger; Black 2 has no word command for a Trainer's name), and a number Black 2's
+                # WordSetNumber can't hold (u16: the Villa's prices go to 220,000), written in (bank None: the number)
+                'BufferTrainerName': (559, False), 'BufferValuePaddingDigits': (None, False)}
 ACCESSORY_NAMES = {'BufferAccessoryName': 'pl_BufferAccessoryWord', 'GetFashionNameWithArticle': 'pl_BufferAccessoryArticle'}
 NAME_WHAT = {'BufferPoketchAppName': 'the app', 'BufferAccessoryName': 'the Accessory',
-             'GetFashionNameWithArticle': 'the Accessory'}
+             'GetFashionNameWithArticle': 'the Accessory', 'BufferTrainerName': 'the Trainer',
+             'BufferValuePaddingDigits': 'the number'}
+WRITTEN_IN_MENUS = ('BufferTrainerName', 'BufferValuePaddingDigits')   # names a menu entry gets written in (h_menu_add)
 
 
 def source_name(cmd, k):
     import gen4_text
     bank, recase = NAME_SOURCES[cmd]
-    nm = gen4_text.bank(bank)[k]
+    if bank is None:                    # BufferValuePaddingDigits value, padding, digits: the number, right-aligned to its
+        v, digits = map(int, str(k).split('/')) if '/' in str(k) else (int(k), 0)   # digits with spaces of a digit's width
+        font = b2font.load(0)
+        pad = max(0, digits - len(str(v))) * font.width('0')
+        return ' ' * round(pad / font.width(' ')) + str(v)
+    nm = gen4_text.bank(bank)[k].replace('{TRNAME}', '')     # (bank 559's names are stored compressed)
     if not recase:
         return nm
     return ' '.join('-'.join(w[:1] + w[1:].lower() for w in word.split('-')) for word in nm.split(' '))
@@ -1372,9 +1547,10 @@ def h_accessory_name(tr, a, vals, name):
     return [f'{ACCESSORY_NAMES[name]} {vals[0]}, {tr.var(vals[1]) if vals[1] >= 0x4000 else vals[1]}  // Pearl {name}']
 
 
-@handler('BufferPoketchAppName')
+@handler('BufferPoketchAppName', 'BufferTrainerName', 'BufferValuePaddingDigits')
 def h_source_name(tr, a, vals, name):
-    return [f'// {name} {vals[0]}, {tr.var(vals[1]) if vals[1] >= 0x4000 else vals[1]}: the lines naming '
+    v = vals[1] if name == 'BufferValuePaddingDigits' or vals[1] < 0x4000 else tr.var(vals[1])   # (a u32 value: no var)
+    return [f'// {name} {vals[0]}, {v}: the lines naming '
             f'{NAME_WHAT[name]} have its name written in (Black 2 has no word for it: NAME_SOURCES)']
 
 
@@ -1571,18 +1747,35 @@ def ev_object(tr, uid, what):
 _HEIGHTS = None
 
 
-def grid_y(tr, x, z, pearl_y):
+def heights():
+    """The converted maps' tile heights (pearl_events.Heights) for grid_y and cam_point: the last build's (work/world);
+    (plat-ch2, 2026-11-07) Platinum's own converted heights (platinum_events --heights) in a Platinum run."""
+    global _HEIGHTS
+    if _HEIGHTS is None:
+        import pearl_events
+        if version.PLATINUM:
+            import platinum_events
+            _HEIGHTS = platinum_events.version_heights(pearl_events)
+        else:
+            _HEIGHTS = pearl_events.Heights()
+    return _HEIGHTS
+
+
+def grid_y(tr, x, z, pearl_y, own=None):
     """Black 2's height step (16 units) of tile (x, z) of this zone's converted map, for a script that places a person.
     Pearl's own y counts Pearl's levels (Jubilife's ground is 1 there, 2 in the converted map): a person placed with it
     stood a level below the player, so Black 2 neither drew nor let anyone talk to them (the Pokétch president after
-    the third clown, found in game 2026-10-19). Pearl's y is kept only when the tile is a variable or has no height."""
-    global _HEIGHTS
+    the third clown, found in game 2026-10-19). Pearl's y is kept only when the tile is a variable or has no height.
+    (plat-ch2, 2026-11-07) Platinum: the heights are Platinum's converted ones (platinum_events --heights, not the last
+    Pearl build's work/world), and a tile in a var takes the ground of the person's own tile (own: its event tile):
+    Platinum's Looker at (179, the player's z) in Jubilife was a level under the ground, so were Route 207's and
+    Solaceon's Barry."""
     if not (isinstance(x, int) and isinstance(z, int)) or x >= 0x4000 or z >= 0x4000:
+        if version.PLATINUM and own is not None:                # (plat-ch2)
+            h = heights().at(tr.job.zone, *own)
+            return pearl_y if h is None else h // 16
         return pearl_y
-    if _HEIGHTS is None:
-        import pearl_events
-        _HEIGHTS = pearl_events.Heights()
-    h = _HEIGHTS.at(tr.job.zone, x, z)
+    h = heights().at(tr.job.zone, x, z)
     return pearl_y if h is None else h // 16
 
 
@@ -1616,7 +1809,7 @@ def h_setobjpos(tr, a, vals, name):
     i, o = ev_object(tr, uid, name)
     if o is None:
         return [f'pl_stub SetObjectEventPos  // object {uid} is not in this zone']
-    y = grid_y(tr, x, z, o['y'])
+    y = grid_y(tr, x, z, o['y'], own=(o['x'], o['z']))
     if tr.levels(a) == {2}:
         turned = same_block_before(tr, a, 'SetObjectEventDir', uid)     # (a Dir just before: keep it)
         d = tr.var(turned[1]) if turned else o['initial_dir']
@@ -1728,9 +1921,66 @@ def h_tower_intro(tr, a, vals, name):
     return tower_script.h_intro(tr, vals)
 
 
+# ---- plat-records (2026-11-08): the Tower lobby's results machines show the player's own results
+# Gen 4's OpenBattleTowerRecordsApp isRankingsScreen, resultsType (pokeplatinum scripts_battle_tower.s BattleTower_ResultsMachine;
+# Pearl's file 358 the same) opens the records app (pokeplatinum applications/frontier/tower_records.c). With isRankingsScreen
+# FALSE it shows the player's own results for resultsType (PrintRecordsScreen): 0 the Single and Double rooms, 1 the Multi and
+# link Multi rooms, 2 the Wi-Fi room (its rank, then its streaks). Each room has two rows: PREV or CURRENT (CURRENT while the
+# streak goes on) with the latest streak, and RECORD with the longest. Black 2 has no such screen: its records screen
+# (BSubwayCmd_Tool 111, overlay 141) lists OTHER players' records. So these machines show the same rows as a message, in the
+# app's own words (its bank, TOWER_RECORDS_BANK: Pearl's, Diamond's and Platinum's lines 0-21 are the same), with the numbers
+# Black 2's Battle Subway keeps for the Tower (its score block, by play mode: Pearl's and Platinum's 0 Single, 1 Double, 2 Multi,
+# 3 link Multi, 4 Wi-Fi are Black 2's modes 0-4; tower_script.py): the latest streak BSubwayCmd_Tool 6 (BSubwayScoreData_
+# GetStreak, set at a loss and after seven wins), the longest the Frontier core's record 2 * mode (BSubwayScoreData_GetMaxStreak,
+# plat_frontier.c: no Black 2 command reads it by mode), CURRENT when the mode has a stage (BSubwayCmd_Tool 38, BSubwayScoreData_
+# HasStage: set when a challenge starts, raised after seven wins, cleared at a loss or a disqualification), the Wi-Fi rank
+# BSubwayCmd_Tool 27. With isRankingsScreen TRUE (the leaders machine, after 0x1E4 found leaders: never, the Wi-Fi rooms are
+# closed) Black 2's leaders screen stays. The rows' colors are the app's palette (dropped).
+TOWER_RECORDS_BANK = 17     # pokediamond narc_0017.gmm, pokeplatinum res/text/battle_tower_records_app.json
+
+
+def _tower_records_lines(job):
+    """The first of the eleven lines pl_TowerResults shows (src/include/pearl_story.inc), added to the zone's text in its order:
+    Single PREV, Single CURRENT, Double PREV, Double CURRENT, the same for Multi and Link, the Wi-Fi rank, Wi-Fi PREV and CURRENT.
+    Built from the records app's own lines (bank TOWER_RECORDS_BANK, by number): 0-2 the screens' titles, 3-5 the first rooms'
+    names and 6-8 the second ones' (two rows each in the app: one here), 9 PREV, 10 CURRENT, 11 RECORD, 12 RANK, 13 "Win streak:
+    N" (buffer 0 the latest streak, 1 the longest), 14 the rank's number."""
+    w = [re.sub(r'\{COLOR \d+\}', '', t) for t in job.gen4_text.bank(TOWER_RECORDS_BANK)]
+    assert w[13].startswith('Win streak: {STRVAR_1 53, 0}') and w[14] == '{STRVAR_1 51, 0}', w[13:15]
+    name = lambda n: ' '.join(w[n].replace('\\n', ' ').split())             # "Single\nRecord" -> "Single Record"
+    streak = lambda i: w[13].rstrip().replace('{STRVAR_1 53, 0}', f'{{STRVAR_1 53, {i}}}')
+    rows = lambda now: f'{w[now]} {streak(0)}\\f{w[11]} {streak(1)}'      # PREV or CURRENT, then RECORD
+    lines = []
+    for title, first, second in ((0, 3, 6), (1, 4, 7)):
+        for now in (9, 10):
+            lines.append(f'{w[title]}\\n{name(first)}\\f{rows(now)}\\r')
+        for now in (9, 10):
+            lines.append(f'{name(second)}\\n{rows(now)}')
+    lines.append(f'{w[2]}\\n{name(5)}\\f{w[12]} {w[14]}\\r')
+    for now in (9, 10):
+        lines.append(f'{name(8)}\\n{rows(now)}')
+    ns = [job.line_text(('tower_results', k), t) for k, t in enumerate(lines)]
+    assert ns == list(range(ns[0], ns[0] + len(lines))), ns          # (the macro counts from the first)
+    return ns[0]
+
+
 @handler('OpenBattleTowerRecordsApp')
 def h_tower_records(tr, a, vals, name):
-    return ['BSubwayCmd_Tool 111, 0, 0, 0  // OpenBattleTowerRecordsApp: Black 2\'s records screen']
+    first = _tower_records_lines(tr.job)
+    return [f'pl_TowerResults {tr.var(vals[0])}, {tr.var(vals[1])}, {first}  // OpenBattleTowerRecordsApp: the player\'s '
+            f'results as a message (Black 2\'s leaders screen for the rankings)']
+# ---- end plat-records
+
+
+@handler('1E4')
+def h_tower_has_leaders(tr, a, vals, name):
+    """Gen 4's 0x1E4 var (pokeplatinum ScrCmd_1E4: WifiBattleTowerDownloadData_HasMatchListData; Pearl's the same): whether
+    the Wi-Fi Battle Room leaders were ever downloaded, which the lobby's leaders machine asks before its list (none: "There
+    doesn't appear to be any data yet..."). Black 2's own question about its Wi-Fi Subway leaders (ov050 scrcmd_bsubway.c
+    case 110, BSubwayWifiData_HasLeaders): none, the Wi-Fi rooms closed. It was a stub, leaving the var as it was, so the
+    machine opened Black 2's leader list ("SUCCESSIVE TRAINERS", empty; 2026-11-08, plat-test)."""
+    return [f'BSubwayCmd_Tool 110, 0, 0, {tr.var(vals[0])}  // Gen 4 0x1E4: any Wi-Fi leaders downloaded (Black 2\'s '
+            f'Wi-Fi Subway leaders)']
 
 
 @handler('GetBattleTowerPartnerSpeciesAndMove')
@@ -1753,6 +2003,30 @@ def h_exchange(tr, a, vals, name):
 @handler('BufferVarPaddingDigits')
 def h_buffer_padded(tr, a, vals, name):
     return [f'pl_BufferNumber {vals[0]}, {tr.var(vals[1])}, {vals[3]}  // BufferVarPaddingDigits']
+
+
+# Platinum's text buffers (2026-11-02, the dialogue step: notes/PORT_AUDIT.md "Step 2: dialogue")
+@handler('BufferTypeName')
+def h_buffer_type(tr, a, vals, name):
+    """Platinum 0x2FD BufferTypeName idx, type (Veilstone's Hidden Power guitarist): Black 2's WordSetPokeTypeName. The
+    type comes from CalcHiddenPowerType, which gives Black 2's type number here (Gen 4 numbers ??? as 9, Fire 10)."""
+    return [f'WordSetPokeTypeName {vals[0]}, {tr.var(vals[1])}  // BufferTypeName (a type of Black 2\'s numbering)']
+
+
+@handler('CalcHiddenPowerType')
+def h_hidden_power_type(tr, a, vals, name):
+    """Platinum 0x2FF CalcHiddenPowerType slot, var: the Hidden Power type of a party Pokémon, 0xFFFF when it can't learn
+    TM10 (scrcmd.c). Black 2's PokePartyGetHiddenPowerType does the same (ov036 scrcmd_pokemon_misc.c), in Black 2's
+    type numbers, which BufferTypeName above takes."""
+    return [f'PokePartyGetHiddenPowerType {tr.var(vals[1])}, {tr.var(vals[0])}  // CalcHiddenPowerType']
+
+
+@handler('BufferFloorNumber')
+def h_buffer_floor(tr, a, vals, name):
+    """Platinum 0x347 BufferFloorNumber idx, floor: the floor for its elevators' floor window (ShowCurrentFloor), which
+    Black 2 lacks (h_show_floor: no window, as Pearl's elevators), so nothing reads it."""
+    tr.job.approx['BufferFloorNumber (for the floor window Black 2 lacks: nothing reads it)'] += 1
+    return [f'// BufferFloorNumber {vals[0]}, {vals[1]}: for the floor window, which Black 2 lacks (ShowCurrentFloor)']
 
 
 @handler('1DF', '1E0')
@@ -1810,17 +2084,16 @@ def h_setbg(tr, a, vals, name):
     i, x, z = vals
     y = 0
     if isinstance(x, int) and isinstance(z, int) and x < 0x4000 and z < 0x4000:
-        global _HEIGHTS
-        if _HEIGHTS is None:
-            import pearl_events
-            _HEIGHTS = pearl_events.Heights()
-        y = _HEIGHTS.at(tr.job.zone, x, z) or 0
+        y = heights().at(tr.job.zone, x, z) or 0
     return [f'pl_SetBgEventPos {tr.var(i)}, {tr.var(x)}, {tr.var(z)}, {y}  // SetBgEventPosition {i}, {x}, {z}']
 
 
 @handler('SetPosition')
 def h_setpos(tr, a, vals, name):
     uid, x, y, z, d = vals
+    if version.PLATINUM and uid in tr.follow_uids:   # (plat-test) the follower once it follows (Black 2 renamed it 0xFE)
+        return [f'pl_SetPositionF {uid}, {tr.var(x)}, {grid_y(tr, x, z, tr.var(y))}, {tr.var(z)}, {tr.var(d)}  '
+                f'// (the follower once it follows)']
     return [f'pl_SetPosition {tr.var(uid)}, {tr.var(x)}, {grid_y(tr, x, z, tr.var(y))}, {tr.var(z)}, {tr.var(d)}']
 
 
@@ -2085,9 +2358,39 @@ def h_sunyshore_init(tr, a, vals, name):
 def h_veilstone_init(tr, a, vals, name):
     """Pearl 0x174 InitVeilstoneGym (the Gym's zone script; pokediamond arm9 0x02064D4C): the 12 panels at their start
     states. Gimmick 60 (decomp src/pearlb2/resident/veilstone_gym.c, patches/veilstone_gym.py) starts them there on
-    each entry, since Black 2 clears the gimmick's saved work on a zone change, so the script has nothing to do."""
+    each entry, since Black 2 clears the gimmick's saved work on a zone change, so the script has nothing to do.
+    Platinum's own Gym (its bags and tire stacks): gimmick 66 does the same (src/pearlb2/plat_gyms/plat_veilstone_gym.c,
+    patches/platinum_gyms.py; 2026-11-02, plat-gyms)."""
+    if version.PLATINUM:
+        tr.job.approx['InitPersistedMapFeaturesForVeilstoneGym (gimmick 66 does it)'] += 1
+        return ['// InitPersistedMapFeaturesForVeilstoneGym: gimmick 66 puts the bags and stacks at their places '
+                '(plat_gyms/plat_veilstone_gym.c)']
     tr.job.approx['InitVeilstoneGym (gimmick 60 does it)'] += 1
     return ['// InitVeilstoneGym: gimmick 60 starts the panels at their places (resident/veilstone_gym.c)']
+
+
+@handler('InitPersistedMapFeaturesForEternaGym')
+def h_eterna_init(tr, a, vals, name):
+    """Platinum 0x2C9 (its Eterna Gym's on-transition script): the flower clock's set-up. Gimmick 65 (decomp
+    src/pearlb2/plat_gyms/plat_eterna_gym.c, patches/platinum_gyms.py) sets the hands and the fountains by the clock's
+    state on each field, so the script has nothing to do (2026-11-02, plat-gyms)."""
+    tr.job.approx['InitPersistedMapFeaturesForEternaGym (gimmick 65 does it)'] += 1
+    return ['// InitPersistedMapFeaturesForEternaGym: gimmick 65 sets the clock by its state (plat_gyms/plat_eterna_gym.c)']
+
+
+ETERNA_FOUNTAIN_LINE = 12                  # Platinum's eterna_city_gym bank: EternaGym_Text_FountainWaterLevelDropped
+
+
+@handler('AdvanceEternaGymClock')
+def h_eterna_clock(tr, a, vals, name):
+    """Platinum 0x2CA (its Eterna Gym, after each Gym Trainer's win and Gardenia's TM): the clock turns, the camera
+    looks on, a fountain drains after the second and third Trainer with its line (pokeplatinum scrcmd.c
+    ScrCmd_AdvanceEternaGymClock, gym_features.c FieldTask_EternaGym_AdvanceClockState). Gimmick 65 does it through
+    PVAR_GIMMICK_REQUEST; the macro shows the fountain's line from the zone's own text (2026-11-02, plat-gyms)."""
+    assert tr.job.zone['name'] == 'MAP_ETERNA_GYM_ENTRANCE', tr.job.zone['name']
+    tr.job.approx['AdvanceEternaGymClock (gimmick 65 turns the clock: PVAR_GIMMICK_REQUEST)'] += 1
+    return [f'pl_AdvanceEternaGymClock {ETERNA_FOUNTAIN_LINE}  // Platinum AdvanceEternaGymClock: the clock turns '
+            f'(plat_gyms/plat_eterna_gym.c)']
 
 
 @handler('PressSunyshoreGymButton')
@@ -2147,7 +2450,15 @@ def h_hearthome_lift(tr, a, vals, name):
     """Pearl's Hearthome Gym lift (0x171 InitHearthomeGym in the four question rooms' zone scripts, 0x172
     MoveHearthomeGymElevator on their step trigger (9, 13); 2026-10-26, the ch5b agent): gimmick 59's platform lift
     (pearl_gimmicks.HEARTHOME_LIFTS), which places it by the player's floor (the first room's up and still until flag
-    0x98D, as Pearl's) and rides it on the step, so the scripts have nothing to do."""
+    0x98D, as Pearl's) and rides it on the step, so the scripts have nothing to do.
+    Platinum's own Gym (pearl_gimmicks.HEARTHOME_GYM 'dark rooms'): its trainer rooms' on-transition script sets up the
+    dark, the doors and the clue; gimmick 67 does that on each field (src/pearlb2/plat_gyms/plat_hearthome_gym.c,
+    patches/platinum_gyms.py; 2026-11-02, plat-gyms)."""
+    import pearl_gimmicks
+    if pearl_gimmicks.HEARTHOME_GYM == 'dark rooms' and name == 'InitPersistedMapFeaturesForHearthomeGym':
+        tr.job.approx['InitPersistedMapFeaturesForHearthomeGym (gimmick 67 does it)'] += 1
+        return ['// InitPersistedMapFeaturesForHearthomeGym: gimmick 67 sets up the dark, the doors and the clue '
+                '(plat_gyms/plat_hearthome_gym.c)']
     return h_platforms(tr, a, vals, name)
 
 
@@ -2166,6 +2477,17 @@ def h_give_egg(tr, a, vals, name):
 # (pearl_story.inc "the deliveryman"). Pearl's lines for each are its own (bank 332).
 DELIVERY_BANK = 332
 DELIVERY_LINES = (14, 15, 16, 13)     # "received a Member's Card", "Oak's Letter", "an Azure Flute", "the MANAPHY Egg"
+if version.PLATINUM:                  # Platinum's: the event Regigigas, "received {Regigigas}!" (its line 7; 2026-11-07,
+    DELIVERY_LINES += (7, 17)         # plat-story), then "received a Secret Key" (line 17: Rotom's event; 2026-11-02,
+                                      # plat-rooms); pearl_story.inc PL_DELIVERY_GIFTS
+# (v101-story) Pearl and Diamond 1.0.1: then the Pokétch apps (version.POKETCH_APP_GIFTS), each "received the Pokétch app
+# ...!" (line 18) with the app's name written in (Black 2 has no word for it: NAME_SOURCES). (plat-stubs) Platinum: its
+# Stopwatch and Alarm Clock after the Secret Key, its line 19
+DELIVERY_APP_LINE = 19 if version.PLATINUM else 18     # (plat-stubs: Platinum's bank has "We look forward..." at 18)
+DELIVERY_LINES += tuple(('app', app) for app in version.POKETCH_APP_GIFTS)
+# (postdex, 2026-11-09) Then the event Pokémon (version.EVENT_GIFTS: Mew, Celebi, Jirachi, Deoxys), each "received
+# <species>!" (line 7; pearl_story.inc pl_DeliveryCanReceive puts the species in word 1)
+DELIVERY_LINES += (7,) * len(version.EVENT_GIFTS)
 DELIVERY_PARTY_FULL = 4               # "Your party is full, I'm afraid. I can't give this to you yet."
 
 
@@ -2204,6 +2526,13 @@ def delivery_message(tr, a, name):
     out = switch_window(tr, kind, uid)
 
     def msg(n):
+        if isinstance(n, tuple):        # (v101-story) a Pokétch app: line 18 with its name written in
+            src = tr.job.gen4_text.bank(DELIVERY_BANK)[DELIVERY_APP_LINE]
+            app = poketch_app_name(n[1])
+            text = tr.job.gen4_text._STRVAR.sub(lambda mm: app if int(mm.group(2)) == 1 else mm.group(0), src)
+            m = tr.job.line_text((DELIVERY_BANK, DELIVERY_APP_LINE, n), text)
+            return (f'pl_msg_actor {m}, {uid}' if kind == 'actor' else f'pl_msg_{kind} {m}') + \
+                f'  // Pearl bank {DELIVERY_BANK} line {DELIVERY_APP_LINE}: the Pokétch app {app}'
         m = tr.job.line_for(DELIVERY_BANK, n)
         return (f'pl_msg_actor {m}, {uid}' if kind == 'actor' else f'pl_msg_{kind} {m}') + \
             f'  // Pearl bank {DELIVERY_BANK} line {n}'
@@ -2683,6 +3012,9 @@ def h_remove_money_var(tr, a, vals, name):
 def h_first_battle(tr, a, vals, name):
     tr.job.approx['StartFirstBattle (a wild battle with Pearl\'s first-battle rules: no critical hits, FIGHT only; a '
                   'loss heals and the scene goes on)'] += 1
+    if len(vals) == 1:          # Platinum's first battle is against the rival (a trainer id): a trainer battle with the same rules
+        tr.last_battle = 'trainer'
+        return [f'pl_StartFirstTrainerBattle {trainer(tr, vals[0])}']
     return [f'pl_StartFirstBattle {tr.var(vals[0])}, {tr.var(vals[1])}']
 
 
@@ -2914,6 +3246,16 @@ NOOP = {
     'SetHasPartner': 'Pearl\'s "partner walks along" flag 0x961: Black 2 pairs at SetMovementType 0x30',
     'CreateJournalEvent': 'Black 2 has no journal',
     'IncrementTrainerScore2': 'Pearl\'s trainer-card score (Black 2 keeps its own records)',
+    # Platinum's (2026-11-02, plat-rooms; Pearl has none of these)
+    'IncrementTrainerScore': 'Platinum\'s trainer-card score (Black 2 keeps its own records)',
+    'AddToGameRecord': 'Platinum\'s records (money spent): Black 2 keeps its own',
+    'AddToGameRecordBigValue': 'Platinum\'s records (money spent): Black 2 keeps its own',
+    'SaveTVSegmentHomeAndManor': 'a TV segment: Pearl\'s TV segments are not built either',
+    'SaveTVSegmentHomeAndManorNoFurniture': 'a TV segment: Pearl\'s TV segments are not built either',
+    'InitPersistedMapFeaturesForVilla': 'the Villa\'s gimmick reads the furniture flags on every field load '
+                                        '(b2tools/patches/platinum_villa.py)',
+    '2CD': 'Platinum\'s dark blue fog over the room (overworld weather 26, the Eterna building\'s 4F): Black 2 has '
+           'no such weather',
 }
 
 
@@ -3197,6 +3539,19 @@ def h_plate(tr, a, vals, name):
     return [f'WorkSetConst {tr.var(vals[1])}, 0  // CheckItemIsPlate {tr.var(vals[0])}']
 
 
+# ---- plat-ch8 (2026-11-07): a Plate a person gives (Platinum: Route 217's hiker, the Icicle Plate; Oreburgh Mine B1F, the
+# Flame Plate). Platinum's give-item script asks CheckItemIsPlate and then shows the next of the Plates' eight engraving
+# lines (scripts_common CommonScript_DeterminePlateEngraving: VAR_NUM_PLATES_OBTAINED counts them, 1-8). The approximation
+# above (0) skipped that in zone files: the hiker's Plate showed no engraving and wasn't counted, so the balls' Plates showed
+# the lines one step early. Platinum runs the real check in every file, as the item balls do; for any other item it is 0,
+# as before. Pearl and Diamond keep their 1.0's approximation.
+if version.PLATINUM:
+    @handler('CheckItemIsPlate')
+    def h_plate_platinum(tr, a, vals, name):
+        return [f'pl_CheckItemIsPlate {tr.var(vals[0])}, {tr.var(vals[1])}  // CheckItemIsPlate: Plates 298-313']
+# ---- end plat-ch8
+
+
 @handler('GetTrainerCardLevel')
 def h_card_level(tr, a, vals, name):
     tr.job.approx['GetTrainerCardLevel (0: no trainer card stars in Black 2)'] += 1
@@ -3218,7 +3573,7 @@ NATIONAL_DEX_AT_CHAMPION = {
 @handler('CheckLocalDexCompleted')
 def h_dex_done(tr, a, vals, name):
     # (2026-10-20) the regional list is Pearl's Sinnoh one (patches/sinnoh_dex.py, its completion rule too)
-    if (tr.f, a) in NATIONAL_DEX_AT_CHAMPION:
+    if (tr.f, tr.job.pd.pearl_addr(tr.f, a)) in NATIONAL_DEX_AT_CHAMPION:
         return [f'pl_CheckLocalDexCompletedOrChampion {tr.var(vals[0])}  // the National Pokédex at Champion '
                 f'(NATIONAL_DEX_AT_CHAMPION)']
     return [f'pl_CheckLocalDexCompleted {tr.var(vals[0])}']
@@ -3235,7 +3590,9 @@ def h_dex_rating(tr, a, vals, name):
     """Pearl 0x123 (GetDexEvaluationMessage mode, var): var = the line of Pearl's rating bank (335: Rowan 4-14, Oak
     19-39) for the count; the script then prints it with MessageVar. Here var = that line's number in this file."""
     mode, var = vals
-    first, last, macro = (19, 39, 'National') if mode else (4, 14, 'Local')
+    # ---- plat-fixes (2026-11-07): the version's lines and tiers (version.DEX_RATING; Platinum: Rowan 4-17, Oak 22-42)
+    first, last, macro = version.DEX_RATING[1 if mode else 0]
+    # ---- end plat-fixes
     lines = [tr.job.line_for(tr.bank, n) for n in range(first, last + 1)]
     return [f'pl_LoadPokedexRating{macro} {tr.var(var)}, {", ".join(map(str, lines))}  // Pearl bank {tr.bank} '
             f'lines {first}-{last}']
@@ -3371,8 +3728,91 @@ def h_amity_steps(tr, a, vals, name):
 @handler('CalcAmitySquareFoundAccessory')
 def h_amity_accessory(tr, a, vals, name):
     """Pearl's Accessory for the next find (by species): Pearl's table and chances (the user, 2026-11-01, replacing the
-    Berries-only decision of 2026-10-25)."""
+    Berries-only decision of 2026-10-25). Platinum's own table and pools (amity_platinum): in the script."""
+    if version.PLATINUM:
+        return amity_platinum(tr, a, tr.var(vals[0]), tr.var(vals[1]))
     return [f'pl_AmityAccessory {tr.var(vals[0])}, {tr.var(vals[1])}  // Pearl 0x217']
+
+
+# Platinum's Amity Square finds (pokeplatinum scrcmd_amity_square.c ScrCmd_CalcAmitySquareFoundAccessory; its table is the
+# dump's 60 u16 at ROM 0xEFF84, checked in amity_platinum_table): six pools of ten Accessories, the column by a roll of 100
+# (15, 15, 15, 15, 10, 10, 8, 5, 5, 2 %), the pool by the walking Pokémon. Pearl's compiled table (resident/contest.c) is
+# Pearl's own rows by Pearl's species: Platinum's starters have pools of their own, so a Platinum build does it in the
+# script (no C change; the resident code stays the same in every version).
+AMITY_POOLS_PLATINUM = [('CHIMCHAR', 'MONFERNO', 'INFERNAPE'), ('PIPLUP', 'PRINPLUP', 'EMPOLEON'),
+                        ('TURTWIG', 'GROTLE', 'TORTERRA'), ('PSYDUCK', 'BUNEARY', 'DRIFLOON'),
+                        ('PIKACHU', 'CLEFAIRY', 'PACHIRISU', 'HAPPINY'), ('JIGGLYPUFF', 'TORCHIC', 'SKITTY', 'SHROOMISH')]
+AMITY_UP_TO = (15, 30, 45, 60, 70, 80, 88, 93, 98, 100)
+AMITY_TABLE_ROM = 0xEFF84
+
+
+def amity_platinum_table():
+    """Platinum's 6 x 10 Accessories (pokeplatinum's source, Pearl's numbers: the same constants), checked against the dump."""
+    src = open(os.path.join(ROOT, 'external', 'pokeplatinum', 'src', 'scrcmd_amity_square.c')).read()
+    block = src[src.index('sMonFindableAccessories[NUM'):src.index('BOOL ScrCmd_CalcAmitySquareFoundAccessory')]
+    names = re.findall(r'ACCESSORY_\w+', block[block.index('{'):])
+    acc = [l.strip() for l in open(os.path.join(ROOT, 'external', 'pokeplatinum', 'generated', 'accessories.txt'))
+           if l.strip() and not l.startswith('#')]
+    ids = [acc.index(n) for n in names]
+    from gen4rom import Rom
+    rom = Rom(version.WORLD_DUMP)
+    assert bytes(rom.data[AMITY_TABLE_ROM:AMITY_TABLE_ROM + 120]) == struct.pack('<60H', *ids), \
+        "Platinum's Amity Square table is not the dump's (pokeplatinum src/scrcmd_amity_square.c)"
+    return [ids[r * 10:r * 10 + 10] for r in range(6)]
+
+
+def amity_platinum(tr, a, dst, species):
+    sp = {}
+    for line in open(os.path.join(ROOT, 'external', 'pokebw2', 'generated', 'species.txt'), encoding='utf-8'):
+        m = re.match(r'(SPECIES_\w+)', line.strip())
+        if m: sp[m.group(1)] = len(sp)
+    table = amity_platinum_table()
+    out = [f'// CalcAmitySquareFoundAccessory {dst}, {species}: Platinum\'s pools (pearl_story AMITY_POOLS_PLATINUM)',
+           'pl_GetRandom PL_TMP, 100']
+    for p, names in enumerate(AMITY_POOLS_PLATINUM):
+        for n in names:
+            out += [f'WorkCmpConst {species}, {sp["SPECIES_" + n]}', f'VMJumpIf CMP_EQ, .Lam{a:x}_{p}']
+    out.append(f'VMJump .Lam{a:x}_0')                  # (anything else: the first pool, as Platinum's default)
+    for p, row in enumerate(table):
+        out.append(f'.Lam{a:x}_{p}:')
+        for c, (up, acc) in enumerate(zip(AMITY_UP_TO, row)):
+            out += [f'WorkSetConst {dst}, {acc}']
+            if c < 9: out += [f'WorkCmpConst PL_TMP, {up}', f'VMJumpIf CMP_LT, .Lam{a:x}_end']
+            else: out += [f'VMJump .Lam{a:x}_end']
+    return out + [f'.Lam{a:x}_end:']
+
+
+# Platinum's Amity Square gift man (pokeplatinum scrcmd_amity_square.c): a daily option of 16, a Berry (0-8) or an Accessory
+@handler('CalcAmitySquareBerryAndAccessoryManOptionID')
+def h_amity_gift_roll(tr, a, vals, name):
+    return [f'pl_GetRandom {tr.var(vals[0])}, 16  // Platinum 0x2DF: the gift man\'s option of the day']
+
+
+@handler('GetAmitySquareBerryOrAccessoryIDFromMan')
+def h_amity_gift_id(tr, a, vals, name):
+    return [f'pl_AmityGiftId {tr.var(vals[0])}, {tr.var(vals[1])}  // Platinum 0x2E1: the option\'s Berry or Accessory']
+
+
+@handler('CheckAmitySquareManGiftIsAccessory')
+def h_amity_gift_kind(tr, a, vals, name):
+    return [f'pl_AmityGiftIsAccessory {tr.var(vals[0])}, {tr.var(vals[1])}  // Platinum 0x2E0: 1 = an Accessory']
+
+
+@handler('32D', '338', '32E', '339')
+def h_amity_hut_objects(tr, a, vals, name):
+    """Platinum's Amity Square huts (a step into one fades and moves the player and the follower to another): 0x32D keeps
+    every other person drawn (MAP_OBJ_STATUS_13) at the player's height while the map round them reloads, 0x338 the gift
+    man at a height by his column, 0x32E / 0x339 let go (pokeplatinum ov5_021F6454.c). Black 2 keeps Amity Square's 2 x 2
+    chunks loaded whole and every person on its own tile's height: nothing to do. (The walking Pokémon, object 5, follows
+    as Black 2's 0xFE: the scene's ApplyMovement 5 and SetPosition 5 move it as the follower, TR.follow_uids.)"""
+    return [f'// {name}: Platinum keeps people drawn through the hut warp; Black 2 loads the 2 x 2 map whole']
+
+
+@handler('GetCurrentSafariGameCaughtNum')
+def h_safari_caught(tr, a, vals, name):
+    """Platinum 0x31B: the Pokémon caught in this Safari Game (5 or more: the Matchup Checker); pl_SafariCaught counts
+    the party and the boxes against the count pl_SafariCountStart kept."""
+    return [f'pl_SafariCaught {tr.var(vals[0])}, PVAR_SAFARI_START_COUNT  // Platinum 0x31B GetCurrentSafariGameCaughtNum']
 
 
 @handler('CanFitAccessory')
@@ -3403,11 +3843,7 @@ CAM_STEP = {'NORTH': (0, -1), 'SOUTH': (0, 1), 'WEST': (-1, 0), 'EAST': (1, 0)}
 def cam_point(tr, x, z):
     h = None
     if isinstance(x, int) and isinstance(z, int) and x < 0x4000 and z < 0x4000:
-        global _HEIGHTS
-        if _HEIGHTS is None:
-            import pearl_events
-            _HEIGHTS = pearl_events.Heights()
-        h = _HEIGHTS.at(tr.job.zone, x, z)
+        h = heights().at(tr.job.zone, x, z)
     return f'{(x * 16 + 8) << 12}, {(h or 0) << 12}, {(z * 16 + 8) << 12}'
 
 
@@ -3431,14 +3867,16 @@ CAMERA_MOVE_FROM = {(351, 0x0142): (15, 45), (351, 0x0160): (15, 45)}
 @handler('AddFreeCamera')
 def h_cam_add(tr, a, vals, name):
     x, z = vals
-    if (x >= 0x4000 or z >= 0x4000) and (tr.f, a) in CAMERA_NEAR_PLAYER:
-        tr.cam = CAMERA_NEAR_PLAYER[(tr.f, a)]
+    pa = tr.job.pd.pearl_addr(tr.f, a)
+    if (x >= 0x4000 or z >= 0x4000) and (tr.f, pa) in CAMERA_NEAR_PLAYER:
+        tr.cam = CAMERA_NEAR_PLAYER[(tr.f, pa)]
         return [f'EvCameraInit  // AddFreeCamera {tr.var(x)}, {tr.var(z)} (the player\'s tile): Black 2\'s event camera '
                 f'where the camera is, counted as {tr.cam}', 'EvCameraUnbind']
-    if (x >= 0x4000 or z >= 0x4000) and (tr.f, a) in CAMERA_AT_PLAYER:
-        x, z = CAMERA_AT_PLAYER[(tr.f, a)]
+    if (x >= 0x4000 or z >= 0x4000) and (tr.f, pa) in CAMERA_AT_PLAYER:
+        x, z = CAMERA_AT_PLAYER[(tr.f, pa)]
     elif (x >= 0x4000 or z >= 0x4000) and tr.f in CAMERA_PLAN_FILES and a in camera_plan(tr.job.pd, tr.f):
         tr.cam = planned_camera(tr, a) or PLAYER_CAM          # (camera_plan: where it is for each start tile)
+        tr.cam_vars = (x, z)                                  # (the start tile's vars: planned_branches)
         return [f'EvCameraInit  // AddFreeCamera {tr.var(x)}, {tr.var(z)}: the player\'s tile (camera_plan); the '
                 f'view stays where it is', 'EvCameraUnbind']
     elif x >= 0x4000 or z >= 0x4000:
@@ -3471,6 +3909,15 @@ def h_cam_restore(tr, a, vals, name):
 # EvCameraUnbind (the view stays where it is: on the player, Pearl's tile). Lake Acuity (Galactic)'s scene (file 351)
 # is made the same way and can use a row here.
 CAMERA_PLAN_FILES = {230}
+if version.PLATINUM:                # (2026-11-02, plat-rooms) the Galactic HQ hall's speech (Platinum's file 1110: Looker
+    CAMERA_PLAN_FILES |= {1110}     # and the player walk to z 12 or 13, the camera goes to Cyrus's stage and back)
+# ---- plat-ch8 (2026-11-07): Acuity Lakefront's Barry (Platinum's file 385, CoordEvent_Rival on (310-311, 244)): the free
+# camera starts on the player's tile (GetPlayerMapPos), goes north 6 to Barry at the lumpy rocks and back. Without a row
+# its AddFreeCamera was a stub and the camera stayed: Barry spoke 7 tiles north, at the screen's top edge. Each start x
+# gets its own walk (planned_branches). Platinum only: Pearl's file 385 is another zone.
+if version.PLATINUM:
+    CAMERA_PLAN_FILES |= {385}
+# ---- end plat-ch8
 _CAM_PLANS, _CAM_ACTIVE, _WARP_PLACES = {}, {}, {}
 _COND = {0: (0,), 1: (1,), 2: (2,), 3: (0, 1), 4: (1, 2), 5: (0, 2)}
 
@@ -3613,11 +4060,37 @@ def planned_camera(tr, a):
     return ends.pop() if len(ends) == 1 and None not in next(iter(ends)) else None
 
 
+def planned_branches(tr, a, frames=None):
+    """A camera_plan walk that ends on another tile from each start (2026-11-02, plat-rooms: the Galactic HQ hall's speech
+    starts at z 12 or 13, and Platinum's camera walks from there): when the starts differ only in z (or only in x) and
+    the scene's AddFreeCamera took the start tile from vars (tr.cam_vars), a branch on that var for each start, each
+    EvCameraMoveTo its own end. frames None: whether it applies (a list or None)."""
+    plan = camera_plan(tr.job.pd, tr.f).get(a, {})
+    cv = getattr(tr, 'cam_vars', None)
+    if cv is None or len(plan) < 2 or None in plan or any(None in t for t in plan.values()):
+        return None
+    xs, zs = {t[0] for t in plan}, {t[1] for t in plan}
+    k = 1 if len(xs) == 1 and len(zs) == len(plan) else 0 if len(zs) == 1 and len(xs) == len(plan) else None
+    if k is None or cv[k] < 0x4000:
+        return None
+    if frames is None:
+        return [True]
+    out = [f'// ApplyMovement 0xF1 (the free camera): from each start its own end (camera_plan), by {tr.var(cv[k])}']
+    for i, (start, end) in enumerate(sorted(plan.items())):
+        out += [f'WorkCmpConst {tr.var(cv[k])}, {start[k]}', f'VMJumpIf CMP_NE, .Lcpb{a:x}_{i}',
+                f'EvCameraMoveTo {cam_angle(tr)}, {cam_point(tr, end[0], end[1])}, {max(1, frames)}  // to {end}',
+                f'VMJump .Lcpb{a:x}_end', f'.Lcpb{a:x}_{i}:']
+    tr.cam = PLAYER_CAM
+    return out + [f'.Lcpb{a:x}_end:', 'EvCameraWait']
+
+
 @handler('ApplyMovement')
 def h_move(tr, a, vals, name):
     if vals[0] == 0xF1 and tr.f in CAMERA_PLAN_FILES and a in camera_plan(tr.job.pd, tr.f):
         to = planned_camera(tr, a)
         frames = move_frames(tr.d.movement.get(vals[1]) or [])
+        if to is None and planned_branches(tr, a):
+            return planned_branches(tr, a, frames)
         if to is None:
             tr.job.approx['ApplyMovement on the free camera ending on several tiles (the camera stays)'] += 1
             return [f'// ApplyMovement 0xF1 (the free camera), {tr.label(vals[1])}: it ends on several tiles, the '
@@ -3626,7 +4099,7 @@ def h_move(tr, a, vals, name):
         return [f'EvCameraMoveTo {cam_angle(tr)}, {cam_point(tr, to[0], to[1])}, {max(1, frames)}  // ApplyMovement '
                 f'0xF1 {tr.label(vals[1])}: the free camera walks to {to} (camera_plan)', 'EvCameraWait']
     if vals[0] == 0xF1:
-        cam = CAMERA_MOVE_FROM.get((tr.f, a)) or getattr(tr, 'cam', None)
+        cam = CAMERA_MOVE_FROM.get((tr.f, tr.job.pd.pearl_addr(tr.f, a))) or getattr(tr, 'cam', None)
         steps = tr.d.movement.get(vals[1]) if hasattr(tr.d, 'movement') else None
         if cam is None or steps is None:
             tr.job.approx['ApplyMovement on the free camera without AddFreeCamera here (the camera stays)'] += 1
@@ -3660,9 +4133,12 @@ MENU_BANK = 321
 def h_menu_init(tr, a, vals, name):
     x, y, cursor, b_exits, var = vals
     tr.menu_bank = MENU_BANK if 'Global' in name else tr.bank
-    tr.job.approx['menus (Black 2\'s list menu at the right edge; B cancels as Black 2 does)'] += 1
-    return [f'ListMenu_AnchorTopRight 31, {y}, {cursor}, 0, {tr.var(var)}  // Pearl {name} {x}, {y}, {cursor}, '
-            f'{b_exits}, {tr.var(var)}']
+    tr.job.approx['menus (Black 2\'s list menu at the right edge)'] += 1
+    # Black 2's flags byte is the list's "cancelable" (ov012 scrcmd_work.c InitListMenu -> ListMenuUI_Create); B writes
+    # 0xFFFE, as Gen 4's. Pearl's canExitWithB goes straight in (1.0.1, found by v101-test: 1.0 wrote 0, so B never
+    # closed a Pearl menu, e.g. the Trainers' School blackboard needed EXIT)
+    return [f'ListMenu_AnchorTopRight 31, {y}, {cursor}, {1 if b_exits else 0}, {tr.var(var)}  // Pearl {name} {x}, {y}, '
+            f'{cursor}, {b_exits}, {tr.var(var)}']
 
 
 @handler('AddMenuEntryImm', 'AddMenuEntry', 'AddListMenuEntry')
@@ -3676,6 +4152,12 @@ def h_menu_add(tr, a, vals, name):
     sex = getattr(tr, 'dc_sex_buf', None)
     mark = f'{{STRVAR_1 2, {sex}}}' if sex is not None else None
     src = tr.job.gen4_text.bank(bank)[msg]
+    apps = {i: v for i, v in tr.app_bufs(a).items() if v[0] in WRITTEN_IN_MENUS and not isinstance(v[1], tuple)
+            and i in tr.job.gen4_text.buffers(src)}
+    if apps:                                    # (Platinum: the Villa's prices, written into each entry: NAME_SOURCES)
+        src = tr.job.gen4_text._STRVAR.sub(lambda m: source_name(*apps[int(m.group(2))]) if int(m.group(2)) in apps
+                                           else m.group(0), src)
+        apps = tuple(sorted(apps.items()))
     if mark and mark in src:                    # a Day Care line with the gender symbol (h_daycare_menu_line)
         tr.dc_sex_buf = None
         # Black 2's list menu sizes its window by the text and ignores a cursor move: Pearl's {CURSOR_X 90}Lv. 100 fell
@@ -3695,11 +4177,15 @@ def h_menu_add(tr, a, vals, name):
     if cursor:
         # Black 2's list menu sizes its window by the text and ignores a cursor move, so the column after it was cut
         # off (the Exchange's "16B", seen in game 2026-11-01): spaces before the move count and draw nothing
+        # A buffered name counts as empty (v101-test, 2026-11-08): the window must fit the list's shortest names too;
+        # with the longest prize name ("Power Bracer") the BP Exchange's TM list, short names, cut its prices off
         font = b2font.load(0)
-        left = re.sub(r'\{STRVAR_1 [^}]*\}', 'Power Bracer', src[:cursor.start()])    # the longest buffered prize name
+        left = re.sub(r'\{STRVAR_1 [^}]*\}', '', src[:cursor.start()])
         pad = max(0, int(cursor.group(1)) - font.width(left))
         src = src[:cursor.start()] + ' ' * -(-pad // font.width(' ')) + src[cursor.start():]
-        line = tr.job.line_text(('menu_column', bank, msg), src)
+        line = tr.job.line_text(('menu_column', bank, msg) + ((apps,) if apps else ()), src)
+    elif apps:
+        line = tr.job.line_text(('menu_written_in', bank, msg, apps), src)
     else:
         line = tr.job.line_for(bank, msg)
     return [f'ListMenuAdd {line}, 65535, {tr.var(value)}  // Pearl {name} {msg}, {tr.var(value)}']
@@ -3710,6 +4196,37 @@ def h_menu_show(tr, a, vals, name):
     return ['ListMenuShow']
 
 
+# ---- plat-ch2 (2026-11-07): Platinum's chapter 2 ---------------------------------------------------------------------
+if version.MENU_COLUMNS:            # (v101-story: Pearl and Diamond too, version.MENU_COLUMNS)
+    @handler('ShowMenuMultiColumn')
+    def h_menu_columns(tr, a, vals, name):
+        """0x048 ShowMenuMultiColumn columns (pokeplatinum scrcmd ShowMenuMultiColumn): the Trainers' School blackboard,
+        the six status lessons in two columns. Black 2's list menu has one column: the same entries in one list. Left a
+        stub (Pearl's 1.0 has it), the menu was never shown and the script read the old answer and went round again:
+        the player could not leave the blackboard."""
+        tr.job.approx['ShowMenuMultiColumn (Black 2\'s list menu: one column)'] += 1
+        return [f'ListMenuShow  // ShowMenuMultiColumn {vals[0]}: one column']
+
+
+if version.PLATINUM:
+    @handler('Unk02CF')
+    def h_menu_side(tr, a, vals, name):
+        """0x33A SetMenuXOriginSide side (pokeplatinum ScrCmd_SetMenuXOriginSide; SetMenuXOriginToRight = 1): the menu
+        just made opens at the screen's right edge. Black 2's list menus here open there already
+        (ListMenu_AnchorTopRight, h_menu_init); a left one (0) stays at the right."""
+        if vals[0] != 1:
+            tr.job.approx['SetMenuXOriginSide left (Black 2\'s list menu stays at the right edge)'] += 1
+        return [f'// SetMenuXOriginSide {vals[0]}: Black 2\'s list menu is at the right edge already']
+
+    @handler('AddCameraOverrideObject', 'RemoveCameraOverrideObject')
+    def h_camera_override(tr, a, vals, name):
+        """0x308 AddCameraOverrideObject x, z / 0x309 RemoveCameraOverrideObject (pokeplatinum scrcmd.c): an invisible
+        object at x, z that ApplyFreeCameraMovement walks, but unlike AddFreeCamera the camera isn't told to follow it
+        (no Camera_TrackTarget): the view stays on the player, which is what the translation of the camera's walk
+        does (Route 202's Poké Radar scene: the walk is only a pause). Nothing to show."""
+        return [f'// {name} {", ".join(tr.var(v) for v in vals)}: an object the camera does not follow (the view stays)']
+
+
 for _pl, _macro, _fmt in [
         ('GetItemNameWithIndefArticle', 'WordSetItemNameWithArticle', ('n', 'var')),
         ('GetPartyMonFriendship', 'PokePartyGetHappiness', ('var', 'var')),
@@ -3717,6 +4234,13 @@ for _pl, _macro, _fmt in [
         ('HideMoney', 'MoneyWinClose', ()), ('UpdateMoneyDisplay', 'MoneyWinUpdate', ()),
         ('TrySaveGame', 'SaveDataWrite', ('var',))]:
     HANDLERS[_pl] = simple(_macro, *_fmt)
+
+
+# Black 2's money window (ov036 scrcmd_msg.c MoneyWinDisp / MoneyWinUpdate) formats the money into the script's word 2
+# (WordSetNumber(wordSet, 2, ...)), so a Pearl line that names word 2's Pokémon after it showed the money instead (the
+# Ribbon Syndicate's "put the Royal Ribbon on 0."; found by v101-test, 2026-11-08). The translator re-issues the last
+# buffer written into word 2 right after each money window command (FileTr.translate).
+MONEY_WORD = 2
 
 
 @handler('ShowMoney')
@@ -3792,12 +4316,20 @@ def h_mapid(tr, a, vals, name):
     return out + [f'.Lmap{a:x}_end:']
 
 
+# An amount past 65535 checked exactly (pearl_story.inc pl_CheckMoneyBig), by version: Platinum's Villa asks up to 220,000
+# (2026-11-02, plat-rooms). Pearl's build keeps its 1.0 check of 65535 (the Ribbon Syndicate's two 100,000 ribbons): a
+# Pearl change moves its released scripts (notes/V1_0_1.md).
+EXACT_BIG_MONEY = version.EXACT_BIG_MONEY      # (v101-story: Pearl and Diamond too in 1.0.1)
+
+
 @handler('GiveMoney', 'RemoveMoney', 'CheckMoney')
 def h_money(tr, a, vals, name):
     """Pearl's amounts are 32-bit, Black 2's money commands take 16 bits: larger amounts in steps."""
     amount = vals[-1]
     macro = {'GiveMoney': 'pl_GiveMoney', 'RemoveMoney': 'pl_RemoveMoney', 'CheckMoney': 'MoneyCheck'}[name]
     if name == 'CheckMoney':
+        if (amount > 0xFFFF or 0x4000 <= amount < 0xC000) and EXACT_BIG_MONEY:     # (0x4000-0xBFFF: read as a var)
+            return [f'pl_CheckMoneyBig {tr.var(vals[0])}, {amount}  // CheckMoney {amount} (in 60,000s)']
         if amount > 0xFFFF:
             tr.job.approx['CheckMoney over 65535 (checks 65535)'] += 1
             amount = 0xFFFF
@@ -3806,6 +4338,9 @@ def h_money(tr, a, vals, name):
     while amount > 0xFFFF:
         out.append(f'{macro} 65535')
         amount -= 0xFFFF
+    while 0x4000 <= amount < 0xC000:             # Black 2 reads 0x4000-0xBFFF as a var (ScriptReadAny): smaller steps
+        out.append(f'{macro} 15000')             # (v101-test: the Ribbon Syndicate's 34465 and 16974 rests)
+        amount -= 15000
     return out + [f'{macro} {amount}']
 
 
@@ -3866,6 +4401,9 @@ def h_safari(tr, a, vals, name):
     takes the ones left (Pearl: "I'll relieve you of your remaining Safari Balls"). No step count or timer
     (2026-10-25, chapter 5a)."""
     tr.job.approx['StartEndSafariGame (the Great Marsh as a normal area: Safari Balls as items, no step count)'] += 1
+    if vals[0] == 0 and version.PLATINUM:          # (its exit counts the Pokémon caught: GetCurrentSafariGameCaughtNum)
+        return ['pl_SafariStart  // Pearl EnableDisableSafariZone 0: 30 Safari Balls into the Bag',
+                'pl_SafariCountStart PVAR_SAFARI_START_COUNT  // the party and the boxes now (Platinum counts the catches)']
     return ['pl_SafariStart  // Pearl EnableDisableSafariZone 0: 30 Safari Balls into the Bag' if vals[0] == 0 else
             'pl_SafariEnd  // Pearl EnableDisableSafariZone 1: the Safari Balls left are taken back']
 
@@ -4021,6 +4559,2855 @@ def fixed_music(pd, f, after):
     return song
 
 
+# ---- Platinum's rooms (step 4, 2026-11-02, plat-rooms): the Regi ruins, Rotom's Room, the Veilstone Store B1F, the
+# Villa. Pearl has none of these commands (macros: pearl_story.inc "Platinum's rooms").
+# The ruins' seven dots each (pokeplatinum ov5_021F6454.c sDotCoordinatesIronRuins, ..IcebergRuins, ..RockPeakRuins:
+# x, z as s16 pairs, one table after the other in Platinum's overlay 5), by dot type (regi_ruins.h DOT_TYPE_*: the
+# ruins' own map numbers); the bit of dot i is 1 << i, all seven RUINS_STATE_ACTIVATED_ALL_DOTS
+RUINS_DOTS = {588: ((4, 7), (5, 5), (5, 9), (7, 7), (9, 5), (9, 9), (10, 7)),      # the Iron Ruins
+              590: ((3, 7), (5, 7), (7, 5), (7, 7), (7, 9), (9, 7), (11, 7)),      # the Iceberg Ruins
+              592: ((5, 5), (5, 7), (5, 9), (7, 7), (9, 5), (9, 7), (9, 9))}       # the Rock Peak Ruins
+RUINS_ALL_DOTS = 260
+_RUINS_CHECKED = False
+
+
+def ruins_dots():
+    """RUINS_DOTS, found once in the Platinum dump's overlay 5 (the three tables in a row)."""
+    global _RUINS_CHECKED
+    if not _RUINS_CHECKED:
+        from gen4rom import Rom
+        rom = Rom(version.WORLD_DUMP)
+        off, _ = struct.unpack_from('<II', rom.data, 0x50)
+        fid, flags = struct.unpack_from('<2I', rom.data, off + 32 * 5 + 24)
+        assert not flags & 1, 'Platinum overlay 5 is compressed'
+        st, en = rom.fat[fid]
+        pat = b''.join(struct.pack('<hh', x, z) for k in (588, 590, 592) for x, z in RUINS_DOTS[k])
+        assert rom.data[st:en].count(pat) == 1, 'the ruins\' dot tables are not in Platinum\'s overlay 5'
+        _RUINS_CHECKED = True
+    return RUINS_DOTS
+
+
+@handler('ActivateRegiRuinsDot')
+def h_regi_dot(tr, a, vals, name):
+    """Platinum 0x32C ActivateRegiRuinsDot state var, dot type, x, z: in script, the same test as Platinum's C."""
+    var, kind, x, z = vals
+    assert kind in RUINS_DOTS, f'ActivateRegiRuinsDot: dot type {kind}'
+    dots = ruins_dots()[kind]
+    out = [f'// Pearl 0x32C ActivateRegiRuinsDot {tr.var(var)}, {kind}: the dot under the player sets its bit']
+    out += [f'pl_RegiRuinsDot {tr.var(var)}, {tr.var(x)}, {tr.var(z)}, {dx}, {dz}, {1 << i}'
+            for i, (dx, dz) in enumerate(dots)]
+    return out + [f'pl_RegiRuinsDotsDone {tr.var(var)}, {(1 << len(dots)) - 1}, {RUINS_ALL_DOTS}']
+
+
+@handler('CheckPartyHasFatefulEncounterRegigigas')
+def h_fateful_regigigas(tr, a, vals, name):
+    return [f'pl_CheckPartyHasFatefulEncounterRegigigas {tr.var(vals[0])}  // Platinum 0x32B']
+
+
+@handler('GetRotomFormsInSave')
+def h_rotom_forms(tr, a, vals, name):
+    """Platinum 0x302 GetRotomFormsInSave heat, wash, frost, fan, mow: 1 for each form some Pokémon in the party or the
+    boxes has (Rotom's Room shows the appliance of each form nobody has). Nothing in this game makes a Rotom form yet
+    (the forms are a later piece: notes/PORT_AUDIT.md "Forms, Rotom, Giratina"): all 0, so every appliance shows."""
+    tr.job.approx['GetRotomFormsInSave (no Rotom forms in this game yet: every form 0)'] += 1
+    return [f'WorkSetConst {tr.var(v)}, 0  // GetRotomFormsInSave: no form in the save (no form change yet)' for v in vals]
+
+
+@handler('GetEmptyPoffinCaseSlotCount')
+def h_poffin_empty(tr, a, vals, name):
+    """Platinum 0x307 (the Veilstone Store B1F's Poffin seller: is there room for the one Poffin he sells): PearlB2's Poffin
+    Case answers room or not (pl_PoffinHasRoom), which is the count's answer for one Poffin."""
+    tr.job.approx['GetEmptyPoffinCaseSlotCount (room for one or none: the seller sells one at a time)'] += 1
+    return [f'pl_PoffinHasRoom {tr.var(vals[0])}  // GetEmptyPoffinCaseSlotCount: 1 room, 0 the Case is full']
+
+
+@handler('ShowListMenuSetWidth')
+def h_menu_show_width(tr, a, vals, name):
+    tr.job.approx['ShowListMenuSetWidth (Black 2\'s list menu sizes itself)'] += 1
+    return [f'ListMenuShow  // ShowListMenuSetWidth {vals[0]}']
+
+
+@handler('CheckMetFurnitureRequirements')
+def h_villa_requirement(tr, a, vals, name):
+    """Platinum 0x30F CheckMetFurnitureRequirements furniture + 1, var: the Villa's gimmick answers (decomp
+    src/pearlb2/plat_rooms/villa.c, b2tools/patches/platinum_villa.py)."""
+    return [f'pl_VillaFurnitureRequirement {tr.var(vals[0])}, {tr.var(vals[1])}  // CheckMetFurnitureRequirements']
+
+
+@handler('GetCurrentBGM', 'SetScenePlayBGMMusicBox', 'SetFieldScene')
+def h_music_box(tr, a, vals, name):
+    """The Villa's music box (pokeplatinum scrcmd_sound.c: GetCurrentBGM keeps the song, SetScenePlayBGMMusicBox plays
+    SEQ_PL_TOWN02 as a music box, SetFieldScene the kept song again). Platinum's songs are not in the game yet (step 6,
+    music): the room's song plays on."""
+    tr.job.approx[f'{name} (the music box: Platinum\'s SEQ_PL_TOWN02 is not in the game yet, the room\'s song plays on)'] += 1
+    return [f'// {name} {", ".join(tr.var(v) for v in vals)}: the music box\'s song (Platinum\'s SEQ_PL_TOWN02) is step 6\'s']
+
+
+@handler('CheckABPress')
+def h_ab_press(tr, a, vals, name):
+    """Platinum 0x2FC CheckABPress var (A or B held now): the music box's loop asks each frame for up to 600 frames.
+    Black 2's scripts can only wait for the press: the box plays until A or B, with no 20-second end."""
+    tr.job.approx['CheckABPress (waits for A or B: no time limit)'] += 1
+    return ['ABKeyWait  // CheckABPress: wait for A or B', f'WorkSetConst {tr.var(vals[0])}, 1']
+
+
+# The Villa's visitor of the day (pokeplatinum system_vars.c SystemVars_UpdateVillaVisitor, run when the date changes
+# and the player is not in the Resort Area or the Villa): the inside and outside flags cleared; the owned furniture
+# counted (FLAG_VILLA_FURNITURE_*: 0x997-0x9AA); a visitor with 25, 75 or 90 % (12+ pieces: 90 %, of 15 visitors; 8+:
+# 75 %, of 12; else 25 %, of 4), else none (0xFF); the visitor's line 0-4. Here the Resort Area's zone init picks it
+# once a day (PFLAG_VILLA_VISITOR_TODAY, a flag Black 2 clears at midnight): the first time the player comes there after
+# the date changed, before Platinum's own zone init reads it. (Platinum skips a day that ends with the player in the
+# Area; here the next day's visitor comes at the first visit of that day.) Only the Resort Area's: the Villa's one door
+# is there, and Platinum never changes the visitor while the player is in the Villa either.
+VILLA_VISITOR_ZONES = ('MAP_RESORT_AREA',) if version.PLATINUM else ()
+VILLA_FURNITURE_FLAGS = range(0x997, 0x9AB)        # FLAG_VILLA_FURNITURE_TABLE .. _CHANDELIER (20)
+VILLA_VISITOR_INSIDE, VILLA_VISITOR_OUTSIDE = 0x9AB, 0x9AC
+VAR_VILLA_VISITOR, VAR_VILLA_VISITOR_MESSAGE = 0x404E, 0x405A   # VAR_RESORT_VILLA_VISITOR, _MESSAGE_NUM
+VILLA_ODDS = ((12, 90, 15), (8, 75, 12), (0, 25, 4))           # (pieces at least, percent, visitors)
+
+
+def villa_visitor_lines(pd, k):
+    import pearl_ids
+    ids = pearl_ids.Ids()
+    flag = lambda f: f'{ids.flag_value(f)}  // Platinum flag {f:#x}'
+    out = ['    FlagGet PFLAG_VILLA_VISITOR_TODAY, PL_TMP', '    WorkCmpConst PL_TMP, 1', '    VMJumpIf CMP_EQ, .Lvv_end',
+           '    FlagSet PFLAG_VILLA_VISITOR_TODAY',
+           f'    FlagReset {flag(VILLA_VISITOR_INSIDE)}', f'    FlagReset {flag(VILLA_VISITOR_OUTSIDE)}',
+           '    WorkSetConst PL_TMP2, 0  // the furniture owned']
+    for f in VILLA_FURNITURE_FLAGS:
+        out += [f'    FlagGet {ids.flag_value(f)}, PL_TMP  // Platinum flag {f:#x}', '    WorkAdd PL_TMP2, PL_TMP']
+    out += ['    Random PL_TMP, 100']
+    for i, (least, pct, n) in enumerate(VILLA_ODDS):
+        out += [f'    WorkCmpConst PL_TMP2, {least}', f'    VMJumpIf CMP_LT, .Lvv_{i}',
+                f'    WorkCmpConst PL_TMP, {pct}', '    VMJumpIf CMP_GT, .Lvv_none',
+                f'    Random {ids.var(VAR_VILLA_VISITOR)}, {n}', '    VMJump .Lvv_line', f'.Lvv_{i}:']
+    return out + ['.Lvv_none:', f'    WorkSetConst {ids.var(VAR_VILLA_VISITOR)}, 0xFF', '.Lvv_line:',
+                  f'    Random {ids.var(VAR_VILLA_VISITOR_MESSAGE)}, 5', '.Lvv_end:', '    VMHalt']
+
+
+# ---- plat-ch1 (2026-11-07): Platinum's chapter 1 and the Pokémon Centers (chapter 90). Pearl's scripts have none of these
+# patterns (its output doesn't change: version_check). The handlers below wrap the ones above; nothing above is changed.
+#
+# Platinum's first battle is Barry, a Trainer (StartFirstBattle trainer: pokeplatinum Encounter_NewVsFirstBattle,
+# BATTLE_STATUS_FIRST_BATTLE). Platinum doesn't restart the field after a loss: its script then runs ReturnToField and
+# FadeScreen in itself (Route201_RivalWonLetsGoHome). Black 2's own first battle (aspertia_city.s, Hugh) is CallTrainerBattle
+# with flags 1 (ov012 event_battle.c: setup flag 0x100, no loss text and no money lost, and no black-out) and CallTrainerBattleEnd
+# win or lose. So pl_StartFirstTrainerBattle does both, CheckWonBattle after it only reads the result, and the loss branch's
+# ReturnToField and FadeScreen in are dropped (the field is back and shown).
+def first_battle_flow(tr):
+    """(addresses of the CheckWonBattle after a first trainer battle, addresses of the loss branch's ReturnToField and its FadeScreen
+    in) in this file."""
+    if getattr(tr, '_first_battle', None) is None:
+        d, pd = tr.d, tr.job.pd
+        name = lambda x: pd.cmd_name(d.insns[x][1]) if x in d.insns else None
+        follow = lambda x: d.insns[x][2][0][1] if name(x) == 'GoTo' else x
+        won, drop = set(), set()
+        for a, (e, op, args) in d.insns.items():
+            if name(a) != 'StartFirstBattle' or len(args) != 1:
+                continue
+            c = follow(e)
+            if name(c) != 'CheckWonBattle':
+                continue
+            won.add(c)
+            cmp_, jump = d.insns[c][0], d.insns[d.insns[c][0]][0]
+            if name(cmp_) != 'CompareVarToValue' or name(jump) != 'GoToIf':
+                continue
+            var, value = d.insns[cmp_][2][0][1], d.insns[cmp_][2][1][1]
+            cond, lose = d.insns[jump][2][0][1], d.insns[jump][2][1][1]
+            if var != d.insns[c][2][0][1] or (value, cond) != (0, 1):
+                continue
+            if name(lose) == 'ReturnToField':
+                drop.add(lose)
+                x = d.insns[lose][0]
+                for _ in range(3):
+                    if name(x) == 'FadeScreen' and d.insns[x][2][2][1] == 1:
+                        drop.add(x)
+                        break
+                    x = d.insns[x][0] if x in d.insns else None
+        tr._first_battle = (won, drop)
+    return tr._first_battle
+
+
+_h_won_base, _h_return_field_base, _h_fade_base = HANDLERS['CheckWonBattle'], HANDLERS['ReturnToField'], HANDLERS['FadeScreen']
+
+
+@handler('CheckWonBattle')
+def h_won_first(tr, a, vals, name):
+    if a in first_battle_flow(tr)[0]:
+        return [f'pl_CheckWonFirstBattle {tr.var(vals[0])}  // after Platinum\'s first battle: the field is back already']
+    return _h_won_base(tr, a, vals, name)
+
+
+@handler('ReturnToField')
+def h_return_field_first(tr, a, vals, name):
+    if a in first_battle_flow(tr)[1]:
+        return ['// RestoreOverworld after the first battle\'s loss: Black 2\'s battle end reopened the field (pl_StartFirstTrainerBattle)']
+    return _h_return_field_base(tr, a, vals, name)
+
+
+@handler('FadeScreen')
+def h_fade_first(tr, a, vals, name):
+    if a in first_battle_flow(tr)[1]:
+        return [f'// FadeScreen {vals[0]}, {vals[1]}, {vals[2]}, {vals[3]:#x} after the first battle\'s loss: shown already '
+                f'(pl_StartFirstTrainerBattle)']
+    return _h_fade_base(tr, a, vals, name)
+
+
+# Dynamic sprites compared (the Pokémon Center daily Trainers, file 1138: VAR_OBJ_GFX_ID_A/B hold who stands there, and their talk
+# scripts ask it; the Battleground's too). The var holds the Black 2 code SetVarFromValue wrote (h_setvar), so a comparison with a
+# Platinum graphics id compares with that id's code. Pearl compares none.
+@handler('CompareVarToValue')
+def h_compare_dynamic(tr, a, vals, name):
+    var, value = vals
+    if 0x4020 <= var < 0x4030 and value < 0x4000:
+        import pearl_events
+        code = pearl_events.sprite_code(value)
+        if code is not None:
+            if dynamic_codes(tr, var).get(code, {value}) != {value}:
+                tr.job.approx['CompareVarToValue (two graphics share a dynamic sprite\'s Black 2 code)'] += 1
+            return [f'pl_CompareVarToValue {tr.var(var)}, {code}  // dynamic sprite: Pearl graphics {value} -> Black 2 code']
+    return [f'pl_CompareVarToValue {tr.var(var)}, {value}']
+
+
+def dynamic_codes(tr, var):
+    """{Black 2 code: the graphics ids this file sets or compares var with that have it}."""
+    cache = tr.__dict__.setdefault('_dynamic_codes', {})
+    if var not in cache:
+        import pearl_events
+        out = collections.defaultdict(set)
+        for e, op, args in tr.d.insns.values():
+            if tr.job.pd.cmd_name(op) in ('SetVarFromValue', 'CompareVarToValue') and args[0][1] == var and args[1][1] < 0x4000:
+                code = pearl_events.sprite_code(args[1][1])
+                if code is not None:
+                    out[code].add(args[1][1])
+        cache[var] = dict(out)
+    return cache[var]
+
+
+# A Trainer battle with a var (StartTrainerBattle VAR_0x8005: the daily Trainers, file 1138; the Pokémon Mansion's Liam and Celeste,
+# file 419; the Battleground's leaders, file 1027): the var holds a Platinum trainer number that SetVarFromValue put there. Here it
+# takes that Trainer's Black 2 id (the battle, BufferTrainerName and the defeat flag read it). A number with no Black 2 id stays,
+# counted as a stub.
+def trainer_vars(tr):
+    """The vars this file's StartTrainerBattle commands battle."""
+    if getattr(tr, '_trainer_vars', None) is None:
+        pd = tr.job.pd
+        tr._trainer_vars = {v for e, op, args in tr.d.insns.values() if pd.cmd_name(op) == 'StartTrainerBattle'
+                            for t, v in args if t == 'var' and v >= 0x4000}
+    return tr._trainer_vars
+
+
+_h_setvar_base = HANDLERS['SetVarFromValue']
+
+
+@handler('SetVarFromValue')
+def h_setvar_trainer(tr, a, vals, name):
+    var, value = vals
+    if var in trainer_vars(tr) and 0 < value < 0x4000:
+        if str(value) in tr.job.ids.reg['trainers']:
+            return [f'pl_SetVarFromValue {tr.var(var)}, {tr.job.ids.trainer(value)}  // Pearl trainer {value}: battled by the var']
+        tr.job.stubs[f'SetVarFromValue (trainer {value} for a battle: no Black 2 id)'] += 1
+    return _h_setvar_base(tr, a, vals, name)
+
+
+# ---- plat-ch11 (2026-11-07): Platinum's chapter 11 (the post-game). The Battleground (our Survival Area west house, Platinum's
+# file 1027, scripts_battleground.s): four Trainers stand on dynamic sprites (VAR_OBJ_GFX_ID_1-4), filled on transition from
+# VAR_BATTLEGROUND_TRAINER_1-4, which GetRandomBattlegroundTrainers (0x2F4) picks once a day (FLAG_DAILY_SET_BATTLEGROUND_TRAINERS):
+# three of the eight Leaders and one of five other Trainers, or fewer (pokeplatinum scrcmd.c ScrCmd_GetRandomBattlegroundTrainers).
+# A talk copies the Trainer's sprite var into VAR_MAP_LOCAL_0x01 and asks it who stands there (the Leader's team, lines, defeat
+# flag). It was a stub: nobody stood there. Platinum only (Pearl's Battleground has no such command; its output doesn't change).
+if version.PLATINUM:
+    BATTLEGROUND_LEADERS = (126, 127, 128, 129, 130, 131, 132, 133)     # OBJ_EVENT_GFX_ROARK .. _VOLKNER (sBattlegroundGymLeaders)
+    BATTLEGROUND_OTHERS = (141, 142, 143, 144, 145)                     # _CHERYL, _RILEY, _MARLEY, _BUCK, _MIRA (sBattlegroundStatTrainers)
+
+    @handler('GetRandomBattlegroundTrainers')
+    def h_battleground_trainers(tr, a, vals, name):
+        """0x2F4 v1, v2, v3, v4 = pl_GetRandomBattlegroundTrainers (pearl_story.inc "plat-ch11"): Platinum's draws, written as
+        the Black 2 codes of the graphics (the vars feed dynamic sprites: h_setvar's rule), 0xFFF (BATTLEGROUND_TRAINER_NONE)
+        for none."""
+        import pearl_events
+        codes = [pearl_events.sprite_code(g) for g in BATTLEGROUND_LEADERS + BATTLEGROUND_OTHERS]
+        assert None not in codes and len(set(codes)) == len(codes), f'the Battleground\'s Trainers\' Black 2 codes: {codes}'
+        return [f'pl_GetRandomBattlegroundTrainers {", ".join(tr.var(v) for v in vals)}, {", ".join(map(str, codes))}'
+                f'  // Platinum 0x2F4: three Leaders and one other, as Black 2 codes']
+
+    def dynamic_copies(tr):
+        """Vars this file fills only with SetVarFromVar from a dynamic sprite var (0x4020-0x402F) and otherwise only compares
+        (the Battleground's VAR_MAP_LOCAL_0x01): they hold a Black 2 code too."""
+        if getattr(tr, '_dynamic_copies', None) is None:
+            pd, ok, bad = tr.job.pd, set(), set()
+            for e, op, args in tr.d.insns.values():
+                n = pd.cmd_name(op)
+                vs = [v for t, v in args if t == 'var' or (isinstance(v, int) and 0x4000 <= v < 0x8100)]
+                if n == 'SetVarFromVar' and len(args) == 2 and 0x4020 <= args[1][1] < 0x4030:
+                    ok.add(args[0][1])
+                elif n == 'CompareVarToValue':
+                    pass
+                else:
+                    bad |= set(vs)
+            tr._dynamic_copies = {v for v in ok - bad if not 0x4020 <= v < 0x4030}
+        return tr._dynamic_copies
+
+    _h_compare_ch1 = HANDLERS['CompareVarToValue']
+
+    @handler('CompareVarToValue')
+    def h_compare_dynamic_copy(tr, a, vals, name):
+        var, value = vals
+        if var in dynamic_copies(tr) and value < 0x4000:
+            import pearl_events
+            code = pearl_events.sprite_code(value)
+            if code is not None:
+                return [f'pl_CompareVarToValue {tr.var(var)}, {code}  // a copy of a dynamic sprite: Platinum graphics {value} '
+                        f'-> Black 2 code']
+        return _h_compare_ch1(tr, a, vals, name)
+# ---- end plat-ch11
+
+
+# ---- plat-ch4 (2026-11-07): Platinum's chapter 4 (Route 206 to Hearthome). The Bicycle in scripts. Pearl checks the Bicycle in the
+# Bag at its Cycling Road gates (CheckItem); Platinum checks that the player rides it, and gets the player off it before a partner
+# walks along. Black 2 has both: PlayerGetExState (ov036 s0078: 0 on foot, 1 cycling, 2 surfing, 3 diving) and
+# PlayerSetSpecialSequence (s0075: 1 back on foot, 2 on the Bicycle, as Field_ToggleCycling; route_5.s gets the player off the same
+# way). Platinum only (Pearl's scripts don't use these; its output doesn't change).
+if version.PLATINUM:
+    @handler('CheckPlayerOnBike')
+    def h_on_bike(tr, a, vals, name):
+        """0x0C7 CheckPlayerOnBike var (pokeplatinum ScrCmd_CheckPlayerOnBike: TRUE while cycling): Black 2's ex state, 1 kept,
+        anything else 0. Route 206's two Cycling Road gates (CoordEvent_OnlyBicycles, CoordEvent_OnlyCyclists) turn back a player
+        on foot and let a cyclist through. Left a stub (Pearl's 1.0 has none: Pearl's gates check the Bag), the var kept its last
+        value: the gates turned back or let through by chance; the north gate stands between Eterna and the story."""
+        v, end = tr.var(vals[0]), f'.L{tr.label(a)}_bike'
+        return [f'PlayerGetExState {v}  // CheckPlayerOnBike: Black 2\'s ex state (1 = cycling)',
+                f'WorkCmpConst {v}, 1', f'VMJumpIf CMP_EQ, {end}', f'WorkSetConst {v}, 0', f'{end}:']
+
+    @handler('SetPlayerBike')
+    def h_set_bike(tr, a, vals, name):
+        """0x0C8 SetPlayerBike on (pokeplatinum ScrCmd_SetPlayerBike): FALSE gets the player off the Bicycle (Mira in Wayward Cave,
+        Cheryl, Riley, Buck and Marley before they walk along: Black 2 refuses the Bicycle while a partner follows), TRUE puts them
+        on it (the common bike-parking script). Black 2's form change, only when the player isn't in that form already (as
+        route_5.s). Platinum's music override comes with it: Black 2's field plays its bike song while cycling. Was a stub [Pearl
+        too]: a partner could start following a player on the Bicycle."""
+        on = bool(vals[0])
+        skip = f'.L{tr.label(a)}_bike'
+        return [f'PlayerGetExState PL_TMP  // SetPlayerBike {int(on)}: Black 2\'s form change ({"on" if on else "off"} the Bicycle)',
+                f'WorkCmpConst PL_TMP, {0 if on else 1}', f'VMJumpIf CMP_NE, {skip}',
+                f'PlayerSetSpecialSequence {2 if on else 1}', f'{skip}:']
+
+    @handler('SetCyclingBGM')
+    def h_cycling_bgm(tr, a, vals, name):
+        """0x2BF SetCyclingBGM (Route 206's on-resume, with ForceBicycling, as the player comes onto the Cycling Road): the bike
+        song. Black 2's field plays the zone's bike song while the player cycles (patches/zone_flags), and on foot its own."""
+        tr.job.approx['SetCyclingBGM (Black 2 plays the bike song while cycling)'] += 1
+        return ['// SetCyclingBGM: Black 2 plays the bike song while the player cycles']
+
+
+# ---- plat-ch3 (2026-11-07): Platinum's chapter 3 (Floaroma, the Windworks, Eterna). Platinum only: Pearl's scripts use
+# Unk0292, SetObjectEventDir and AddObject too, and Pearl's output stays its 1.0's (version_check). (The Bicycle's commands,
+# CheckPlayerOnBike and SetPlayerBike, are plat-ch4's block above.)
+if version.PLATINUM:
+    @handler('GetItemQuantity')
+    def h_item_quantity(tr, a, vals, name):
+        """0x2FE GetItemQuantity item, var (pokeplatinum: the Bag's count) = Black 2's ItemGetCount (ov036 s00B9). Mr. Fuego
+        offers ten Star Pieces at once when the player has ten."""
+        item, var = vals
+        b2, note = (item, '') if item >= 0x4000 else item_value(item)
+        return [f'pl_GetItemQuantity {tr.var(b2)}, {tr.var(var)}{note}']
+
+    @handler('FindPartySlotWithFatefulEncounterSpecies')
+    def h_fateful_slot(tr, a, vals, name):
+        """0x31C FindPartySlotWithFatefulEncounterSpecies var, species (pokeplatinum scrcmd_party.c): the first party slot,
+        no Egg, of that species with the fateful-encounter mark, else 0xFF. In script, as plat-rooms' Regigigas check
+        (Black 2's PKM_PARAM_FATEFUL_ENCOUNTER 0x6d). Floaroma's Gracidea (an event Shaymin in the party)."""
+        var, species = vals
+        if species >= 0x4000:
+            tr.job.stubs['FindPartySlotWithFatefulEncounterSpecies (species in a var)'] += 1
+            return [f'pl_stub FindPartySlotWithFatefulEncounterSpecies  // species in {tr.var(species)}']
+        return [f'pl_FindPartySlotWithFatefulEncounterSpecies {tr.var(var)}, {species}']
+
+
+if version.GHOSTS:                  # (v101-story: Pearl and Diamond too, version.GHOSTS)
+    @handler('CheckShouldShowGhost')
+    def h_ghost(tr, a, vals, name):
+        """0x292 CheckShouldShowGhost percent, var (pokeplatinum scrcmd.c: var = 1 when LCRNG % 101 <= percent): the Old
+        Chateau's old man (10 %) and girl (25 %) in its zone inits. Black 2's Random (allowed in a zone init: the Villa's
+        visitor). Pearl's 1.0 left it a stub: the ghosts never showed."""
+        return [f'pl_CheckShouldShowGhost {min(vals[0], 100)}, {tr.var(vals[1])}']
+
+
+if version.PLATINUM:
+    _h_setobjdir_ch3_base = HANDLERS['SetObjectEventDir']
+
+    @handler('SetObjectEventDir')
+    def h_setobjdir_var(tr, a, vals, name):
+        """SetObjectEventDir on an object held in a var (the Eterna Gym's Trainers turn to the player after their battle:
+        EternaGym_LookTowardsPlayer, VAR_0x8007 = the Trainer's local id): outside a zone init the live actor turns
+        (Black 2's ActorCmdExec reads its actor as a var too, ov036 s0064). Only when every value the file puts in the
+        var is an object of the zone; else as before (a stub)."""
+        uid, d = vals
+        if uid < 0x4000 or tr.levels(a) == {2} or tr.mode == 'common' or d >= 4:
+            return _h_setobjdir_ch3_base(tr, a, vals, name)
+        pd = tr.job.pd
+        ids = {args[1][1] for e, op, args in tr.d.insns.values()
+               if pd.cmd_name(op) == 'SetVarFromValue' and args[0][1] == uid}
+        if not ids or not all(i in tr.job.object_index for i in ids):
+            return _h_setobjdir_ch3_base(tr, a, vals, name)
+        return [f'pl_ApplyMovement {tr.var(uid)}, .Lface{a:x}  // SetObjectEventDir {tr.var(uid)} (objects {sorted(ids)}): '
+                'the live actor turns', 'pl_WaitMovement', f'VMJump .Lface{a:x}_end', '.balign 4, 0', f'.Lface{a:x}:',
+                f'    Move {d}, 1', '    MoveEnd', f'.Lface{a:x}_end:']
+
+    # Platinum's movement 0x99 (MOVEMENT_ACTION_153, pokeplatinum unk_020655F4.c: the "!" emote, sub_020664A0(obj, 0, 1): the
+    # balloon shown two frames late, with its sound) = Pearl's 0x4B's Black 2 code (75, "!" with its sound). Kept as the bare
+    # number before, Black 2's own action 153 played instead: Cheryl in Eterna Forest (3 uses; else only step 7's Distortion
+    # World uses Platinum's 0x69-0x99). Pearl's codes stop at 0x68.
+    MOVEMENT.setdefault(0x99, dict(MOVEMENT[0x4B], pearl_name='EMOTE_EXCLAMATION_MARK_LATE (Platinum 0x99)', exact=False,
+                                   note='Platinum shows the "!" two frames later; here at once'))
+
+    _h_add_ch3_base = HANDLERS['AddObject']
+
+    @handler('AddObject')
+    def h_add_facing(tr, a, vals, name):
+        """AddObject after a SetObjectEventDir of the same object in its block (Platinum: SetObjectEventPos,
+        SetObjectEventMovementType, SetObjectEventDir, AddObject): the actor appears facing that way, not its event's
+        way. (The Dir before it turns no actor: the object isn't there yet.) The Eterna Galactic building's Looker
+        appeared facing north at (12, 15), not west to the player."""
+        out = _h_add_ch3_base(tr, a, vals, name)
+        uid = vals[0]
+        turned = same_block_before(tr, a, 'SetObjectEventDir', uid) if uid < 0x4000 and tr.levels(a) != {2} else None
+        if not turned or not out:
+            return out
+        d = tr.var(turned[1])
+        m = re.match(rf'^(pl_AddObjectAt {uid}, \S+, )(\S+)(  // .*)$', out[0])
+        if m:
+            return [f'{m.group(1)}{d}{m.group(3)}, facing as its SetObjectEventDir'] + out[1:]
+        if len(out) > 1:
+            m = re.match(rf'^(pl_SetPosition {uid}, \S+, \S+, \S+, )(\S+)(  // .*)$', out[1])
+            if m:
+                return [out[0], f'{m.group(1)}{d}{m.group(3)}, facing as its SetObjectEventDir'] + out[2:]
+        return out
+
+
+# ---- plat-ch6 (2026-11-07): Platinum's chapter 6 (Route 214 to Pastoria). Two of Platinum's party and Pokédex questions, on
+# Black 2's own commands (macros in pearl_story.inc, block "plat-ch6"). Platinum only: Pearl's output doesn't change (Pearl's
+# Pastoria middle house keeps its stub, as in 1.0). 1.0.1: Pearl and Diamond too (version.PARTY_QUESTIONS).
+if version.PARTY_QUESTIONS:
+    @handler('CheckHasSeenSpecies')
+    def h_seen_species(tr, a, vals, name):
+        """0x337 CheckHasSeenSpecies species, var (pokeplatinum ScrCmd_CheckHasSeenSpecies: Pokedex_HasSeenSpecies) = Black 2's
+        PokeDexIsRegist 0 (PokeDex_IsSeen; the same national numbers). The Pokémon Mansion office's book (Manaphy, 490): left a
+        stub, the var kept the last answer, so the picture showed or not by chance."""
+        return [f'pl_CheckHasSeenSpecies {tr.var(vals[0])}, {tr.var(vals[1])}  // Black 2\'s Pokédex: seen']
+
+    @handler('CheckPartyCombeeGenderCount')
+    def h_combee_genders(tr, a, vals, name):
+        """0x264 CheckPartyCombeeGenderCount var (pokeplatinum scrcmd.c): the party's Combee that aren't Eggs, 0 none, 1 of one
+        gender, 2 a male and a female. Pastoria's middle house gives the Macho Brace for both. A party loop on Black 2's
+        PokePartyGetParam (species 5, sex 0x6E: both in its stats_list) and PokePartyIsEgg. Was a stub [Pearl too]: the var
+        kept whatever it held, so the boy's answer and the Macho Brace came by chance.
+        Pearl and Diamond (1.0.1): the same op is their own CheckBurmyForms (pokediamond scrcmd.c ScrCmd_CheckBurmyForms):
+        the number of different Burmy forms in the party, 0-3; their boy asks for all three cloaks and gives the Macho
+        Brace at 3 (his script compares 0, 1 and 2 first)."""
+        if not version.PLATINUM:
+            return [f'pl_CheckBurmyForms {tr.var(vals[0])}  // a party pass per cloak: 0-3 different Burmy forms']
+        return [f'pl_CheckPartyCombeeGenderCount {tr.var(vals[0])}  // a party loop: 0 none, 1 one gender, 2 both']
+
+
+if version.PREVIEW_SEEN:            # (v101-story: Pearl and Diamond too, version.PREVIEW_SEEN)
+    _h_preview_base = HANDLERS['DrawPokemonPreview']
+
+    @handler('DrawPokemonPreview')
+    def h_preview_seen(tr, a, vals, name):
+        """0x208 DrawPokemonPreview species, gender also marks the species seen (pokeplatinum ScrCmd_DrawPokemonPreview:
+        FieldSystem_WriteSpeciesSeen; Pearl's ScrCmd_ShowPokemonPic the same). Black 2's CallPokemonPreview only shows it
+        (ov036 scrcmd_poke_disp.c), so PokeDexRegist 0 (PokeDex_RegistPkm) follows. The Mansion office's book says "Manaphy's
+        data was added to the Pokédex"; Verity Cavern's Mesprit (chapter 8) and Fullmoon Island's Cresselia (chapter 12) are
+        the other two. Pearl's handler is unchanged (its 1.0 shows the picture without the Pokédex entry)."""
+        return _h_preview_base(tr, a, vals, name) + [
+            f'PokeDexRegist 0, {tr.var(vals[0])}  // DrawPokemonPreview marks the species seen (Black 2\'s preview doesn\'t)']
+
+
+# ---- plat-ch7 (2026-11-07): Platinum's chapter 7 (Celestic, Canalave, Iron Island, the library). Platinum only: Pearl's output
+# stays its 1.0's (version_check). Nothing above is changed; the handlers below wrap or add.
+# (v101-story: the ReturnToField rule and the Move Deleter are on for Pearl and Diamond too, version.FIELD_STAYS_OPEN and
+# MOVE_DELETER; the library's TV and its camera stay Platinum's. The order of the definitions is as before.)
+if version.PLATINUM or version.FIELD_STAYS_OPEN or version.MOVE_DELETER:
+    def _prev_insn(tr, a):
+        """The instruction before address a in Platinum's file (address order), or None."""
+        if getattr(tr, '_prev_ch7', None) is None:
+            tr._prev_ch7 = {e: x for x, (e, op, args) in tr.d.insns.items()}
+        return tr._prev_ch7.get(a)
+
+
+if version.PLATINUM:
+    @handler('StartLibraryTV')
+    def h_library_tv(tr, a, vals, name):
+        """0x310 StartLibraryTV (pokeplatinum library_tv.c, the Canalave library's explosion scene): a full-screen picture,
+        the TV's footage of Lake Valor (graphic/library_tv in the intro TV's frame, with moving scan lines) for 240 frames,
+        between the scene's fade-out and its ReturnToField. Black 2 has no such screen: the scene goes on, the footage isn't
+        shown (a stub, counted). The field stays open: the ReturnToField after it opens nothing (h_return_field_open)."""
+        tr.job.stubs['StartLibraryTV (the TV\'s footage of Lake Valor: no Black 2 screen)'] += 1
+        return ['pl_stub StartLibraryTV  // the TV\'s footage of Lake Valor (240 frames): no Black 2 screen; the field stays open']
+
+
+if version.FIELD_STAYS_OPEN:
+    # ReturnToField (0x0A1) after an app that didn't run: Black 2's FieldOpen waits for the proc manager to be idle (pokebw2
+    # field_event.c EventFieldOpen_Callback: GSYS_GetProcMgrState), which never happens while the field runs, so a FieldOpen
+    # on an open field hangs the script. When every command since the scene's last fade or message is a stub (or
+    # StartLibraryTV) or only reads a result, the field never closed: nothing to open, and the fade-in after it is a black one
+    # (not the starter screen's white). The library's explosion scene stopped there; also Jublife TV's photo boards and
+    # custom-word menus, the Union Room, the Frontier's closed scenes (all stubs).
+    _NO_SCREEN = {'StartLibraryTV'}
+    _NEUTRAL = {'GoToIf', 'GoTo', 'CallIf', 'Call', 'CompareVarToValue', 'CompareVarToVar', 'SetVarFromValue', 'SetVarFromVar'}
+    _BOUNDARY = {'WaitFadeScreen', 'FadeScreen', 'CloseMessage', 'WaitButton', 'Message', 'WaitTime', 'LockAll', 'ReleaseAll',
+                 'RestoreCamera', 'ApplyMovement', 'WaitMovement'}      # (field commands: the scene was on the field there)
+    _h_return_field_ch7_base = HANDLERS['ReturnToField']
+
+    @handler('ReturnToField')
+    def h_return_field_open(tr, a, vals, name):
+        if a in poke_select_fades(tr):
+            return _h_return_field_ch7_base(tr, a, vals, name)
+        pd, apps, p = tr.job.pd, [], _prev_insn(tr, a)
+        while p is not None and len(apps) < 6:
+            n = pd.cmd_name(tr.d.insns[p][1])
+            if n in _BOUNDARY or n in ('End', 'Return', 'ReturnCommonScript') or (n == 'GoTo' and not apps):
+                break
+            if n not in _NEUTRAL and not n.startswith('Get'):
+                apps.append(n)
+            p = _prev_insn(tr, p)
+        if apps and all(n in _NO_SCREEN or n not in HANDLERS for n in apps):
+            return [f'// ReturnToField: the field stayed open ({", ".join(reversed(apps))}: no Black 2 screen ran)']
+        return _h_return_field_ch7_base(tr, a, vals, name)
+
+
+if version.MOVE_DELETER:
+    # The Move Deleter (Canalave's east house; pearl_story.inc "plat-ch7"): Black 2's move list fades and reopens the field
+    # itself, so Platinum's fades and ReturnToField around SelectPartyMonMove are dropped, as around the party select.
+    _psel_ch7_base = poke_select_fades
+
+    def poke_select_fades(tr):
+        out = _psel_ch7_base(tr)
+        if not getattr(tr, '_psel_ch7', False):
+            tr._psel_ch7 = True
+            d, pd = tr.d, tr.job.pd
+            nxt = {x: e for x, (e, op, args) in d.insns.items()}
+            name = lambda x: pd.cmd_name(d.insns[x][1]) if x in d.insns else None
+            for c in [x for x in d.insns if name(x) == 'SelectPartyMonMove']:
+                w0 = _prev_insn(tr, c)
+                f0 = _prev_insn(tr, w0) if w0 is not None else None
+                g = nxt.get(c)
+                r = nxt.get(g)
+                f1 = nxt.get(r)
+                if (name(f0), name(w0), name(g), name(r), name(f1)) == ('FadeScreen', 'WaitFadeScreen',
+                                                                      'GetSelectedPartyMonMove', 'ReturnToField', 'FadeScreen'):
+                    out |= {f0, r, f1}
+        return out
+
+    def _ch7_handler(cmd):
+        """A handler for cmd unless another chapter's block gave it one first (the shard tutor's commands are chapter 6's)."""
+        def deco(fn):
+            return fn if cmd in HANDLERS else handler(cmd)(fn)
+        return deco
+
+    @_ch7_handler('GetPartyMonMoveCount')
+    def h_move_count(tr, a, vals, name):
+        """0x1C8 GetPartyMonMoveCount var, slot: the moves that party Pokémon knows = Black 2's PokePartyGetMoveCount."""
+        return [f'PokePartyGetMoveCount {tr.var(vals[0])}, {tr.var(vals[1])}  // GetPartyMonMoveCount']
+
+    @_ch7_handler('SelectPartyMonMove')
+    def h_select_move(tr, a, vals, name):
+        """0x1C6 SelectPartyMonMove slot: the summary's move list (pearl_story.inc pl_SelectPartyMonMove)."""
+        return [f'pl_SelectPartyMonMove {tr.var(vals[0])}  // SelectPartyMonMove: Black 2\'s move list (CallPokeMoveReplace)']
+
+    @_ch7_handler('GetSelectedPartyMonMove')
+    def h_selected_move(tr, a, vals, name):
+        """0x1C7 GetSelectedPartyMonMove var: the slot chosen, 0xFF when cancelled."""
+        return [f'pl_GetSelectedPartyMonMove {tr.var(vals[0])}']
+
+    @_ch7_handler('BufferPartyMoveName')
+    def h_buffer_party_move(tr, a, vals, name):
+        """0x1CB BufferPartyMoveName arg, slot, move slot."""
+        return [f'pl_BufferPartyMoveName {vals[0]}, {tr.var(vals[1])}, {tr.var(vals[2])}']
+
+    @_ch7_handler('ClearPartyMonMoveSlot')
+    def h_clear_move_slot(tr, a, vals, name):
+        """0x1C9 ClearPartyMonMoveSlot slot, move slot (pokeplatinum Pokemon_ClearMoveSlot: the moves after it move up, the
+        last is emptied) = Black 2's PokePartyLearnMove with move 0 (ov012 s010B: the same)."""
+        return [f'PokePartyLearnMove {tr.var(vals[0])}, {tr.var(vals[1])}, 0  // ClearPartyMonMoveSlot: the move forgotten']
+
+
+if version.PLATINUM:
+    # The library's explosion scene puts the free camera on the player again after the TV (AddFreeCamera with
+    # GetPlayerMapPos's vars, at Platinum's 0x1FF, not in Pearl's file): the player is still at (7, 7), the first camera's
+    # tile (CAMERA_AT_PLAYER), so it walks east 3 to the table again before the fade-in, west 3 with Rowan at the end, and
+    # RestoreCamera then cuts back. (Platinum's file, Platinum's address: no Pearl address to key it by.)
+    PL_CAMERA_AT_PLAYER = {(42, 0x01FF): (7, 7)}
+    _h_cam_add_ch7_base = HANDLERS['AddFreeCamera']
+
+    @handler('AddFreeCamera')
+    def h_cam_add_platinum(tr, a, vals, name):
+        x, z = vals
+        if (x >= 0x4000 or z >= 0x4000) and (tr.f, a) in PL_CAMERA_AT_PLAYER and tr.mode != 'common':
+            return _h_cam_add_ch7_base(tr, a, list(PL_CAMERA_AT_PLAYER[(tr.f, a)]), name)
+        return _h_cam_add_ch7_base(tr, a, vals, name)
+# ---- end plat-ch7 ------------------------------------------------------------------------------------------------------
+
+
+# ---- plat-ch10 (2026-11-07): Platinum's chapter 10 (Sunyshore and the League). The Pokétch developer's nature question, on
+# Black 2's own party commands (macro in pearl_story.inc, block "plat-ch10"). Platinum only: Pearl's output doesn't change
+# (Pearl's Sunyshore east house keeps its stub, as in 1.0).
+if version.NATURE_CHECK:            # (v101-story: Pearl and Diamond too, version.NATURE_CHECK)
+    @handler('FindPartySlotWithNature')
+    def h_nature_slot(tr, a, vals, name):
+        """0x213 FindPartySlotWithNature var, nature (pokeplatinum scrcmd_party.c): the first party slot, not an Egg, with
+        that nature, else 0xFF (PARTY_SLOT_NONE). A party loop on Black 2's PokePartyGetParam nature (PKM_PARAM_NATURE 0x70,
+        in its stats_list; Gen 5 keeps the nature apart from the personality, the same 25 in the same order) and
+        PokePartyIsEgg. Sunyshore's Pokétch developer gives the Calendar, Dot Artist and Roulette apps for a Serious, Naive
+        and Quirky Pokémon. It was a stub [Pearl too]: VAR_0x8000 kept whatever it held, so the app came or not by chance."""
+        nat = tr.var(vals[1])
+        cmp = 'WorkCmpWork' if vals[1] >= 0x4000 else 'WorkCmpConst'
+        return [f'pl_FindPartySlotWithNature {tr.var(vals[0])}, {nat}, {cmp}  // a party loop: the slot, or 255']
+# ---- end plat-ch10
+
+# ---- plat-ch9 (2026-11-07): Platinum's chapter 9 (the Galactic HQ, Mt. Coronet, Spear Pillar, Sendoff Spring). Platinum's party
+# and Pokédex commands there on Black 2's own commands (macros in pearl_story.inc, block "plat-ch9"), Spear Pillar's cutscene,
+# and the Distortion World's entrance marked for step 7. Platinum only: Pearl's scripts use none of these.
+if version.PLATINUM:
+    @handler('CheckPartyHasHeldItem')
+    def h_party_held_item(tr, a, vals, name):
+        """0x32F CheckPartyHasHeldItem item, var (pokeplatinum scrcmd_party.c: TRUE if a party Pokémon holds the item). A party
+        loop on Black 2's PokePartyGetParam (PKM_PARAM_ITEM 6, in its stats_list). Mt. Coronet 6F's map scripts (chapter 12):
+        the Adamant or Lustrous Orb held by a party Pokémon, not only in the Bag, leads the stairs to Dialga's or Palkia's
+        pillar. Was a stub: the var kept CheckItem's answer, so a held Orb didn't count."""
+        if vals[0] >= 0x4000:
+            tr.job.stubs['CheckPartyHasHeldItem (an item in a var)'] += 1
+            return ['pl_stub CheckPartyHasHeldItem  // an item in a var']
+        item, note = item_value(vals[0])
+        return [f'pl_CheckPartyHasHeldItem {item}, {tr.var(vals[1])}  // a party loop on the held item{note}']
+
+    @handler('SetPartyGiratinaForm')
+    def h_giratina_form(tr, a, vals, name):
+        """0x328 SetPartyGiratinaForm form (pokeplatinum ScrCmd_SetPartyGiratinaForm, Party_SetGiratinaForm): each party
+        Giratina to the Origin Forme (1), or (0) to the forme its held item gives (the Origin Forme with the Griseous Orb, else
+        the Altered Forme), and the Pokédex records it = Black 2's PokePartySetForme (PokeParty_ChangeForme: ability and stats
+        recalculated; PokeDex_RegistPkm). Spear Pillar Distorted, into the Distortion World (1, step 7), and Sendoff Spring,
+        back out (0). Was a stub: a Giratina caught there stayed in the Origin Forme without the Orb after step 7."""
+        what = 'the Origin Forme' if vals[0] else 'the forme its held item gives'
+        return [f'pl_SetPartyGiratinaForm {vals[0]}  // each party Giratina: {what}']
+
+    @handler('SetSpeciesSeen')
+    def h_species_seen(tr, a, vals, name):
+        """0x31A SetSpeciesSeen species (pokeplatinum FieldSystem_WriteSpeciesSeen) = Black 2's PokeDexRegist 0
+        (PokeDex_RegistPkm), as plat-ch6's DrawPokemonPreview. Spear Pillar: Dialga and Palkia seen after the summoning. Was a
+        stub."""
+        return [f'PokeDexRegist 0, {tr.var(vals[0])}  // SetSpeciesSeen: the Pokédex has seen it']
+
+    SPEAR_PILLAR_CUTSCENE = (       # (line, cries before it, a long shake before it): overlay 100's order (ov100_021D2F0C:
+        (14, (483,), False),        # Dialga and Palkia come, lines 14, 16, 18, 19; ov100_021D1C44: the lake trio, lines
+        (16, (484,), False),        # 20-23, Giratina's shadow and its cries, 24-26; the line numbers are Spear Pillar's bank)
+        (18, (), False), (19, (), False), (20, (), False), (21, (), False), (22, (), False), (23, (), False),
+        (24, (487,), True), (25, (), False), (26, (487,), True))     # (one cry at a time: the cutscene's Dialga and
+    # Palkia crying together before Giratina's first cry are left out)
+
+    @handler('2FB')
+    def h_spear_pillar_cutscene(tr, a, vals, name):
+        """Platinum 0x2FB (pokeplatinum ScrCmd_2FB, sub_020985E4): Spear Pillar's cutscene, overlay 100 (Dialga and Palkia
+        summoned in 3D, the lake trio, Giratina's shadow; NARC demo_tengan). Black 2 has no such screen. Its 11 lines (Spear
+        Pillar's text bank, lines 14-26: Cyrus's speech, "a Pokémon that can only appear as a shadow") were lost with the stub;
+        now they show in the field, in the cutscene's order, with Dialga's, Palkia's and Giratina's cries and the camera's long
+        shake where Giratina comes. The 3D pictures and the cutscene's songs (SEQ_PL_EV_GIRA, GIRA2) aren't shown."""
+        src = tr.job.gen4_text.bank(tr.bank)
+        if len(src) <= 26 or 'shadow' not in src[24]:
+            tr.job.stubs['2FB (not Spear Pillar\'s text bank)'] += 1
+            return ['pl_stub 2FB  // Spear Pillar\'s cutscene, outside Spear Pillar\'s text bank']
+        tr.job.approx['2FB (Spear Pillar\'s cutscene, overlay 100: its 11 lines in the field with the cries and a shake; the '
+                      '3D pictures not shown)'] += 1
+        out = ['// Platinum 0x2FB: Spear Pillar\'s cutscene (overlay 100) has no Black 2 screen: its lines, cries and a shake']
+        for n, cries, shake in SPEAR_PILLAR_CUTSCENE:
+            if shake:
+                out.append('pl_ShakeCamera 1')
+            out += [f'pl_PlayCry {c}' for c in cries]
+            if 0 in tr.job.gen4_text.buffers(src[n]):       # (line 22: "Now, PLAYER.": the cutscene buffers the name)
+                out.append('pl_BufferPlayerName 0')
+            out += h_message(tr, a, [n], 'Message')
+            if cries:
+                out.append('pl_WaitCry')
+        return out + ['pl_CloseMessage']
+
+    @handler('DoDWWarp')
+    def h_dw_warp(tr, a, vals, name):
+        """0x320 DoDWWarp (pokeplatinum FieldSystem_StartDWWarp: the warp effect into the Distortion World, an app the script
+        waits for). Step 7 (the Distortion World, built later: the user's order). A marked stub; the Warp after it leads to
+        MAP_DISTORTION_WORLD_1F, which step 7 builds (notes/PLATINUM_HANDOFFS.md, "Chapter 9", the step 7 handoff)."""
+        tr.job.stubs['DoDWWarp (step 7: the Distortion World is built later)'] += 1
+        return ['pl_stub DoDWWarp  // STEP 7: the warp effect into the Distortion World (FieldSystem_StartDWWarp); '
+                'notes/PLATINUM_HANDOFFS.md "Chapter 9"']
+
+    @handler('2B5')
+    def h_exit_location(tr, a, vals, name):
+        """Platinum 0x2B5 map, x, z (pokeplatinum ScrCmd_2B5): the save's exit location, where an Escape Rope or Dig leads
+        and the Town Map's spot inside. Sendoff Spring after the Distortion World sets the Spring Path (762, 714): the player
+        came by a script warp, not by walking in. Black 2 remembers its escape point only when the player walks from the
+        overworld into a cave (ov035 event_mapchange.c GameData_SetEscapeRopeZone), and no script command sets it: that would
+        be C. Sendoff Spring has no Escape Rope; in Turnback Cave's rooms that allow one, it leads to the last cave entrance
+        until the player walks out by the Spring Path once. The Harbor Inn's Darkrai dream (chapter 12) sets Canalave the
+        same way. Listed as cosmetic (was a stub that did the same nothing)."""
+        tr.job.approx['2B5 (the exit for an Escape Rope or Dig: no Black 2 command; Black 2 remembers its own when the '
+                      'player walks into a cave)'] += 1
+        return [f'// Platinum 0x2B5 {", ".join(map(str, vals))}: the exit location (Escape Rope, Dig): no Black 2 command']
+
+# ---- end plat-ch9
+
+
+# ---- plat-ch12 (2026-11-07): Platinum's chapter 12 (the post-game's event islands, Rotom's Room). Flower Paradise's Shaymin
+# with Black 2's fateful-encounter mark, and Rotom's forms on Black 2's own party commands (macros in pearl_story.inc, block
+# "plat-ch12"; two of them PearlB2 extension sub-commands, patches/platinum_postgame.py). Platinum only: Pearl's scripts use
+# none of these. A command another chapter's block gave a handler first keeps it (as plat-ch7's _ch7_handler).
+if version.PLATINUM:
+    def _ch12_handler(cmd):
+        def deco(fn):
+            return fn if cmd in HANDLERS else handler(cmd)(fn)
+        return deco
+
+    @handler('StartFatefulEncounter')
+    def h_fateful_encounter(tr, a, vals, name):
+        """0x318 StartFatefulEncounter species, level (pokeplatinum Encounter_NewFatefulVsSpeciesAtLevel: a wild battle whose
+        Pokémon has the fateful-encounter mark): Flower Paradise's Shaymin. PearlB2 extension 0xBE (patches/platinum_postgame.py):
+        Black 2's static wild battle, as StartLegendaryBattle's, with PKM_PARAM_FATEFUL_ENCOUNTER set on the wild Pokémon; the
+        caught Shaymin keeps it, so Floaroma's Gracidea is given (plat-ch3's FindPartySlotWithFatefulEncounterSpecies). Was a
+        stub: no battle, nothing caught."""
+        tr.last_battle = 'wild'
+        return end_free_camera(tr, 'a battle', a) + [f'pl_StartFatefulEncounter {tr.var(vals[0])}, {tr.var(vals[1])}  // a wild '
+                                                     f'battle; the Pokémon has the fateful-encounter mark']
+
+    @handler('GetRotomFormsInSave')
+    def h_rotom_forms_in_save(tr, a, vals, name):
+        """0x302 GetRotomFormsInSave heat, wash, frost, fan, mow (pokeplatinum SaveData_GetRotomFormsInSave): 1 for each form
+        some Rotom has, not an Egg, in the party, the Day Care or a box; Rotom's Room shows the appliance of each form nobody
+        has. PearlB2 extension 0xBD (patches/platinum_postgame.py) reads all three; the macro spreads its bits (form n = bit n).
+        Replaces plat-rooms' handler (every form 0: nothing in the game made a form before Rotom's Room's commands below)."""
+        return [f'pl_GetRotomFormsInSave {", ".join(tr.var(v) for v in vals)}  // party, Day Care and boxes (ext 0xBD)']
+
+    @handler('GetPartyRotomCountAndFirst')
+    def h_rotom_count(tr, a, vals, name):
+        """0x303 GetPartyRotomCountAndFirst count, slot (pokeplatinum ScrCmd_GetPartyRotomCountAndFirst): the party's Rotom in
+        an appliance (form not 0, not an Egg), and the first one's slot (255: none). A party loop on Black 2's PokePartyIsEgg,
+        PokePartyGetParam (species) and PokePartyGetForme."""
+        return [f'pl_GetPartyRotomCountAndFirst {tr.var(vals[0])}, {tr.var(vals[1])}']
+
+    @handler('SetRotomForm')
+    def h_set_rotom_form(tr, a, vals, name):
+        """0x304 SetRotomForm slot, move slot, move, form (pokeplatinum Pokemon_SetRotomForm: the form's move replaces the
+        other form's, or goes in the first free slot, or in the move slot given; Thunder Shock when no move is left; the
+        Pokédex records the form) = Black 2's PokePartyChangeRotomForme slot, move slot, form (ov012 s011C, PML_PkmChangeRotomForme:
+        the same rule, the same five moves; PokeDex_RegistPkm), as Black 2's own appliance script (global 10315). Platinum's
+        third argument (the move) is unused by its command too."""
+        return [f'PokePartyChangeRotomForme {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[3])}  // SetRotomForm: the form '
+                f'and its move']
+
+    @handler('GetPartyMonForm2')
+    def h_party_form2(tr, a, vals, name):
+        """0x305 GetPartyMonForm2 slot, var = Black 2's PokePartyGetForme var, slot."""
+        return [f'PokePartyGetForme {tr.var(vals[1])}, {tr.var(vals[0])}  // GetPartyMonForm2']
+
+    @_ch12_handler('GetPartyMonMove')
+    def h_party_move(tr, a, vals, name):
+        """0x1CA GetPartyMonMove var, slot, move slot = Black 2's PokePartyGetMove (the same order)."""
+        return [f'PokePartyGetMove {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[2])}  // GetPartyMonMove']
+
+    @_ch12_handler('CountRepeatedSpeciesInParty')
+    def h_count_species(tr, a, vals, name):
+        """0x2CB CountRepeatedSpeciesInParty var, species: how many party Pokémon (not Eggs) are that species = Black 2's
+        PokePartyGetCountBySpecies species, var. (Species 0, Platinum's "any species twice", is used by no script: a stub.)"""
+        if vals[1] == 0:
+            return keep_stub(tr, a, vals, name)
+        return [f'PokePartyGetCountBySpecies {tr.var(vals[1])}, {tr.var(vals[0])}  // CountRepeatedSpeciesInParty']
+
+    @_ch12_handler('FindPartySlotWithSpecies')
+    def h_find_species(tr, a, vals, name):
+        """0x2DD FindPartySlotWithSpecies var, species: the first party slot (not an Egg) of that species, else 255 = Black 2's
+        PokePartyFindBySpecies (pl_FindPartySlotWithSpecies)."""
+        return [f'pl_FindPartySlotWithSpecies {tr.var(vals[0])}, {tr.var(vals[1])}']
+
+    @_ch12_handler('OpenSummaryScreenTeachMove')
+    def h_summary_teach(tr, a, vals, name):
+        """0x2E7 OpenSummaryScreenTeachMove slot, move (pokeplatinum: the summary's move screen, a move to forget for the new
+        one) = Black 2's CallPokeMoveReplace (the forget-a-move screen; it fades and reopens the field itself, so the fades and
+        ReturnToField around it are dropped: _ch12_psel)."""
+        return [f'pl_OpenSummaryScreenTeachMove {tr.var(vals[0])}, {tr.var(vals[1])}  // Black 2\'s forget-a-move screen']
+
+    @_ch12_handler('GetSummarySelectedMoveSlot')
+    def h_summary_slot(tr, a, vals, name):
+        """0x2E8 GetSummarySelectedMoveSlot var: the move slot chosen, 4 (LEARNED_MOVES_MAX) when none."""
+        return [f'pl_GetSummarySelectedMoveSlot {tr.var(vals[0])}']
+
+    # Rotom's Room writes its two party selects and its move screen with a CloseMessage after the fade-out (FadeScreen,
+    # WaitFadeScreen, CloseMessage, SelectMoveTutorPokemon / OpenSummaryScreenTeachMove, GetSelectedPartySlot /
+    # GetSummarySelectedMoveSlot, ReturnToField, FadeScreen): Black 2's screens fade and reopen the field themselves, so the
+    # fades and the ReturnToField are dropped, as poke_select_fades does for the pattern without the CloseMessage (a FieldOpen
+    # on an open field hangs: plat-ch7). Only Rotom's Room has it (and the Battle Tower's, another shape: step 8).
+    _psel_ch12_base = poke_select_fades
+
+    def poke_select_fades(tr):
+        out = _psel_ch12_base(tr)
+        if not getattr(tr, '_psel_ch12', False):
+            tr._psel_ch12 = True
+            d, pd = tr.d, tr.job.pd
+            nxt = {x: e for x, (e, op, args) in d.insns.items()}
+            prv = {e: x for x, e in nxt.items()}
+            name = lambda x: pd.cmd_name(d.insns[x][1]) if x in d.insns else None
+            pairs = {'SelectMoveTutorPokemon': 'GetSelectedPartySlot', 'OpenSummaryScreenTeachMove': 'GetSummarySelectedMoveSlot'}
+            for c in [x for x in d.insns if name(x) in pairs]:
+                m0 = prv.get(c)
+                w0 = prv.get(m0)
+                f0 = prv.get(w0)
+                g = nxt.get(c)
+                r = nxt.get(g)
+                f1 = nxt.get(r)
+                if (name(f0), name(w0), name(m0), name(g), name(r), name(f1)) == ('FadeScreen', 'WaitFadeScreen', 'CloseMessage',
+                                                                               pairs[name(c)], 'ReturnToField', 'FadeScreen'):
+                    out |= {f0, r, f1}
+        return out
+# ---- end plat-ch12
+
+
+# ---- plat-tutors (2026-11-07): Platinum's party commands that Black 2's script commands can't do, on PearlB2 extension
+# sub-commands 0xB0-0xB6 (the decomp's overlay 376, src/pearlb2/plat_party/; macros in pearl_story.inc block "plat-tutors";
+# notes/EXT_COMMAND.md) and Black 2's own: the three shard tutors (Route 212, Snowpoint, the Survival Area) and their Shard
+# lists, Pastoria's scarf man (contest conditions), the ribbon givers (Dr. Footstep, Julia, the Sunyshore Market, the
+# Ribbon Syndicate), Dr. Footstep's footprints. The Pokémon Mansion's turn count needs no script: the battle's end writes
+# the work (decomp src/pearlb2/resident/plat_party_ext.c). The tutors' forget-a-move screen and move read are plat-ch12's
+# handlers (OpenSummaryScreenTeachMove, GetSummarySelectedMoveSlot, GetPartyMonMove, the fades). Platinum's tables come
+# from its dump (b2tools/platinum_party_data.py). Platinum only: Pearl's scripts keep their 1.0 stubs.
+# (v101-story: on for Pearl and Diamond too, version.PARTY_COMMANDS: their ribbon and footprint tables from their own dumps;
+# Pearl's scripts have no shard tutor.)
+if version.PARTY_COMMANDS:
+    import platinum_party_data as PPD
+
+    PL_PARTY_SLOT_NONE = 255                # Platinum's PARTY_SLOT_NONE: every move of the tutor (the Shard list)
+    PL_MENU_CANCEL = 0xFFFE                 # MENU_CANCEL (-2): EXIT or B, as Black 2's list menu answers B
+    PL_TUTOR_CMDS = ('ShowMoveTutorMoveSelectionMenu', 'CheckHasLearnableTutorMoves')
+
+    def _tutor_menu_after(tr, a):
+        """The command right after the one at a (address order) is a tutor's move list."""
+        end = tr.d.insns[a][0] if a in tr.d.insns else None
+        return end in tr.d.insns and tr.job.pd.cmd_name(tr.d.insns[end][1]) == 'ShowMoveTutorMoveSelectionMenu'
+
+    _speaker_tutors_base = speaker
+
+    def speaker(tr, a, line):
+        # The question right before a tutor's move list goes to the plain window: Black 2's list menu prints an entry's
+        # description (the move's Shards) only there (ov012 ListMenu_ShowDescription: SCRIPT_SUB_EVENT_SYSTEM_MSG; a person's
+        # balloon gets none). Both h_message and the window dataflow (FileTr.speakers_in) ask here.
+        if _tutor_menu_after(tr, a):
+            return ('sys', None)
+        return _speaker_tutors_base(tr, a, line)
+
+    def _tutor_locations(tr, a, loc):
+        """The tutor locations a command's location argument can be: a constant, or the values set into its var on every
+        way in (message_var_values: the Shard list's common script, VAR_0x8004 set by each caller), else all three."""
+        if loc < 0x4000:
+            return [loc]
+        values = message_var_values(tr, a, loc)
+        return sorted(v for v in values if v in (0, 1, 2)) if values and all(v in (0, 1, 2) for v in values) else [0, 1, 2]
+
+    def _file_locations(tr):
+        """The tutor locations this file's tutor commands name (a move bought here is one of theirs)."""
+        if getattr(tr, '_tutor_locs', None) is None:
+            locs = set()
+            for x, (e, op, args) in tr.d.insns.items():
+                if tr.job.pd.cmd_name(op) in PL_TUTOR_CMDS:
+                    locs |= set(_tutor_locations(tr, x, args[1][1]))
+            tr._tutor_locs = sorted(locs) or [0, 1, 2]
+        return tr._tutor_locs
+
+    def _shard_text(costs):
+        """A move's Shards in Platinum's words (bank 321: RED SHARDS .. GREEN SHARDS, "X n": its cost window), two to a line
+        of the plain window, the second column lined up."""
+        import gen4_text
+        bank = gen4_text.bank(PPD.MENU_BANK)
+        times = bank[PPD.TIMES_LINE]
+        cells = [f'{bank[PPD.SHARD_LINES[k]]} ' + re.sub(r'\{STRVAR_1 \d+(?:, \d+)*\}', str(costs[k]), times) for k in range(4)]
+        font = b2font.load(0)
+        col = max(font.width(cells[0]), font.width(cells[2])) + 3 * font.width(' ')
+        pad = lambda c: c + ' ' * max(1, round((col - font.width(c)) / font.width(' ')))
+        return f'{pad(cells[0])}{cells[1]}\\n{pad(cells[2])}{cells[3]}'
+
+    def _shard_line(tr, index):
+        costs = PPD.tutor_moves()[0][index][1]
+        return tr.job.line_text(('tutor_shards', index), _shard_text(costs))
+
+    def _move_chain(tr, a, move, body, what):
+        """For each move a tutor of this file teaches: when the move var holds it, body(index, move, costs)."""
+        m, end = tr.var(move), f'{tr.prefix}_{a:04X}_{what}End'
+        out = []
+        for loc in _file_locations(tr):
+            for i, mv, costs in PPD.location_moves(loc):
+                nxt = f'{tr.prefix}_{a:04X}_{what}{i}'
+                out += [f'WorkCmpConst {m}, {mv}', f'VMJumpIf CMP_NE, {nxt}'] + body(i, mv, costs) + [f'VMJump {end}',
+                                                                                                       f'{nxt}:']
+        return out + [f'{end}:']
+
+    @handler('CheckHasLearnableTutorMoves')
+    def h_tutor_any(tr, a, vals, name):
+        """0x2E5 CheckHasLearnableTutorMoves slot, location, var (Pokemon_HasLearnableMovesAt): 1 if a move of that tutor is
+        left for the Pokémon to learn, by Platinum's species-and-form masks = PearlB2 extension 0xB1. Was a stub: the tutor
+        said "no moves to teach" or not by chance."""
+        return [f'pl_CheckHasLearnableTutorMoves {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[2])}  // '
+                f'{PPD.LOCATIONS[vals[1]] if vals[1] < 3 else "the tutor"}\'s moves, Platinum\'s masks (ext 0xB1)']
+
+    @handler('ShowMoveTutorMoveSelectionMenu')
+    def h_tutor_menu(tr, a, vals, name):
+        """0x2E6 ShowMoveTutorMoveSelectionMenu slot, location, var: the tutor's moves the Pokémon can learn and doesn't know
+        (PARTY_SLOT_NONE: all of them, the Shard list), then EXIT; var = the move, MENU_CANCEL (-2) for EXIT or B. Black 2's
+        list menu at the right edge (Platinum's is at the top right too), each move's name (word 2) in its entry and its Shards
+        in Platinum's words in the entry's description line, which the plain window shows while the cursor is there (the
+        question before it moves there: speaker). Each entry asks PearlB2 extension 0xB0 (Platinum's masks). Was a stub."""
+        slot, loc, var = vals
+        entry = tr.job.line_text(('tutor_move',), '{STRVAR_1 6, 2}')
+        exit_line = tr.job.line_for(PPD.MENU_BANK, PPD.EXIT_LINE)
+        out = [f'ListMenu_AnchorTopRight 31, 1, 0, 1, {tr.var(var)}  // {name}: Black 2\'s list menu, the Shards in each '
+               f'entry\'s description line']
+        locs = _tutor_locations(tr, a, loc)
+        done = f'{tr.prefix}_{a:04X}_TutorExit'
+        for L in locs:
+            nxt = f'{tr.prefix}_{a:04X}_Tutor{L}'
+            if len(locs) > 1:
+                out += [f'WorkCmpConst {tr.var(loc)}, {L}', f'VMJumpIf CMP_NE, {nxt}']
+            for i, mv, costs in PPD.location_moves(L):
+                desc = _shard_line(tr, i)
+                if slot == PL_PARTY_SLOT_NONE:
+                    out.append(f'pl_TutorMenuAny {mv}, {entry}, {desc}  // tutor move {i}, Shards {"/".join(map(str, costs))}')
+                else:
+                    out.append(f'pl_TutorMenuMove {tr.var(slot)}, {i}, {mv}, {entry}, {desc}  // tutor move {i}, Shards '
+                               f'{"/".join(map(str, costs))}')
+            if len(locs) > 1:
+                out += [f'VMJump {done}', f'{nxt}:']
+        if len(locs) > 1:
+            out.append(f'{done}:')
+        return out + [f'ListMenuAdd {exit_line}, 65535, {PL_MENU_CANCEL}  // EXIT (MENU_CANCEL)', 'ListMenuShow']
+
+    @handler('CheckCanAffordMove')
+    def h_tutor_afford(tr, a, vals, name):
+        """0x2EA CheckCanAffordMove move, var: 1 when the Bag holds the move's red, blue, yellow and green Shards (Platinum's
+        table) = Black 2's ItemCheckAmount for each. Was a stub."""
+        move, var = vals
+        v = tr.var(var)
+        assert move >= 0x4000, f'{name} with a constant move'
+        return [f'WorkSetConst {v}, 0  // {name}: the Bag\'s Shards against the move\'s (Platinum\'s table)'] + _move_chain(
+            tr, a, move, lambda i, mv, costs: [f'WorkSetConst {v}, 1'] + [f'pl_TutorShardCheck {it}, {n}, {v}'
+                                                                        for it, n in zip(PPD.SHARDS, costs) if n], 'Afford')
+
+    @handler('PayShardCost')
+    def h_tutor_pay(tr, a, vals, name):
+        """0x2EB PayShardCost move: the move's Shards out of the Bag = Black 2's ItemSub for each. Was a stub (the move was
+        free)."""
+        assert vals[0] >= 0x4000, f'{name} with a constant move'
+        return [f'// {name}: the move\'s Shards (Platinum\'s table)'] + _move_chain(
+            tr, a, vals[0], lambda i, mv, costs: [f'pl_TutorShardPay {it}, {n}' for it, n in zip(PPD.SHARDS, costs) if n],
+            'Pay')
+
+    @handler('ResetMoveSlot')
+    def h_tutor_learn(tr, a, vals, name):
+        """0x2E9 ResetMoveSlot slot, move slot, move (Party_ResetMonMoveSlot: the move there, its full PP, no PP Ups) = Black 2's
+        PokePartyLearnMove (PokeParty_SetMove: the same). Was a stub (the move was never learned)."""
+        return [f'PokePartyLearnMove {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[2])}  // {name}']
+
+    @handler('ShowShardCost')
+    def h_tutor_cost(tr, a, vals, name):
+        """0x2EC ShowShardCost x, y, move, var: Platinum's window of the move's four Shards next to the message. Here the same
+        words in the plain window the Shard list's question was in (the next WaitABPress waits on it). Was a stub."""
+        x, y, move, var = vals
+        return [f'// {name} {x}, {y}: the move\'s Shards in the plain window'] + _move_chain(
+            tr, a, move, lambda i, mv, costs: [f'pl_msg_sys {_shard_line(tr, i)}'], 'Cost')
+
+    @handler('CloseShardCostWindow')
+    def h_tutor_cost_close(tr, a, vals, name):
+        return [f'// {name}: the Shards were in the plain window (its CloseMessage closes it)']
+
+    @handler('GetPartyMonContestStat')
+    def h_contest_stat(tr, a, vals, name):
+        """0x281 GetPartyMonContestStat slot, type, var (MON_DATA_COOL + type): Black 2 keeps the five conditions as Platinum
+        (PKM_PARAM_CONTEST_COOL 0x13 ..), but its PokePartyGetParam doesn't read them: PearlB2 extension 0xB3. Pastoria's scarf
+        man (a scarf for a condition of 200 or more). Was a stub [Pearl too]."""
+        slot, typ, var = vals
+        if typ >= 0x4000:
+            return [f'WorkSet PL_TMP2, {tr.var(typ)}', f'WorkAdd PL_TMP2, {PPD.CONTEST_COOL}',
+                    f'pl_GetPartyMonParam {tr.var(var)}, {tr.var(slot)}, PL_TMP2  // {name}']
+        return [f'pl_GetPartyMonParam {tr.var(var)}, {tr.var(slot)}, {PPD.CONTEST_COOL + typ:#x}  // {name} {typ}']
+
+    def _ribbon(tr, ribbon):
+        import gen4_text
+        return gen4_text.bank(PPD.RIBBON_NAMES_BANK)[PPD.ribbon_name_line(ribbon)]
+
+    @handler('GetPartyMonRibbon')
+    def h_get_ribbon(tr, a, vals, name):
+        """0x230 GetPartyMonRibbon var, slot, ribbon: Platinum's ribbon id (generated/ribbons.txt) -> its MON_DATA field
+        (sRibbonDataTable, from the dump) -> Black 2's PKM_PARAM (platinum_party_data.b2_param), read by PearlB2 extension
+        0xB3 (Black 2's PokePartyGetParam reads no ribbon). Was a stub [Pearl too]."""
+        var, slot, ribbon = vals
+        if ribbon >= 0x4000:
+            return keep_stub(tr, a, vals, name)
+        p = PPD.ribbon_param(ribbon)
+        return [f'pl_GetPartyMonParam {tr.var(var)}, {tr.var(slot)}, {p:#x}  // {name}: the {_ribbon(tr, ribbon)}']
+
+    @handler('SetPartyMonRibbon')
+    def h_set_ribbon(tr, a, vals, name):
+        """0x231 SetPartyMonRibbon slot, ribbon: the same parameter set (PearlB2 extension 0xB4; Black 2 has no such set).
+        Platinum also tells the TV (sub_0206DDB8): Black 2's TV has no such show. Was a stub [Pearl too]."""
+        slot, ribbon = vals
+        if ribbon >= 0x4000:
+            return keep_stub(tr, a, vals, name)
+        p = PPD.ribbon_param(ribbon)
+        return [f'pl_SetPartyMonRibbon {tr.var(slot)}, {p:#x}  // {name}: the {_ribbon(tr, ribbon)}']
+
+    @handler('CountPartyRibbons')
+    def h_count_ribbons(tr, a, vals, name):
+        """0x22F CountPartyRibbons var: Platinum's 80 ribbons that some Pokémon of the party has, no Egg (the Ribbon
+        Syndicate lets in a player with 10) = PearlB2 extension 0xB5. Was a stub [Pearl too]."""
+        return [f'pl_CountPartyRibbons {tr.var(vals[0])}  // {name}']
+
+    @handler('BufferRibbonName')
+    def h_ribbon_name(tr, a, vals, name):
+        """0x232 BufferRibbonName word, ribbon: Platinum's name for it (bank 484), a line of the zone's text, into the word
+        buffer at run time (PearlB2 extension 0xB6: Black 2 has no word command for a ribbon). Julia's seven ribbons meet in one
+        "received the ..." line. Was a stub [Pearl too]."""
+        word, ribbon = vals
+        if ribbon >= 0x4000:
+            return keep_stub(tr, a, vals, name)
+        nm = _ribbon(tr, ribbon)
+        return [f'pl_BufferLineWord {word}, {tr.job.line_text(("ribbon_name", ribbon), nm)}  // {name}: the {nm}']
+
+    @handler('GetPartyMonFootprintType')
+    def h_footprint(tr, a, vals, name):
+        """0x23A GetPartyMonFootprintType print var, type var, slot (footprint_type.c, from the dump): Dr. Footstep's five
+        kinds of footprint and whether the species has one = PearlB2 extension 0xB2. Was a stub [Pearl too]: his reading was
+        any one by chance."""
+        return [f'pl_GetPartyMonFootprintType {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[2])}  // {name}']
+
+    @handler('GetPartyMonEVTotal')
+    def h_ev_total(tr, a, vals, name):
+        """0x233 GetPartyMonEVTotal var, slot = Black 2's PokePartyGetEVTotal (the six effort values added; the Sunyshore
+        Market's Effort Ribbon at 510). Was a stub [Pearl too]."""
+        return [f'PokePartyGetEVTotal {tr.var(vals[0])}, {tr.var(vals[1])}  // {name}']
+# ---- end plat-tutors
+# ---- plat-music (2026-11-07): Platinum's songs and sounds in its scripts (notes/MUSIC.md "Platinum"). Platinum's sound ids
+# past Pearl's (its SEQ_PL_* songs 1189-1222, its SEQ_SE_PL_* sounds 1350-1499) take Platinum's names (the decomp's
+# res/sound/pl_sound_data.json); the songs its scripts start (version.STORY_SONGS: Looker's theme, the Villa's piano, audio
+# system and music box, Spear Pillar's cutscene, the Poké Radar's song) and its fanfares (version.STORY_FANFARES) play as
+# SEQ_PEARL_<name>, installed by patches/sinnoh_music.py, as Pearl's own story songs do. Platinum only: Pearl's and
+# Diamond's scripts have none of these ids, and the rows are empty for them.
+if version.PLATINUM:
+    _PL_SEQ_NAMES = None
+    _seq_name_pearl = seq_name
+
+    def seq_name(v):        # noqa: F811  (Pearl's names, and Platinum's own past them)
+        """(Black 2 sound constant or None, name) for a Platinum sound id: Pearl's name (pokediamond's sndseq.h), or
+        Platinum's for the ids it added (SEQ_PL_*, SEQ_SE_PL_*)."""
+        global _PL_SEQ_NAMES
+        if _PL_SEQ_NAMES is None:
+            info = json.load(open(os.path.join(PLATINUM, 'res', 'sound', 'pl_sound_data.json')))['seqInfo']
+            _PL_SEQ_NAMES = {i: e['name'] for i, e in enumerate(info) if e.get('name', '').startswith(('SEQ_PL_', 'SEQ_SE_PL_'))}
+        name = _PL_SEQ_NAMES.get(v)
+        if name:
+            return SOUND.get(name), name
+        return _seq_name_pearl(v)
+
+    # Platinum's own sounds -> Black 2's (as SOUND above: [guess] = chosen by name and use). SEQ_SE_PL_KUSARI (Spear
+    # Pillar's red chains) and SEQ_SE_PL_SYUWA (the Distortion World's portals) have no Black 2 sound found: they stay counted
+    # stubs (Black 2 plays only the sounds its sound groups have loaded, so Platinum's own can't simply be added: C).
+    SOUND.update({
+        'SEQ_SE_PL_COIN': 'SEQ_SE_SYS_22',     # [guess] the Game Corner's coins: the cash register (Pearl's SEQ_SE_DP_REGI)
+    })
+    # (plat-dw-rom) Platinum's own sounds PearlB2 installs (patches/platinum_dw.py PLAT_SOUNDS; include/pearlb2.h PLATSND_*):
+    # SEQ_SE_PL_SYUWA (the Distortion World's portals) and SEQ_SE_PL_KUSARI (Spear Pillar's chains) play by number through
+    # extension 0x25 (resident PearlB2_PlatSound: loaded when played; silent in a build without them, as the stubs were)
+    PLAT_SE = {'SEQ_SE_PL_SYUWA': 0, 'SEQ_SE_PL_KUSARI': 10}
+    _h_sound_before_plat_se = HANDLERS['PlaySE']
+
+    @handler('PlaySE')
+    def h_playse_platinum(tr, a, vals, name):
+        b2, pname = seq_name(vals[0])
+        if pname in PLAT_SE:
+            return [f'pl_PlatSound {PLAT_SE[pname]}  // Platinum {pname} (patches/platinum_dw.py)']
+        return _h_sound_before_plat_se(tr, a, vals, name)
+    PEARL_SONGS = PEARL_SONGS + version.STORY_SONGS      # noqa: F811  (h_sound plays these as SEQ_PEARL_<name>)
+    _h_sound_pearl = HANDLERS['PlayFanfare']
+
+    @handler('PlayFanfare')
+    def h_fanfare_platinum(tr, a, vals, name):
+        """PlayFanfare of Platinum's own fanfares (version.STORY_FANFARES: the Battle Hall's BP fanfare, SEQ_PL_POINTGET3):
+        sinnoh_music installs them with Black 2's ME player. A WaitFanfare follows, so a build without them plays Black 2's
+        item jingle instead of nothing (a WaitFanfare after a stub hangs: 2026-10-18)."""
+        b2, pname = seq_name(vals[0])
+        if pname not in version.STORY_FANFARES:
+            return _h_sound_pearl(tr, a, vals, name)
+        return [f'#ifdef SEQ_PEARL_{pname[4:]}', f'    pl_PlayFanfare SEQ_PEARL_{pname[4:]}  // Platinum {pname}', '#else',
+                f'    pl_PlayFanfare SEQ_ME_ITEM  // Black 2 stand-in (a build without sinnoh_music): a jingle, for the WaitFanfare',
+                '#endif']
+
+    @handler('GetCurrentBGM', 'SetScenePlayBGMMusicBox', 'SetFieldScene')
+    def h_music_box_platinum(tr, a, vals, name):
+        """The Villa's music box (pokeplatinum scrcmd_sound.c): GetCurrentBGM keeps the song that plays, SetScenePlayBGMMusicBox
+        plays SEQ_PL_TOWN02 as the music box, SetFieldScene the kept song again. = Black 2's BGMPlayPush (the field's song
+        kept on Black 2's BGM stack, the box's song played) and BGMPop (the kept song back). Replaces plat-rooms' comment."""
+        if name == 'GetCurrentBGM':
+            return [f'// GetCurrentBGM {tr.var(vals[0])}: the song that plays is kept by the BGMPlayPush below']
+        if name == 'SetScenePlayBGMMusicBox':
+            return ['#ifdef SEQ_PEARL_PL_TOWN02', '    BGMPlayPush SEQ_PEARL_PL_TOWN02  // Platinum SEQ_PL_TOWN02: the music box',
+                    '#else', '// SetScenePlayBGMMusicBox: no Platinum songs in this build, the room\'s song plays on', '#endif']
+        return ['#ifdef SEQ_PEARL_PL_TOWN02', f'    BGMPop 0, 0  // SetFieldScene {tr.var(vals[0])}: the kept song again',
+                '#endif']
+
+    _h_spear_pillar_cutscene = HANDLERS.get('2FB')
+
+    @handler('2FB')
+    def h_spear_pillar_cutscene_music(tr, a, vals, name):
+        """plat-ch9's Spear Pillar cutscene (0x2FB) with the cutscene's music (overlay 100, ov100_021D1C44.c): the song that
+        plays fades out with line 22 (Sound_FadeOutBGM 0, 10), SEQ_PL_EV_GIRA starts after line 23 (state 11, before the
+        shadow's line 24), SEQ_PL_EV_GIRA2 after line 25 (state 18, before Giratina's cry and line 26), and the cutscene's
+        end stops it (Sound_StopBGM); the script's warp to the distorted pillar then plays that zone's song."""
+        out = _h_spear_pillar_cutscene(tr, a, vals, name)
+        if not out or out[0].startswith('pl_stub'):
+            return out
+
+        def group_start(n):
+            """Where the lines before Spear Pillar line n begin (its shake, cries and name buffer)."""
+            at = next(i for i, l in enumerate(out) if re.match(rf'\s*pl_msg\w* {n}\b', l))
+            while at and out[at - 1].strip().startswith(('pl_ShakeCamera', 'pl_PlayCry', 'pl_BufferPlayerName')):
+                at -= 1
+            return at
+
+        def song(s):
+            return [f'#ifdef SEQ_PEARL_{s[4:]}', f'    pl_PlayMusic SEQ_PEARL_{s[4:]}  // Platinum {s}: the cutscene\'s song',
+                    '#endif']
+        for n, lines in ((26, song('SEQ_PL_EV_GIRA2')), (24, song('SEQ_PL_EV_GIRA')),
+                         (22, ['pl_FadeOutBGM 10  // the cutscene fades the song out (Sound_FadeOutBGM 0, 10)'])):
+            at = group_start(n)
+            out[at:at] = lines
+        at = len(out) - (out[-1] == 'pl_CloseMessage')
+        out[at:at] = ['#ifdef SEQ_PEARL_PL_EV_GIRA2', '    pl_FadeOutBGM 1  // the cutscene\'s end stops its song (Sound_StopBGM)',
+                      '#endif']
+        tr.job.approx['2FB: the cutscene\'s songs SEQ_PL_EV_GIRA and EV_GIRA2 with its lines'] += 1
+        return out
+# ---- end plat-music
+
+
+# ---- plat-trades (2026-11-07): Gen 4's in-game trades, the Mining Museum's fossil restorer and ActivateRoamingPokemon as
+# real commands (pearl_story.inc block "plat-trades"; decomp src/pearlb2/resident/npc_trade.c, roamers.c; extension
+# sub-commands 0xA7, 0xA8: notes/EXT_COMMAND.md). On by version rows (version.NPC_TRADES, FOSSIL_RESTORER,
+# ROAMER_COMMAND): Platinum now; Pearl's and Diamond's 1.0 keep their stubs until 1.0.1 turns the rows on (their
+# commands have the same names here: FileTr's cmd_name). A command another block gave a handler first keeps it.
+if version.NPC_TRADES:
+    import npc_trade_data as NTD
+
+    _TRADE_MENUS = ('OpenPartyMenuForTrade',)
+
+    def _prev_insn_trades(tr, a):
+        if getattr(tr, '_prev_trades', None) is None:
+            tr._prev_trades = {e: x for x, (e, op, args) in tr.d.insns.items()}
+        return tr._prev_trades.get(a)
+
+    def _trade_at(tr, a):
+        """The trade of the file's InitNPCTrade before address a (the nearest; the one of the file if none is before)."""
+        pd = tr.job.pd
+        inits = sorted((x, args[0][1]) for x, (e, op, args) in tr.d.insns.items() if pd.cmd_name(op) == 'InitNPCTrade')
+        assert inits, f'{tr.f}: a trade command without InitNPCTrade'
+        before = [n for x, n in inits if x < a]
+        return before[-1] if before else inits[0][1]
+
+    def _trade_name(n):
+        t = NTD.trades()[n]
+        return f'{t["nickname"]} (species {t["species"]}) for species {t["wanted"]}'
+
+    @handler('OpenPartyMenuForTrade')
+    def h_trade_menu(tr, a, vals, name):
+        """0x2A5 OpenPartyMenuForTrade (pokeplatinum FieldSystem_OpenPartyMenu_SelectForTrade: the party menu, any Pokémon
+        may be picked, an Egg too: GetPartyMonSpecies then answers no species) = Black 2's party select (CallPokeSelect).
+        It fades and reopens the field itself, so Platinum's fades and ReturnToField around it are dropped (poke_select_fades
+        below). Platinum's ball-capsule question has no Black 2 counterpart (no Ball Capsules)."""
+        return ['pl_ChoosePokemonMenu  // OpenPartyMenuForTrade: Black 2\'s party select (CallPokeSelect)']
+
+    _h_selected_slot_trades_base = HANDLERS['GetSelectedPartySlot']
+
+    @handler('GetSelectedPartySlot')
+    def h_selected_slot_trade(tr, a, vals, name):
+        p = _prev_insn_trades(tr, a)
+        if p is not None and tr.job.pd.cmd_name(tr.d.insns[p][1]) in _TRADE_MENUS:
+            return [f'pl_GetSelectedPartySlot {tr.var(vals[0])}  // the slot, 255 when cancelled (as Platinum)']
+        return _h_selected_slot_trades_base(tr, a, vals, name)
+
+    _psel_trades_base = poke_select_fades
+
+    def poke_select_fades(tr):
+        out = _psel_trades_base(tr)
+        if not getattr(tr, '_psel_trades', False):
+            tr._psel_trades = True
+            d, pd = tr.d, tr.job.pd
+            nxt = {x: e for x, (e, op, args) in d.insns.items()}
+            name = lambda x: pd.cmd_name(d.insns[x][1]) if x in d.insns else None
+            for c in [x for x in d.insns if name(x) in _TRADE_MENUS]:
+                w0 = _prev_insn_trades(tr, c)
+                f0 = _prev_insn_trades(tr, w0) if w0 is not None else None
+                g = nxt.get(c)
+                r = nxt.get(g)
+                f1 = nxt.get(r)
+                if (name(f0), name(w0), name(g), name(r), name(f1)) == ('FadeScreen', 'WaitFadeScreen',
+                                                                      'GetSelectedPartySlot', 'ReturnToField', 'FadeScreen'):
+                    out |= {f0, r, f1}
+        return out
+
+    @handler('InitNPCTrade')
+    def h_trade_init(tr, a, vals, name):
+        """0x226 InitNPCTrade trade: Platinum loads the trade's data for the commands after it. Here they take the trade
+        from this line (the generator: GetNPCTradeRequestedSpecies a constant, StartNPCTrade its argument)."""
+        return [f'// InitNPCTrade {vals[0]}: {_trade_name(vals[0])} (the commands below name it)']
+
+    @handler('GetNPCTradeRequestedSpecies')
+    def h_trade_wanted(tr, a, vals, name):
+        """0x228 GetNPCTradeRequestedSpecies var: the species the trade wants, from the dump's table (npc_trade_data)."""
+        n = _trade_at(tr, a)
+        return [f'pl_SetVarFromValue {tr.var(vals[0])}, {NTD.requested_species(n)}  // GetNPCTradeRequestedSpecies: '
+                f'trade {n} wants species {NTD.requested_species(n)}']
+
+    @handler('GetNPCTradeSpecies')
+    def h_trade_offered(tr, a, vals, name):
+        """0x227 GetNPCTradeSpecies var: the species the trade gives."""
+        n = _trade_at(tr, a)
+        return [f'pl_SetVarFromValue {tr.var(vals[0])}, {NTD.offered_species(n)}  // GetNPCTradeSpecies: trade {n} gives '
+                f'species {NTD.offered_species(n)}']
+
+    @handler('StartNPCTrade')
+    def h_trade_start(tr, a, vals, name):
+        """0x229 StartNPCTrade slot = extension 0xA7 (pl_StartNPCTrade): Black 2's trade event with the Pokémon made by
+        Platinum's rules (decomp resident/npc_trade.c; the table: patches/npc_trades.py). It fades and reopens the field
+        itself, as Platinum's trade task does."""
+        n = _trade_at(tr, a)
+        return [f'pl_StartNPCTrade {n}, {tr.var(vals[0])}  // {_trade_name(n)}: Black 2\'s trade event and demo']
+
+    @handler('FinishNPCTrade')
+    def h_trade_finish(tr, a, vals, name):
+        return ['// FinishNPCTrade: nothing to free (the trade event frees its own)']
+
+
+if version.FOSSIL_RESTORER:
+    import fossil_data as FOS
+
+    @handler('GetFossilCount')
+    def h_fossil_count(tr, a, vals, name):
+        """0x1F1 GetFossilCount var: the Bag's count of every fossil of the dump's table, added up (Black 2's ItemGetCount)."""
+        v = tr.var(vals[0])
+        return [f'pl_SetVarFromValue {v}, 0  // GetFossilCount: every fossil in the Bag, added up'] + \
+            [f'pl_FossilCountAdd {v}, {item}  // {FOS.ITEM_NAMES.get(item, item)}' for item, sp in FOS.table()]
+
+    @handler('GetSpeciesFromFossil')
+    def h_fossil_species(tr, a, vals, name):
+        """0x1F4 GetSpeciesFromFossil var, item: the fossil's species (0 for any other item)."""
+        v, item = tr.var(vals[0]), vals[1]
+        first = f'WorkSet PL_TMP, {tr.var(item)}' if item >= 0x4000 else f'WorkSetConst PL_TMP, {item}'
+        return [f'{first}  // GetSpeciesFromFossil: the item', f'pl_SetVarFromValue {v}, 0'] + \
+            [f'pl_FossilSpecies {v}, {i}, {s}  // {FOS.ITEM_NAMES.get(i, i)}: {FOS.SPECIES_NAMES.get(s, s)}'
+             for i, s in FOS.table()]
+
+    @handler('FindFossilAtThreshold')
+    def h_fossil_find(tr, a, vals, name):
+        """0x1F5 FindFossilAtThreshold item var, index var, threshold: the first fossil (the table's order) where the Bag's
+        counts added up reach the threshold, its item and index (0, 0 when none)."""
+        item, index, thr = tr.var(vals[0]), tr.var(vals[1]), vals[2]
+        done = f'.Lfossil_{tr.prefix}_{a:04X}'
+        out = [f'WorkSet PL_TMP3, {tr.var(thr)}' if thr >= 0x4000 else f'WorkSetConst PL_TMP3, {thr}',
+               f'WorkSetConst PL_TMP2, 0  // FindFossilAtThreshold: the counts so far',
+               f'pl_SetVarFromValue {item}, 0', f'pl_SetVarFromValue {index}, 0']
+        out += [f'pl_FossilFind {item}, {index}, {i}, {k}, {done}  // {FOS.ITEM_NAMES.get(i, i)}'
+                for k, (i, s) in enumerate(FOS.table())]
+        return out + [f'{done}:']
+
+    # The Museum's fossil menu (Platinum's MiningMuseum_FossilMenuLoop) adds each fossil's entry by a line in a var: the
+    # fossil's index plus MenuEntries_Text_Fossil_OldAmber (SetVarFromVar V, W; AddVar V, base; AddMenuEntry V, value).
+    # Black 2's ListMenuAdd takes a fixed line, so the entry is written once for every value W is compared with in the
+    # file (0-6: the loop's CallIfEq chain), each picked by V. Only the Museum has a menu line in a var.
+    _h_menu_add_fossil_base = HANDLERS['AddMenuEntry']
+
+    def _var_line_values(tr, a, var):
+        """[(line, ...)] the var can hold at a (SetVarFromVar var, W; AddVar var, base; W's compared values), or None."""
+        pd = tr.job.pd
+        p1 = next((x for x, (e, op, args) in tr.d.insns.items() if e == a), None)
+        p2 = next((x for x, (e, op, args) in tr.d.insns.items() if e == p1), None) if p1 is not None else None
+        if p1 is None or p2 is None:
+            return None
+        (_, op1, args1), (_, op2, args2) = tr.d.insns[p1], tr.d.insns[p2]
+        if (pd.cmd_name(op1), pd.cmd_name(op2)) != ('AddVar', 'SetVarFromVar') or args1[0][1] != var or args2[0][1] != var:
+            return None
+        base, w = args1[1][1], args2[1][1]
+        if base >= 0x4000:
+            return None
+        ks = sorted({args[1][1] for x, (e, op, args) in tr.d.insns.items()
+                     if pd.cmd_name(op) == 'CompareVarToValue' and args[0][1] == w and args[1][1] < 0x4000})
+        return [base + k for k in ks] or None
+
+    @handler('AddMenuEntryImm', 'AddMenuEntry', 'AddListMenuEntry')
+    def h_menu_add_var_line(tr, a, vals, name):
+        if vals[0] < 0x4000:
+            return _h_menu_add_fossil_base(tr, a, vals, name)
+        lines = _var_line_values(tr, a, vals[0])
+        if not lines:
+            return _h_menu_add_fossil_base(tr, a, vals, name)
+        end, out = f'{tr.prefix}_{a:04X}_LineDone', []
+        for k, line in enumerate(lines):
+            nxt = f'{tr.prefix}_{a:04X}_Line{k}'
+            out += [f'WorkCmpConst {tr.var(vals[0])}, {line}  // {name}: the line in {tr.var(vals[0])}',
+                    f'VMJumpIf CMP_NE, {nxt}']
+            out += _h_menu_add_fossil_base(tr, a, [line] + list(vals[1:]), name)
+            out += [f'VMJump {end}', f'{nxt}:']
+        return out + [f'{end}:']
+
+
+if version.ROAMER_COMMAND:
+    @handler('ActivateRoamingPokemon')
+    def h_roamer(tr, a, vals, name):
+        """0x21C ActivateRoamingPokemon slot = extension 0xA8 (pl_ActivateRoamingPokemon): the roamer of Gen 4's slot is
+        released now (decomp resident/roamers.c; Platinum's five slots from patches/roamers.py)."""
+        return [f'pl_ActivateRoamingPokemon {vals[0]}  // the roamer of slot {vals[0]} released (Black 2\'s roamer save)']
+# ---- end plat-trades
+
+
+# ---- v101-story (2026-11-07): 1.0.1's new script fixes for Pearl and Diamond (work/agents/V101_BRIEF.md "v101-story";
+# pearl_story.inc block "v101-story"). The Platinum gates they turn on are the rows in version.py's block of the same name.
+if version.DEOXYS_FORMS:
+    @handler('CheckPartyHasSpecies2')
+    def h_has_species2(tr, a, vals, name):
+        """Pearl 0x262 CheckPokemonInParty species, var (pokediamond ScrCmd_CheckPokemonInParty: Party_HasMon, any party
+        Pokémon of that species): Veilstone's meteorites ask for a Deoxys. As 0x1C1's CheckPartyHasSpecies (Black 2's
+        PokePartyFindBySpecies). Was a stub: the var kept its last value. 0x262's arguments are species, var (0x1C1's are
+        var, species), so they swap here (2026-11-08: they didn't, and every meteorite read species 0)."""
+        return h_has_species(tr, a, [vals[1], vals[0]], 'CheckPartyHasSpecies')
+
+    @handler('ChangeDeoxysForm')
+    def h_deoxys_form(tr, a, vals, name):
+        """Pearl 0x263 SetDeoxysForm form (pokediamond ScrCmd_SetDeoxysForm: each party Deoxys to that form, its stats
+        recalculated, the Pokédex records it) = Black 2's PokePartySetForme over the party (PokeParty_ChangeForme,
+        PokeDex_RegistPkm), as plat-ch9's Giratina. Veilstone's four meteorites: Normal 0, Attack 1, Defense 2, Speed 3 (the
+        same numbers in Black 2). Was a stub: Deoxys never changed."""
+        return [f'pl_ChangeDeoxysForm {tr.var(vals[0])}  // each party Deoxys to form {tr.var(vals[0])}']
+
+if version.UNDERGROUND_GIFTS:
+    UNDERGROUND_FEATS = {'GetUndergroundTalkCounter': 'people met in the tunnels',
+                         'GetUndergroundItemsGivenAway': 'items given away there',
+                         'GetUndergroundFossilsUnearthed': 'Fossils dug up', 'GetUndergroundTrapsSet': 'Traps set'}
+
+    @handler(*UNDERGROUND_FEATS)
+    def h_underground_feat(tr, a, vals, name):
+        """Pearl 0x293, 0x286, 0x287, 0x288 (the Underground's records: people met, items given away, Fossils dug up, Traps
+        set): Hearthome's man gives a Crystal for 100 of each. This Underground has no digging, no Traps and no other
+        players, so the record counts as reached (version.UNDERGROUND_GIFTS): he gives them one a talk, after his other
+        goods. Was a stub: the var kept a smaller value, the Crystals never came."""
+        tr.job.approx[f'{name} (the Underground has no such feat here: counted as 100)'] += 1
+        return [f'WorkSetConst {tr.var(vals[0])}, 100  // {name}: {UNDERGROUND_FEATS[name]}, which this Underground '
+                f'has none of: counted as reached']
+
+if version.GAME_CORNER_CLOSED:
+    @handler('CheckBonusRoundStreak')
+    def h_bonus_streak(tr, a, vals, name):
+        """Pearl 0x275 (the Game Corner: ten straight bonus rounds on the slots, for the coin clerk's TM64): the slots are
+        closed here (the lead's choice for 1.0.1), so it counts as met; the clerk stands at the closed line
+        (version.MOVED_PEOPLE). Was a stub that left the Coin Case check's 1 in the var: the same answer, by chance."""
+        tr.job.approx['CheckBonusRoundStreak (the slots are closed: met)'] += 1
+        return [f'WorkSetConst {tr.var(vals[0])}, 1  // CheckBonusRoundStreak: the slots are closed, counted as met']
+
+    @handler('CheckCanAddCoins')
+    def h_can_add_coins(tr, a, vals, name):
+        """Pearl 0x276 CanGiveCoins var, count: the Coin Case's room. Coins have no use while the slots are closed and Black
+        2 has no Coins to give (AddCoins stays a stub), so it answers 0: the clerk's sale ends on her "can't" line (bank 139
+        line 5, data/pearl_text_edits.json: the slots are closed) and she takes no money (2026-11-08: the stub left the
+        money check's 1 in the var, so she took $1,000 or $10,000 for nothing; found by plat-stubs)."""
+        tr.job.approx['CheckCanAddCoins (the slots are closed: no Coins sold)'] += 1
+        return [f'WorkSetConst {tr.var(vals[0])}, 0  // CheckCanAddCoins: the slots are closed, no Coins sold']
+
+if version.TOWER_TROPHIES:
+    @handler('1DF')
+    def h_tower_trophy(tr, a, vals, name):
+        """Pearl 0x1DF var (pokediamond sub_0205FE10): the Battle Tower's trophy for a 20-, 50- or 100-win streak, 1-3, 4 when
+        the PC is full, 0 none = pearl_story.inc pl_TowerTrophy (decomp extension 0x91, 0x92). The lobby's attendant
+        gives the Bronze, Silver and Gold Trophy goods with Pearl's lines. Was "none here" (h_tower_none). (plat-stubs)
+        Platinum's 0x1DF is the same (pokeplatinum sub_0206BDBC: Teala in its Tower's lobby) on its Single record streak only
+        (pearl_story.inc pl_TowerTrophyStreak)."""
+        return [f'pl_TowerTrophy {tr.var(vals[0])}  // Pearl 0x1DF: the trophy for the longest streak, given once each']
+
+    @handler('1E0')
+    def h_tower_trophy_due(tr, a, vals, name):
+        """Pearl 0x1E0 var (pokediamond sub_0205FF5C): the trophy 0x1DF would give now, without giving it = pearl_story.inc
+        pl_TowerTrophyDue (1-3, 0 none; Pearl's 4-6 for an earlier try with a full PC read 1-3). The lobby's map script
+        shows the trophy attendant when it isn't 0 (2026-11-08: it was "none here", so he never showed)."""
+        return [f'pl_TowerTrophyDue {tr.var(vals[0])}  // Pearl 0x1E0: a trophy due (the attendant shows)']
+
+if version.ACCESSORY_SHOP:
+    SHOP_BANK = 516                      # Pearl's flower shop: the zone's lines, then the shop app's (pokediamond ov06_0224D70C)
+    SHOP_LINES = dict(greet=4, thanks=5, which=6, confirm=7, ok=8, few=9, full=10, bye=11, got=12, all=13, berry=16,
+                      needed=17, exit=19)
+    FIRST_BERRY = 149                    # ITEM_CHERI_BERRY: the rows' Berry numbers count from it (Black 2's the same)
+
+    def accessory_shop_rows():
+        """[(Accessory, Berry item, how many)] of Pearl's shop (overlay 6, pokediamond ov06_02252080: 22 rows of three u32,
+        found by their first two: the Red Flower for 10 Razz Berries, the Pink Flower for 10 Bluk Berries). (plat-stubs,
+        2026-11-08) Platinum's own: overlay 7 (pokeplatinum overlay007/accessory_shop.c sAccessoryShop_ItemLists, the same
+        Accessories 50-71), its first two the Red Flower for one Cheri Berry, the Pink Flower for one Chesto Berry."""
+        import contest_data
+        rom = Rom(version.WORLD_DUMP)
+        ov, first = (7, (50, 0, 1, 51, 1, 1)) if version.PLATINUM else (6, (50, 15, 10, 51, 16, 10))
+        ram, o = contest_data.overlay(rom, ov)
+        pat = struct.pack('<6I', *first)
+        at = o.find(pat)
+        assert at >= 0 and o.find(pat, at + 1) < 0, f'the Accessory shop\'s table: not found once in overlay {ov}'
+        rows = [struct.unpack_from('<3I', o, at + 12 * k) for k in range(22)]
+        assert [a for a, b, n in rows] == list(range(50, 72)) and all(b < 64 and 0 < n < 1000 for a, b, n in rows), rows
+        return [(a, FIRST_BERRY + b, n) for a, b, n in rows]
+
+    @handler('ShowAccessoryShop')
+    def h_accessory_shop(tr, a, vals, name):
+        """Pearl 0x257 AccessoriesShop (pokediamond scrcmd_mart.c, sub_02038AD0: overlay 6's berry exchange; Platinum's
+        overlay007/accessory_shop.c is the same screen with other prices): its greeting, a list of Pearl's 22 Accessories
+        with the Berries each costs in the entry's description line (the plain window, as Black 2's list menu shows it),
+        the question, the Bag's Berries and the Fashion Case's room checked (pl_CanFitAccessory, the 1.0 Super Contests'),
+        the Berries taken (ItemSub) and the Accessory given (pl_AddAccessory), Pearl's lines (bank 516) with the names and
+        counts written in; the thanks once every Accessory is traded (none fits any more). The shop's "In Bag: n" line has
+        no place here. Was a stub: the clerk said nothing."""
+        import gen4_text
+        bank = gen4_text.bank(SHOP_BANK)
+        acc, berry, plural = gen4_text.bank(338), gen4_text.bank(344), gen4_text.bank(347)
+        rows = accessory_shop_rows()
+        L = lambda key, text: tr.job.line_text(('accessory_shop',) + key, text)
+        line = lambda n: tr.job.line_for(SHOP_BANK, SHOP_LINES[n])
+
+        def fill(src, k):
+            ac, it, n = rows[k]
+            names = {0: plural[it] if n > 1 else berry[it], 1: str(n), 2: acc[ac]}
+            return gen4_text._STRVAR.sub(lambda m: names.get(int(m.group(2)), m.group(0)), src)
+        p = f'{tr.prefix}_{a:04X}_Acc'
+        out = [f'// Pearl 0x257 AccessoriesShop: Pearl\'s berry exchange (overlay 6) in Black 2\'s list menu, its lines (bank 516)',
+               'MsgWinCloseAll', f'pl_msg_sys {line("greet")}', 'pl_WaitButton',
+               'WorkSetConst PL_TMP3, 0  // the Accessories that fit no more']
+        for k, (ac, it, n) in enumerate(rows):
+            out += [f'pl_CanFitAccessory {ac}, 1, PL_TMP', 'WorkCmpConst PL_TMP, 0', f'VMJumpIf CMP_NE, {p}Fit{k}',
+                    'WorkAdd PL_TMP3, 1', f'{p}Fit{k}:']
+        out += [f'WorkCmpConst PL_TMP3, {len(rows)}', f'VMJumpIf CMP_EQ, {p}AllDone', f'{p}Menu:',
+                f'pl_msg_sys {line("which")}',
+                'ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004']
+        for k, (ac, it, n) in enumerate(rows):
+            desc = L(('desc', k), fill(bank[SHOP_LINES['berry']], k) + '\\n' + fill(bank[SHOP_LINES['needed']], k).rstrip())
+            out.append(f'ListMenuAdd {L(("entry", k), acc[ac])}, {desc}, {k}  // the {acc[ac]}: {n} of item {it}')
+        out += [f'ListMenuAdd {line("exit")}, 65535, 65534  // EXIT (B answers 65534 too)', 'ListMenuShow',
+                f'WorkCmpConst PVAR_8004, {len(rows)}', f'VMJumpIf CMP_LT, {p}Pick',
+                'MsgWinCloseAll', f'pl_msg_sys {line("bye")}', 'pl_WaitButton', f'VMJump {p}End', f'{p}Pick:']
+        for k, (ac, it, n) in enumerate(rows):
+            out += [f'WorkCmpConst PVAR_8004, {k}', f'VMJumpIf CMP_NE, {p}Row{k}',
+                    'MsgWinCloseAll', f'pl_msg_sys {L(("confirm", k), fill(bank[SHOP_LINES["confirm"]], k))}',
+                    'pl_ShowYesNoMenu PVAR_800C', 'pl_CompareVarToValue PVAR_800C, 1', f'pl_GoToIf 1, {p}Menu',
+                    f'ItemCheckAmount {it}, {n}, PL_TMP', 'WorkCmpConst PL_TMP, 0', f'VMJumpIf CMP_EQ, {p}Few',
+                    f'pl_CanFitAccessory {ac}, 1, PL_TMP', 'WorkCmpConst PL_TMP, 0', f'VMJumpIf CMP_EQ, {p}Full',
+                    f'pl_msg_sys {line("ok")}', 'pl_WaitButton', f'ItemSub {it}, {n}, PL_TMP', f'pl_AddAccessory {ac}, 1',
+                    f'pl_msg_sys {L(("got", k), fill(bank[SHOP_LINES["got"]], k))}', 'pl_WaitButton',
+                    f'pl_CanFitAccessory {ac}, 1, PL_TMP', 'WorkCmpConst PL_TMP, 0', f'VMJumpIf CMP_NE, {p}Menu',
+                    'WorkAdd PL_TMP3, 1', f'WorkCmpConst PL_TMP3, {len(rows)}', f'VMJumpIf CMP_LT, {p}Menu',
+                    f'pl_msg_sys {line("all")}', 'pl_WaitButton', f'VMJump {p}AllDone', f'{p}Row{k}:']
+        out += [f'VMJump {p}Menu', f'{p}Few:', f'pl_msg_sys {line("few")}', 'pl_WaitButton', f'VMJump {p}Menu',
+                f'{p}Full:', f'pl_msg_sys {line("full")}', 'pl_WaitButton', f'VMJump {p}Menu',
+                f'{p}AllDone:', f'pl_msg_sys {line("thanks")}', 'pl_WaitButton', f'{p}End:', 'pl_CloseMessage']
+        return out
+# ---- end v101-story
+
+
+# ---- plat-dw-world (2026-11-07): Platinum's Distortion World (step 7, notes/PLATINUM_DW.md "The world"; pearl_story.inc block
+# "plat-dw-world"). Its floors' tiles are their own (Platinum's shared world less the floor's offset, notes/PLATINUM_DW.md
+# "Coordinates"): a Warp into a floor and the player's place in its scripts convert. Its people are in overlay 9, not the event
+# files: gen4_extract puts them in the floors' own event files, and the engine's overlay keeps Platinum's rules for them
+# (src/pearlb2/plat_dw/dw_world.c). Its commands that need the engine are PearlB2 extension sub-commands 0x20-0x24 (the row
+# the Underground never took), which the overlay answers while it runs. Platinum only: Pearl's scripts use none of these.
+if version.PLATINUM:
+    _DW_FLOORS = None
+
+    def dw_floors():
+        """{Platinum map header: floor} of the Distortion World (b2tools/platinum_dw_data.py's tables)."""
+        global _DW_FLOORS
+        if _DW_FLOORS is None:
+            import platinum_dw_data
+            _DW_FLOORS = {f['map']: f for f in platinum_dw_data.read_tables()['floors']}
+        return _DW_FLOORS
+
+    def dw_floor_of_file(tr):
+        """The Distortion World's floor whose zone script file this is, or None."""
+        for z in tr.job.pd.zones:
+            if z['scripts'] == tr.f and z['id'] in dw_floors():
+                return dw_floors()[z['id']]
+        return None
+
+    # Platinum's distortion movement actions (105-116 the faces' walks, 117-120 the Distortion World's jumps, 121-132 the faces'
+    # runs): PearlB2's action commands 0x100 + Platinum's number, which the engine's overlay runs (include/pearlb2/plat_dw.h
+    # PLATDW_ACMD_FIRST; resident/plat_dw_hooks.c sends them there for any actor)
+    _DW_ACTION_NAMES = {117: 'JUMP_DISTORTION_WORLD_NORTH', 118: 'JUMP_DISTORTION_WORLD_SOUTH',
+                        119: 'JUMP_DISTORTION_WORLD_WEST', 120: 'JUMP_DISTORTION_WORLD_EAST'}
+    for _c in list(range(105, 133)):
+        MOVEMENT[_c] = {'pearl_name': f'Platinum {_DW_ACTION_NAMES.get(_c, f"MOVEMENT_ACTION_{_c}")} (the Distortion '
+                                      f'World\'s, run by its overlay: 0x100 + {_c})', 'b2': 0x100 + _c, 'exact': True}
+
+    @handler('InitPersistedMapFeaturesForDistortionWorld')
+    def h_dw_init_features(tr, a, vals, name):
+        """0x2F2 InitPersistedMapFeaturesForDistortionWorld (pokeplatinum: the persisted map features made the Distortion
+        World's, once, on entering it). The engine's gimmick does it: Black 2 clears a zone's gimmick work when the player
+        warps in (ov035 GameData_SetGimmickByZone), and the gimmick starts it as Platinum's InitPersistedData then."""
+        return ['// Platinum 0x2F2 InitPersistedMapFeaturesForDistortionWorld: the engine\'s gimmick (69) inits its work on entering']
+
+    @handler('AddDistortionWorldMapObject')
+    def h_dw_add_object(tr, a, vals, name):
+        """0x311 AddDistortionWorldMapObject id (DistWorld_AddMapObjectWithLocalID): the person of overlay 9's table with that
+        local id. Each is in the floor's event file (gen4_extract), always spawned; the engine deletes the ones Platinum
+        doesn't show at the floor's load and places the added ones as Platinum's table says (height, rotation on a face)."""
+        return [f'ActorAdd {tr.var(vals[0])}  // AddDistortionWorldMapObject: the engine places it (dw_world.c)']
+
+    @handler('DeleteDistortionWorldMapObject')
+    def h_dw_delete_object(tr, a, vals, name):
+        """0x312 DeleteDistortionWorldMapObject id (DistWorld_DeleteMapObjectWithLocalID): the person goes."""
+        return [f'ActorDelete {tr.var(vals[0])}  // DeleteDistortionWorldMapObject']
+
+    @handler('StartDistortionWorldGiratinaShadowEvent')
+    def h_dw_shadow_start(tr, a, vals, name):
+        """0x321 StartDistortionWorldGiratinaShadowEvent index (DistWorld_StartGiratinaShadowEvent): Giratina's shadow flies
+        past (1F's first sight of it), drawn by the engine's overlay = extension 0x22."""
+        return [f'pl_DWGiratinaShadow {tr.var(vals[0])}  // Giratina\'s shadow flies past (the engine\'s overlay)']
+
+    @handler('FinishDistortionWorldGiratinaShadowEvent')
+    def h_dw_shadow_finish(tr, a, vals, name):
+        """0x322 FinishDistortionWorldGiratinaShadowEvent: waits for the shadow's flight to end, then frees it = extension 0x23."""
+        return ['pl_DWGiratinaShadowFinish  // waits for the shadow\'s flight']
+
+    @handler('ResetDistortionWorldPersistedCameraAngles')
+    def h_dw_reset_camera(tr, a, vals, name):
+        """0x31F ResetDistortionWorldPersistedCameraAngles (DistWorld_ResetPersistedCameraAngles): the camera trigger's saved
+        angles back to the base = extension 0x24 (the Giratina room after the battle)."""
+        return ['pl_DWResetCameraAngles  // the camera at its base angles']
+
+    @handler('DoDWWarp')
+    def h_dw_warp(tr, a, vals, name):
+        """0x320 DoDWWarp (pokeplatinum FieldSystem_StartDWWarp: dw_warp.c, the swirl into the Distortion World over a
+        screen wipe, SEQ_SE_PL_SYUWA2) = extension 0x20 (resident/plat_dw_hooks.c PearlB2_DWWarp; the script waits)."""
+        return ['pl_DWWarp  // the warp effect into the Distortion World']
+
+    # (plat-dw-rom) Platinum's swirl is an app (the field closed, then ReturnToField); here it runs on the open field (overlay
+    # 377's dw_warp.c), so the ReturnToField after it would open the field a second time (overlay 35 loaded twice:
+    # GFL_OvlCheckMemoryCollision's assert, as plat-tower found after the Frontier's screens): it goes
+    if version.FIELD_STAYS_OPEN:
+        _NO_SCREEN.add('DoDWWarp')
+
+    @handler('GetPlayer3DPos')
+    def h_dw_player_3d(tr, a, vals, name):
+        """0x317 GetPlayer3DPos x, y, z (the player's tile and height): Platinum's shared world's tiles in the Distortion
+        World, which its scripts compare (B2F's Cynthia: the height 231 or 232) = extension 0x21: the engine adds the floor's
+        offset to the player's own tiles."""
+        return [f'pl_DWGetPlayer3DPos {tr.var(vals[0])}, {tr.var(vals[1])}, {tr.var(vals[2])}  // Platinum\'s world tiles']
+
+    _h_player_map_pos_base = HANDLERS['GetPlayerMapPos']
+
+    @handler('GetPlayerMapPos')
+    def h_dw_player_map_pos(tr, a, vals, name):
+        """0x69 GetPlayerMapPos in a Distortion World floor's script: the tile in Platinum's shared world, which its scripts
+        compare (B7F: x 86, z 74), so the floor's offset is added to Black 2's tile."""
+        out = _h_player_map_pos_base(tr, a, vals, name)
+        f = dw_floor_of_file(tr)
+        if f is None or tr.mode != 'zone':
+            return out
+        ox, _, oz = f['offset']
+        return out + ([f'pl_AddVar {tr.var(vals[0])}, {ox}  // + the floor\'s offset: Platinum\'s world tile'] if ox else []) + \
+            ([f'pl_AddVar {tr.var(vals[1])}, {oz}'] if oz else [])
+
+    @handler('StartGiratinaOriginBattle')
+    def h_dw_giratina_battle(tr, a, vals, name):
+        """0x319 StartGiratinaOriginBattle species, level (pokeplatinum ScrCmd_StartGiratinaOriginBattle: a wild battle with
+        Giratina in its Origin Forme, the Distortion World's) = Black 2's CallWildBattleEx species, level, form 1 (Origin), 0:
+        the static wild battle with the forme given (ov036 scrcmd_encount.c, EventWildBattleCall_CreateStatic)."""
+        tr.last_battle = 'wild'
+        return [f'CallWildBattleEx {tr.var(vals[0])}, {tr.var(vals[1])}, 1, 0  // Giratina in its Origin Forme']
+
+    @handler('GetBattleResult')
+    def h_dw_battle_result(tr, a, vals, name):
+        """0x314 GetBattleResult var (pokeplatinum: the last battle's result, BATTLE_RESULT_*) from Black 2's wild battle answers
+        (pl_GetBattleResult: lost 2, caught 4, knocked out 1, fled 5). The Giratina room after its battle."""
+        return [f'pl_GetBattleResult {tr.var(vals[0])}  // Platinum\'s BATTLE_RESULT_ from Black 2\'s wild battle']
+
+    _h_warp_base = HANDLERS['Warp']
+
+    @handler('Warp')
+    def h_dw_warp_into(tr, a, vals, name):
+        """A Warp into a Distortion World floor: the tile in the floor's own tiles (Platinum's less the floor's offset): Spear
+        Pillar Distorted's way in (55, 40) is 1F's (34, 30), B7F's (89, 57) is (15, 25), Turnback Cave's into its room."""
+        m, w, x, z, d = vals
+        f = dw_floors().get(m)
+        if f is not None and x < 0x4000 and z < 0x4000:
+            vals = [m, w, x - f['offset'][0], z - f['offset'][2], d]
+        return _h_warp_base(tr, a, vals, name)
+
+    # The Giratina room after the battle (Platinum's DistortionWorldGiratinaRoom_PostBattle): the free camera starts on the player's
+    # tile (GetPlayerMapPos), goes 5 south to Cyrus and back. The player stands south of Giratina at (15, 14), the tile its arrival
+    # stops them on (overlay 9's event at (15, 1, 14)); the camera starts where the field's is (CAMERA_NEAR_PLAYER's way).
+    DW_CAMERA_NEAR_PLAYER = {582: (15, 14)}
+    _h_cam_add_base = HANDLERS['AddFreeCamera']
+
+    @handler('AddFreeCamera')
+    def h_dw_cam_add(tr, a, vals, name):
+        x, z = vals
+        f = dw_floor_of_file(tr)
+        if f is not None and (x >= 0x4000 or z >= 0x4000) and f['map'] in DW_CAMERA_NEAR_PLAYER:
+            tr.cam = DW_CAMERA_NEAR_PLAYER[f['map']]
+            return [f'EvCameraInit  // AddFreeCamera {tr.var(x)}, {tr.var(z)} (the player\'s tile): Black 2\'s event camera '
+                    f'where the camera is, counted as {tr.cam}', 'EvCameraUnbind']
+        return _h_cam_add_base(tr, a, vals, name)
+
+    # The free camera's walks there keep the Distortion World's own camera (the engine's: Platinum's base pitch, 59.1 degrees,
+    # and distance 0x29AEC1 at yaw 0; DwCamera_BlackTwoPitchYaw), which the engine's gimmick also writes every frame: Black 2's
+    # camera 0 angle (CAM_ANGLE) would tilt the view for the scene.
+    DW_CAM_ANGLE = f'{10750}, 0, {0x29AEC1:#x}'
+    _h_apply_movement_base = HANDLERS['ApplyMovement']
+
+    @handler('ApplyMovement')
+    def h_dw_apply_movement(tr, a, vals, name):
+        out = _h_apply_movement_base(tr, a, vals, name)
+        if vals and vals[0] == 0xF1 and dw_floor_of_file(tr) is not None:
+            out = [l.replace(f'EvCameraMoveTo {CAM_ANGLE},', f'EvCameraMoveTo {DW_CAM_ANGLE},') for l in out]
+        return out
+# ---- end plat-dw-world
+
+# ---- plat-frontier (2026-11-07): the Battle Frontier's scenes in field rooms (notes/PLATINUM_FRONTIER.md; b2tools/frontier_script.py
+# reads Platinum's frontier scripts, b2tools/frontier_translate.py makes each into a Platinum field-script file). Those files are
+# PearlData slots from frontier_translate.FILE_BASE; a scene runs in its host room's zone file from its entry point (frontier_entries,
+# called by translate()). Platinum's LaunchBattleFrontierScene starts one (a warp to the host with RTReserveScript, as Gen 4's Warp
+# is translated); the synthesized files' markers on the same opcode change scenes and end the Frontier: ExitFrontier goes on with
+# the field script that started the chain, after its ReturnToField (FrontierReturn_k blocks in the host). Pearl's and Diamond's
+# scripts have no LaunchBattleFrontierScene: nothing here touches their output.
+if version.PLATINUM:
+    import frontier_translate as _ft
+
+    _pd_init_frontier_base = PearlData.__init__
+
+    def _pd_init_frontier(self):
+        _pd_init_frontier_base(self)
+        self.files = list(self.files)
+        for k, s in _ft.scenes().items():
+            if _ft.host(k):
+                n = _ft.slot(s['script'])
+                if len(self.files) <= n:
+                    self.files += [b''] * (n + 1 - len(self.files))
+                self.files[n] = _ft.synthesize(s['script'])[0]
+        self._frontier = None
+
+    PearlData.__init__ = _pd_init_frontier
+
+    import pearl_ids as _pearl_ids_frontier
+    _frontier_local_base = _pearl_ids_frontier.Ids.local
+
+    def _frontier_local(self, v):
+        if _ft.VAR_EXTRA <= v <= _ft.VAR_EXTRA + 6:          # a frontier script's vars 0x800D-0x8013 (frontier_translate.fvar)
+            return f'FR_VAR_{0x800D + v - _ft.VAR_EXTRA:04X}'
+        return _frontier_local_base(self, v)
+
+    _pearl_ids_frontier.Ids.local = _frontier_local
+
+    # A ChangeSceneWithinScript inside a subroutine (plat-frontier-flow, 2026-11-08: the Factory's and the Castle's
+    # after-battle subroutines stranded the player in the corridor). Platinum's script keeps its call frames over the scene
+    # change, so the subroutine's Return goes back to its caller, in the new scene. Ours ends the script at the change
+    # (RTReserveScript, a warp, pl_End) and the destination room goes on from the change with no call frame. So the
+    # translation keeps the frames itself, as call stacks (ctx: the return addresses, innermost first):
+    # - a subroutine with a within change in its code or in a subroutine it calls (_fr_wsubs) gets a copy per call stack
+    #   (FrTr units ('call', ...)), so each copy's within change reserves its own continuation, ('within', file, address,
+    #   ctx);
+    # - that continuation's frame is "virtual" (no VM frame after the warp): its Return jumps to the caller's code from the
+    #   return address (a unit ('ret', ...) in the destination room, its frames the rest of ctx), and each Call in it goes to
+    #   a translation of its own (a unit ('sub', ...), or ('call', ...) for a subroutine with a within change), so a Return
+    #   in a callee stays the callee's.
+    # _fr_contexts walks those units from the file's entries, as FrTr makes them, for the keys of _frontier_graph.
+    def _fr_is_call(pd, op):
+        return pd.table[op]['flow'] in ('call', 'ccall')
+
+    def _fr_is_within(pd, op, args):
+        return pd.cmd_name(op) == 'LaunchBattleFrontierScene' and _ft.MARK_WITHIN <= args[0][1] < _ft.MARK_EXIT
+
+    def _fr_frame(pd, d, start):
+        """The addresses of one frame's code from start: FileTr.succ's flow with each Call stepped over (not into)."""
+        seen, todo = set(), [start]
+        while todo:
+            a = todo.pop()
+            if a in seen or a not in d.insns:
+                continue
+            seen.add(a)
+            end, op, args = d.insns[a]
+            if not _fr_is_call(pd, op):
+                todo += [t for ty, t in args if ty == 'rel']
+            if pd.table[op]['flow'] not in ('end', 'jump', 'return') and op != 0xBE:
+                todo.append(end)
+        return seen
+
+    def _fr_target(d, a):
+        return next(t for ty, t in d.insns[a][2] if ty == 'rel')
+
+    def _fr_wsubs(pd, f):
+        """The subroutines of frontier file f whose code, or a subroutine's it calls, has a ChangeSceneWithinScript."""
+        cache = pd.__dict__.setdefault('_fr_wsubs_cache', {})
+        if f not in cache:
+            d = pd.disasm(f)
+            subs = {_fr_target(d, a) for a, (e, op, args) in d.insns.items() if _fr_is_call(pd, op)}
+            body = {t: _fr_frame(pd, d, t) for t in subs}
+            w = set()
+            while True:
+                more = {t for t in subs - w if any(_fr_is_within(pd, d.insns[a][1], d.insns[a][2]) or
+                                                   (_fr_is_call(pd, d.insns[a][1]) and _fr_target(d, a) in w) for a in body[t])}
+                if not more:
+                    break
+                w |= more
+            cache[f] = w
+        return cache[f]
+
+    def _fr_contexts(pd, f):
+        """{within-change address: sorted call stacks it runs with} of frontier file f: FrTr's units (start, ctx, virtual)
+        walked from the file's entries."""
+        cache = pd.__dict__.setdefault('_fr_contexts_cache', {})
+        if f in cache:
+            return cache[f]
+        d, w = pd.disasm(f), _fr_wsubs(pd, f)
+        out, seen, todo = collections.defaultdict(set), set(), [(e, (), False) for e in d.entries]
+        while todo:
+            u = todo.pop()
+            if u in seen:
+                continue
+            seen.add(u)
+            start, ctx, virtual = u
+            assert len(ctx) <= 8, f'frontier file {f}: call stacks past 8 frames at {start:04X} (a recursion?)'
+            for a in _fr_frame(pd, d, start):
+                end, op, args = d.insns[a]
+                if _fr_is_call(pd, op):
+                    if _fr_target(d, a) in w:
+                        todo.append((_fr_target(d, a), (end,) + ctx, False))
+                elif _fr_is_within(pd, op, args):
+                    out[a].add(ctx)
+                    todo.append((end, ctx, bool(ctx)))
+                elif pd.table[op]['flow'] == 'return' and virtual:
+                    todo.append((ctx[0], ctx[1:], bool(ctx[1:])))
+        cache[f] = {a: sorted(c) for a, c in out.items()}
+        return cache[f]
+
+    def _fr_within_key(f, end, ctx):
+        return ('within', f, end) + ((ctx,) if ctx else ())
+
+    def _fr_ctx_tag(ctx):
+        return ''.join(f'_{r:04X}' for r in ctx)
+
+    class _FrUnits:
+        """A zone's extra frontier translations (FrTr), {key: label} in the order asked: ('call', file, subroutine, ctx) a
+        subroutine's copy for one call stack, ('sub', file, subroutine, ()) a subroutine a virtual frame calls, ('ret',
+        file, return address, ctx) the caller's code after a virtual frame's Return."""
+
+        def __init__(self):
+            self.labels, self.banks = {}, {}
+
+        def need(self, key, bank):
+            if key not in self.labels:
+                kind, f, at, ctx = key
+                self.labels[key] = f'Fr{kind.capitalize()}_{f}_{at:04X}{_fr_ctx_tag(ctx)}'
+                self.banks[key] = bank
+            return self.labels[key]
+
+    class FrTr(FileTr):
+        """One frame's translation of a frontier file: ctx, the return addresses of the frames under it; virtual, its Return
+        has no VM frame (a subroutine's code after its ChangeSceneWithinScript: the Return goes on with the caller's code,
+        ctx[0]); units, the zone's _FrUnits for its split Calls and its Returns. A subroutine with a within change (and, in a
+        virtual frame, every subroutine) is a unit of its own; the rest are translated in the frame, as FileTr does."""
+
+        def __init__(self, job, f, bank, starts, prefix, ctx=(), virtual=False, units=None):
+            self.fr_ctx, self.fr_virtual, self.fr_units = ctx, virtual, units
+            self.fr_w = _fr_wsubs(job.pd, f)
+            super().__init__(job, f, bank, mode='warp', starts=starts, prefix=prefix)
+
+        def _split(self, t):
+            return self.fr_virtual or t in self.fr_w
+
+        def succ(self, a):
+            end, op, args = self.d.insns[a]
+            if _fr_is_call(self.job.pd, op) and self._split(_fr_target(self.d, a)):
+                return [end]
+            return super().succ(a)
+
+        def call_label(self, a, t):
+            if not self._split(t):
+                return super().call_label(a, t)
+            if t in self.fr_w:
+                return self.fr_units.need(('call', self.f, t, (self.d.insns[a][0],) + self.fr_ctx), self.bank)
+            return self.fr_units.need(('sub', self.f, t, ()), self.bank)
+
+    _h_return_frontier_base = HANDLERS['Return']
+
+    @handler('Return')
+    def h_return_frontier(tr, a, vals, name):
+        """A virtual frame's Return (FrTr): Platinum's caller goes on, after the scene change, in this room."""
+        if getattr(tr, 'fr_virtual', False):
+            ret, rest = tr.fr_ctx[0], tr.fr_ctx[1:]
+            return [f'VMJump {tr.fr_units.need(("ret", tr.f, ret, rest), tr.bank)}  // Return: the caller goes on from '
+                    f'{ret:04X} (its call frame is Platinum\'s, kept over ChangeSceneWithinScript)']
+        return _h_return_frontier_base(tr, a, vals, name)
+
+    def _frontier_graph(pd):
+        """The Frontier's chains, once per run: {'sites': [(k, file, launch addr, scene, return addr, live)],
+        'next': {scene: {scenes it changes to}}, 'exits': {scene: has an ExitFrontier}, 'starts': {Pearl map: [keys]}}.
+        Keys: ('scene', scene, entry) a scene started at an entry; ('within', slot, addr) the script going on after
+        ChangeSceneWithinScript, ('within', slot, addr, ctx) after one in a subroutine, for its call stack (_fr_contexts)."""
+        if pd._frontier is not None:
+            return pd._frontier
+        sc = _ft.scenes()
+        nxt, exits, starts = collections.defaultdict(set), collections.defaultdict(bool), collections.defaultdict(list)
+
+        def start(key, scene):
+            h = _ft.host(scene)
+            if h is not None and key not in starts[h['zone']]:
+                starts[h['zone']].append(key)
+        for k, s in sorted(sc.items()):
+            if not _ft.host(k):
+                continue
+            d = pd.disasm(_ft.slot(s['script']))
+            for a in sorted(d.insns):
+                end, op, args = d.insns[a]
+                if pd.cmd_name(op) != 'LaunchBattleFrontierScene':
+                    continue
+                v = args[0][1]
+                same = [k2 for k2, s2 in sc.items() if s2['script'] == s['script']]
+                if v == _ft.MARK_EXIT:
+                    for k2 in same:
+                        exits[k2] = True
+                elif v >= _ft.MARK_WITHIN:
+                    for k2 in same:
+                        nxt[k2].add(v - _ft.MARK_WITHIN)
+                    f = _ft.slot(s['script'])
+                    for ctx in _fr_contexts(pd, f).get(a, [()]):     # (a change no entry reaches: its old key)
+                        start(_fr_within_key(f, end, ctx), v - _ft.MARK_WITHIN)
+                elif v >= _ft.MARK_CHANGE:
+                    t = v - (_ft.MARK_CHANGE1 if v >= _ft.MARK_CHANGE1 else _ft.MARK_CHANGE)
+                    for k2 in same:
+                        nxt[k2].add(t)
+                    start(('scene', t, 1 if v >= _ft.MARK_CHANGE1 else 0), t)
+        sites = []
+        for z in sorted(pd.zones, key=lambda z: z['id']):
+            f = z['scripts']
+            if f not in pd.files_using('LaunchBattleFrontierScene') or pd.shared_file_zones().get(z['id']) is not None:
+                continue
+            d = pd.disasm(f)
+            nth = 0
+            for a in sorted(d.insns):
+                end, op, args = d.insns[a]
+                if pd.cmd_name(op) != 'LaunchBattleFrontierScene':
+                    continue
+                nth += 1
+                scene, ret, p = args[0][1], end, end
+                for _ in range(4):                    # (the field script goes on after ReturnToField)
+                    if p not in d.insns:
+                        break
+                    pe, pop, _a = d.insns[p]
+                    if pd.cmd_name(pop) == 'ReturnToField':
+                        ret = pe
+                        break
+                    p = pe
+                live = (z['name'], nth) not in _ft.CLOSED_SITES
+                sites.append((len(sites), f, a, scene, ret, live, z['name']))
+                start(('scene', scene, 0), scene)
+        pd._frontier = {'sites': sites, 'next': nxt, 'exits': exits, 'starts': starts}
+        for s in sites:                 # (an ExitFrontier in a picture room: the field script goes on in its lobby)
+            if any(s in _frontier_returns(pd, r) for r in _fr_picture_rooms()):
+                starts[s[6]].append(('return', s[0]))
+        return pd._frontier
+
+    # ExitFrontier in a picture room (plat-frontier-flow, 2026-11-08; found by plat-test in the Hall: retire, a loss and the
+    # 7-win end left the player in the room). Platinum's picture scenes run over the lobby's field, so the lobby's script
+    # after ReturnToField (FrontierReturn_k: a fade-in) goes on in the lobby, where Platinum's walk back (WalkBackInvisibly*,
+    # before LaunchBattleFrontierScene) left the player: in front of the attendant, facing it. Here the room is another
+    # zone, so FrontierExit fades out and warps to that tile, and FrontierReturn_k is an entry of the lobby's file
+    # (('return', k) keys), reserved before the warp; the lobby's own frame scripts (the challenge's end) run after it. The
+    # Tower's rooms keep FrontierReturn_k in the room: its code has Platinum's own Warp to the lobby.
+    def _fr_picture_rooms():
+        return sorted({h['zone'] for h in _ft.HOSTS.values() if h.get('picture')})
+
+    def _fr_lobby_place(pd, site):
+        """(x, z, dir): the tile in front of the first person of the lobby whose script reaches the site's
+        LaunchBattleFrontierScene (the Single and Double attendant; a Multi challenge's attendant stands beside), facing
+        them."""
+        k, f, a = site[0], site[1], site[2]
+        zone = pd.by_name[site[6]]
+        d = pd.disasm(f)
+        for o in sorted(pd.events(zone)['object_events'], key=lambda o: o['id']):
+            if not 1 <= o['script'] <= len(d.entries):
+                continue
+            seen, todo = set(), [d.entries[o['script'] - 1]]
+            while todo and a not in seen:
+                x = todo.pop()
+                if x in seen or x not in d.insns:
+                    continue
+                seen.add(x)
+                end, op, args = d.insns[x]
+                todo += [t for ty, t in args if ty == 'rel']
+                if pd.table[op]['flow'] not in ('end', 'jump', 'return') and op != 0xBE:
+                    todo.append(end)
+            if a in seen:
+                dx, dz = {0: (0, -1), 1: (0, 1), 2: (-1, 0), 3: (1, 0)}[o['initial_dir']]
+                return o['x'] + dx, o['z'] + dz, {0: 1, 1: 0, 2: 3, 3: 2}[o['initial_dir']]
+        raise AssertionError(f'{site[6]}: no person\'s script reaches the LaunchBattleFrontierScene at {a:04X}')
+
+    def _frontier_chain(pd, scene):
+        g, out, todo = _frontier_graph(pd), set(), [scene]
+        while todo:
+            s = todo.pop()
+            if s not in out:
+                out.add(s)
+                todo += list(g['next'].get(s, ()))
+        return out
+
+    def _frontier_returns(pd, zone_name):
+        """The live launch sites whose chain ends (ExitFrontier) in a scene this room hosts."""
+        g = _frontier_graph(pd)
+        hosted = {k for k in _ft.scenes() if (_ft.host(k) or {}).get('zone') == zone_name}
+        return [s for s in g['sites'] if s[5] and any(g['exits'][c] and c in hosted for c in _frontier_chain(pd, s[3]))]
+
+    def _frontier_ids(pd, pearl_map):
+        """{start key: script id} of the room's scene entries, after the zone's other extra entries."""
+        zone = pd.zones[pearl_map]
+        keys = _frontier_graph(pd)['starts'].get(zone['name'], [])
+        if not keys:
+            return {}
+        skip = len(pd.closed(zone)) + (1 if pd.elevator_init(pearl_map) else 0) + len(pd.ramanas_ids(pearl_map)) + \
+            (2 if pd.game_clear_ids(pearl_map) else 0) + (1 if pd.turnback_doors(pearl_map) else 0) + \
+            (1 if pd.villa_init(pearl_map) else 0)
+        return dict(zip(keys, pd._extra_ids(pearl_map, len(keys), skip=skip)))
+
+    def _frontier_arrival(scene):
+        """Where the warp into a scene's room puts the player (frontier_translate.HOSTS arrive: Pearl's own warps there)."""
+        return _ft.host(scene)['arrive']
+
+    def frontier_entries(job, pd, zone):
+        """[(script id, label, lines)]: the scenes this room hosts, from each place they start, and the field code each
+        ExitFrontier here goes on with (FrontierReturn_k)."""
+        if not _ft.HOSTS or (zone['name'] not in {h['zone'] for h in _ft.HOSTS.values()} and
+                             not _frontier_graph(pd)['starts'].get(zone['name'])):
+            return []
+        out, units = [], _FrUnits()
+        for key, k in _frontier_ids(pd, zone['id']).items():
+            ctx = ()
+            if key[0] == 'return':          # (a lobby: its script after ReturnToField, an ExitFrontier's warp reserves it)
+                out.append((k, f'FrontierReturn_{key[1]}', _fr_return_lines(job, pd, _frontier_graph(pd)['sites'][key[1]])))
+                continue
+            if key[0] == 'scene':
+                scene, entry = key[1], key[2]
+                f = _ft.slot(_ft.scenes()[scene]['script'])
+                at = pd.disasm(f).entries[entry]
+                label = f'FrontierScene{scene}_{entry}'
+            else:
+                f, at = key[1], key[2]
+                ctx = key[3] if len(key) > 3 else ()
+                scene = next(s for s, v in _ft.scenes().items() if _ft.slot(v['script']) == f)
+                label = f'FrontierWithin_{f}_{at:04X}{_fr_ctx_tag(ctx)}'
+            name = _ft.scenes()[scene]['name']
+            tr = FrTr(job, f, _ft.bank_slot(scene), starts=[(label, at, None)], prefix=f'F{k}', ctx=ctx, virtual=bool(ctx),
+                      units=units)
+            where = 'entry ' + str(key[2]) if key[0] == 'scene' else 'after its scene change' + \
+                (f' in a subroutine (its callers go on from {", ".join(f"{r:04X}" for r in ctx)})' if ctx else '')
+            out.append((k, label, ['', f'// ---- {name} (Platinum\'s frontier script {_ft.scenes()[scene]["script"]}), '
+                                      f'{where}: b2tools/frontier_translate.py'] + tr.lines()))
+        lines, n = [], 0
+        while n < len(units.labels):                    # (FrTr's units: each may ask for more)
+            key, label = list(units.labels.items())[n]
+            kind, f, at, ctx = key
+            tr = FrTr(job, f, units.banks[key], starts=[(label, at, None)], prefix=f'FU{n}', ctx=ctx,
+                      virtual=kind == 'ret' and bool(ctx), units=units)
+            if kind == 'call':
+                what = f'a copy of subroutine {at:04X} for the call that returns to {ctx[0]:04X}'
+            elif kind == 'sub':
+                what = f'subroutine {at:04X}, called after a scene change in a subroutine'
+            else:
+                what = f'the caller\'s code from {at:04X}, after a scene change in its subroutine'
+            lines += ['', f'// ---- frontier script file {f}: {what} (plat-frontier-flow, FrTr)'] + tr.lines()
+            n += 1
+        if lines:
+            out.append((None, None, lines))
+        rets = _frontier_returns(pd, zone['name'])
+        picture = zone['name'] in _fr_picture_rooms()       # (the field script goes on in the lobby: a warp there)
+        go = (lambda s: f'FrontierExit_{s[0]}') if picture else (lambda s: f'FrontierReturn_{s[0]}')
+        lines = ['', 'FrontierExit:                     // ExitFrontier: back to the field script that started the scenes']
+        if len(rets) == 1:
+            lines.append(f'    VMJump {go(rets[0])}')
+        else:
+            lines.append('    pl_FrontierGetReturn PL_TMP')
+            for s in rets:
+                lines += [f'    WorkCmpConst PL_TMP, {s[0]}', f'    VMJumpIf CMP_EQ, {go(s)}']
+            lines += ['    pl_ReleaseAll', '    pl_End']
+        for s in rets:
+            if not picture:
+                lines += _fr_return_lines(job, pd, s)
+                continue
+            lobby = pd.by_name[s[6]]
+            x, z, d = _fr_lobby_place(pd, s)
+            sid = _frontier_ids(pd, lobby['id'])[('return', s[0])]
+            lines += ['', f'{go(s)}:', '    pl_fade_out_black',
+                      '    pl_WaitFadeScreen',
+                      f'    RTReserveScript {sid}  // FrontierReturn_{s[0]}: {s[6]}\'s script after ReturnToField (its entry {sid})',
+                      f'    pl_Warp {pd.b2_zone[lobby["id"]]}, {x}, {z}, {d}  // the lobby, in front of the attendant: where '
+                      f'Platinum\'s walk back left the player',
+                      '    pl_End']
+        if rets:
+            out.append((None, None, lines))
+        return out
+
+    def _fr_return_lines(job, pd, s):
+        """The field script after a launch site's ReturnToField, as FrontierReturn_k."""
+        k, f, a, scene, ret, live, zname = s
+        tr = FileTr(job, f, pd.bank_of(f), mode='warp', starts=[(f'FrontierReturn_{k}', ret, None)], prefix=f'FR{k}')
+        return ['', f'// ---- after the Frontier: {zname}\'s script from {ret:04X} (its LaunchBattleFrontierScene at '
+                    f'{a:04X}, then ReturnToField)'] + tr.lines()
+
+    @handler('LaunchBattleFrontierScene')
+    def h_frontier_scene(tr, a, vals, name):
+        """A scene starts (a field script's), changes (ChangeScript, ChangeSceneWithinScript) or the Frontier ends (ExitFrontier)."""
+        v, pd = vals[0], tr.job.pd
+        if v == _ft.MARK_EXIT:
+            return ['VMJump FrontierExit  // ExitFrontier']
+        end = tr.d.insns[a][0]
+        if v >= _ft.MARK_WITHIN:
+            scene, key, what = v - _ft.MARK_WITHIN, _fr_within_key(tr.f, end, getattr(tr, 'fr_ctx', ())), 'ChangeSceneWithinScript'
+        elif v >= _ft.MARK_CHANGE:
+            scene = v - (_ft.MARK_CHANGE1 if v >= _ft.MARK_CHANGE1 else _ft.MARK_CHANGE)
+            key, what = ('scene', scene, 1 if v >= _ft.MARK_CHANGE1 else 0), 'ChangeScript'
+        else:
+            scene, key, what = v, ('scene', v, 0), 'LaunchBattleFrontierScene'
+        h = _ft.host(scene)
+        sname = _ft.scenes().get(scene, {}).get('name', str(scene))
+        if h is None:
+            tr.job.stubs[f'{what} {sname} (its room is a later piece)'] += 1
+            return [f'pl_stub {what}  // {sname}: no room yet (step 8\'s facility pieces); the field goes on']
+        target = pd.by_name[h['zone']]
+        sid = _frontier_ids(pd, target['id'])[key]
+        x, z, d = _frontier_arrival(scene)
+        out = []
+        if what == 'LaunchBattleFrontierScene':
+            g = _frontier_graph(pd)
+            site = next(s for s in g['sites'] if s[1] == tr.f and s[2] == a)
+            chain = _frontier_chain(pd, scene)
+            rooms = {(_ft.host(c) or {}).get('zone') for c in chain if g['exits'][c]}
+            if any(len(_frontier_returns(pd, r)) > 1 for r in rooms if r):
+                out.append(f'pl_FrontierSetReturn {site[0]}  // where ExitFrontier goes on (FrontierExit)')
+        return out + [f'RTReserveScript {sid}  // {what} {sname}: the scene runs in {h["zone"]} (its entry {sid})',
+                      f'pl_Warp {pd.b2_zone[target["id"]]}, {x}, {z}, {d}', 'pl_End']
+
+    _h_return_field_frontier_base = HANDLERS['ReturnToField']
+
+    @handler('ReturnToField')
+    def h_return_field_frontier(tr, a, vals, name):
+        """ReturnToField right after LaunchBattleFrontierScene (compares and conditional calls between): no Black 2 screen ran,
+        so it opens nothing. A scene that runs warps away first (its room's FrontierReturn_k is the field script after it);
+        one whose room is a later piece leaves the field open."""
+        prev = {e: x for x, (e, op, args) in tr.d.insns.items()}
+        p = prev.get(a)
+        while p is not None and tr.job.pd.cmd_name(tr.d.insns[p][1]) in ('CompareVarToValue', 'CompareVarToVar', 'CallIf'):
+            p = prev.get(p)
+        if p is not None and tr.job.pd.cmd_name(tr.d.insns[p][1]) == 'LaunchBattleFrontierScene':
+            return ['// ReturnToField: the field stayed open (LaunchBattleFrontierScene: the scene warped away, or its room is '
+                    'a later piece)']
+        return _h_return_field_frontier_base(tr, a, vals, name)
+
+    # (WaitForTransition, TerminateOverworldProcess, stays a stub that writes nothing: plat-ch7's ReturnToField rule counts a
+    # command without a handler as no screen, and the warp to a scene's room needs nothing before it)
+
+    @handler('PokeMartFrontier')
+    def h_frontier_mart(tr, a, vals, name):
+        """The Exchange Service Corner's two counters on Black 2's BP shop (pearl_story.inc pl_PokeMartFrontier)."""
+        return [f'pl_PokeMartFrontier {vals[0]}  // Platinum\'s {("right", "left")[vals[0]]} counter']
+# ---- end plat-frontier
+# ---- plat-castle (2026-11-07): the Battle Castle's lobby (MAP_BATTLE_CASTLE, Platinum's scripts_battle_castle.s) on the Castle's
+# Frontier ops (pearl_story.inc block "plat-castle"; notes/PLATINUM_FRONTIER.md "The Battle Castle"). Platinum only: Pearl's and
+# Diamond's scripts have none of these commands.
+if version.PLATINUM:
+    @handler('CallBattleCastleLobbyFunction')
+    def h_castle_lobby(tr, a, vals, name):
+        fn, arg, var = vals
+        if fn == 4:         # BC_LOBBY_FUNC_SELECT_POKEMON: Black 2's battle-entry party screen; GetBattleCastleSelectedSlots reads it
+            return [f'pl_CastleLobbySelect {tr.var(arg)}  // Platinum CallBattleCastleLobbyFunction 4 (the party screen)']
+        return [f'pl_CastleLobbyFunction {fn}, {tr.var(arg)}, {tr.var(var)}  // Platinum CallBattleCastleLobbyFunction {fn}']
+
+    @handler('GetBattleCastleSelectedSlots')
+    def h_castle_slots(tr, a, vals, name):
+        return [f'pl_CastleSelectedSlots {", ".join(tr.var(v) for v in vals)}  // Platinum GetBattleCastleSelectedSlots']
+
+    @handler('DeleteActiveBattleCastleStreak')
+    def h_castle_delete(tr, a, vals, name):
+        return [f'pl_CastleDeleteStreak {tr.var(vals[0])}  // Platinum DeleteActiveBattleCastleStreak']
+# ---- end plat-castle
+# ---- plat-frontier-rooms (2026-11-07): the Frontier's picture rooms (b2tools/frontier_rooms.py) as maps of PearlData, and the
+# facilities' scene commands (notes/PLATINUM_FRONTIER.md "The picture rooms"). Platinum only: Pearl's and Diamond's PearlData and
+# scripts have none of these.
+# - The rooms: pseudo map ids 593-600 after Platinum's 593 maps (frontier_rooms.ROOMS: zones 719-726), each its lobby's header with
+#   the empty script, level-script and event files and its scene's text bank; the frontier scenes they host make their files
+#   (frontier_entries, as the Tower's rooms), their people come from frontier_rooms.people_entities (pearl_events).
+# - The commands: frontier_translate carries a facility's own commands as they are, opcode CARRIER_BASE + the frontier opcode with
+#   the frontier's arguments; the table grows by them here (named FR_ + the frontier name), and the handlers below turn them into
+#   the facilities' Frontier ops (pearl_story.inc blocks "plat-factory", "plat-hall", "plat-castle").
+if version.PLATINUM:
+    import frontier_rooms as _fr
+
+    _pd_init_rooms_base = PearlData.__init__
+
+    def _pd_init_rooms(self):
+        _pd_init_rooms_base(self)
+        import frontier_script as _fs
+        table = list(self.table)
+        assert len(table) == _ft.CARRIER_BASE, f'{len(table)} field commands: frontier_translate.CARRIER_BASE is {_ft.CARRIER_BASE}'
+        ftab = _fs.load_table()
+        for op in range(max(ftab) + 1):
+            row = ftab.get(op)
+            table.append({'op': _ft.CARRIER_BASE + op, 'name': 'FR_' + (row['name'] if row else f'none_{op}'),
+                          'handler': None, 'flow': None, 'args': [('u8' if t == 'u8' else 'var') for t, _ in (row or {}).get('args', [])],
+                          'source': 'plat-frontier-rooms'})
+        self.table = table
+        self.zones = list(self.zones)
+        for r in _fr.ROOMS:
+            assert len(self.zones) == r['map'], (len(self.zones), r['map'])
+            bank = _ft.bank_slot(_ft.scene_id(r['scene']))
+            z = _fr.pseudo_zone(r, self.by_name[r['lobby']], bank)
+            self.zones.append(z)
+            self.by_name[z['name']] = z
+            self.b2_zone[z['id']] = r['zone']
+        self._frontier = None
+
+    PearlData.__init__ = _pd_init_rooms
+
+    def _fr_scratch(tr, a, what):
+        return f'{tr.prefix}_{a:04X}_{what}'
+
+    # the shared ones
+    @handler('FR_BufferTypeName')
+    def h_fr_type_name(tr, a, vals, name):
+        """A type's name (the Factory's hint: its opponents' most common type, Black 2's numbering: the overlay counts the
+        types of Black 2's own personal data)."""
+        return [f'WordSetPokeTypeName {vals[0]}, {tr.var(vals[1])}  // BufferTypeName (Black 2\'s type numbers)']
+
+    # the Battle Factory (pearl_story.inc "plat-factory"; notes/PLATINUM_FRONTIER.md "The Battle Factory")
+    _FACTORY_SIMPLE = {'FR_InitBattleFactory': 'pl_FactoryInit', 'FR_BattleFactory_LoadTrainersForRound': 'pl_FactoryLoadRound',
+                       'FR_CallBattleFactoryFunction': 'pl_FactoryFunction', 'FR_AddSelectedRentalsToParty': 'pl_FactoryAddSelected',
+                       'FR_BattleFactory_SetupNextOpponent': 'pl_FactorySetupNextOpponent',
+                       'FR_BattleFactory_ApplyTrade': 'pl_FactoryApplyTrade',
+                       'FR_BattleFactory_SetupNextOpponentsParty': 'pl_FactorySetupNextParty',
+                       'FR_BattleFactory_StartBattle': 'pl_FactoryBattle', 'FR_BattleFactory_CleanupBattle': 'pl_FactoryCleanupBattle',
+                       'FR_BattleFactory_CheckWonBattle': 'pl_FactoryCheckWon', 'FR_FreeBattleFactory': 'pl_FactoryFree',
+                       # the Hall's (pearl_story.inc "plat-hall")
+                       'FR_InitBattleHall': 'pl_HallInit', 'FR_CallBattleHallFunction': 'pl_HallFunction',
+                       'FR_FreeBattleHall': 'pl_HallFree', 'FR_BattleHall_StartBattle': 'pl_HallStartBattle',
+                       'FR_BattleHall_CleanupBattle': 'pl_HallCleanupBattle', 'FR_BattleHall_CheckWonBattle': 'pl_HallCheckWonBattle',
+                       'FR_BattleHall_UpdateWinRecord': 'pl_HallUpdateWinRecord',
+                       # the Castle's (pearl_story.inc "plat-castle")
+                       'FR_LoadTrainersForRound': 'pl_CastleLoadRound', 'FR_CallBattleCastleFunction': 'pl_CastleFunction',
+                       'FR_FreeBattleCastle': 'pl_CastleFree', 'FR_BattleCastle_SetupFirstOpponent': 'pl_CastleSetupFirstOpponent',
+                       'FR_BattleCastle_SetupNextOpponent': 'pl_CastleSetupNextOpponent',
+                       'FR_BattleCastle_StartBattle': 'pl_CastleBattle', 'FR_BattleCastle_CleanupBattle': 'pl_CastleCleanupBattle',
+                       'FR_BattleCastle_CheckWonBattle': 'pl_CastleCheckWonBattle',
+                       'FR_GetCurrentCastlePoints': 'pl_CastleGetCP', 'FR_SpendCastlePoints': 'pl_CastleSpendCP',
+                       'FR_ReceiveCastlePoints': 'pl_CastleReceiveCP'}
+
+    @handler(*_FACTORY_SIMPLE)
+    def h_fr_simple(tr, a, vals, name):
+        """A facility command with an op of its own, its arguments as they are (each a value or a var)."""
+        return [f'{_FACTORY_SIMPLE[name]} {", ".join(tr.var(v) for v in vals)}  // Platinum {name[3:]}'.replace(' , ', ' ')
+                if vals else f'{_FACTORY_SIMPLE[name]}  // Platinum {name[3:]}']
+
+    @handler('FR_BattleHall_SetupNextOpponent')
+    def h_fr_hall_next(tr, a, vals, name):
+        return ['pl_HallSetupNextOpponent  // Platinum BattleHall_SetupNextOpponent (its argument is unused)']
+
+    @handler('FR_InitBattleCastle')
+    def h_fr_castle_init(tr, a, vals, name):
+        return [f'pl_CastleInit {", ".join(tr.var(v) for v in vals[:5])}  // Platinum InitBattleCastle (its last var is the '
+                f'link\'s: {tr.var(vals[5])})']
+
+    @handler('FR_OpenBattleFactoryAppInitial')
+    def h_fr_factory_rent(tr, a, vals, name):
+        """The rental screen: Black 2's battle-entry party screen on the six rentals, until three are picked (B leaves it:
+        it opens again; Platinum's can't be left without three). Work 0x8006 holds the answer (the Factory's script doesn't
+        use it)."""
+        again = _fr_scratch(tr, a, 'rent')
+        return [f'{again}:                       // Platinum OpenBattleFactoryAppInitial', '    pl_FactoryRentScreen',
+                '    pl_FactoryRentResult 0x8006', '    pl_CompareVarToValue 0x8006, 0', f'    pl_GoToIf 1, {again}']
+
+    @handler('FR_OpenBattleFactoryAppForTrade')
+    def h_fr_factory_swap(tr, a, vals, name):
+        """The swap: the player's three (one to give, B for none), then the beaten opponent's three (one to take)."""
+        return ['pl_FactorySwapScreen 0  // Platinum OpenBattleFactoryAppForTrade: the player\'s three', 'pl_FactorySwapResult 0',
+                'pl_FactorySwapScreen 1  // the beaten opponent\'s three', 'pl_FactorySwapResult 1']
+
+    @handler('FR_BattleFactory_PrintTrainerIntro')
+    def h_fr_factory_intro(tr, a, vals, name):
+        """The opponent's line in Black 2's balloon over the room's opponent (person 98, or 99 for the second)."""
+        return [f'pl_FactoryTrainerIntro {vals[0]}, {98 + vals[0]}  // Platinum BattleFactory_PrintTrainerIntro {vals[0]}']
+
+    # (plat-test, 2026-11-08) The balloon (Black 2's EventBtlInstTrainerMsg) waits for A or B and closes itself, so the
+    # WaitABPress Platinum's scene has right after the line (its message window's wait) asked for a second A: dropped, in
+    # the four facilities alike. The double battles' WaitTime 30 after each line stays (the balloon's A, then 30 frames).
+    _FR_INTROS = {'FR_BattleFactory_PrintTrainerIntro', 'FR_BattleHall_PrintTrainerIntro',
+                  'FR_BattleCastle_PrintTrainerIntro', 'FR_BattleArcade_PrintTrainerInfo'}
+    _h_wait_ab_intro_base = HANDLERS['WaitABPress']
+
+    @handler('WaitABPress')
+    def h_wait_ab_after_intro(tr, a, vals, name):
+        p = _prev_insn(tr, a)
+        if p is not None and tr.job.pd.cmd_name(tr.d.insns[p][1]) in _FR_INTROS:
+            return ["// WaitABPress: the Trainer's balloon waited for A itself"]
+        return _h_wait_ab_intro_base(tr, a, vals, name)
+
+    @handler('FR_BattleHall_PrintTrainerIntro', 'FR_BattleCastle_PrintTrainerIntro')
+    def h_fr_word_intro(tr, a, vals, name):
+        """The opponent's intro line in Black 2's balloon over the room's opponent (person 98, or 99 for the second), as the
+        Factory's (plat-test, 2026-11-08: through a script word it never showed, the word holds 63 characters)."""
+        op = 'pl_HallTrainerIntro' if 'Hall' in name else 'pl_CastleTrainerIntro'
+        return [f'{op} {vals[0]}, {98 + vals[0]}  // Platinum {name[3:]} {vals[0]}']
+
+    @handler('FR_OpenBattleHallApp')
+    def h_fr_hall_app(tr, a, vals, name):
+        """The type grid: Black 2's list menu of the 17 types with their ranks and a summary row (pl_HallTypeList), the app's
+        rules (pl_HallTypeCheck: a type at the full rank buzzes; Argenta next: Platinum's own "Excuse me!" and "Will you
+        battle against the Hall Matron?" lines, scene bank 32 and 31), else "Will you battle the X-type, Rank N Pokemon?"
+        (bank 24, the type and rank into words 0 and 1: pl_HallTypeWords) and yes/no; the cell picked (pl_HallSetCell).
+        Black 2 has no field command for a Pokemon's summary: the summary row shows the line that names it and opens the grid
+        again (not as Platinum, which opens the summary screen). Works 0x8006 (the cell) and PL_TMP (the answers).
+        (plat-fix3, 2026-11-12) Platinum's scene fades to black before the app (FadeScreenOut, CloseMessage) and in again after
+        it (FadeScreenIn, after the engine-layer toggle and the base level); the app is its own screen and fades itself in and
+        out. Here the grid is a list on the field, so, as the Arcade's board: the room fades in under the list first, and out
+        again after the cell is set (the scene's own fade-in follows). Without it the grid and its question showed on a black
+        screen (plat-fix2's final checks)."""
+        scene_bank = tr.bank
+        top, check, ask, matron, summary = (_fr_scratch(tr, a, k) for k in ('grid', 'check', 'ask', 'matron', 'summary'))
+        done = _fr_scratch(tr, a, 'done')
+        row = tr.job.line_for(402, 146)             # Platinum's party menu "SUMMARY" (TEXT_BANK_PARTY_MENU)
+        return ['pl_fade_in_black  // Platinum OpenBattleHallApp: its screen fades in (the room, under the grid\'s list)',
+                'pl_WaitFadeScreen',
+                f'{top}:                        // Platinum OpenBattleHallApp: the type grid as a list menu',
+                '    ListMenu_AnchorTopRight 31, 1, 0, 0, 0x8006', f'    pl_HallTypeList {row}', '    ListMenuShow',
+                '    pl_CompareVarToValue 0x8006, 17', f'    pl_GoToIf 1, {summary}',
+                '    pl_CompareVarToValue 0x8006, 17', f'    pl_GoToIf 4, {top}   // (B: the grid again: it must pick)',
+                f'{check}:', '    pl_HallTypeCheck 0x8006, PL_TMP', '    pl_CompareVarToValue PL_TMP, 2', f'    pl_GoToIf 1, {matron}',
+                '    pl_CompareVarToValue PL_TMP, 0', f'    pl_GoToIf 1, {ask}', '    pl_PlaySE SEQ_SE_BEEP', f'    pl_GoTo {top}',
+                f'{ask}:', '    pl_HallTypeWords 0x8006, 0, 1',
+                f'    pl_msg_sys {tr.job.line_for(scene_bank, 24)}', '    pl_ShowYesNoMenu PL_TMP', '    pl_CloseMessage',
+                '    pl_CompareVarToValue PL_TMP, 0', f'    pl_GoToIf 5, {top}', f'    pl_GoTo {done}',
+                f'{matron}:', f'    pl_msg_sys {tr.job.line_for(scene_bank, 32)}', '    pl_WaitABPress',
+                f'    pl_msg_sys {tr.job.line_for(scene_bank, 31)}', '    pl_ShowYesNoMenu PL_TMP', '    pl_CloseMessage',
+                '    pl_CompareVarToValue PL_TMP, 0', f'    pl_GoToIf 5, {top}', f'    pl_GoTo {done}',
+                f'{summary}:', f'    pl_GoTo {top}', f'{done}:', '    pl_HallSetCell 0x8006',
+                'pl_fade_out_black  // the app fades out', 'pl_WaitFadeScreen']
+
+    # the Castle's screens and CP windows (src/include/pearl_castle_screens.inc)
+    @handler('FR_OpenBattleCastleSelfApp', 'FR_OpenBattleCastleOpponentApp')
+    def h_fr_castle_screen(tr, a, vals, name):
+        tr.job.castle_screens = True
+        return [f'pl_Call CastleSelfScreen  // Platinum {name[3:]}' if 'Self' in name else
+                f'pl_Call CastleOpponentScreen  // Platinum {name[3:]}']
+
+    # The Castle's two screens are subroutines of the room's file (pearl_castle_screens.inc pl_CastleScreensCode), with the two
+    # screens' text banks (Platinum's battle_castle_self_app and _opponent_app) and three lines of the Castle's own in the zone's
+    # text, in order, after the scenes (frontier_entries' last entry)
+    CASTLE_SELF_BANK, CASTLE_OPP_BANK = 633, 635        # (Pearl's slots of Platinum's banks 199 and 201)
+    CASTLE_LINES = ['?????',                            # an opponent's Pokemon not identified yet (Platinum's row)
+                    # the summary panel, of the self screen's labels (bank 199 lines 70-85): words 0 item, 1 nature, 2 ability,
+                    # 3-7 Attack, Defense, Sp. Atk, Sp. Def, Speed
+                    'Item: {STRVAR_1 8, 0}\\nNature: {STRVAR_1 7, 1}\\rAbility: {STRVAR_1 5, 2}\\r'
+                    'Attack {STRVAR_1 52, 3}  Defense {STRVAR_1 52, 4}\\nSp. Atk {STRVAR_1 52, 5}  Sp. Def {STRVAR_1 52, 6}\\r'
+                    'Speed {STRVAR_1 52, 7}',
+                    # the moves panel: words 0-3 the moves, 4-7 their PP, 8-11 their maximum
+                    '{STRVAR_1 6, 0}  {STRVAR_1 52, 4}/{STRVAR_1 52, 8}\\n{STRVAR_1 6, 1}  {STRVAR_1 52, 5}/{STRVAR_1 52, 9}\\r'
+                    '{STRVAR_1 6, 2}  {STRVAR_1 52, 6}/{STRVAR_1 52, 10}\\n{STRVAR_1 6, 3}  {STRVAR_1 52, 7}/{STRVAR_1 52, 11}']
+
+    _frontier_entries_rooms_base = frontier_entries
+
+    def frontier_entries(job, pd, zone):
+        out = _frontier_entries_rooms_base(job, pd, zone)
+        if getattr(job, 'castle_screens', False):
+            first = {}
+            for key, bank in (('self', CASTLE_SELF_BANK), ('opp', CASTLE_OPP_BANK)):
+                for j, text in enumerate(job.gen4_text.bank(bank)):
+                    n = job.line_text(('castle', key, j), text)
+                    first.setdefault(key, n)
+                    assert n == first[key] + j, f'{zone["name"]}: the Castle bank {bank} is not in one run of lines'
+            lines0 = [job.line_text(('castle', 'own', j), t) for j, t in enumerate(CASTLE_LINES)]
+            assert lines0 == list(range(lines0[0], lines0[0] + len(CASTLE_LINES))), lines0
+            out.append((None, None, ['', '// ---- the Castle\'s two screens (src/include/pearl_castle_screens.inc), its lines in this zone\'s '
+                                         'text', f'.set CASTLE_SELF, {first["self"]}', f'.set CASTLE_OPP, {first["opp"]}',
+                                         f'.set CASTLE_LINES, {lines0[0]}', '#include "pearl_castle_screens.inc"',
+                                         '    pl_CastleScreensCode']))
+        return out
+
+    @handler('FR_ShowCastlePointsWindows', 'FR_ReprintCastlePointsInfo')
+    def h_fr_castle_cp(tr, a, vals, name):
+        return ['pl_CastleCPWord 0  // Platinum ' + name[3:] + ': the CP into word 0 (no window: the screens\' lines say them)']
+
+    @handler('FR_ClearCastlePointsWindows')
+    def h_fr_castle_cp_clear(tr, a, vals, name):
+        return ['// Platinum ClearCastlePointsWindows: no window to clear']
+
+    # The lobbies' own commands (Platinum's field scripts scripts_battle_factory.s and _hall.s), on the facilities' ops
+    @handler('DeleteActiveBattleFactoryStreak')
+    def h_fr_factory_delete(tr, a, vals, name):
+        return [f'pl_FactoryDeleteStreak {tr.var(vals[0])}, {tr.var(vals[1])}  // Platinum DeleteActiveBattleFactoryStreak']
+
+    HALL_SLOT1, HALL_SLOT2 = 'PL_TMP2', 'PL_TMP3'      # the lobby's picks, until GetBattleHallSelectedSlots reads them
+
+    @handler('CallBattleHallLobbyFunction')
+    def h_fr_hall_lobby(tr, a, vals, name):
+        """CallBattleHallLobbyFunction fn, arg, var: 0-3 the Hall's op (eligibility, the streak, its species, its deletion);
+        4, the party screen (Platinum's party app for one Pokemon, two of the same species in a Double): Black 2's party
+        list (pl_ChoosePokemonMenu), once, or twice in a Double, the second asked again until it is the first's species (the
+        app's rule). A cancel leaves slot 0xFF, as Platinum's."""
+        fn, arg, var = vals
+        if fn != 4:
+            return [f'pl_HallLobbyFunction {fn}, {tr.var(arg)}, {tr.var(var)}  // Platinum CallBattleHallLobbyFunction {fn}']
+        second, again, done = (_fr_scratch(tr, a, k) for k in ('second', 'again', 'done'))
+        tr.job.approx['the Hall\'s party app (Black 2\'s party list, one pick at a time)'] += 1
+        return [f'pl_ChoosePokemonMenu  // Platinum CallBattleHallLobbyFunction 4: the party app', f'pl_GetSelectedPartySlot {HALL_SLOT1}',
+                f'WorkSetConst {HALL_SLOT2}, 255', f'WorkCmpConst {HALL_SLOT1}, 255', f'VMJumpIf CMP_EQ, {done}',
+                f'WorkCmpConst {tr.var(arg)}, 1', f'VMJumpIf CMP_NE, {done}   // (a Double: a second of the same species)',
+                f'{again}:', 'pl_ChoosePokemonMenu', f'pl_GetSelectedPartySlot {HALL_SLOT2}',
+                f'WorkCmpConst {HALL_SLOT2}, 255', f'VMJumpIf CMP_EQ, {second}',
+                f'WorkCmpWork {HALL_SLOT2}, {HALL_SLOT1}', f'VMJumpIf CMP_EQ, {again}',
+                f'pl_GetPartyMonSpecies {HALL_SLOT1}, PL_TMP', f'pl_GetPartyMonSpecies {HALL_SLOT2}, {tr.var(var)}',
+                f'WorkCmpWork PL_TMP, {tr.var(var)}', f'VMJumpIf CMP_NE, {again}', f'VMJump {done}',
+                f'{second}:', f'WorkSetConst {HALL_SLOT1}, 255   // (the second cancelled: no challenge)', f'{done}:']
+
+    @handler('GetBattleHallSelectedSlots')
+    def h_fr_hall_slots(tr, a, vals, name):
+        return [f'WorkSet {tr.var(vals[0])}, {HALL_SLOT1}  // Platinum GetBattleHallSelectedSlots', f'WorkSet {tr.var(vals[1])}, {HALL_SLOT2}']
+
+    @handler('DeleteActiveBattleHallStreak')
+    def h_fr_hall_delete(tr, a, vals, name):
+        return [f'pl_HallLobbyFunction 3, {tr.var(vals[0])}, PL_TMP  // Platinum DeleteActiveBattleHallStreak']
+
+    @handler('GetNumSpeciesWithBattleHallRecords', 'GetBattleHallTotalSinglesRecord', 'CheckIfBattleHallStreakIs50')
+    def h_fr_hall_records(tr, a, vals, name):
+        what = {'GetNumSpeciesWithBattleHallRecords': 0, 'GetBattleHallTotalSinglesRecord': 1, 'CheckIfBattleHallStreakIs50': 2}[name]
+        return [f'pl_HallRecords {what}, {tr.var(vals[0])}  // Platinum {name}']
+# ---- end plat-frontier-rooms
+# ---- plat-arcade (2026-11-07): the Battle Arcade's lobby (MAP_BATTLE_ARCADE, Platinum's scripts_battle_arcade.s) and its scenes
+# in its picture rooms (frontier_rooms' MAP_BATTLE_ARCADE_CORRIDOR and _BATTLE_ROOM: the facility commands frontier_translate
+# carries, plat-frontier-rooms' carrier) on the Arcade's Frontier ops (pearl_story.inc block "plat-arcade"; notes/PLATINUM_FRONTIER.md
+# "The Battle Arcade"). Platinum only: Pearl's and Diamond's scripts have none of these commands.
+if version.PLATINUM:
+    @handler('CallBattleArcadeLobbyFunction')
+    def h_arcade_lobby(tr, a, vals, name):
+        fn, arg, var = vals
+        if fn == 4:         # BA_LOBBY_FUNC_SELECT_POKEMON: Black 2's battle-entry party screen; GetBattleArcadeSelectedSlots reads it
+            return [f'pl_ArcadeLobbySelect {tr.var(arg)}  // Platinum CallBattleArcadeLobbyFunction 4 (the party screen)']
+        return [f'pl_ArcadeLobbyFunction {fn}, {tr.var(arg)}, {tr.var(var)}  // Platinum CallBattleArcadeLobbyFunction {fn}']
+
+    @handler('GetBattleArcadeSelectedSlots')
+    def h_arcade_slots(tr, a, vals, name):
+        return [f'pl_ArcadeSelectedSlots {", ".join(tr.var(v) for v in vals)}  // Platinum GetBattleArcadeSelectedSlots']
+
+    @handler('DeleteActiveBattleArcadeStreak')
+    def h_arcade_delete(tr, a, vals, name):
+        return [f'pl_ArcadeDeleteStreak {tr.var(vals[0])}  // Platinum DeleteActiveBattleArcadeStreak']
+
+    _ARCADE_SIMPLE = {'FR_BattleArcade_LoadTrainersForRound': 'pl_ArcadeLoadRound', 'FR_FreeBattleArcade': 'pl_ArcadeFree',
+                      'FR_CallBattleArcadeFunction': 'pl_ArcadeFunction',
+                      'FR_BattleArcade_SetupFirstOpponent': 'pl_ArcadeSetupFirstOpponent',
+                      'FR_BattleArcade_SetupNextOpponent': 'pl_ArcadeSetupNextOpponent',
+                      'FR_BattleArcade_StartBattle': 'pl_ArcadeBattle', 'FR_BattleArcade_CleanupBattle': 'pl_ArcadeCleanupBattle',
+                      'FR_BattleArcade_CheckWonBattle': 'pl_ArcadeCheckWonBattle', 'FR_ApplyArcadeEffect': 'pl_ArcadeApplyEffect'}
+
+    @handler(*_ARCADE_SIMPLE)
+    def h_fr_arcade_simple(tr, a, vals, name):
+        """An Arcade command with an op of its own, its arguments as they are (each a value or a var)."""
+        op = _ARCADE_SIMPLE[name]
+        return [f'{op} {", ".join(tr.var(v) for v in vals)}  // Platinum {name[3:]}' if vals else f'{op}  // Platinum {name[3:]}']
+
+    @handler('FR_InitBattleArcade')
+    def h_fr_arcade_init(tr, a, vals, name):
+        return [f'pl_ArcadeInit {", ".join(tr.var(v) for v in vals[:5])}  // Platinum InitBattleArcade (its last var is the '
+                f'link\'s: {tr.var(vals[5])})']
+
+    @handler('FR_BattleArcade_PrintTrainerInfo')
+    def h_fr_arcade_intro(tr, a, vals, name):
+        """The opponent's intro line in Black 2's balloon over the room's opponent (person 98 or 99), as the Factory's."""
+        return [f'pl_ArcadeTrainerIntro {vals[0]}, {98 + vals[0]}  // Platinum BattleArcade_PrintTrainerInfo {vals[0]}']
+
+    @handler('FR_OpenBattleArcadeApp')
+    def h_fr_arcade_board(tr, a, vals, name):
+        """The game board: a window of its 16 panels on the field (arcade_field.c), named by 32 lines of this zone's text, in a
+        run (platinum_arcade_data.BOARD_NAMES); the script goes on when it stops. Platinum's scene has faded to black before
+        it, and the app fades its own screens in and out: here the room fades in under the window, and out again after."""
+        import platinum_arcade_data as _pad
+        lines = [tr.job.line_text(('arcade_board', i), n) for i, n in enumerate(_pad.BOARD_NAMES)]
+        assert lines == list(range(lines[0], lines[0] + len(lines))), lines
+        tr.job.approx['OpenBattleArcadeApp (the board as a window over the room: arcade_field.c)'] += 1
+        return ['pl_fade_in_black  // Platinum OpenBattleArcadeApp: its screens fade in (the room, under the board\'s window)',
+                'pl_WaitFadeScreen',
+                f'pl_ArcadeBoard {lines[0]}  // the game board (its names: lines {lines[0]}-{lines[-1]})',
+                'pl_fade_out_black  // the app fades out', 'pl_WaitFadeScreen']
+
+    @handler('FR_SetItemDrawFlag')
+    def h_fr_arcade_items(tr, a, vals, name):
+        return ['// Platinum SetItemDrawFlag: the items beside the board are sprites (none here)']
+
+    @handler('FR_AddToRecordValue')
+    def h_fr_arcade_record(tr, a, vals, name):
+        """Platinum's AddToRecordValue RECORD_UNK_067, VAR_0x8008 (the board's free BP added to a Game Record; only the Arcade's
+        scene has it): nothing, as IncrementGameRecord (Black 2 keeps its own records). GiveBattlePoints after it gives the BP."""
+        tr.job.approx['AddToRecordValue (Black 2 keeps its own records)'] += 1
+        return [f'// Platinum AddToRecordValue {vals[0]}, {tr.var(vals[1])}: nothing in Black 2 (its own records)']
+
+    # The board's free BP plays Platinum's SEQ_PL_DON2, then waits for it (WaitFanfare): a stub there would hang, so Black 2's item
+    # jingle stands in [guess]. The effects' sounds (SEQ_SE_PL_FR03, FR04, FR05: with the particles) and the swap's SEQ_SE_DP_Z_SEARCH
+    # stay counted stubs (their waits are stubs too): no Black 2 sound chosen
+    SOUND.update({'SEQ_PL_DON2': 'SEQ_ME_ITEM'})
+# ---- end plat-arcade
+# ---- plat-tower (2026-11-08): the Frontier's party and record screens reopen the field themselves. Black 2's battle-entry party
+# screen (ov012 EventBSubwayPokeSelect / EventBtlInstPokeSelect: the Tower's function 30, the Castle's and the Arcade's lobby
+# function 4), its party list (CallPokeSelect: the Stats Judge's SelectMoveTutorPokemon, the Hall's lobby function 4) and the
+# Subway's records screen (EventBSubwayRecords, a field subprocess: OpenBattleTowerRecordsApp) fade out, close the field, run the
+# screen, open the field again (EventFieldOpen_CreateHeadless) and fade in. Platinum's ReturnToField after them was a second
+# FieldOpen on the open field: it loads the field's glue overlay 35 again while it is loaded, GFL_OvlCheckMemoryCollision
+# asserts, "An error has occurred" (the Tower's CONFIRM, the Stats Judge, the records machine; the Hall's, Castle's and Arcade's
+# lobby party screens the same). Pearl's Tower drops them by address (data/pearl_script_patches.json, file 358), which doesn't
+# align with Platinum's lobby. So, as poke_select_fades does for the other party screens: the fade-out before the screen, the
+# ReturnToField after it and the fade-in after that are dropped (the waits stay: nothing to wait for). Platinum only: Pearl's
+# and Diamond's output doesn't change.
+if version.PLATINUM:
+    # the screens' commands (the facility functions by their number: the party screens), then what may sit between
+    _FR_SCREENS = {'CallBattleTowerFunction': 30, 'CallBattleHallLobbyFunction': 4, 'CallBattleCastleLobbyFunction': 4,
+                   'CallBattleArcadeLobbyFunction': 4, 'SelectMoveTutorPokemon': None, 'OpenBattleTowerRecordsApp': None}
+    _FR_BEFORE = {'CloseMessage', 'WaitFadeScreen'}                                  # between the fade-out and the screen
+    _FR_READS = {'GetSelectedPartySlot', 'GetBattleHallSelectedSlots', 'GetBattleCastleSelectedSlots',
+                 'GetBattleArcadeSelectedSlots'}                                     # the screen's answer, before ReturnToField
+    _FR_AFTER = {'SetVarFromVar', 'SetVarFromValue'}                                 # between ReturnToField and the fade-in
+    _psel_tower_base = poke_select_fades
+
+    def poke_select_fades(tr):
+        out = _psel_tower_base(tr)
+        if not getattr(tr, '_psel_tower', False):
+            tr._psel_tower = True
+            d, pd = tr.d, tr.job.pd
+            nxt = {x: e for x, (e, op, args) in d.insns.items()}
+            prv = {e: x for x, e in nxt.items()}
+            name = lambda x: pd.cmd_name(d.insns[x][1]) if x in d.insns else None
+            first = lambda x: d.insns[x][2][0][1] if x in d.insns and d.insns[x][2] else None
+            for c in d.insns:
+                n = name(c)
+                if n not in _FR_SCREENS or (_FR_SCREENS[n] is not None and first(c) != _FR_SCREENS[n]):
+                    continue
+                f0 = prv.get(c)
+                while name(f0) in _FR_BEFORE:
+                    f0 = prv.get(f0)
+                r = nxt.get(c)
+                while name(r) in _FR_READS:
+                    r = nxt.get(r)
+                f1 = nxt.get(r)
+                while name(f1) in _FR_AFTER or (name(f1) == 'CallBattleTowerFunction' and first(f1) == 31):   # (31: the choice)
+                    f1 = nxt.get(f1)
+                if (name(f0), name(r), name(f1)) == ('FadeScreen', 'ReturnToField', 'FadeScreen') and \
+                        (d.insns[f0][2][2][1], d.insns[f1][2][2][1]) == (0, 1):                          # out, then in
+                    out |= {f0, r, f1}
+        return out
+# ---- end plat-tower
+# ---- plat-stubs (2026-11-08): the stubs a Platinum player still reached (work/agents/plat-stubs/STUBS.md, notes/PLATINUM_STUBS.md;
+# pearl_story.inc block "plat-stubs"). Platinum only: Pearl's and Diamond's scripts don't change.
+if version.PLATINUM:
+    # The Frontier's four lobbies save with the common save script (Platinum's CommonScript 2007: CheckSaveType, the save details
+    # window) and show the banned-species line, as the Tower's lobby: the Tower's handlers (TOWER_ONLY_HANDLERS) there too. Left
+    # stubs, CheckSaveType kept the var's last answer: a 0 (Yes to the question before it) read as "a save that can't be
+    # overwritten", the challenge didn't start.
+    TOWER_ZONES = TOWER_ZONES + ('MAP_BATTLE_FACTORY', 'MAP_BATTLE_HALL', 'MAP_BATTLE_CASTLE', 'MAP_BATTLE_ARCADE')  # noqa: F811
+
+    @handler('TryRevertPokemonForm')
+    def h_revert_form(tr, a, vals, name):
+        """0x31E TryRevertPokemonForm slot, var (pokeplatinum ov5_021F6454.c): a party Pokémon entered at a Frontier facility,
+        the Tower or put in the Day Care goes back to its first form: a Rotom out of its appliance (Black 2's
+        PokePartyChangeRotomForme to form 0: its appliance move goes, Thunder Shock if it has none left, as Platinum's
+        Pokemon_SetRotomForm), Shaymin to its Land Forme; var 0, 255 only when a Griseous Orb finds no room in the Bag.
+        Giratina's Orb isn't taken here (Black 2 has no script command for a held item; its Giratina takes its form from
+        the item): Giratina can't enter the Frontier (banned), so only the Day Care keeps an Origin Giratina so."""
+        tr.job.approx['TryRevertPokemonForm (Giratina keeps its Griseous Orb)'] += 1
+        slot = tr.var(vals[0])
+        out = []
+        if vals[0] < 0x4000:
+            out, slot = [f'WorkSetConst PL_TMP2, {vals[0]}'], 'PL_TMP2'
+        return out + [f'pl_TryRevertPokemonForm {slot}, {tr.var(vals[1])}  // TryRevertPokemonForm: Rotom and Shaymin to '
+                      f'their first form']
+
+    @handler('ShowListMenuRememberCursor')
+    def h_list_menu_cursor(tr, a, vals, name):
+        """0x306 ShowListMenuRememberCursor cursor, scroll: the list menu, opening where it was left (the vars keep the place).
+        Black 2's list menu opens at the top (approximation). Left a stub, the menu was never shown: the Frontier records'
+        letter list (the Battle Hall's machine) read its old answer and went round for ever."""
+        tr.job.approx['ShowListMenuRememberCursor (Black 2\'s list menu opens at the top)'] += 1
+        return [f'ListMenuShow  // ShowListMenuRememberCursor {tr.var(vals[0])}, {tr.var(vals[1])}: opens at the top']
+
+    @handler('ShowBattleHallRecordMonSelectionMenu')
+    def h_hall_record_mons(tr, a, vals, name):
+        """0x2DE ShowBattleHallRecordMonSelectionMenu type, letters, var, ...: the Battle Hall records machine's list of the
+        species with a record whose names start with the letters picked, for the records screen (OpenFrontierRecordsApp),
+        which Black 2 doesn't have. The answer is EXIT (MENU_CANCEL): back to the letters, whose EXIT leaves."""
+        tr.job.approx['ShowBattleHallRecordMonSelectionMenu (no records screen: EXIT)'] += 1
+        return [f'WorkSetConst {tr.var(vals[2])}, 65534  // ShowBattleHallRecordMonSelectionMenu: EXIT (no records screen here)']
+
+    if version.HALL_RECORDS_MACHINE:
+        @handler('ShowBattleHallRecordMonSelectionMenu')
+        def h_hall_record_mons_list(tr, a, vals, name):
+            """(plat-fix2) 0x2DE ShowBattleHallRecordMonSelectionMenu type, letters, var, list pos, cursor pos (pokeplatinum
+            ov5_021F6454.c): the species of the letters with a record of the type, in Platinum's alphabetical lists, then EXIT
+            (menu entries line 12; MENU_CANCEL, as B), in Black 2's list menu at the right edge (Platinum's at tile 20). The
+            list and cursor positions aren't kept: Black 2's list menu opens at the top (as the letters' menu)."""
+            tr.job.approx['ShowBattleHallRecordMonSelectionMenu (Black 2\'s list menu opens at the top)'] += 1
+            return [f'ListMenu_AnchorTopRight 31, 1, 0, 1, {tr.var(vals[2])}  // ShowBattleHallRecordMonSelectionMenu',
+                    f'pl_HallRecordList {tr.var(vals[0])}, {tr.var(vals[1])}  // the species with a record',
+                    f'ListMenuAdd {tr.job.line_for(MENU_BANK, 12)}, 65535, 65534  // EXIT (MenuEntries_Text_ListMenu_Exit)',
+                    'ListMenuShow']
+
+    _HALL_MILESTONES = None
+
+    def hall_milestones():
+        """[(total record, BP)] of Platinum's Battle Hall record keeper (pokeplatinum scrcmd_battle_hall.c
+        sBattleHallRecordMilestones: its rows and count), checked against the dump's ARM9 ({u32 record, u32 bp} rows, found
+        by the first four)."""
+        global _HALL_MILESTONES
+        if _HALL_MILESTONES is None:
+            import pearl_items
+            src = open(os.path.join(PLATINUM, 'src', 'scrcmd_battle_hall.c')).read()
+            at = src.index('sBattleHallRecordMilestones[] = {')
+            rows = [(int(r), int(b)) for r, b in re.findall(r'\{\s*(\d+),\s*(\d+)\s*\}', src[at:src.index('};', at)])]
+            arm9, _ = pearl_items.world_arm9()
+            first = struct.pack('<8I', *[v for row in rows[:4] for v in row])
+            at = arm9.find(first)
+            assert at >= 0 and arm9.find(first, at + 1) < 0, 'the Hall milestones: not found once in the ARM9'
+            assert [struct.unpack_from('<2I', arm9, at + 8 * k) for k in range(len(rows))] == rows, 'the Hall milestones'
+            _HALL_MILESTONES = rows
+        return _HALL_MILESTONES
+
+    @handler('GetBattleHallRecordKeeperStats')
+    def h_hall_record_keeper(tr, a, vals, name):
+        """0x324 GetBattleHallRecordKeeperStats cur, passed, next, bp (words), milestone var, var (pokeplatinum
+        scrcmd_battle_hall.c): the Battle Hall's record keeper. The total of every species' Single record (pl_HallRecords 1)
+        into word cur; each milestone from the var's on that the total reached gives its BP (BP added, the var counts on;
+        word passed the last one reached, else the first's 10), word next the next one, word bp the BP; var 0 no record
+        (or nothing reached yet), 1 BP given, 2 no new milestone, 3 every milestone passed (no words). The total is a u16
+        here: the milestones past 65,535 (70,000-100,000) are never reached (the word shows 65,535 for them)."""
+        cur, passed, nxt, bpw = vals[:4]
+        mv, res = tr.var(vals[4]), tr.var(vals[5])
+        rows = hall_milestones()
+        p = f'{tr.prefix}_{a:04X}_Hall'
+        out = ['// GetBattleHallRecordKeeperStats: Platinum\'s record keeper (its milestones from the dump)',
+               'pl_HallRecords 1, PL_TMP  // the total of the Single records', f'pl_BufferNumber {cur}, PL_TMP',
+               'WorkSetConst PL_TMP2, 0  // the BP earned', f'WorkSetConst PL_TMP3, {rows[0][0]}  // the last milestone reached']
+        for i, (rec, bp) in enumerate(rows):
+            if rec > 0xFFFF:
+                break
+            out += [f'WorkCmpConst {mv}, {i}', f'VMJumpIf CMP_NE, {p}M{i}', f'WorkCmpConst PL_TMP, {rec}',
+                    f'VMJumpIf CMP_LT, {p}Scanned', f'WorkAdd PL_TMP2, {bp}', f'WorkAdd {mv}, 1',
+                    f'WorkSetConst PL_TMP3, {rec}  // {rec} reached: {bp} BP', f'{p}M{i}:']
+        out += [f'{p}Scanned:', 'WorkCmpConst PL_TMP2, 0', f'VMJumpIf CMP_EQ, {p}NoBP', 'pl_TowerBpAdd PL_TMP2',
+                f'{p}NoBP:', f'WorkSetConst {res}, 0', 'WorkCmpConst PL_TMP, 0', f'VMJumpIf CMP_EQ, {p}Words',
+                f'WorkSetConst {res}, 1', 'WorkCmpConst PL_TMP2, 0', f'VMJumpIf CMP_NE, {p}Words', f'WorkSetConst {res}, 2',
+                f'WorkCmpConst {mv}, {len(rows)}', f'VMJumpIf CMP_LT, {p}Words', f'WorkSetConst {res}, 3',
+                f'VMJump {p}End', f'{p}Words:', f'pl_BufferNumber {passed}, PL_TMP3']
+        for i, (rec, bp) in enumerate(rows):
+            out += [f'WorkCmpConst {mv}, {i}', f'VMJumpIf CMP_NE, {p}N{i}', f'pl_BufferNumber {nxt}, {min(rec, 0xFFFF)}',
+                    f'{p}N{i}:']
+        return out + [f'pl_BufferNumber {bpw}, PL_TMP2', f'{p}End:']
+
+    @handler('CheckHeapMemory')
+    def h_check_heap(tr, a, vals, name):
+        """0x313 CheckHeapMemory check (pokeplatinum scrcmd.c): a debug check that the field's heaps are as large as when the
+        Frontier lobby's script began (an assert, nothing else): nothing in Black 2."""
+        return [f'// CheckHeapMemory {vals[0]}: Platinum\'s debug check of its heaps (an assert): nothing here']
+
+    @handler('331', '332')
+    def h_eterna_rival_objects(tr, a, vals, name):
+        """0x331 / 0x332 (pokeplatinum ov5_021F6454.c): Eterna's scene with Barry by the Galactic building (the free camera
+        pans away) keeps objects 32 and 2 drawn at height 9 (MAP_OBJ_STATUS_13) and lets go after, as 0x32D / 0x32E in Amity
+        Square. Black 2 keeps every person of the zone drawn, on its own tile's height: nothing to do."""
+        return [f'// {name}: Platinum keeps two people drawn through the camera pan; Black 2 draws them anyway']
+
+    _SCRATCH = None
+
+    def scratch_card_prizes():
+        """(Nugget item, [the Berries a card can show]) of the Battle Frontier's scratch-off cards (pokeplatinum
+        applications/scratch_off_cards/main.c sAvailableItems, by generated/items.txt), checked against the dump's overlay 111."""
+        global _SCRATCH
+        if _SCRATCH is None:
+            import contest_data
+            src = open(os.path.join(PLATINUM, 'src', 'applications', 'scratch_off_cards', 'main.c')).read()
+            at = src.index('sAvailableItems[] = {')
+            ids = {n: i for i, n in enumerate(open(os.path.join(PLATINUM, 'generated', 'items.txt')).read().split())}
+            berries = [ids[n] for n in re.findall(r'ITEM_\w+', src[at:src.index('};', at)])]
+            _, o = contest_data.overlay(Rom(version.WORLD_DUMP), 111)
+            assert o.find(struct.pack(f'<{len(berries)}H', *berries)) >= 0, 'the scratch-off cards\' Berries: not in overlay 111'
+            _SCRATCH = ids['ITEM_NUGGET'], berries
+        return _SCRATCH
+
+    if version.FIELD_STAYS_OPEN:                # (plat-test, 2026-11-08) no screen runs, so the field never closed: the
+        _NO_SCREEN |= {'OpenScratchOffCardsApp', 'FreeScratchOffCardsArgs'}   # ReturnToField after them opens nothing
+        # (h_return_field_open; its FieldOpen on the open field stopped the game: "An error has occurred")
+
+    @handler('OpenScratchOffCardsApp', 'FreeScratchOffCardsArgs')
+    def h_scratch_app(tr, a, vals, name):
+        """0x2E2 OpenScratchOffCardsApp / 0x2E3 FreeScratchOffCardsArgs: the Battle Frontier's scratch-off cards (1 BP for three).
+        Black 2 has no such touch screen: the cards are scratched for the player (GetScratchOffCardsWonItem below)."""
+        if name == 'OpenScratchOffCardsApp':
+            tr.job.approx['OpenScratchOffCardsApp (no touch screen: the cards come out at Platinum\'s odds)'] += 1
+        return [f'// {name}: no scratch-off screen here; each card\'s prize is drawn at Platinum\'s odds']
+
+    @handler('GetScratchOffCardsWonItem')
+    def h_scratch_prize(tr, a, vals, name):
+        """0x2E4 GetScratchOffCardsWonItem card, item, count: what a card won (0, 0: nothing). Platinum's card (its app's
+        PlaceValuesInScratchCells, CheckIfThreeOfAKindFound): nine cells, two Dittos (wild) and three, two and two of three
+        of the card's four prizes (one a Nugget, the others Berries of the 23); three cells scratched win when they show one
+        prize (Dittos count as any). The cells lie in random places, so which three the player picks doesn't matter: 18 of
+        the 84 picks win, a quarter of them the Nugget (one), the rest a Berry (three of it). = Black 2's Random: 18 in 336
+        the Nugget, 54 in 336 a Berry of the 23, else nothing."""
+        nugget, berries = scratch_card_prizes()
+        it, n = tr.var(vals[1]), tr.var(vals[2])
+        p = f'{tr.prefix}_{a:04X}_Card'
+        out = [f'// GetScratchOffCardsWonItem {vals[0]}: card {vals[0] + 1} at Platinum\'s odds', f'WorkSetConst {it}, 0',
+               f'WorkSetConst {n}, 0', 'Random PL_TMP, 336', 'WorkCmpConst PL_TMP, 18', f'VMJumpIf CMP_GE, {p}Berry',
+               f'WorkSetConst {it}, {nugget}  // a Nugget', f'WorkSetConst {n}, 1', f'VMJump {p}End', f'{p}Berry:',
+               'WorkCmpConst PL_TMP, 72', f'VMJumpIf CMP_GE, {p}End', f'WorkSetConst {n}, 3', f'Random PL_TMP, {len(berries)}']
+        for k, b in enumerate(berries):
+            out += [f'WorkCmpConst PL_TMP, {k}', f'VMJumpIf CMP_NE, {p}B{k}', f'WorkSetConst {it}, {b}', f'VMJump {p}End',
+                    f'{p}B{k}:']
+        return out + [f'{p}End:']
+
+    _JUDGE_LINES = None
+
+    def judge_lines():
+        """[the line naming each stat as best] of the Battle Tower's Stats Judge, by IV (HP, Attack, Defense, Speed, Sp. Atk,
+        Sp. Def): pokeplatinum ov5_021F6454.c sHighestIVMessageIndices, found in the dump's overlay 5 (lines of the lobby's
+        own bank, which keep their numbers in its text file)."""
+        global _JUDGE_LINES
+        if _JUDGE_LINES is None:
+            import contest_data
+            _, o = contest_data.overlay(Rom(version.WORLD_DUMP), 5)
+            want = (122, 123, 124, 127, 125, 126)
+            at = o.find(struct.pack('<6H', *want))
+            assert at >= 0 and o.find(struct.pack('<6H', *want), at + 1) < 0, 'the Stats Judge\'s lines: not once in overlay 5'
+            _JUDGE_LINES = list(want)
+        return _JUDGE_LINES
+
+    @handler('JudgeStats')
+    def h_judge_stats(tr, a, vals, name):
+        """0x2EE JudgeStats slot, total, line, best (pokeplatinum ov5_021F6454.c): the Battle Tower lobby's Stats Judge. total =
+        the six IVs added, best = the highest IV, line = the line naming the stat with it (the first highest; an equal one
+        later takes its place on a coin toss, as Platinum's LCRNG % 2). Black 2's PokePartyGetIV (ov036: 0 the total, 1 the
+        highest, 2-7 HP, Attack, Defense, Speed, Sp. Atk, Sp. Def: Platinum's order) and Random."""
+        slot, total, line, best = (tr.var(v) for v in vals)
+        lines = judge_lines()
+        p = f'{tr.prefix}_{a:04X}_Judge'
+        out = ['// JudgeStats: Platinum\'s Stats Judge on Black 2\'s PokePartyGetIV',
+               f'PokePartyGetIV {slot}, 0, {total}  // the six IVs added',
+               f'PokePartyGetIV {slot}, 2, PL_TMP2  // HP: the best so far', f'WorkSetConst {line}, {lines[0]}']
+        for i in range(1, 6):
+            out += [f'PokePartyGetIV {slot}, {2 + i}, PL_TMP', 'WorkCmpWork PL_TMP2, PL_TMP', f'VMJumpIf CMP_GT, {p}N{i}',
+                    f'VMJumpIf CMP_LT, {p}T{i}', 'Random PL_TMP3, 2  // as high: a coin toss', 'WorkCmpConst PL_TMP3, 0',
+                    f'VMJumpIf CMP_NE, {p}N{i}', f'{p}T{i}:', 'WorkSet PL_TMP2, PL_TMP', f'WorkSetConst {line}, {lines[i]}',
+                    f'{p}N{i}:']
+        return out + [f'WorkSet {best}, PL_TMP2  // the highest IV']
+
+    @handler('SaveExtraData')
+    def h_save_extra(tr, a, vals, name):
+        """0x2D6 SaveExtraData (pokeplatinum SaveDataExtra_Init: the extra save blocks set up before their first save):
+        Black 2's save writes its own blocks."""
+        return ['// SaveExtraData: Black 2\'s save writes its own extra blocks']
+
+    @handler('CheckIsMiscSaveInit')
+    def h_misc_save_init(tr, a, vals, name):
+        """0x2D7 CheckIsMiscSaveInit var: 1 once the save's extra data was set up (the common save asks it after a save
+        that couldn't be overwritten). Black 2's save always has its blocks: 1."""
+        return [f'WorkSetConst {tr.var(vals[0])}, 1  // CheckIsMiscSaveInit: Black 2\'s save has its blocks']
+
+    @handler('258', '259')
+    def h_save_player_task(tr, a, vals, name):
+        """0x258 / 0x259 (pokeplatinum scrcmd.c, around the common save): a task on the player's sprite started and ended
+        while the game saves. Black 2's save has its own: nothing to do."""
+        return [f'// {name}: Platinum\'s player task while saving; Black 2\'s save has its own']
+
+    @handler('GetOverworldWeather')
+    def h_overworld_weather(tr, a, vals, name):
+        """0x315 GetOverworldWeather var (Route 213's Looker scene: rain plays SEQ_SE_DP_T_AME, a sound Black 2 has none for,
+        a counted stub): no rain asked (0); nothing else reads it."""
+        tr.job.approx['GetOverworldWeather (0: the rain\'s sound has no Black 2 sound)'] += 1
+        return [f'WorkSetConst {tr.var(vals[0])}, 0  // GetOverworldWeather: not asked (the rain sound has no Black 2 sound)']
+
+    @handler('Dummy316')
+    def h_dummy316(tr, a, vals, name):
+        return ['// Dummy316: Platinum\'s command does nothing']
+
+    @handler('WaitForTransition')
+    def h_wait_transition(tr, a, vals, name):
+        """0x1F8 TerminateOverworldProcess / WaitForTransition (pokeplatinum): before a Frontier scene starts, the field's
+        process ends. The scene here is a warp (RTReserveScript and Warp just after it), which ends the field itself."""
+        return ['// WaitForTransition: the warp after it ends the field (the scene is a room here)']
+# ---- end plat-stubs
+# ---- plat-records (2026-11-08): the Frontier's records machines (Platinum's global 10450-10455, scripts_battle_frontier_records.s:
+# the Tower lobby's (13, 5), the Factory's (22, 6), the Hall's (7, 8), the Castle's (6, 8), the Arcade's (16, 5)). After the menu
+# (SINGLE, DOUBLE, MULTI) Platinum's OpenFrontierRecordsApp challengeType, facility, species (pokeplatinum applications/frontier/
+# records/main.c DisplayRecords) shows the facility's own records for that type: each row PREV or CURRENT (CURRENT while the
+# facility's streak flag for the type is set) with the latest streak, and RECORD with the record. Black 2 has no such screen, so
+# the same rows show as messages, in the app's own words (its bank, FRONTIER_RECORDS_BANK), with the numbers the Frontier core
+# keeps (plat_frontier.c: Platinum's BattleFrontierStats by its ids, pl_FrontierStatGet; the facilities' streak flags,
+# pl_FrontierStreakFlag, bits as Platinum's), which the Factory, Castle and Arcade write as Platinum does (factory_rules.c,
+# castle_rules.c, arcade_rules.c); the Tower's are Black 2's Subway records (pl_TowerResultsRoom). The screen's fades and its
+# ReturnToField are dropped (the message is on the field). Platinum only (Pearl has no Frontier).
+if version.PLATINUM:
+    FRONTIER_RECORDS_BANK = 627     # pokeplatinum res/text/battle_frontier_records.json (TEXT_BANK_BATTLE_FRONTIER_RECORDS)
+    FRONTIER_FACILITIES = {1: 'Tower', 2: 'Factory', 3: 'Factory', 4: 'Castle', 5: 'Hall', 6: 'Arcade'}   # FACILITY_* (Open: the same)
+
+    def _frontier_records_lines(job, kind):
+        """The first of the facility's lines pl_FrontierRecords shows (pearl_story.inc), added to the zone's text in its order,
+        each in a PREV and a CURRENT copy. Tower (kind 1): Single, Double, Multi w/Trainer, Multi w/friend. Factory (2): Level 50
+        for Single, Double, Multi, then Open Level. Castle (4), Arcade (6): Single, Double, Multi. Built from the app's lines by
+        number (bank FRONTIER_RECORDS_BANK): 21-25 the facilities, 26-28 the types' records, 29 PREV, 30 CURRENT, 31 RECORD,
+        32-33 the Multi's two rooms, 34-36 the Factory's levels and its Rental/Trade column, 38 and 42 "Win streak: N", 40 a
+        number, 41 "N CP", 43 "Games cleared: N" (buffers: 0 the latest, 1 the record, or 0-3 latest, its count, record, its
+        count)."""
+        w = job.gen4_text.bank(FRONTIER_RECORDS_BANK)
+        want = {21: 'Battle Tower', 22: 'Battle Factory', 23: 'Battle Castle', 25: 'Battle Arcade', 26: 'Single Record',
+                27: 'Double Record', 28: 'Multi Record', 29: 'PREV', 30: 'CURRENT', 31: 'RECORD', 32: 'Multi w/Trainer',
+                33: 'Multi w/friend', 34: 'Level 50', 35: 'Open Level', 36: 'Rental/Trade', 38: 'Win streak: {STRVAR_1 53, 0}',
+                40: '{STRVAR_1 53, 0}', 41: '{STRVAR_1 53, 0} CP', 42: 'Win streak: {STRVAR_1 53, 0}',
+                43: 'Games cleared: {STRVAR_1 53, 0}'}
+        assert all(w[k] == v for k, v in want.items()), [(k, w[k]) for k, v in want.items() if w[k] != v]
+        num = lambda n, i: w[n].replace('{STRVAR_1 53, 0}', f'{{STRVAR_1 53, {i}}}')
+        types, now = (26, 27, 28), (29, 30)
+        if kind == 1:
+            rows = lambda pv: f'{w[pv]} {num(38, 0)}\\f{w[31]} {num(38, 1)}'
+            lines = [f'{w[21]}\\n{w[types[t]]}\\f{rows(pv)}' for t in (0, 1) for pv in now]
+            lines += [f'{w[21]}\\n{w[28]}\\f{w[32]}\\f{rows(pv)}\\r' for pv in now]
+            lines += [f'{w[33]}\\n{rows(pv)}' for pv in now]
+        elif kind == 2:
+            rows = lambda pv: f'{w[pv]} {num(38, 0)}\\f{w[36]} {num(40, 1)}\\r{w[31]} {num(38, 2)}\\n{w[36]} {num(40, 3)}'
+            lines = [f'{w[22]}\\n{w[types[t]]}\\r{w[34]}\\n{rows(pv)}\\r' for t in range(3) for pv in now]
+            lines += [f'{w[35]}\\n{rows(pv)}' for pv in now]
+        elif kind == 4:
+            lines = [f'{w[23]}\\n{w[types[t]]}\\r{w[pv]} {num(42, 0)}\\n{num(41, 1)}\\r{w[31]} {num(42, 2)}\\n{num(41, 3)}'
+                     for t in range(3) for pv in now]
+        elif kind == 5:                 # (plat-fix2) the Hall: one PREV line per type (its screen has no CURRENT row); the
+            mons = w[39].replace('{STRVAR_1 0, 0}', '{STRVAR_1 0, 2}')     # species in word 2, the numbers in 0 and 1
+            assert mons != w[39], w[39]
+            lines = [f'{w[24]}\\n{w[types[t]]}\\r{mons}\\n{w[29]} {num(38, 0)}\\f{w[31]} {num(38, 1)}' for t in range(3)]
+        else:
+            lines = [f'{w[25]}\\n{w[types[t]]}\\f{w[pv]} {num(43, 0)}\\f{w[31]} {num(43, 1)}' for t in range(3) for pv in now]
+        ns = [job.line_text(('frontier_records', kind, k), t) for k, t in enumerate(lines)]
+        assert ns == list(range(ns[0], ns[0] + len(lines))), ns          # (the macro counts from the first)
+        return ns[0]
+
+    def _frontier_records_facility(tr, a, var):
+        """The facility values var can hold at the command at a: a value, or the SetVarFromValue values of var in the code the
+        same entries reach (each machine's entry sets it once: FrontierRecords_BattleTower .. _BattleArcade)."""
+        if var < 0x4000:
+            return {var}
+        d, pd, ents = tr.d, tr.job.pd, tr.reach_from.get(a, set())
+        return {args[1][1] for x, (e, op, args) in d.insns.items() if tr.reach_from.get(x, set()) & ents
+                and pd.cmd_name(op) == 'SetVarFromValue' and args[0][1] == var}
+
+    @handler('OpenFrontierRecordsApp')
+    def h_frontier_records(tr, a, vals, name):
+        ctype, facility, species = vals
+        fac = _frontier_records_facility(tr, a, facility)
+        kinds = {FRONTIER_FACILITIES.get(f) for f in fac}
+        if len(kinds) != 1 or None in kinds:
+            tr.job.stubs[f'OpenFrontierRecordsApp (facility {sorted(fac)}: not one known facility)'] += 1
+            return [f'pl_stub OpenFrontierRecordsApp  // facility {sorted(fac)}: not one known facility (no records shown)']
+        kind = kinds.pop()
+        if kind == 'Hall' and version.HALL_RECORDS_MACHINE:
+            first = _frontier_records_lines(tr.job, 5)
+            return [f'pl_HallRecordShow {tr.var(ctype)}, {tr.var(species)}, {first}  // OpenFrontierRecordsApp: the Battle '
+                    f'Hall\'s record of the species as a message']
+        if kind == 'Hall':
+            # The Hall's records are a species' (its record and, for the latest species, the latest streak): the machine's
+            # species list (ShowBattleHallRecordMonSelectionMenu) answers EXIT here, so this is never reached, and no script
+            # command reads a species' record (PlatHall_GetRecordForSpecies has no op)
+            tr.job.stubs['OpenFrontierRecordsApp for the Hall (its species list answers EXIT; no op reads a species\' record)'] += 1
+            return [f'pl_stub OpenFrontierRecordsApp  // the Battle Hall\'s records of species {tr.var(species)}: never reached '
+                    f'(its species list answers EXIT)']
+        k = {'Tower': 1, 'Factory': 2, 'Castle': 4, 'Arcade': 6}[kind]
+        first = _frontier_records_lines(tr.job, k)
+        return [f'pl_FrontierRecords {k}, {tr.var(ctype)}, {first}  // OpenFrontierRecordsApp: the Battle {kind}\'s records '
+                f'as messages']
+
+    def _frontier_records_drops(tr):
+        """{address: what it says}: the ReturnToField after OpenFrontierRecordsApp (no Black 2 screen ran: the field is open),
+        and, where the records show as a message, the FadeScreen in after it and the FadeScreen out before the Call that
+        opens them (CloseMessage and WaitFadeScreen between: FrontierRecords_OpenRecordDisplay, _OpenApp). The Hall's copy
+        keeps its fades (nothing shows there)."""
+        if getattr(tr, '_fr_records', None) is None:
+            d, pd = tr.d, tr.job.pd
+            name = lambda x: pd.cmd_name(d.insns[x][1]) if x in d.insns else None
+            nxt = {x: e for x, (e, op, args) in d.insns.items()}
+            prv = {e: x for x, e in nxt.items()}
+            out = {}
+            for c in [x for x in d.insns if name(x) == 'OpenFrontierRecordsApp']:
+                kinds = {FRONTIER_FACILITIES.get(f) for f in _frontier_records_facility(tr, c, d.insns[c][2][1][1])}
+                shown = len(kinds) == 1 and kinds <= ({'Tower', 'Factory', 'Castle', 'Arcade'} |
+                                                      ({'Hall'} if version.HALL_RECORDS_MACHINE else set()))
+                r = nxt.get(c)
+                f1 = nxt.get(r)
+                if name(r) == 'ReturnToField':
+                    out[r] = ('the records were a message' if shown else 'no Black 2 screen ran')
+                    if shown and name(f1) == 'FadeScreen' and d.insns[f1][2][2][1] == 1:
+                        out[f1] = 'the records show as a message on the field'
+                for x, (e, op, args) in d.insns.items():
+                    if shown and name(x) == 'Call' and args and args[0] == ('rel', c):
+                        p = prv.get(x)
+                        while name(p) in ('CloseMessage', 'WaitFadeScreen'):
+                            p = prv.get(p)
+                        if name(p) == 'FadeScreen' and d.insns[p][2][2][1] == 0:
+                            out[p] = 'the records show as a message on the field'
+            tr._fr_records = out
+        return tr._fr_records
+
+    _h_fade_frrec_base, _h_return_field_frrec_base = HANDLERS['FadeScreen'], HANDLERS['ReturnToField']
+
+    @handler('FadeScreen')
+    def h_fade_frontier_records(tr, a, vals, name):
+        if a in _frontier_records_drops(tr):
+            return [f'// FadeScreen {vals[0]}, {vals[1]}, {vals[2]}, {vals[3]:#x}: {_frontier_records_drops(tr)[a]}']
+        return _h_fade_frrec_base(tr, a, vals, name)
+
+    @handler('ReturnToField')
+    def h_return_field_frontier_records(tr, a, vals, name):
+        if a in _frontier_records_drops(tr):
+            return [f'// ReturnToField: the field stayed open (OpenFrontierRecordsApp: {_frontier_records_drops(tr)[a]})']
+        return _h_return_field_frrec_base(tr, a, vals, name)
+# ---- end plat-records
+# ---- plat-fix2 (2026-11-11): the Frontier's and the Tower's last differences (version.LINK_STARTS_CANCEL, TOWER_INTRO_ONE_A).
+def _prev_insn_fix2(tr, a):
+    """The instruction before address a in the file (address order), or None."""
+    if getattr(tr, '_prev_fix2', None) is None:
+        tr._prev_fix2 = {e: x for x, (e, op, args) in tr.d.insns.items()}
+    return tr._prev_fix2.get(a)
+
+
+if version.LINK_STARTS_CANCEL:
+    @handler('StartBattleClient', 'StartBattleServer')
+    def h_link_start_closed(tr, a, vals, name):
+        """Gen 4 StartBattleClient / StartBattleServer type, a, b, result (the wireless link's search for a group): the link is
+        closed, so the answer is COMM_CLUB_RET_CANCEL (1), as when the player backs out with nobody there. Platinum's scripts
+        then go back to their "join a group or become the leader" menu (pokeplatinum scripts_battle_factory.s
+        BattleFactory_CancelJoiningGroup and the same in the Hall, Castle, Arcade, Tower, Poffin house, Contests, the Centers'
+        2F). As a stub the result kept the menu's Yes (0, connected): the Frontier's Multi started with no partner."""
+        return [f'pl_SetVarFromValue {tr.var(vals[3])}, 1  // Platinum {name} {", ".join(map(str, vals[:3]))}: the wireless '
+                f'link is closed (COMM_CLUB_RET_CANCEL: nobody there)']
+
+if version.TOWER_INTRO_ONE_A:
+    _h_wait_ab_tower_base = HANDLERS['WaitABPress']
+
+    @handler('WaitABPress')
+    def h_wait_ab_after_tower_intro(tr, a, vals, name):
+        """The WaitABPress right after PrintBattleTowerIntroMessage: Black 2's balloon (BSubwayCmd_Tool 352, EventBSubwayTrainerMsg)
+        waits for A or B and closes itself, so the wait asked for a second A (as plat-test found for the four facilities)."""
+        p = _prev_insn_fix2(tr, a)
+        if p is not None and tr.job.pd.cmd_name(tr.d.insns[p][1]) == 'PrintBattleTowerIntroMessage':
+            return ["// WaitABPress: the Tower opponent's balloon waited for A itself"]
+        return _h_wait_ab_tower_base(tr, a, vals, name)
+# ---- end plat-fix2
+
+
 # ---------------------------------------------------------------- whole files
 
 def musical_lines():
@@ -4134,6 +7521,18 @@ def translate(pd, zone, ids):
         import turnback
         entry_label[tb] = 'TurnbackDoors'
         closed += turnback.doors_code(pid)
+    villa = pd.villa_init(pid)                      # VILLA_VISITOR_ZONES (Platinum): the day's Villa visitor
+    if villa:
+        entry_label[villa[0]] = 'PearlVillaVisitor'
+        closed += ['', 'PearlVillaVisitor:                // zone init (before Platinum\'s): the Villa\'s visitor of the day '
+                       '(VILLA_VISITOR_ZONES)'] + villa[1]
+    # ---- plat-frontier: the Battle Frontier's scenes this room hosts (block "plat-frontier" below; Platinum only)
+    if version.PLATINUM:
+        for k, label, lines in frontier_entries(job, pd, zone):
+            if k is not None:
+                entry_label[k] = label
+            closed += lines
+    # ---- end plat-frontier
     ending = pd.game_clear_ids(pid)                 # GAME_CLEAR_ZONE: Black 2's game clear's two ending scripts
     if ending:
         entry_label[ending[0]] = 'PearlEndingBeforeCredits'
@@ -4175,7 +7574,10 @@ def translate(pd, zone, ids):
         _, start_arrive = pd.arrival_ids(start['id'])
         tail += ['', f'#define PEARL_START_ZONE {pd.b2_zone[start["id"]]}   // {z0}',
                  f'#define PEARL_START_X {x0}', f'#define PEARL_START_Z {z_0}', f'#define PEARL_START_DIR {d0}',
-                 f'#define PEARL_START_ARRIVE {start_arrive}   // its PearlArrive', '#include "pearl/newgame.inc"']
+                 f'#define PEARL_START_ARRIVE {start_arrive}   // its PearlArrive']
+        if job.label_common(PEARL_NEW_GAME_SCRIPT) != 'C377_1_S1':      # (newgame.inc names Pearl's label; Platinum's file has another number)
+            tail += [f'#define C377_1_S1 {job.label_common(PEARL_NEW_GAME_SCRIPT)}']
+        tail += ['#include "pearl/newgame.inc"']
     src = head + body + [l for _, _, c in conts for l in c] + [l for _, _, c in proxies for l in c] + closed + subs + tail + \
         ['', '    .balign 4, 0', '']
     text = [job.gen4_text.b2_line(t, v) for t, v in job.text]
@@ -4281,6 +7683,44 @@ def report(pd, ids):
     return 0
 
 
+# ---- plat-look (2026-11-08): Veilstone's walk into the Galactic Warehouse (Platinum's file 131,
+# VeilstoneCity_EnterWarehouseZ595/Z597: the player one step to z 596, east 5 behind the Department Store, north 5 up
+# the warehouse's steps). Black 2's camera is 237 units from the player, Platinum's 667: on that street Black 2's eye
+# passes 20-60 units over the store's rooftop balloons (build model 214, material c7_s04_b_lm4, 146-201 units up) and
+# they fill 30-52 % of the screen (plat-test's frames; offline ray cast work/agents/plat-look/scratch/store_camera.py),
+# where Platinum's eye, on the same line of sight but far behind, shows them small (6 %). For the walk the camera stays
+# on the player (EvCameraInit without EvCameraUnbind: the bound target wins over the move's, ov036 field_camera.c
+# TARGET_REL) at the field's pitch, 59 degrees, and pulls back to 340 units over the walk's first 16 frames (the
+# balloons at most 10 %, nothing nearer than 100 units; 400 units: 4 %); back to the field's camera behind the fade-out,
+# before the warp.
+if version.PLATINUM:
+    WAREHOUSE_FILE = 131                                   # MAP_VEILSTONE's script file
+    WAREHOUSE_WALK = {0x8A9, 0x8C3}                        # each branch's first ApplyMovement (Looker's)
+    WAREHOUSE_WARP = 0x8FF                                 # Warp MAP_HEADER_VEILSTONE_CITY_GALACTIC_WAREHOUSE, 8, 11
+    WAREHOUSE_CAM = f'{0x29FE}, 0, {340 << 12:#x}'          # pitch (maplook 'tilt': Pearl's 59), yaw, distance
+
+    _h_apply_movement_look = HANDLERS['ApplyMovement']
+
+    @handler('ApplyMovement')
+    def h_warehouse_walk_camera(tr, a, vals, name):
+        out = _h_apply_movement_look(tr, a, vals, name)
+        if tr.f == WAREHOUSE_FILE and a in WAREHOUSE_WALK:
+            out = ['EvCameraInit  // (plat-look) the walk behind the Department Store: the camera stays on the player',
+                   f'EvCameraMoveTo {WAREHOUSE_CAM}, 0, 0, 0, 16  // and pulls back to 340 units (its target: the player)'] + out
+        return out
+
+    _h_warp_look = HANDLERS['Warp']
+
+    @handler('Warp')
+    def h_warehouse_warp_camera(tr, a, vals, name):
+        out = _h_warp_look(tr, a, vals, name)
+        if tr.f == WAREHOUSE_FILE and a == WAREHOUSE_WARP:
+            out = ['EvCameraReturn 1  // (plat-look) the field\'s camera again, behind the fade', 'EvCameraWait',
+                   'EvCameraEnd'] + out
+        return out
+# ---- end plat-look
+
+
 # every handler is registered: the item arguments of ITEM_ARG's commands go through item_value
 for _n, _k in ITEM_ARG.items():
     if _n in HANDLERS:
@@ -4297,6 +7737,33 @@ def main(argv):
         src, text, job = translate(pd, z, ids)
         print('\n'.join(src))
         print(summary(job), file=sys.stderr)
+        return 0
+    if argv[:1] == ['all']:         # every zone the world installs (a Platinum tree's first run: Pearl's are in src/, by Pearl's numbers)
+        written = sorted({z['id'] for z in pd.zones if z['id'] in pd.b2_zone})
+        if version.PLATINUM:        # (as Pearl: a zone Pearl installs with no file of this generator's keeps its own: the shared Center 2F,
+            pearl_world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))      # the Underground, unused rooms)
+            pearl_world = set(pearl_world['zones']) | set(pearl_world['rooms']['zones'])
+            mine = lambda z: os.path.exists(os.path.join(ROOT, 'src', 'field_scripts', f'{pd.script_file(z):04d}_pearl_{slug(z["name"])}.s'))
+            for zid in [z for z in written if str(z) in pearl_world and not mine(pd.zones[z])]:
+                written.remove(zid)
+                for d, n, ext in ((SRC_SCRIPTS, pd.script_file(pd.zones[zid]), '.s'), (SRC_TEXT, pd.text_file(pd.zones[zid]), '.txt')):
+                    old = os.path.join(d, f'{n:04d}_pearl_{slug(pd.zones[zid]["name"])}{ext}')
+                    if os.path.exists(old):
+                        os.replace(old, os.path.expanduser(f'~/.Trash/{os.path.basename(old)}'))
+        problems, kept = [], 0
+        for zid in written:
+            try:
+                p, tp, job = write_zone(pd, ids, pd.zones[zid])
+                if pd.zone_same(pd.zones[zid], p, tp):     # Pearl's files, as they are
+                    kept += 1
+                    os.replace(p, os.path.expanduser(f'~/.Trash/{os.path.basename(p)}'))
+                    os.replace(tp, os.path.expanduser(f'~/.Trash/{os.path.basename(tp)}'))
+                    continue
+                assemble(p)
+            except BaseException as e:
+                problems.append(f'{pd.zones[zid]["name"]}: {type(e).__name__}: {str(e)[:200]}')
+        print(f'{len(written)} zones: {kept} keep Pearl\'s files, {len(written) - kept} written -> {os.path.relpath(SRC_SCRIPTS, ROOT)}, {len(problems)} with problems')
+        print('\n'.join(problems[:40]))
         return 0
     if argv[:1] in (['zones'], ['chapter']):
         for a in (CHAPTERS[int(argv[1]) if argv[1].isdigit() else argv[1]] if argv[0] == 'chapter' else argv[1:]):

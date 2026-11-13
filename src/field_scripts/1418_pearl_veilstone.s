@@ -814,10 +814,10 @@ P131_S26:
 P131_0A59:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
-    pl_stub CheckPartyHasSpecies2  // Pearl 0x262 CheckPokemonInParty 386, 32780: not translated yet
+    PokePartyFindBySpecies 386, PVAR_800C, PL_TMP  // CheckPartyHasSpecies (1 = yes)
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P131_0B19
-    pl_stub ChangeDeoxysForm  // Pearl 0x263 SetDeoxysForm 3: not translated yet
+    pl_ChangeDeoxysForm 3  // each party Deoxys to form 3
     pl_PlayCry 386
     pl_msg_sys 37
     pl_WaitButton
@@ -830,10 +830,10 @@ P131_S27:
 P131_0A89:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
-    pl_stub CheckPartyHasSpecies2  // Pearl 0x262 CheckPokemonInParty 386, 32780: not translated yet
+    PokePartyFindBySpecies 386, PVAR_800C, PL_TMP  // CheckPartyHasSpecies (1 = yes)
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P131_0B19
-    pl_stub ChangeDeoxysForm  // Pearl 0x263 SetDeoxysForm 2: not translated yet
+    pl_ChangeDeoxysForm 2  // each party Deoxys to form 2
     pl_PlayCry 386
     pl_msg_sys 38
     pl_WaitButton
@@ -846,10 +846,10 @@ P131_S28:
 P131_0AB9:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
-    pl_stub CheckPartyHasSpecies2  // Pearl 0x262 CheckPokemonInParty 386, 32780: not translated yet
+    PokePartyFindBySpecies 386, PVAR_800C, PL_TMP  // CheckPartyHasSpecies (1 = yes)
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P131_0B19
-    pl_stub ChangeDeoxysForm  // Pearl 0x263 SetDeoxysForm 1: not translated yet
+    pl_ChangeDeoxysForm 1  // each party Deoxys to form 1
     pl_PlayCry 386
     pl_msg_sys 39
     pl_WaitButton
@@ -862,10 +862,10 @@ P131_S29:
 P131_0AE9:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
-    pl_stub CheckPartyHasSpecies2  // Pearl 0x262 CheckPokemonInParty 386, 32780: not translated yet
+    PokePartyFindBySpecies 386, PVAR_800C, PL_TMP  // CheckPartyHasSpecies (1 = yes)
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P131_0B19
-    pl_stub ChangeDeoxysForm  // Pearl 0x263 SetDeoxysForm 0: not translated yet
+    pl_ChangeDeoxysForm 0  // each party Deoxys to form 0
     pl_PlayCry 386
     pl_msg_sys 40
     pl_WaitButton

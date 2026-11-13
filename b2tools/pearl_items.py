@@ -5,6 +5,7 @@ the global scripts that give them.
                                            src/text/script/1303_global_item_balls.txt, 1304_global_hidden_items.txt, 1302_global_mart.txt
     python3 pearl_items.py --check         the same, compared: nonzero exit if a file is out of date
     python3 pearl_items.py --list          every ball and hidden item: zone, tile, item, count, flag, range
+    python3 pearl_items.py --verify        the installed file 1241 against the table: items, counts, one flag each
 
 Item balls: Pearl's objects with a script of 7000+n. Pearl's file 370 entry n+1 sets the item and count, its entry 256 is
 the shared routine (found line, Bag check, the ball removed). Black 2's item balls are the same idea: a person with the
@@ -36,6 +37,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from gen4rom import Rom  # noqa: E402
 
 BALL_FILE, HIDDEN_FILE = 370, 374     # Pearl's script files (pearl_story SCRIPT_RANGES)
@@ -44,8 +46,20 @@ BALL_SCRIPTS, HIDDEN_SCRIPTS = 1240, 1241     # Black 2's a/0/5/6 files for glob
 BALL_TEXT, HIDDEN_TEXT = 1303, 1304   # a/0/0/3 (decomp include/pearlb2.h PEARLB2_TEXT_GLOBAL_7000, _8000)
 MART_TEXT = 1302                      # a/0/0/3 (decomp include/pearlb2.h PEARLB2_TEXT_GLOBAL_10110)
 HIDDEN_TABLE, HIDDEN_COUNT = 0x020F2DB4, 229     # Pearl's hidden items (arm9): u16 item, u8 count, u8 range, u16 0, u16 n
-HIDDEN_FLAG_PEARL = 730               # Pearl's flag of hidden item n: 730 + n (Black 2: pearl_ids, 2820 + n)
+# Platinum's own table (2026-11-07): 257 records, numbers 0-228 and 256-283, in its own arm9 (pokeplatinum
+# include/data/field/hidden_items.h gHiddenItems). File 1241 then holds entries 0-283; 229-255 have no record.
+if version.PLATINUM:
+    HIDDEN_TABLE, HIDDEN_RECORDS, HIDDEN_COUNT = 0x020EA378, 257, 284
+else:
+    HIDDEN_RECORDS = HIDDEN_COUNT
+HIDDEN_FLAG_PEARL = 730               # Pearl's flag of hidden item n: 730 + n (Black 2: pearl_ids, 2820 + n; hidden_flag)
 NORMAL_MART_COUNT, SPECIAL_MART_COUNT = 19, 19   # pokediamond sNormalMartBadgeThresholds, sSpecialMartPointers
+# ---- plat-fixes (2026-11-07): Platinum's Marts are its own tables (pokeplatinum include/data/mart_items.h
+# PokeMartCommonItems, PokeMartSpecialties), read from its own arm9: the same badge list and lists 0-18 as Pearl's, and a
+# 20th, Veilstone Dept. Store B1F's berries (MART_SPECIALTIES_ID_VEILSTONE_B1F). Pearl and Diamond read Pearl's arm9.
+if version.PLATINUM:
+    SPECIAL_MART_COUNT = 20
+# ---- end plat-fixes
 BADGE_STEPS = 6                       # Pearl's "param" 1-6 (0 badges; 1-2; 3-4; 5-6; 7; 8): Black 2's six badge lists
 ITEM_POKE_BALL = 4
 
@@ -56,27 +70,51 @@ def arm9():
     """(bytes of Pearl's ARM9 binary, its RAM address)."""
     global _arm9
     if _arm9 is None:
-        d = Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).data
+        # (its tables are read at Pearl's addresses: Platinum keeps Pearl's hidden items and Marts until its own tables are found, notes/PORT_AUDIT.md)
+        d = Rom(os.path.join(ROOT, 'roms', 'pearl.nds') if version.PLATINUM else version.WORLD_DUMP).data
         off, _, ram, size = struct.unpack_from('<4I', d, 0x20)
         _arm9 = d[off:off + size], ram
     return _arm9
 
 
+_world_arm9 = None
+
+
+def world_arm9():
+    """(bytes of the world dump's ARM9 binary, its RAM address): Pearl's, or Platinum's own for its hidden items."""
+    global _world_arm9
+    if _world_arm9 is None:
+        d = Rom(version.WORLD_DUMP).data
+        off, _, ram, size = struct.unpack_from('<4I', d, 0x20)
+        _world_arm9 = d[off:off + size], ram
+    return _world_arm9
+
+
 def hidden_items():
-    """{n: {'item', 'count', 'range'}} of Pearl's hidden-item table (script 8000 + n)."""
-    a, ram = arm9()
+    """{n: {'item', 'count', 'range'}} of the world's hidden-item table (script 8000 + n): Pearl's, or Platinum's own."""
+    a, ram = world_arm9()
     out = {}
-    for i in range(HIDDEN_COUNT):
+    for i in range(HIDDEN_RECORDS):
         item, count, rng, pad, n = struct.unpack_from('<HBBHH', a, HIDDEN_TABLE - ram + 8 * i)
-        assert pad == 0 and n not in out and n < HIDDEN_COUNT, f'hidden item record {i}: {(item, count, rng, pad, n)}'
+        assert pad == 0 and n not in out and n < HIDDEN_COUNT and 0 < item, f'hidden item record {i}: {(item, count, rng, pad, n)}'
         out[n] = dict(item=item, count=count, range=rng)
+    end = struct.unpack_from('<HBBHH', a, HIDDEN_TABLE - ram + 8 * HIDDEN_RECORDS)
+    assert end[3] != 0 or end[4] >= HIDDEN_COUNT, f'the table goes on past {HIDDEN_RECORDS} records: {end}'
     return out
+
+
+def hidden_flag(n):
+    """The Black 2 flag of hidden item n, the field's rule (PearlB2_HiddenItemFlag, src/pearlb2/resident/items.c: 2820 + n;
+    Platinum's 256-283, past the saved flags that way: pearl_ids.HIDDEN_EXTRA, patches/platinum_hidden_items.py)."""
+    import pearl_ids
+    first, flag = pearl_ids.HIDDEN_EXTRA
+    return flag + n - first if n >= first else 2820 + n
 
 
 def mart_normal():
     """[(Pearl item, step 1-6)] of Pearl's Mart, in its order: pokediamond sNormalMartBadgeThresholds, found in the dump
-    by its first two rows (Poké Ball at 1, Great Ball at 3)."""
-    a, _ = arm9()
+    by its first two rows (Poké Ball at 1, Great Ball at 3). (Platinum: its own, PokeMartCommonItems.)"""
+    a, _ = world_arm9() if version.PLATINUM else arm9()
     at = a.find(struct.pack('<4H', ITEM_POKE_BALL, 1, 3, 3))
     assert at >= 0 and a.find(struct.pack('<4H', ITEM_POKE_BALL, 1, 3, 3), at + 1) < 0, 'Mart table not found once'
     rows = [struct.unpack_from('<HH', a, at + 4 * i) for i in range(NORMAL_MART_COUNT)]
@@ -92,8 +130,10 @@ def mart_lists():
 
 def mart_special():
     """Pearl's 19 special lists (SpecialMart n), found in the dump: a table of 19 pointers whose list 8 begins with
-    Potion, Super Potion and list 9 with Poké Ball, Great Ball (the Veilstone Dept. Store's first counters)."""
-    a, ram = arm9()
+    Potion, Super Potion and list 9 with Poké Ball, Great Ball (the Veilstone Dept. Store's first counters). (Platinum:
+    its own 20, PokeMartSpecialties.) (v101-story) Pearl's and Diamond's 1.0.1: version.STORE_TMS after Pearl's own;
+    then version.STORE_ITEMS (the Game Corner's held-item prizes, 2F)."""
+    a, ram = world_arm9() if version.PLATINUM else arm9()
 
     def items(p):
         o, out = p - ram, []
@@ -116,7 +156,12 @@ def mart_special():
         except (AssertionError, struct.error):
             continue
     assert len(found) == 1, f'{len(found)} special Mart tables in the dump'
-    return [items(p) for p in found[0]]
+    out = [items(p) for p in found[0]]
+    for store in (version.STORE_TMS, version.STORE_ITEMS):   # (v101-story, 1.0.1) the Game Corner's prize TMs at
+        for n, extra in store.items():                       # Veilstone 3F; its held-item prizes at 2F
+            assert not set(extra) & set(out[n]), f'SpecialMart {n} sells {extra} already'
+            out[n] = out[n] + list(extra)
+    return out
 
 
 def b2_item(item):
@@ -181,15 +226,20 @@ def hidden_script(pd, ids):
     tr = pearl_story.FileTr(job, HIDDEN_FILE, HIDDEN_BANK, mode='common',
                             starts=[('H_Find', pd.disasm(HIDDEN_FILE).entries[0], 1)], prefix='H')
     code = tr.lines()
-    out = [f"// Global scripts 8000-{8000 + HIDDEN_COUNT - 1} (a/0/5/6 entry {HIDDEN_SCRIPTS}): Pearl's hidden items "
+    out = [f"// Global scripts 8000-{8000 + HIDDEN_COUNT - 1} (a/0/5/6 entry {HIDDEN_SCRIPTS}): {'Platinum' if version.PLATINUM else 'Pearl'}'s hidden items "
            f"(arm9 table {HIDDEN_TABLE:#x}) and file {HIDDEN_FILE}'s routine.", '// Written by b2tools/pearl_items.py: '
            f'do not edit. Text: a/0/0/3 file {HIDDEN_TEXT}.'] + HEAD
     out += [f'    ScriptEntry Hidden_{n}' for n in range(HIDDEN_COUNT)] + ['    ScriptEntriesEnd', '']
     for n in range(HIDDEN_COUNT):
+        if n not in table:                      # (Platinum's 229-255: no record, no zone uses them)
+            out += [f'Hidden_{n}:   // no record in the table', '    VMHalt', '']
+            continue
         r = table[n]
         item, note = pearl_story.item_value(r['item'])
-        flag = ids.flag_value(HIDDEN_FLAG_PEARL + n)
-        out += [f'Hidden_{n}:   // Pearl script {8000 + n}: {r["count"]} of item {r["item"]}, range {r["range"]}' + note,
+        flag = hidden_flag(n)
+        k = f'0x{HIDDEN_FLAG_PEARL + n:04X}'
+        assert k not in ids.reg['flags'] or ids.reg['flags'][k]['b2'] == flag, f'hidden item {n}: registry {ids.reg["flags"][k]}, field {flag}'
+        out += [f'Hidden_{n}:   // {"Platinum" if version.PLATINUM else "Pearl"} script {8000 + n}: {r["count"]} of item {r["item"]}, range {r["range"]}' + note,
                 f'    WorkSet PVAR_8000, {item}', f'    WorkSet PVAR_8001, {r["count"]}',
                 f'    WorkSet PVAR_8002, {flag}', '    VMJump H_Start', '']
     # (Pearl: the field plays the select sound and starts the routine with these works; Black 2's own hidden items
@@ -221,7 +271,10 @@ def outputs():
     ids = pearl_ids.Ids()
     b, btext, bwhy = ball_script(pd, ids)
     h, htext, hwhy = hidden_script(pd, ids)
-    src, txt = os.path.join(ROOT, 'src', 'field_scripts'), os.path.join(ROOT, 'src', 'text', 'script')
+    # (Platinum: into work/platinum/src, from its own ball file, which version.sources installs over Pearl's)
+    src = version.generated_folder(os.path.join(ROOT, 'src', 'field_scripts'))
+    txt = version.generated_folder(os.path.join(ROOT, 'src', 'text', 'script'))
+    os.makedirs(src, exist_ok=True); os.makedirs(txt, exist_ok=True)
     return {os.path.join(src, f'{BALL_SCRIPTS}_global_item_balls.s'): '\n'.join(b),
             os.path.join(src, f'{HIDDEN_SCRIPTS}_global_hidden_items.s'): '\n'.join(h),
             os.path.join(txt, f'{BALL_TEXT}_global_item_balls.txt'):
@@ -264,11 +317,49 @@ def world():
                 r = table[n]
                 rows.append(dict(kind='hidden', zone=z['name'], pearl_zone=z['id'], b2_zone=pd.b2_zone.get(z['id']),
                                  x=b['x'], z=b['z'], item=r['item'], b2_item=b2_item(r['item']), count=r['count'],
-                                 flag=ids.flag_value(HIDDEN_FLAG_PEARL + n), range=r['range'], script=b['script']))
+                                 flag=hidden_flag(n), range=r['range'], script=b['script']))
     return rows
 
 
+def verify():
+    """The installed hidden items against the world's own table, offline (2026-11-07, for Platinum's): every hidden-item sign
+    of every zone runs an entry of file 1241 that gives the table's item and count on the field's flag, and no two hidden items
+    or item balls share a flag. Returns the problems."""
+    import re
+    path = next(p for p in version.sources(os.path.join(ROOT, 'src', 'field_scripts'), '.s')
+                if os.path.basename(p).startswith(f'{HIDDEN_SCRIPTS}_'))
+    src = open(path, encoding='utf-8').read()
+    entries = re.findall(r'^\s*ScriptEntry (\w+)', src, re.M)
+    got = {int(n): (int(i) if i.isdigit() else i, int(c), int(f)) for n, i, c, f in re.findall(
+        r'^Hidden_(\d+):.*\n\s+WorkSet PVAR_8000, (\w+)\n\s+WorkSet PVAR_8001, (\d+)\n\s+WorkSet PVAR_8002, (\d+)', src, re.M)}
+    import pearl_story
+    table, rows, bad = hidden_items(), world(), []
+    if entries != [f'Hidden_{n}' for n in range(HIDDEN_COUNT)]:
+        bad.append(f'{path}: {len(entries)} entries, not Hidden_0-{HIDDEN_COUNT - 1}')
+    for n, r in table.items():
+        want = (pearl_story.item_value(r['item'])[0], r['count'], hidden_flag(n))
+        if got.get(n) != want:
+            bad.append(f'hidden item {n}: file 1241 gives {got.get(n)}, the table {want}')
+    hidden = [r for r in rows if r['kind'] == 'hidden']
+    for r in hidden:
+        if r['script'] - 8000 not in table:
+            bad.append(f'{r["zone"]} ({r["x"]}, {r["z"]}): script {r["script"]} has no record')
+    owner = {}
+    for r in rows:
+        k = (r['kind'], r['script'])
+        if owner.setdefault(r['flag'], k) != k:
+            bad.append(f'flag {r["flag"]}: {owner[r["flag"]]} and {k}')
+    print(f'{os.path.relpath(path, ROOT)}: {len(table)} records, {len(hidden)} hidden-item signs ({len({r["script"] for r in hidden})} '
+          f'scripts), {len(rows) - len(hidden)} balls; flags {len(owner)}, hidden {min(r["flag"] for r in hidden)}-'
+          f'{max(r["flag"] for r in hidden)}; {len(bad)} problems')
+    return bad
+
+
 def main(argv):
+    if '--verify' in argv:
+        bad = verify()
+        print('\n'.join(bad[:40]))
+        return 1 if bad else 0
     if '--list' in argv:
         for r in world():
             print(json.dumps(r))

@@ -224,7 +224,7 @@ P1009_02AD:
     pl_LockAll
     pl_msg_sys 12
     pl_msg_sys 13
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 18, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 18, 1, 0, 1, PVAR_800C
     ListMenuAdd 17, 65535, 0  // Pearl AddMenuEntry 263, 0
     ListMenuAdd 18, 65535, 1  // Pearl AddMenuEntry 264, 1
     ListMenuAdd 19, 65535, 2  // Pearl AddMenuEntry 265, 2

@@ -24,7 +24,7 @@ P426_0010:
     pl_BufferPartyMonSpecies 0, PVAR_8002
     pl_BufferPlayerName 1
     pl_BufferPartyMonNickname 2, PVAR_8002
-    pl_stub GetPartyMonFootprintType  // Pearl 0x23A GetPokemonFootprint 32768, 32769, 32770: not translated yet
+    pl_GetPartyMonFootprintType PVAR_8000, PVAR_8001, PVAR_8002  // GetPartyMonFootprintType
     pl_CheckFlag PFLAG_00F9
     pl_GoToIf 1, P426_004B
     pl_SetFlag PFLAG_00F9
@@ -395,13 +395,13 @@ P426_0531:
     pl_GoTo P426_0555
 
 P426_053A:
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 69: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x2a  // GetPartyMonRibbon: the Footprint Ribbon
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P426_05FE
     pl_GoTo P426_05A1
 
 P426_0555:
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 69: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x2a  // GetPartyMonRibbon: the Footprint Ribbon
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P426_062F
     pl_GoTo P426_05C0
@@ -411,7 +411,7 @@ P426_0570:
     PokePartyGetHappiness PVAR_800C, PVAR_8002
     pl_CompareVarToValue PVAR_800C, 255
     pl_GoToIf 0, P426_05DF
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 69: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x2a  // GetPartyMonRibbon: the Footprint Ribbon
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P426_0660
     pl_GoTo P426_05DF
@@ -458,7 +458,7 @@ P426_05FE:
     pl_PlayFanfare SEQ_ME_POKEGET  // Pearl SEQ_FANFA1
     pl_msg_talk 8
     pl_WaitFanfare
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 69: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x2a  // SetPartyMonRibbon: the Footprint Ribbon
     pl_msg_talk 9
     pl_WaitButton
     pl_CloseMessage
@@ -474,7 +474,7 @@ P426_062F:
     pl_PlayFanfare SEQ_ME_POKEGET  // Pearl SEQ_FANFA1
     pl_msg_talk 8
     pl_WaitFanfare
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 69: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x2a  // SetPartyMonRibbon: the Footprint Ribbon
     pl_msg_talk 9
     pl_WaitButton
     pl_CloseMessage
@@ -490,7 +490,7 @@ P426_0660:
     pl_PlayFanfare SEQ_ME_POKEGET  // Pearl SEQ_FANFA1
     pl_msg_talk 8
     pl_WaitFanfare
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 69: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x2a  // SetPartyMonRibbon: the Footprint Ribbon
     pl_msg_talk 9
     pl_WaitButton
     pl_CloseMessage

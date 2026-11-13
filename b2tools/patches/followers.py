@@ -26,6 +26,7 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import itcm, resident, sprites  # noqa: E402
 
@@ -69,12 +70,13 @@ def config():
     smap = json.load(open(os.path.join(ROOT, 'data', 'pearl_sprite_map.json'), encoding='utf-8'))
     species = species_ids()
     pearl = []
-    for who, gfx, _, _ in pearl_amity_sprites.POKEMON:
+    own = pearl_amity_sprites.sprite_map()          # (Platinum: its starters' walkers too, pearl_amity_sprites.walkers)
+    for who, gfx, _, _, _ in pearl_amity_sprites.walkers():
         sid = species['SPECIES_' + who.upper()]
-        code = smap[str(gfx)]['code']
+        code = own[str(gfx)]['code']
         assert code < 377, f'{who}: code {code} is not a person code'
         pearl.append((sid, code))
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json'), encoding='utf-8'))
+    world = json.load(open(version.data_path('sinnoh_world.json'), encoding='utf-8'))
     by_name = {z['name']: z['b2_zone'] for z in world['rooms']['zones'].values()}
     off = list(BATTLE_TOWER) + [by_name[m] for m in OFF_MAPS]
     table = sprites.ow_table(os.path.join(DECOMP, 'extract', 'b2_us', 'files'))

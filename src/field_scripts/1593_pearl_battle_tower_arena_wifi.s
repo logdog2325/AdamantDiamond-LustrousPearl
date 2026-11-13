@@ -117,11 +117,11 @@ P363_019D:
     pl_Call P363_04BD
     pl_Call P363_0521
     BSubwayCmd_Tool 352, 0, 4, 0  // PrintBattleTowerIntroMessage
-    pl_WaitABPress
+// WaitABPress: the Tower opponent's balloon waited for A itself
     pl_CloseMessage
     pl_Call P363_052D
     BSubwayCmd_Tool 352, 1, 5, 0  // PrintBattleTowerIntroMessage
-    pl_WaitABPress
+// WaitABPress: the Tower opponent's balloon waited for A itself
     pl_CloseMessage
     pl_Call P363_04FD
     BSubwayCmd_Tool 309, 0, 0, 0  // Pearl tower function 42: the battle

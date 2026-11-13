@@ -1,0 +1,165 @@
+{
+ "_doc": "Written by b2tools/platinum_events.py (PEARL_VERSION=platinum); do not edit. sprites: Platinum overworld sprites drawn with a stand-in or left out until step 6 brings Platinum's sheets (data/platinum/sprite_map.json). scripts: event references (people, signs, step triggers, map scripts) with no converted script yet, for the chapter pieces (step 5).",
+ "sprites": [],
+ "scripts": [
+  {
+   "zone": "MAP_UNDERGROUND",
+   "b2_zone": 633,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_JUBLIFE_POKECENTER_2F",
+   "b2_zone": 567,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_OREBURGH",
+   "b2_zone": 62,
+   "kind": "sign",
+   "what": "sign (bg 1) at (256, 808)",
+   "platinum_script": 45,
+   "script": 45,
+   "tile": [
+    256,
+    808
+   ],
+   "why": "the converted file has no script at this entry (Pearl's events have it too)"
+  },
+  {
+   "zone": "MAP_UNION_ROOM",
+   "b2_zone": 580,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_JUBLIFE_POKECENTER_B1F",
+   "b2_zone": 581,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_CANALAVE_POKECENTER_B1F",
+   "b2_zone": 582,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_OREBURGH_POKECENTER_B1F",
+   "b2_zone": 583,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_ETERNA_POKECENTER_B1F",
+   "b2_zone": 587,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_HEARTHOME_POKECENTER_B1F",
+   "b2_zone": 588,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_PASTORIA_POKECENTER_B1F",
+   "b2_zone": 589,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_VEILSTONE_POKECENTER_B1F",
+   "b2_zone": 590,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_SUNYSHORE_POKECENTER_B1F",
+   "b2_zone": 591,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_SNOWPOINT_POKECENTER_B1F",
+   "b2_zone": 592,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_POKEMON_LEAGUE_POKECENTER_B1F",
+   "b2_zone": 593,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_FIGHT_AREA_POKECENTER_B1F",
+   "b2_zone": 594,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_SANDGEM_POKECENTER_B1F",
+   "b2_zone": 595,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_FLOAROMA_POKECENTER_B1F",
+   "b2_zone": 596,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_SOLACEON_POKECENTER_B1F",
+   "b2_zone": 63,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_CELESTIC_POKECENTER_B1F",
+   "b2_zone": 77,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_SURVIVAL_AREA_POKECENTER_B1F",
+   "b2_zone": 97,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  },
+  {
+   "zone": "MAP_RESORT_AREA_POKECENTER_B1F",
+   "b2_zone": 139,
+   "kind": "zone",
+   "what": "every event",
+   "why": "no script file: Pearl installs no events here either"
+  }
+ ],
+ "hidden_items": {
+  "_doc": "hidden items whose Platinum record differs from what file 1241 gives (Pearl's table): [item, count]; null = not in that table",
+  "platinum_table": "0x20ea378",
+  "records": 257,
+  "differ": []
+ }
+}

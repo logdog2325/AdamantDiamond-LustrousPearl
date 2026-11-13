@@ -27,6 +27,7 @@ from collections import Counter
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import itcm, resident, narcio  # noqa: E402
 
@@ -45,9 +46,9 @@ FX = 4096
 
 
 def gym():
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))['rooms']
+    world = json.load(open(version.data_path('sinnoh_world.json')))['rooms']
     z = next(v for v in world['zones'].values() if v['name'] == GYM)
-    mat = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f'{z["pearl_matrix"]:03d}.json')))
+    mat = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f'{z["pearl_matrix"]:03d}.json')))
     return z['b2_zone'], [row[0] for row in mat['maps']]     # the zone, its chunks top to bottom (one column)
 
 
@@ -55,7 +56,7 @@ def tiles_and_buttons(chunks):
     """({(x, z): (collision, behaviour)}, [(x, z, level)]) over the gym's chunks (32 x 32 each, one column)."""
     tiles, buttons = {}, []
     for i, c in enumerate(chunks):
-        land = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.json')))
+        land = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{c:03d}.json')))
         for z in range(32):
             for x in range(32):
                 tiles[x, 32 * i + z] = (land['collision'][z][x], land['behaviour'][z][x])
@@ -69,8 +70,8 @@ def tiles_and_buttons(chunks):
 def check_buttons(buttons):
     """Pearl's step triggers of the gym's scripts 2-4 lie on its buttons, group for group (the press reads the
     button under the player)."""
-    pz = next(z for z in json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json'))) if z['name'] == GYM)
-    events = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'events', f'{pz["events"]:03d}.json')))
+    pz = next(z for z in json.load(open(os.path.join(version.WORLD_WORK, 'zones.json'))) if z['name'] == GYM)
+    events = json.load(open(os.path.join(version.WORLD_WORK, 'events', f'{pz["events"]:03d}.json')))
     level_of_script = {2: 2, 3: 1, 4: 0}
     trig = sorted((c['x'], c['z'], level_of_script[c['script']]) for c in events['coord_events'])
     assert trig == buttons, f'Pastoria Gym buttons {buttons} != triggers {trig}'
@@ -107,7 +108,7 @@ def apply(files):
     narcio.save(files, GIMMICK_TABLE_ARC, t)
     # Pearl's water model after Humilau Gym's resources
     from gen4rom import Rom, narc_members
-    model = narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read('fielddata/build_model/build_model.narc'))[WATER_MODEL]
+    model = narc_members(Rom(version.WORLD_DUMP).read('fielddata/build_model/build_model.narc'))[WATER_MODEL]
     assert model[:4] == b'BMD0', 'Pearl build model 242 is not a BMD0'
     m = narcio.load(files, MODEL_ARC)
     assert len(m) == len(narcio.load(VANILLA, MODEL_ARC)), f'a/2/7/6 has {len(m)} files: another patch appended'
@@ -120,7 +121,7 @@ def table_blob(base):
     zone, chunks = gym()
     tiles, buttons = tiles_and_buttons(chunks)
     check_buttons(buttons)
-    reg = json.load(open(os.path.join(ROOT, 'data', 'pearl_story_ids.json')))
+    reg = json.load(open(version.data_path('pearl_story_ids.json')))
     works = [int(reg['vars'][v]['b2'], 16) for v in LEVEL_VARS]
     press = int(reg['new']['PVAR_PASTORIA_GYM_PRESS']['b2'], 16)
     floors = floor_heights(chunks)

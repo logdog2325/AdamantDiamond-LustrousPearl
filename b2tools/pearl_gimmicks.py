@@ -21,6 +21,7 @@ import functools, json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 
 GIMMICK_ID = 59                  # Black 2's gimmick ids end at 58; PearlB2's own start here (decomp gimmick_itcm.c)
@@ -48,10 +49,14 @@ GYM_ZONE = 'MAP_CANALAVE_GYM'
 # back), else up and still (its trigger's var, the zone script). The converted floors are -2 and 158 (the walking
 # surface 2 units under Pearl's): the lift takes those, its model Pearl's 0 and 160 (propDY 2). Rooms 2-4 share one
 # chunk and its one added prop. The flag: a registry name (src/include/pearl.h), gimmick 59's per-lift flag.
+# Which Hearthome Gym the version has: Pearl's and Diamond's quiz rooms with lifts, or Platinum's own dark rooms
+# (2026-11-02, plat-gyms: Platinum rebuilt the Gym on zones 88-91, its own gimmick 67, patches/platinum_gyms.py; its
+# zones 92-100 are DP leftovers no warp reaches), whose rooms get no lift, no lift prop and no lift plate.
+HEARTHOME_GYM = {'pearl': 'lifts', 'diamond': 'lifts', 'platinum': 'dark rooms'}[version.VERSION]
 HEARTHOME_LIFTS = {'MAP_HEARTHOME_GYM_FIRST_QUESTION_ROOM': 'PFLAG_098D',
                    'MAP_HEARTHOME_GYM_SECOND_QUESTION_ROOM': None,
                    'MAP_HEARTHOME_GYM_THIRD_QUESTION_ROOM': None,
-                   'MAP_HEARTHOME_GYM_FOURTH_QUESTION_ROOM': None}
+                   'MAP_HEARTHOME_GYM_FOURTH_QUESTION_ROOM': None} if HEARTHOME_GYM == 'lifts' else {}
 HEARTHOME_LIFT = dict(lo=-2, hi=158, sx=8, sz=13, at=(152, 216), dy=2)
 
 # The Pokémon League's six lifts (2026-10-26, the ch8 agent): rows 3-8 of Pearl's lift table (pokeplatinum
@@ -92,7 +97,7 @@ def rom_data():
     global _ROM
     if _ROM is None:
         from gen4rom import Rom
-        _ROM = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+        _ROM = Rom(version.WORLD_DUMP)
     return _ROM
 
 
@@ -126,17 +131,17 @@ def lift_table():
 
 
 def pearl_zones():
-    return json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    return json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
 
 
 def zone_chunks(zone):
     """{(cx, cz): chunk} of a Pearl zone's matrix."""
-    m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f"{zone['matrix']:03d}.json")))
+    m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{zone['matrix']:03d}.json")))
     return {(x, z): c for z, row in enumerate(m['maps']) for x, c in enumerate(row) if c != 0xffff}
 
 
 def land_props(chunk):
-    return json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(chunk):03d}.json')))['props']
+    return json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{land_id(chunk):03d}.json')))['props']
 
 
 def _at_chunk(zone, ux, uz):

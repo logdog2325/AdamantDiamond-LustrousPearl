@@ -12,12 +12,18 @@ TM83 Natural Gift = TM118 is sold by move (tm_audit), with its pearl_tms price.
 
 Pearl's Goods and Seal clerks: Black 2 has no such goods (pearl_story h_mart_goods: a closed line). Pearl's 12 Mail
 designs are Black 2's 12 Mail items on the same ids (b2tools/item_check.py lists them).
+
+Platinum (2026-11-07, plat-fixes): its own tables from its own arm9 (pearl_items.mart_normal, mart_special): the same badge
+list and special lists 0-18 as Pearl's, and a 20th, Veilstone Dept. Store B1F's berries (list file 25, Black 2's shop 19).
+Its TMs get Platinum's own prices (pearl_price by Platinum's item table). Every list, clerk and price against Platinum's:
+`PEARL_VERSION=platinum python3 b2tools/platinum_fixes_check.py marts`.
 """
 import os, re, struct, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import narcio, pearl_items  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
 
@@ -29,16 +35,35 @@ PEARL_TM01 = 328
 
 
 def pearl_price(item):
-    """Pearl's price of a Pearl item (itemtool/itemdata/item_data.narc, by pokediamond sItemIndexMappings column 1)."""
+    """Pearl's price of a Pearl item (itemtool/itemdata/item_data.narc, by pokediamond sItemIndexMappings column 1).
+    Platinum: its own price, from pl_item_data.narc by its own table (plat-fixes, 2026-11-07: Platinum's item data
+    has other numbers, Griseous Orb's among them, so Pearl's table read wrong records: TM38 cost 2,000, not 5,500)."""
     global _prices
     if '_prices' not in globals():
-        rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
-        data = narc_members(rom.read('itemtool/itemdata/item_data.narc'))
-        src = open(os.path.join(ROOT, 'external', 'pokediamond', 'arm9', 'src', 'itemtool.c')).read()
-        at = src.index('sItemIndexMappings[][4] = {')
-        rows = re.findall(r'\{\s*(\d+),\s*\d+,\s*\d+,\s*\d+\s*\}', src[at:src.index('};', at)])
+        rom = Rom(version.WORLD_DUMP)
+        data = narc_members(rom.read(version.ARCHIVE['items']))
+        if version.PLATINUM:
+            rows = [r[0] for r in platinum_item_table()]
+        else:
+            src = open(os.path.join(ROOT, 'external', 'pokediamond', 'arm9', 'src', 'itemtool.c')).read()
+            at = src.index('sItemIndexMappings[][4] = {')
+            rows = re.findall(r'\{\s*(\d+),\s*\d+,\s*\d+,\s*\d+\s*\}', src[at:src.index('};', at)])
         _prices = [struct.unpack_from('<H', data[int(r)], 0)[0] for r in rows]
     return _prices[item]
+
+
+PLATINUM_ITEMS = 467                  # pokeplatinum NUM_ITEMS: items 0-466
+
+
+def platinum_item_table():
+    """[(data, icon, palette, Gen 3 item)] by item of Platinum's own table (pokeplatinum src/item.c sItemArchiveIDs),
+    found in its arm9 by its first five rows (data and Gen 3 numbers 0-4: none, Master, Ultra, Great and Poké Ball)."""
+    a, _ = pearl_items.world_arm9()
+    hits = [p for p in range(0, len(a) - 40, 2)
+            if [struct.unpack_from('<4H', a, p + 8 * i)[k] for i in range(5) for k in (0, 3)] ==
+            [i for i in range(5) for _ in (0, 3)]]
+    assert len(hits) == 1, f'Platinum\'s item table: {len(hits)} places'
+    return [struct.unpack_from('<4H', a, hits[0] + 8 * i) for i in range(PLATINUM_ITEMS)]
 
 
 def lists():
@@ -70,4 +95,5 @@ def apply(files):
                 records[b2] = bytes(r)
                 tms += 1
     narcio.save(files, ITEMS, records)
-    return f'pearl_shops: {len(new)} lists (6 badge lists, 19 special), {tms} TMs at Pearl\'s prices'
+    return f'pearl_shops: {len(new)} lists (6 badge lists, {len(new) - 6} special), {tms} TMs at ' \
+           f'{"Platinum" if version.PLATINUM else "Pearl"}\'s prices'

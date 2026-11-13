@@ -120,4 +120,15 @@ The Underground Man in Eterna City, for his missions:
 | 10 Flags | Mystic Gem |
 | 50 Flags | Glitter Gem |
 
-In Hearthome City, Mr. Goods gives you the Gym Statue once you have all eight badges. His other goods can't be earned in 1.0 ([known issues](known-issues.md)).
+### Mr. Goods and the Battle Tower
+
+Mr. Goods stands by the Hearthome City Gym. Each time you talk to him he gives you one good, the first on his list you've earned:
+
+- The Gym Statue: once you have all eight badges.
+- A cup for a Master Rank win in each contest: the Cool Cup (the Cool Contest), the Beauty Cup (the Beauty Contest), the Cute Cup (the Cute Contest), the Clever Cup (the Smart Contest), the Tough Cup (the Tough Contest).
+- The Blue Crystal, Pink Crystal, Red Crystal and Yellow Crystal: nothing more is needed (in the original they came for meeting people, giving things away, digging up fossils and setting traps in the Underground).
+- The Globe needs Wi-Fi, so it isn't given.
+
+At the Battle Tower, the lobby's attendant gives a trophy for your longest winning streak: the Bronze Trophy at 20, the Silver Trophy at 50 and the Gold Trophy at 100 wins in a row.
+
+With no room in your Secret Base PC they keep the good until there is.

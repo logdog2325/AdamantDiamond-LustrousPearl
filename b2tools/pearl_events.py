@@ -37,6 +37,7 @@ from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for t
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
+import version  # noqa: E402
 SIGN_GFX = {91, 92, 93, 94, 95, 96}   # Pearl's signposts, mailboxes, signboards: Black 2 sign events (pearl_signs)
 # Pearl's player sprites, which scripts store in the dynamic-sprite vars for the counterpart (Pearl sets VAR_0 to 0x61
 # Dawn or 0 Lucas): Black 2's players, Rosa 240 / Nate 231 (24-frame walk + run sheets; data/pearl_sprite_map.json 101)
@@ -46,11 +47,18 @@ PLAYER_SPRITES = {0: 231, 97: 240}
 _SPR = _MOV = None
 
 
+PLATINUM_SPRITES = os.path.join(ROOT, 'data', 'platinum', 'sprite_map.json')
+
+
 def sprite_table():
+    """{graphics id: row} of data/pearl_sprite_map.json; a Platinum build adds its own ids' rows over it
+    (data/platinum/sprite_map.json: Platinum numbers 0-209 as Pearl does and adds 210 on; b2tools/platinum_events.py)."""
     global _SPR
     if _SPR is None:
         _SPR = {int(k): v for k, v in json.load(open(os.path.join(ROOT, 'data', 'pearl_sprite_map.json'))).items()
                 if k.isdigit()}
+        if version.PLATINUM:
+            _SPR.update({int(k): v for k, v in json.load(open(PLATINUM_SPRITES, encoding='utf-8')).items() if k.isdigit()})
     return _SPR
 
 
@@ -165,8 +173,10 @@ class Heights:
 
     def chunk(self, zone, x, z):
         mid = zone['matrix']
+        if mid is None:                 # (plat-frontier-rooms: a Frontier picture room, flat at height 0: no Gen 4 matrix)
+            return None
         if mid not in self.mats:
-            self.mats[mid] = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f'{mid:03d}.json')))
+            self.mats[mid] = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f'{mid:03d}.json')))
         m = self.mats[mid]
         cx, cz = x // 32, z // 32
         if not (0 <= cx < m['width'] and 0 <= cz < m['height']) or m['maps'][cz][cx] == 0xffff:
@@ -190,7 +200,7 @@ class Heights:
         if c is None:
             return True
         if c not in self.lands:
-            self.lands[c] = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))
+            self.lands[c] = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{land_id(c):03d}.json')))
         return bool(self.lands[c]['collision'][z % 32][x % 32])
 
     def sign_y(self, zone, x, z, facing, blocked=False):
@@ -214,7 +224,7 @@ def is_sign(o):
     return o['graphics_id'] in SIGN_GFX
 
 
-ROCK_CLIMB = os.path.join(ROOT, 'data', 'pearl_rock_climb.json')
+ROCK_CLIMB = version.data_path('pearl_rock_climb.json')   # (Platinum's own walls: data/platinum/, rock_climb.py --write)
 SIGN_DIR = {0: 0, 1: 3, 2: 2, 3: 1}   # the player's facing (0 up, 1 down, 2 left, 3 right) -> a sign event's direction
 ROCKY_WALL = 10003          # Pearl's global script facing a Rock Climb wall (scr_seq 375 entry 4): "The wall is very
                             # rocky... Would you like to use Rock Climb?" (party move, Icicle Badge, no partner)
@@ -239,14 +249,16 @@ def town_map_tiles(zone):
     -> [(x, z)] in the zone's tile coordinates (2026-10-26: 17 Pokémon Centers, the Pokétch Company 2F/3F, Jubilife
     TV 4F, 8 gatehouses, the Battle Tower lobby)."""
     mid = zone['matrix']
+    if mid is None:                     # (plat-frontier-rooms: a Frontier picture room has no Gen 4 matrix)
+        return []
     if mid not in _TOWN_MAPS:
-        m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f'{mid:03d}.json')))
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f'{mid:03d}.json')))
         out = []
         for cz, row in enumerate(m['maps']):
             for cx, c in enumerate(row):
                 if c == 0xffff:
                     continue
-                land = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))
+                land = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{land_id(c):03d}.json')))
                 b, col = land['behaviour'], land['collision']
                 for z in range(31):
                     for x in range(32):
@@ -264,13 +276,13 @@ def honey_tree_tiles(zone):
     if zone['id'] not in HONEY_TREE_MAPS:
         return []
     mid = zone['matrix']
-    m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f'{mid:03d}.json')))
+    m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f'{mid:03d}.json')))
     out = []
     for cz, row in enumerate(m['maps']):
         for cx, c in enumerate(row):
             if c == 0xffff or (m.get('headers') and m['headers'][cz][cx] != zone['id']):
                 continue
-            land = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))
+            land = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{land_id(c):03d}.json')))
             for p in land['props']:
                 if p['model'] == HONEY_TREE_MODEL:
                     x, z = int(p['pos'][0] // 16) + 16, int(round(p['pos'][2] / 16)) + 16
@@ -320,7 +332,8 @@ def object_skipped(o, zone=None):
     if is_sign(o) or is_berry_patch(o):
         return None
     if sprite_code(o['graphics_id']) is None:
-        return (f'object {o["id"]}: graphics {o["graphics_id"]} ({sprite_table().get(o["graphics_id"], {}).get("pearl_name")}) '
+        row = sprite_table().get(o['graphics_id'], {})
+        return (f'object {o["id"]}: graphics {o["graphics_id"]} ({row.get("pearl_name") or row.get("pl_name")}) '
                 f'has no Black 2 actor')
     return None
 
@@ -358,6 +371,21 @@ def hide_flag(pd, o):
     return o['hidden_flag']
 
 
+SIGN_OFF_MAP = 0x7FF8          # a sign event's tile no player reaches (sinnoh_events moves dead warps to 0xFFF8 the same way)
+_HIDDEN = None
+
+
+def hidden_items_count():
+    """Entries of the global hidden-item file 1241 the build installs (version.sources: Pearl's, or a version's own)."""
+    global _HIDDEN
+    if _HIDDEN is None:
+        import re
+        path = next(p for p in version.sources(os.path.join(ROOT, 'src', 'field_scripts'), '.s')
+                    if os.path.basename(p).startswith('1241_'))
+        _HIDDEN = len(re.findall(r'^\s*ScriptEntry\s', open(path, encoding='utf-8').read(), re.M))
+    return _HIDDEN
+
+
 def entities(pd, zone, ids, heights, script_ids):
     """(npcs, signs, triggers, skipped) for a Pearl zone, as Black 2 entity dicts (b2tools/zones.py).
     script_ids(sid) -> the Black 2 script id for a Pearl one (proxies, trainers)."""
@@ -379,7 +407,11 @@ def entities(pd, zone, ids, heights, script_ids):
     for why in (object_skipped(o, zone) for o in ev['object_events']):
         if why:
             skipped.append(why)
+    moved = version.MOVED_PEOPLE.get(zone['name'], {})     # (v101-story, 1.0.1) people put where the player reaches them
     for o in [o for o in kept_objects(pd, zone)] + added:
+        if o['id'] in moved and not any(o is a for a in added):
+            x, z, d = moved[o['id']]
+            o = dict(o, x=x, z=z, initial_dir=d)
         code = BERRY_ACTOR_CODE + o['data'][0] if is_berry_patch(o) else sprite_code(o['graphics_id'], zone['name'])
         y = heights.at(zone, o['x'], o['z'], near=o['y'] * 16)   # (under or on a bridge: Pearl's y says)
         y = pearl_gimmicks.object_y(zone['name'], o, y)   # (on a floor Pearl's code builds: the Canalave Gym's)
@@ -387,7 +419,8 @@ def entities(pd, zone, ids, heights, script_ids):
         move, facing = (0, 1) if is_berry_patch(o) else fit_move(o, code)
         npcs.append(dict(uid=o['id'], model=code, move=move,
                          evtype=0 if o['trainer_type'] == 3 else o['trainer_type'],
-                         flag=item_ball_flag(ids, o) if item_ball(zone, o) else
+                         flag=o['b2_flag'] if 'b2_flag' in o else       # (postdex: an added person's own new flag)
+                         item_ball_flag(ids, o) if item_ball(zone, o) else
                          ids.flag_value(hide_flag(pd, o)) if hide_flag(pd, o) else 0,
                          script=o['script'] if any(o is a for a in added) or item_ball(zone, o) else
                          talk_obj.get(o['id']) or script_ids(o['script']), dir=facing,
@@ -395,13 +428,27 @@ def entities(pd, zone, ids, heights, script_ids):
                          areaw=o['movement_range_x'] & 0xFFFF, areah=o['movement_range_z'] & 0xFFFF, rail=0,
                          x=o['x'], z=o['z'], y=(y * 0x1000) if y is not None else (o['y'] << 16),
                          clone=o['script'] == 0xFFFF))      # (a copy of a neighbouring zone's object)
+    # ---- plat-frontier-rooms: a Frontier picture room's people (b2tools/frontier_rooms.py: the objects its scenes place, by their
+    # local ids, parked where the camera never looks until the scene puts them; their height is the flat floor's, 0)
+    if version.PLATINUM:
+        import frontier_rooms
+        if zone['name'] in frontier_rooms.BY_NAME:
+            npcs += frontier_rooms.people_entities(frontier_rooms.BY_NAME[zone['name']])
+    # ---- end plat-frontier-rooms
     for bi, b in enumerate(ev['bg_events']):
         y = heights.sign_y(zone, b['x'], b['z'], b['player_facing_dir'])
         hidden = script_kind(b['script']) == 'hidden'      # Pearl's type 2: Black 2's hidden item (the same id: file 1241)
+        x, z = b['x'], b['z']
+        if hidden and b['script'] - 8000 >= hidden_items_count():
+            # a hidden item past the installed file 1241 (Platinum's 8229-8283 while it holds Pearl's 229: pearl_items.py)
+            # would start no script there: it keeps its index, off the map, and is listed
+            x = z = SIGN_OFF_MAP
+            skipped.append(f'hidden item {b["script"]} at {(b["x"], b["z"])}: past global file 1241 ({hidden_items_count()} '
+                           f'entries), off the map')
         signs.append(dict(script=talk_bg.get(bi) or (b['script'] if hidden else script_ids(b['script'])),
                           cond=0 if bi in talk_bg else b['type'],
                           dir=b['player_facing_dir'], rail=0,
-                          x=b['x'], z=b['z'], y=y if y is not None else b['y']))
+                          x=x, z=z, y=y if y is not None else b['y']))
     for o in ev['object_events']:
         # Pearl's sign objects (after Pearl's own BG events, whose indices stay): read from any side, as Pearl's
         # objects (direction 4); copies (script 0xFFFF) and script 0 (Route 204 North's twin of Route 204 South's
@@ -441,6 +488,15 @@ def entities(pd, zone, ids, heights, script_ids):
                           rail=0, x=c['x'], z=c['z'], w=c['width'], h=c['length'],
                           y=(y if y is not None else c['y']) & 0xFFFF if (y if y is not None else c['y']) >= 0
                           else (y if y is not None else c['y']), unk=0))
+    if rids:                                       # (postdex) extra step triggers (b2tools/ramanas.py extra_triggers:
+        import ramanas                             # Spear Pillar's other legendary), at their walkable tiles' height
+        for t in ramanas.extra_triggers(zone['name'], rids):
+            hs = [heights.at(zone, x, z) for x in range(t['x'], t['x'] + t['w']) for z in range(t['z'], t['z'] + t['h'])
+                  if not heights.solid(zone, x, z)]
+            hs = [v for v in hs if v is not None]
+            y = max(set(hs), key=hs.count) if hs else (heights.at(zone, t['x'], t['z']) or 0)
+            trigs.append(dict(script=t['script'], value=t['value'], work=t['work'], type=0, rail=0, x=t['x'], z=t['z'],
+                              w=t['w'], h=t['h'], y=y & 0xFFFF if y >= 0 else y, unk=0))
     for k, r in closed:
         if r.get('talk'):
             continue
@@ -466,7 +522,23 @@ def map_script_table(pd, zone, ids):
     elev = pd.elevator_init(zone['id']) if hasattr(pd, 'elevator_init') else None
     if elev:                                       # an elevator's floor or room (pearl_story ELEVATOR_FLOORS_ABOVE):
         entries.append((2, elev[0]))               # one more zone init, after Pearl's (Black 2 runs every one)
+    rids = pd.ramanas_ids(zone['id']) if hasattr(pd, 'ramanas_ids') else {}
+    if rids:                                       # (postdex) extra entries that are zone inits (b2tools/ramanas.py
+        import ramanas                             # zone_inits: Spear Pillar's other legendary), after Pearl's
+        entries += [(2, s) for s in ramanas.zone_inits(zone['name'], rids)]
+    villa = pd.villa_init(zone['id']) if hasattr(pd, 'villa_init') else None
+    if villa:                                      # Platinum's Resort Area (pearl_story VILLA_VISITOR_ZONES): the Villa's
+        entries.insert(0, (2, villa[0]))           # visitor of the day, picked before Platinum's own zone init reads it
     tables = [[(v, val, local(s)) for v, val, s in rows] for rows in tables]
+    # ---- plat-frontier: a room that hosts the Battle Frontier's scenes (b2tools/frontier_translate.py HOSTS) runs them from
+    # the warp's reserved script; its own frame table starts the scripts Pearl's rooms ran (Platinum never runs them), so it
+    # goes. Its zone-init and resume scripts stay (the stand-in's look, the player hidden).
+    import version
+    if version.PLATINUM:
+        import frontier_translate
+        if zone['name'] in {h['zone'] for h in frontier_translate.HOSTS.values()}:
+            tables = []
+    # ---- end plat-frontier
     levels = {}
     out = []
     for t, s in [e for e in entries if e[0] == 2] + [e for e in entries if e[0] == 4] + [e for e in entries if e[0] == 3]:

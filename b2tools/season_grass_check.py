@@ -18,6 +18,7 @@ from collections import defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 sys.path.insert(0, os.path.join(HERE, 'patches'))
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import narcio, nsbtx, recolour, maplook  # noqa: E402
@@ -28,7 +29,7 @@ SEASONS = ('spring', 'summer', 'autumn', 'winter')
 
 
 def load_matrix(mid):
-    return json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f'{mid:03d}.json')))
+    return json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f'{mid:03d}.json')))
 
 
 def areas_and_chunks(rom):
@@ -36,7 +37,7 @@ def areas_and_chunks(rom):
     areas (by the zones of matrix 0's cells) and the outdoor room areas (sinnoh_rooms' rule: Pearl's area data says
     outdoor light, or the area is exterior)."""
     import sinnoh_rooms
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     zones = {int(k): v for k, v in world['zones'].items()}
     m0 = load_matrix(0)
     out = defaultdict(set)
@@ -63,7 +64,7 @@ def built_sets(files, areas):
     """{area key: [4 BTX0]} from a build: the overworld groups of data/sinnoh_world.json, the rooms' groups from their
     zones' headers (sinnoh_rooms points them at the group's first record)."""
     import zoneheaders
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     sets = narcio.load(files, 14)
     headers, _ = zoneheaders.load(files)
     group = {('overworld', int(k)): v['b2_area_group'] for k, v in world['areas'].items()}
@@ -77,7 +78,7 @@ def offline_sets(areas):
     import sinnoh_reskin
     fixes = maplook.texture_fixes(maplook.fixes())
     ow, _ = sinnoh_reskin.reskin_sets(fixes)
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     out = {k: [ow[world['areas'][str(k[1])]['b2_area_group'] + s] for s in range(4)]
            for k in areas if k[0] == 'overworld'}
     rooms = [k for k in areas if k[0] == 'room']
@@ -109,7 +110,7 @@ def texel_colours(parsed, tex, pal):
 
 
 def check(files=None):
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    rom = Rom(version.WORLD_DUMP)
     pearl_sets = narc_members(rom.read('fielddata/areadata/area_map_tex/map_tex_set.narc'))
     areas = areas_and_chunks(rom)
     sets = built_sets(files, areas) if files else offline_sets(areas)
@@ -118,7 +119,7 @@ def check(files=None):
         P = nsbtx._parse(pearl_sets[texset])
         pairs = set()
         for c in chunks:
-            pairs |= nsbtx.material_pairs(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.nsbmd'), 'rb').read())
+            pairs |= nsbtx.material_pairs(open(os.path.join(version.WORLD_WORK, 'land', f'{land_id(c):03d}.nsbmd'), 'rb').read())
         pairs = sorted((t, p) for t, p in pairs if t and p and t in dict(P['texs']) and p in dict(P['pals']))
         mine = {t: [(i, c) for i, c in texel_colours(P, t, p)] for t, p in pairs}
         for s in (range(4) if key[1] == NORTH else (2, 3)):

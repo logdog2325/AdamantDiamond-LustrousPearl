@@ -46,7 +46,7 @@ P18_0075:
 P18_0082:
 // ShowCurrentFloor 20, 1, PVAR_40CE: no floor window in Black 2
     pl_msg_talk 0
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 6, 65535, 0  // Pearl AddMenuEntryImm 119, 0
     ListMenuAdd 7, 65535, 1  // Pearl AddMenuEntryImm 118, 1
     ListMenuAdd 8, 65535, 2  // Pearl AddMenuEntryImm 117, 2

@@ -53,11 +53,12 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, 'patches'))
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import nsbtx, pearl_mesh, pearl_render, pearl_buildings, pearl_chunk, pearl_model_fix  # noqa: E402
 import pearl_rooms_view as RV  # noqa: E402
 
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 VOID = (31, 0, 31)                       # (5-bit) background of the renders: nothing drawn
 FLOOR_WINDOW = 4.5                       # (the layers fix moves floor pieces up to ~1.8 units up or down)
 

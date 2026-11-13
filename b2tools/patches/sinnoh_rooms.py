@@ -39,15 +39,16 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import narcio, zoneheaders  # noqa: E402
 import pearl_chunk, pearl_buildings, pearl_mesh, pearl_model_fix, maplook  # noqa: E402
-import pearl_signs, pearl_gimmicks, ramanas, b2_look  # noqa: E402
+import pearl_signs, pearl_gimmicks, ramanas, b2_look, villa_furniture  # noqa: E402
 from b2files import gf_container, gf_container_build, arc_path  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
 
 VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 EMPTY_ENTITIES, EMPTY_SCRIPTS, EMPTY_INIT, NO_ENCOUNTERS = 3, 6, 7, 0x1FFF
 TEMPLATE_ZONE = {4: 441, 3: 324, 2: 437, 1: 441, 6: 324}
 COPY_FIELDS = ('weather_word', 'flags', 'icon_word', 'bgm0', 'bgm1', 'bgm2', 'bgm3')
@@ -60,6 +61,8 @@ def pearl_light_field(rom):
     """{Pearl area: its area data's u16 at 6}: 0 = Pearl's indoor light (area01light) and indoor outlines, else the
     outdoor day cycle (area00light) and outlines (pokediamond ov05_021F4CBC, ov05_021F4968)."""
     ad = narc_members(rom.read('fielddata/areadata/area_data.narc'))
+    if version.PLATINUM:        # (its u16 at 6 is a file of data/arealight.narc: 0 the day cycle, 1 indoor, 2 and 3 others; maplook)
+        return {i: int(struct.unpack_from('<H', d, 6)[0] == 0) for i, d in enumerate(ad)}
     return {i: struct.unpack_from('<H', d, 6)[0] for i, d in enumerate(ad)}
 
 
@@ -92,10 +95,10 @@ def load_matrix(mid):
 
 
 def apply(files):
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     rooms = world['rooms']
     zones = json.load(open(os.path.join(PEARL, 'zones.json')))
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    rom = Rom(version.WORLD_DUMP)
     build = narc_members(rom.read('fielddata/build_model/build_model.narc'))
     texsets = narc_members(rom.read('fielddata/areadata/area_map_tex/map_tex_set.narc'))
     res_of = {int(k): v for k, v in rooms['building_res'].items()}
@@ -113,7 +116,7 @@ def apply(files):
     slopes, offsets = pearl_chunk.tables()
     chunks = narcio.load(files, 8)
     first = min(rooms['chunks'].values())
-    assert len(chunks) == first, f'a/0/0/8 has {len(chunks)} entries, expected {first} (sinnoh_world first, once)'
+    assert len(chunks) == first or version.PLATINUM, f'a/0/0/8 has {len(chunks)} entries, expected {first} (sinnoh_world first, once)'
     fixes = maplook.fixes()
     field = pearl_light_field(rom)
     outdoor = {int(pa) for pa, a in rooms['areas'].items() if field.get(int(pa)) or a['exterior']}   # seasonal
@@ -131,7 +134,9 @@ def apply(files):
         magic, layers, part = pearl_chunk.terrains(data)    # ('GC': two layers, bridges with a way under them)
         secs = [room_model(part['model'], area_of_chunk.get(c) in day_light, fixes)]
         mm = pearl_mesh.Model(secs[0])
-        P = [mm.units(v) for sh in mm.shapes for poly in sh.polys for v in poly]
+        tr = pearl_model_fix.node_shift(mm)              # (version.NODE_SHIFT: where each shape is drawn; zeros otherwise)
+        P = [tuple(a + b for a, b in zip(mm.units(v), tr[si])) if version.NODE_SHIFT else mm.units(v)
+             for si, sh in enumerate(mm.shapes) for poly in sh.polys for v in poly]
         if P: extent[c] = (min(p[0] for p in P), max(p[0] for p in P), min(p[2] for p in P), max(p[2] for p in P))
         fixed[c] = rep.get('fixes', {})
         props = json.load(open(os.path.join(PEARL, 'land', f'{land_id(c):03d}.json')))['props']
@@ -139,12 +144,17 @@ def apply(files):
         props = pearl_chunk.people_props_moved(c, props)   # (on a counter or table the people fix sinks)
         props = props + pearl_gimmicks.extra_props(c)      # (props Pearl's code adds: the Canalave Gym's floors and
         # platforms, a lift; after the chunk's own, so their indices are fixed: patches/pearl_platforms.py moves them)
+        villa = villa_furniture.extra_props(c)             # (Platinum's Villa: its 23 places of furniture, after those;
+        if villa:                                          # the gimmick shows the owned ones: patches/platinum_villa.py)
+            villa_furniture.note_first_prop(len(props))
+            props = props + villa
         place, bad = pearl_buildings.placements(props, res_of)
         problems += [f'chunk {c}: {b}' for b in bad]
         signed = [pearl_signs.chunk(c, t, place, rep) for t in layers]   # Pearl's signs: sign models, solid
         if c in ramanas.park_chunks():                     # (Pal Park: the Ramanas rooms' doorways, b2tools/ramanas.py)
             signed = [ramanas.chunk(c, t, p, rep) for t, p in signed]
-        chunks.append(pearl_chunk.rebuild(magic, secs[0], [t for t, _ in signed], signed[0][1]))
+        chunks += [b''] * (b2 + 1 - len(chunks))           # (the numbers can have gaps in Platinum: rooms it dropped)
+        chunks[b2] = pearl_chunk.rebuild(magic, secs[0], [t for t, _ in signed], signed[0][1])
         heights[c] = {f'{tx},{tz}': y for (tx, tz), y in rep['heights'].items()}
         if rep['heights_low']: low[c] = {f'{tx},{tz}': y for (tx, tz), y in rep['heights_low'].items()}
         floor_fixed += [(c,) + t for t in rep.get('mats', [])]   # warp mats put on their floor (pearl_chunk.floor_mats)
@@ -168,10 +178,12 @@ def apply(files):
             inner = [(cz, cx, b2_of_room[h]) for cz, row in enumerate(m['headers']) for cx, h in enumerate(row) if h]
             zid = [min(inner, key=lambda t: (max(abs(t[0] - cz), abs(t[1] - cx)), t[0], t[1]))[2]
                    for cz in range(m['height']) for cx in range(m['width'])]
-            mats.append(struct.pack('<HHHH', 1, 0, m['width'], m['height']) + struct.pack(f'<{len(cells)}I', *cells)
-                        + struct.pack(f'<{len(zid)}I', *zid))
+            mats += [b''] * (r['b2_matrix'] + 1 - len(mats))   # (the numbers can have gaps in Platinum)
+            mats[r['b2_matrix']] = (struct.pack('<HHHH', 1, 0, m['width'], m['height']) + struct.pack(f'<{len(cells)}I', *cells)
+                                    + struct.pack(f'<{len(zid)}I', *zid))
             continue
-        mats.append(struct.pack('<HHHH', 0, 0, m['width'], m['height']) + struct.pack(f'<{len(cells)}I', *cells))
+        mats += [b''] * (r['b2_matrix'] + 1 - len(mats))
+        mats[r['b2_matrix']] = struct.pack('<HHHH', 0, 0, m['width'], m['height']) + struct.pack(f'<{len(cells)}I', *cells)
     narcio.save(files, 9, mats)
 
     # building packs: interior after Black 2's 93, exterior after the overworld's

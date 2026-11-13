@@ -9,6 +9,20 @@ in Black 2's entry field (Pearl bank 616; Diamond 615), its categories (621), he
 they differ from Black 2's. Pearl's entries are one page of three lines, as Black 2's field, so there is no page flip
 (HoennB2 needed one for Gen 3's two pages).
 
+Platinum's text (2026-11-07, plat-dex; a version row: `PEARL_VERSION=platinum python3 sinnoh_pokedex.py --text` writes
+data/text_overrides/platinum/pokedex.json, which sinnoh_names applies over the shared file): Platinum's own entries
+(its slot 616 = pokeplatinum TEXT_BANK_SPECIES_POKEDEX_ENTRY_EN, the bank its Pokédex reads) wherever the shared files
+give other words (Black 2's or Pearl's), and every alternate form the same entry (Platinum has one entry a species;
+Black 2's forms each repeat their species' entry). Categories, heights and weights: Platinum's equal Black 2's for all
+493 (checked). Giratina: Platinum's base height and weight banks (619, 620) hold the Origin Forme's and its Giratina
+banks (714, 715: TEXT_BANK_SPECIES_WEIGHT_GIRA / HEIGHT_GIRA) the Altered Forme's (pokeplatinum
+Pokedex_SetupGiratina); Black 2's base is the Altered Forme and its form 1 the Origin Forme: equal, checked that way.
+The other forms' heights and weights are Black 2's (Platinum shows its species' one height and weight for them; for
+Shaymin's Sky Forme Black 2 has its own, 1'04" and 11.5 lbs.). A Pearl run writes the shared file as before; a
+Diamond run writes data/text_overrides/diamond/pokedex.json (1.0.1: Diamond's own words on the 156 species where its
+bank 615 differs from Pearl's, and Rotom's five forms and Giratina's Origin Forme the species' entry; 1.0 showed Pearl's).
+`b2tools/platinum_dex_check.py` checks the packed text against Platinum's dump.
+
 The professor's rating (sources made by `--sources`; the field scripts and texts are ordinary src/ files):
 - src/field_scripts/1260_global_pokedex_rating.s: global 10382 (the Pokémon Center PC's professor entry) = Pearl's PC
   rating (common script 376 script_2): "Accessed Professor Rowan's PC." and Rowan's line for the Sinnoh seen count,
@@ -27,6 +41,7 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 DECOMP = os.path.join(ROOT, 'external', 'pokebw2')
 
 RATING_TEXT, PC_TEXT = 1051, 1052                 # a/0/0/3 files (after Pearl's zone banks 676-1050)
@@ -55,10 +70,16 @@ def write_sources():
     import gen4_text
     rating = gen4_text.bank(RATING_BANK)
     lines = [f'PearlRating_Text_{i:03d} = {gen4_text.b2_line(t)}' for i, t in enumerate(rating)]
-    open(os.path.join(SRC_TEXT, f'{RATING_TEXT}_rowan_rating.txt'), 'w', encoding='utf-8').write('\n'.join(lines) + '\n')
+    # (plat-fixes, 2026-11-07) Platinum's rating bank has 45 lines (Rowan's 12 tiers): its own text file in
+    # src/text/script/platinum/ (version.sources), beside its own PC rating src/field_scripts/platinum/1260_*.s
+    text_dir = os.path.join(SRC_TEXT, 'platinum') if version.PLATINUM else SRC_TEXT
+    os.makedirs(text_dir, exist_ok=True)
+    open(os.path.join(text_dir, f'{RATING_TEXT}_rowan_rating.txt'), 'w', encoding='utf-8').write('\n'.join(lines) + '\n')
     menu = gen4_text.bank(PC_MENU_BANK)
     rowan, oak = menu_label(menu[PC_ROWAN]), menu_label(menu[PC_OAK])
     assert (rowan, oak) == ('Rowan’s PC', 'Oak’s PC'), (rowan, oak)
+    if version.PLATINUM:        # Platinum's PC menu has the same two words: the shared PC files stay as they are
+        return f'platinum/{RATING_TEXT}_rowan_rating.txt ({len(lines)} lines); the PC\'s files are Pearl\'s (the same labels)'
     b2 = open(os.path.join(DECOMP, 'res', 'text', 'script', 'global_10090.txt'), encoding='utf-8').read().split('\n')
     assert b2[5] == "Global10090_Text_ProfessorsPc = Professor's PC" and b2[-2:] == ['\\pad{4c}', ''], b2[-3:]
     pc = b2[:-2]
@@ -110,8 +131,12 @@ def global_text_code(code):
 
 # ------------------------------------------------------------------------------------------------- the text
 
-ENTRY_BANK = 615 if __import__('version').DIAMOND else 616     # Pearl's Pokédex entries (Diamond's in bank 615)
-PEARL_FORMS = ('unown', 'castform', 'deoxys', 'burmy', 'wormadam', 'shellos', 'gastrodon', 'cherrim')   # one Pearl entry each
+ENTRY_BANK = {'pearl': 616, 'diamond': 615, 'platinum': 616}[version.VERSION]   # the version's Pokédex entries
+#   (Pearl 616, Diamond 615; Platinum's slot 616 = its own English entries, pl_msg 706)
+CATEGORY_BANK, HEIGHT_BANK, WEIGHT_BANK = 621, 620, 619
+GIRATINA, GIRA_HEIGHT_BANK, GIRA_WEIGHT_BANK = 487, 715, 714   # Platinum: the Altered Forme's (module docstring)
+ENTRY_FIT, ENTRY_ROWS = 222, 3          # ov296 zukan_info.c: the entry window is 28 tiles (224 px), printed from x = 2, 3 rows
+TEXT_OVERRIDES = os.path.join(ROOT, 'data', 'text_overrides')
 SHARED = {
     'game_start_3': {'GameStart3_Text_UnovaPokedex': 'SINNOH POKÉDEX', 'GameStart3_Text_Unova': 'SINNOH'},
     'zknsearch_main': {'ZknsearchMain_Text_UnovaPokedexSearchMode': 'Sinnoh Pokédex: Search Mode'},
@@ -130,9 +155,94 @@ def species_dirs():
     return out
 
 
+def norm_dex(t):
+    """A height, weight or category line as both games print it (the dump's thin spaces and curly marks)."""
+    return t.strip().replace('\u2009', '').replace('’', "'").replace('”', '"').replace('\\n', ' ').replace('\n', ' ')
+
+
+def dex_line(gen4):
+    """A Gen 4 entry as Black 2's entry text: rows joined by \\n; it must fit the entry window (ENTRY_FIT, ENTRY_ROWS)."""
+    import gen4_text, b2font
+    line = gen4_text.b2_line(gen4)
+    rows = line.split('\\n')
+    font = b2font.load(0)
+    assert len(rows) <= ENTRY_ROWS and '{' not in line and max(font.width(r) for r in rows) <= ENTRY_FIT, line
+    return '\n'.join(rows)
+
+
+def shared_entries():
+    """{data.json path: (entry, [form entries])} as the shared files give them: Black 2's data with
+    data/text_overrides/pokedex.json (Pearl's words) over it."""
+    shared = json.load(open(os.path.join(TEXT_OVERRIDES, 'pokedex.json'), encoding='utf-8'))
+    dirs, out = species_dirs(), {}
+    for n in range(1, 494):
+        path = f'res/pokemon/{dirs[n]}/data.json'
+        dex = json.load(open(os.path.join(DECOMP, path), encoding='utf-8'))['pokedex']
+        ov = shared.get(path, {}).get('pokedex', {})
+        forms = [f['entry'] for f in dex.get('forms', [])]
+        if 'forms' in ov:
+            forms = [o.get('entry', f) for o, f in zip(ov['forms'], forms)]
+        out[path] = (ov.get('entry', dex['entry']), forms)
+    return out
+
+
+def check_sizes(cats, heights, weights, gira=None):
+    """The version's categories, heights and weights against Black 2's (they keep Black 2's lines); for Platinum also
+    Giratina's two formes (module docstring): [(species, field, theirs, Black 2's)] that differ."""
+    dirs, bad = species_dirs(), []
+    for n in range(1, 494):
+        dex = json.load(open(os.path.join(DECOMP, f'res/pokemon/{dirs[n]}/data.json'), encoding='utf-8'))['pokedex']
+        if gira and n == GIRATINA:
+            gh, gw = gira
+            pairs = [(gh[n], dex['height'], 'height'), (gw[n], dex['weight'], 'weight'),
+                     (heights[n], dex['forms'][0]['height'], 'origin height'),
+                     (weights[n], dex['forms'][0]['weight'], 'origin weight'), (cats[n], dex['category'], 'category')]
+        else:
+            pairs = [(cats[n], dex['category'], 'category'), (heights[n], dex['height'], 'height'),
+                     (weights[n], dex['weight'], 'weight')]
+        bad += [(n, f, a, b) for a, b, f in pairs if norm_dex(a) != norm_dex(b)]
+    return bad
+
+
+def write_version_text():
+    """data/text_overrides/<version>/pokedex.json (module docstring "Platinum's text"): the version's entries wherever
+    the shared files give other words, each alternate form the same entry."""
+    import gen4_text
+    entries, cats, heights, weights = (gen4_text.bank(n) for n in (ENTRY_BANK, CATEGORY_BANK, HEIGHT_BANK, WEIGHT_BANK))
+    gira = (gen4_text.bank(GIRA_HEIGHT_BANK), gen4_text.bank(GIRA_WEIGHT_BANK)) if version.PLATINUM else None
+    bad = check_sizes(cats, heights, weights, gira)
+    assert not bad, f'{version.NAME}\'s categories, heights or weights differ from Black 2\'s: {bad[:5]}'
+    cur, out, same = shared_entries(), {}, 0
+    for n, (path, (entry, forms)) in enumerate(cur.items(), 1):      # (species 1-493 in order)
+        want = dex_line(entries[n])
+        new = {}
+        if entry != want:
+            new['entry'] = want
+        if any(f != want for f in forms):
+            new['forms'] = [{'entry': want} for _ in forms]
+        if new:
+            out[path] = {'pokedex': new}
+        else:
+            same += 1
+    doc = (f'{version.NAME}\'s Pokédex entries (b2tools/patches/sinnoh_pokedex.py --text with PEARL_VERSION={version.VERSION}, '
+           f'from the user\'s dump, bank slot {ENTRY_BANK}, through b2tools/gen4_text.py), applied by patches/sinnoh_names.py '
+           f'over data/text_overrides/pokedex.json: the {len(out)} species whose words differ from what the shared files give '
+           f'(Black 2\'s or Pearl\'s), with every alternate form the same entry ({same} already equal). Categories, heights '
+           'and weights equal Black 2\'s for all 493 (checked; Giratina\'s Altered and Origin Formes by '
+           f'{version.NAME}\'s own banks), so Black 2\'s lines stay. Checked against the dump by b2tools/platinum_dex_check.py.')
+    folder = os.path.join(TEXT_OVERRIDES, version.VERSION)
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, 'pokedex.json')
+    json.dump({'_doc': doc, **out}, open(path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    return f'{len(out)} entries ({same} already equal) -> {path}'
+
+
 def write_text():
     """data/text_overrides/pokedex.json (module docstring "Text"): Pearl's entries where they differ from Black 2's
-    (categories, heights and weights are all equal: checked here, so they keep Black 2's lines)."""
+    (categories, heights and weights are all equal: checked here, so they keep Black 2's lines). Another version writes
+    its own folder's file (write_version_text)."""
+    if version.VERSION != 'pearl':
+        return write_version_text()
     import gen4_text, b2font
     font = b2font.load(0)
     entries, cats, heights, weights = (gen4_text.bank(n) for n in (ENTRY_BANK, 621, 620, 619))
@@ -148,18 +258,22 @@ def write_text():
         lines = line.split('\\n')
         assert len(lines) <= 3 and '{' not in line and max(font.width(l) for l in lines) <= 222, (n, line)
         text = '\n'.join(lines)
-        if text == dex['entry']:
-            same += 1; continue
-        new = {'entry': text}
-        if dirs[n] in PEARL_FORMS and dex.get('forms'):
+        new = {'entry': text} if text != dex['entry'] else {}
+        # (every alternate form shows its species' entry: Pearl has one a species. 1.0 did this only for the forms Pearl
+        # has (PEARL_FORMS), so Rotom's five forms, Giratina's Origin Forme, Shaymin's Sky Forme and Arceus's 16 forms
+        # showed Black 2's own words; 1.0.1, v101-seams)
+        if any(f['entry'] != text for f in dex.get('forms', [])):
             new['forms'] = [{'entry': text} for _ in dex['forms']]
+        if not new:
+            same += 1; continue
         out[path] = {'pokedex': new}
         changed += 1
     doc = ('Pearl\'s Pokédex text (b2tools/patches/sinnoh_pokedex.py --text, from the user\'s dump through '
            'b2tools/gen4_text.py): the list header SINNOH POKÉDEX, the search and HABITAT list lines, and Pearl\'s '
-           f'entries (bank {ENTRY_BANK}) for species 1-493 where Black 2\'s differ ({changed}; {same} equal), the '
-           'alternate forms Pearl has (Unown, Castform, Deoxys, Burmy, Wormadam, Shellos, Gastrodon, Cherrim) the same '
-           'entry. Categories, heights and weights equal Pearl\'s for all 493 (checked), so Black 2\'s lines stay.')
+           f'entries (bank {ENTRY_BANK}) for species 1-493 where Black 2\'s differ ({changed}; {same} equal), every '
+           'alternate form the same entry as its species (Pearl has one a species; 1.0.1 adds Rotom\'s, Giratina\'s, '
+           'Shaymin\'s and Arceus\'s forms). Categories, heights and weights equal Pearl\'s for all 493 (checked), so '
+           'Black 2\'s lines stay. Checked against the dump by b2tools/platinum_dex_check.py --text.')
     data = {'_doc': doc, **SHARED, **out}
     path = os.path.join(ROOT, 'data', 'text_overrides', 'pokedex.json')
     json.dump(data, open(path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
@@ -189,10 +303,23 @@ def _tm():
     return m
 
 
+def table_bits(data):
+    """{species: bits} of one zone's a/1/2/7 file (all four of its tables: morning, day, night and the Old/Good Rod
+    table). Bits: walking, surfing, fishing (Black 2's groups grass / surf / fishing and their dark-grass, rippling
+    copies)."""
+    assert len(data) % ENC_TABLE == 0, len(data)
+    bits = {}
+    for t0 in range(0, len(data), ENC_TABLE):
+        t = data[t0:t0 + ENC_TABLE]
+        for k in range(56):
+            sp = struct.unpack_from('<H', t, 8 + 4 * k)[0] & 0x7FF
+            if sp and t[GROUPS[k]]: bits[sp] = bits.get(sp, 0) | KIND_BIT[GROUPS[k]]
+    return bits
+
+
 def zone_bits(files, ztab):
-    """{zone: {species: bits}} of every zone with a Sinnoh wild table (sinnoh_encounters' a/1/2/7 135-317, all four
-    of its tables: morning, day, night and the Old/Good Rod table) and a place on the map. Bits: walking, surfing,
-    fishing (Black 2's groups grass / surf / fishing and their dark-grass, rippling copies)."""
+    """{zone: {species: bits}} of every zone with a Sinnoh wild table (sinnoh_encounters' a/1/2/7 135-317) and a place
+    on the map (table_bits)."""
     import narcio, zoneheaders
     headers, _ = zoneheaders.load(files)
     enc = narcio.load(files, ARC_ENC)
@@ -200,16 +327,49 @@ def zone_bits(files, ztab):
     for z, h in enumerate(headers):
         f = h['encounters']
         if f not in SINNOH_TABLES or z >= len(ztab) or ztab[z] == 0xFF: continue
-        data = enc[f]
-        assert len(data) % ENC_TABLE == 0, (z, f, len(data))
-        bits = {}
-        for t0 in range(0, len(data), ENC_TABLE):
-            t = data[t0:t0 + ENC_TABLE]
-            for k in range(56):
-                sp = struct.unpack_from('<H', t, 8 + 4 * k)[0] & 0x7FF
-                if sp and t[GROUPS[k]]: bits[sp] = bits.get(sp, 0) | KIND_BIT[GROUPS[k]]
-        out[z] = bits
+        out[z] = table_bits(enc[f])
     return out
+
+
+# Platinum's AREA page also shows its own Pokédex's "special" places (2026-11-07, plat-dex; a version row): zukan_enc's
+# categories 3 and 8, the lists its Pokédex shows before the National Pokédex (town_map.AREA_SPECIAL): the honey trees
+# (Aipom, Heracross, Wurmple, Burmy, Combee, Cherubi: Floaroma Meadow and 21 routes and fields), the Great Marsh's daily
+# Pokémon and Feebas's tiles in Mt. Coronet, which our wild tables don't hold (patches/wild.py does them in code). They
+# show as walking, Feebas as fishing. 1.0.1 (the user, 2026-11-07): on for Pearl and Diamond too, from their own zukan_enc
+# (20 species with such dungeon places and 7 with field places; Pearl's honey trees have Cascoon, Diamond's Silcoon).
+# Black 2's HABITAT list (its own feature, after the National Pokédex) keeps the wild tables' Pokémon only: with the
+# special places its pages need 20,168 B, and a/2/9/6 keeps its 19,776 (the ROM layout). Not shown, in any version:
+# the lists Platinum adds with the National Pokédex (categories 4 and 9: the Trophy Garden's daily Pokémon, swarms, the
+# Great Marsh after it, the GBA slot), since Black 2's area data (a/1/7/6) has one table for both Pokédex modes.
+AREA_SPECIAL = {'pearl': True, 'diamond': True, 'platinum': True}[version.VERSION]
+SPECIAL_KIND = {349: 0x20}                      # Feebas: by fishing; every other special place: walking (0x01)
+
+
+def special_bits(tm, locs):
+    """{species: {record: bits}} of the version's special lists (AREA_SPECIAL)."""
+    rec = tm.area_records(locs)
+    out = {}
+    for spc in range(1, 494):
+        for cat in tm.AREA_SPECIAL:
+            kind = 'dungeon' if cat < 5 else 'field'
+            for place in tm.area_list(spc, cat):
+                out.setdefault(spc, {})[rec[(kind, place)]] = SPECIAL_KIND.get(spc, 0x01)
+    return out
+
+
+def place_bits(zb, ztab, rzones, specials=None):
+    """{species: [bits per habitat index]} from zone_bits and the special places (a record's habitat index is its zone's
+    first record: Mt. Coronet's two records share one) -> (hab, slot_of)."""
+    slot_of = [rzones.index(z) for z in rzones]
+    hab = {}
+    for z, bits in zb.items():
+        k = slot_of[ztab[z]]
+        for spc, b in bits.items():
+            hab.setdefault(spc, [0] * NREC)[k] |= b
+    for spc, recs in (specials or {}).items():
+        for r, b in recs.items():
+            hab.setdefault(spc, [0] * NREC)[slot_of[r]] |= b
+    return hab, slot_of
 
 
 def habitat(files):
@@ -221,13 +381,10 @@ def habitat(files):
     recs, ztab = f21['records'], f21['zone_table']
     assert len(recs) == NREC, len(recs)
     rzones = [r[0] for r in recs]
-    slot_of = [rzones.index(z) for z in rzones]                # a place's habitat index: its zone's first record
-    hab = {}
+    locs = tm.locations(); locs = locs + [tm.dummy_record(locs)] * (NREC - len(locs))
     zb = zone_bits(files, ztab)
-    for z, bits in zb.items():
-        k = slot_of[ztab[z]]
-        for spc, b in bits.items():
-            hab.setdefault(spc, [0] * NREC)[k] |= b
+    hab, slot_of = place_bits(zb, ztab, rzones, special_bits(tm, locs) if AREA_SPECIAL else None)
+    wild_hab = place_bits(zb, ztab, rzones)[0] if AREA_SPECIAL else hab     # the HABITAT list's: wild tables only
     path = arc_path(files, ARC_HABITAT); size = os.path.getsize(path)
     entries = narcio.load(files, ARC_HABITAT)
     assert len(entries) == N_FILES and all(len(e) == HABITAT_SIZE for e in entries)
@@ -242,10 +399,9 @@ def habitat(files):
         new.append(bytes(d))
     narcio.save(files, ARC_HABITAT, new)
     assert os.path.getsize(path) == size, 'a/1/7/6 changed size'
-    locs = tm.locations(); locs = locs + [tm.dummy_record(locs)] * (NREC - len(locs))
     art = highlight_art(files, tm, locs, recs)
     AREA.update(zones=rzones, filler=NREC - 1, nzones=len(ztab), zt_off=_zt_off(files, tm))
-    hl = habitat_list(files, tm, locs, hab, slot_of, rzones, ztab)
+    hl = habitat_list(files, tm, locs, wild_hab, slot_of, rzones, ztab)
     found = sum(1 for i in range(1, 494) if i in hab)
     return (f'habitat: {found} species of 1-493 on the Sinnoh map ({len(zb)} zones with wild tables); {art}; {hl}')
 
@@ -375,14 +531,13 @@ PICTURE_OF = {'ROUTE_209_LOST_TOWER_1F': 'tower', 'STARK_MOUNTAIN_EXTERIOR': 'mo
 
 
 def _visited_works():
-    t = open(os.path.join(ROOT, 'src', 'include', 'pearl.h')).read()
+    """The four works of the HABITAT list's visited bits, from the version's pearl.h (Platinum's own: the same numbers)."""
+    t = open(os.path.join(ROOT, 'src', 'include', 'platinum' if version.PLATINUM else '', 'pearl.h')).read()
     return [int(re.search(rf'#define\s+PVAR_HABITAT_VISITED_{i}\s+(0x[0-9A-Fa-f]+)', t).group(1), 16) for i in range(4)]
 
 
-def habitat_list(files, tm, locs, hab, slot_of, rzones, ztab):
-    """a/2/9/6 = one page per Sinnoh place (+ the empty filler), and AREA['hlist'] for apply_code."""
-    import narcio
-    from b2files import arc_path
+def hlist_pages(tm, locs, hab, slot_of):
+    """The HABITAT list's pages (a/2/9/6 files, without the filler): (pages, place names, {name: records}, left out)."""
     import importlib.util
     spec = importlib.util.spec_from_file_location('sinnoh_dex_hl', os.path.join(HERE, 'sinnoh_dex.py'))
     sd = importlib.util.module_from_spec(spec); spec.loader.exec_module(sd)
@@ -433,6 +588,14 @@ def habitat_list(files, tm, locs, hab, slot_of, rzones, ztab):
                                        'field' if have[0] else 'water')
         pages.append(bytes([0, 0, 0, *map(int, have), PICTURE[kind], 0]) + struct.pack('<H', len(ents)) + b''.join(ents))
         places.append(g)
+    return pages, places, groups, left_out
+
+
+def habitat_list(files, tm, locs, hab, slot_of, rzones, ztab):
+    """a/2/9/6 = one page per Sinnoh place (+ the empty filler), and AREA['hlist'] for apply_code."""
+    import narcio
+    from b2files import arc_path
+    pages, places, groups, left_out = hlist_pages(tm, locs, hab, slot_of)
     pages += [bytes(8) + struct.pack('<H', 0)] * (HLIST_FILES - len(pages))
     path = arc_path(files, ARC_HLIST); size = os.path.getsize(path)
     assert len(narcio.load(files, ARC_HLIST)) == HLIST_FILES

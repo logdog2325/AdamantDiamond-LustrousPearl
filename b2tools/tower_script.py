@@ -16,6 +16,12 @@ ZONES = ('MAP_BATTLE_TOWER_LOBBY', 'MAP_BATTLE_TOWER_ELEVATOR', 'MAP_BATTLE_TOWE
 LOBBY = 'MAP_BATTLE_TOWER_LOBBY'
 # Where a saved challenge resumes: in front of the room's receptionist (Pearl's returning Warps), facing up
 LOBBY_RESUME = {'MAP_BATTLE_TOWER_ARENA_MULTI': (11, 6), 'MAP_BATTLE_TOWER_ARENA_WIFI': (7, 6), LOBBY: (11, 6)}
+import version  # noqa: E402
+if version.PLATINUM:
+    # (plat-frontier-core) Platinum's lobby: the single and double attendant stands at (15, 5), the multi's at (11, 5)
+    # (pokeplatinum scripts_battle_tower.s BattleTower_EnterSingleDoubleBattleRoom 15, BattleTower_EnterMultiBattleRoom 11;
+    # the elevator's warps back to (15, 6) and (11, 6)); the arenas are its battle room and multi battle room
+    LOBBY_RESUME = {'MAP_BATTLE_TOWER_ARENA_MULTI': (15, 6), 'MAP_BATTLE_TOWER_ARENA_WIFI': (11, 6), LOBBY: (15, 6)}
 # The opponents' people in each arena, by opponent number
 OPPONENT_OBJECTS = {'MAP_BATTLE_TOWER_ARENA_MULTI': (1,), 'MAP_BATTLE_TOWER_ARENA_WIFI': (4, 5)}
 FLAG_CONTINUE_SCRIPT = 2405
@@ -50,6 +56,8 @@ def h_function(tr, vals):
         45: (312, 1),   # beat Palmer?
         46: (313, 1),   # the Battle Points award
     }
+    if fn == 14 and version.TOWER_DISQUALIFY_ZERO:      # (plat-fix2) Platinum's rule: the latest streak is 0 too
+        return [f'pl_TowerDisqualify {v}  // Pearl tower function 14: the saved challenge ends, its latest streak 0']
     if fn in simple:
         cmd, has_ret = simple[fn]
         return [_tool(cmd, 0, 0, v if has_ret else 0) + f'  // Pearl tower function {fn}']
@@ -96,6 +104,14 @@ def h_function(tr, vals):
         return [f'pl_SetVarFromValue {v}, 0  // Pearl tower function 57']
     if fn == 100:
         return [f'pl_TowerIsNull {v}  // Pearl tower function 100']
+    if fn == 53 and version.PLATINUM:   # (plat-frontier-core) BT_FUNC_GET_SLOT_INDEX: the chosen Pokemon's party slot, which
+        # Platinum's lobby asks only to revert a form (TryRevertPokemonForm: Giratina's Origin Forme, Shaymin's Sky Forme) and on
+        # the wireless Multi; those species can't enter Black 2's Subway (its banned list), so no form needs reverting.
+        # (plat-stubs, 2026-11-08) 255, no slot: TryRevertPokemonForm is a real command now (Rotom out of its appliance), and
+        # the Subway's picks aren't known to the script, so it reverts nothing here (a Rotom keeps its appliance form)
+        return [f'pl_SetVarFromValue {v}, 255  // Platinum tower function 53: no slot (the Subway keeps the picks)']
+    if fn in (58, 59):          # (Platinum's own, plat-frontier-core) a field of its tower work nothing reads: unk_884 cleared,
+        return [f'// Platinum tower function {fn}: nothing reads what it sets']      # unk_8D6 set (pokeplatinum frscrcmd_battle_tower.c)
     # The Wi-Fi rooms' functions (8-12, 15, 16, 54 ...): nothing reaches them, the rooms are closed
     tr.job.approx[f'CallBattleTowerFunction {fn} (Wi-Fi only: closed)'] += 1
     return [f'pl_SetVarFromValue {v}, 0  // Pearl tower function {fn}: Wi-Fi only']

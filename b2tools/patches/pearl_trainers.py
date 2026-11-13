@@ -35,20 +35,29 @@ classes; the special classes' encounter effect (ov036 SPECIAL_TRAINER_ENCEFF 0x0
 5, its plain trainer effect, as HoennB2 found: the Elite Four cut-in hangs outside the League), music group (arm9
 SPECIAL_TRAINER_CLASSES 0x020922bc) and group music (ov036 SPECIAL_TRAINER_BGM 0x021d28e4). As HoennB2's
 patches/trainers.py does.
+Classes past Black 2's 236 (plat-frontier-rooms, 2026-11-07; version.NEW_TRAINER_CLASSES: Platinum's four Frontier Brains):
+registry ids 236 on ('how': 'new'), their names as lines 236 on of system text 383 and 485 (the clone's class list grows),
+their rows (picture, sex, eye-contact song) in the resident pool at gPearlB2TrainerClassExt (the decomp's
+resident/trainer_class.c answers tr_tool.c's class readers from it). Prize money is not a class's in Black 2: it is each
+trainer record's (TRAINER_PARAM_MONEY), and a facility battle (battle type 2) pays none, as Platinum's Brains (rate 0).
 """
 import glob, json, os, re, shutil, struct, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import narcio  # noqa: E402
 
 DECOMP = os.path.join(ROOT, 'external', 'pokebw2')
 VANILLA = os.path.join(DECOMP, 'build', 'b2_us', 'files')
-REGISTRY = os.path.join(ROOT, 'data', 'pearl_trainer_classes.json')
-TRAINERS = os.path.join(ROOT, 'work', 'pearl', 'b2_trainers')
+REGISTRY = version.data_path('pearl_trainer_classes.json')
+if version.PLATINUM:                # (its own copy, seeded from Pearl's: new classes take spare Black 2 classes there)
+    REGISTRY = version.data_out('pearl_trainer_classes.json')
+TRAINERS = os.path.join(version.WORLD_WORK, 'b2_trainers')
 ARM9_BASE, CLASS_RESOURCES, SPECIAL_CLASSES = 0x02004000, 0x02092394, 0x020922bc
+B2_CLASS_COUNT, CLASS_LIMIT = 236, 256  # Black 2's classes (tr_tool.c TRAINER_CLASS_COUNT); ids stay below 256 (u8 in some structs)
 OV036_BASE, SPECIAL_BGM, SPECIAL_ENCEFF = 0x0217f600, 0x021d28e4, 0x021d2900
 PLAIN_ENCEFF = 5
 TEXT_FILES = (381, 382, 383, 485)        # trainer messages, names, class names, class names with an article
@@ -107,13 +116,24 @@ def pearl_class_names():
     sexes = re.findall(r'/\*(TRAINER_CLASS_\w+)\*/ (\d)', open(os.path.join(
         ROOT, 'external', 'pokediamond', 'arm9', 'src', 'trainer_data.c')).read())
     sex = {c[14:]: int(v) for c, v in sexes}
-    return {c[14:]: (rows[0][int(n)], rows[1][int(n)], sex.get(c[14:], 0)) for c, n in consts}
+    out = {c[14:]: (rows[0][int(n)], rows[1][int(n)], sex.get(c[14:], 0)) for c, n in consts}
+    if version.PLATINUM:            # its classes 98-104 (the Frontier Brains, ...), from its own names
+        P = os.path.join(ROOT, 'external', 'pokeplatinum')
+        cls = [l.strip()[14:] for l in open(os.path.join(P, 'generated', 'trainer_classes.txt')) if l.strip()]
+        txt = [json.load(open(os.path.join(P, 'res', 'text', f), encoding='utf-8'))['messages']
+               for f in ('trainer_class_names.json', 'trainer_class_names_with_articles.json')]
+        flat = lambda m: (''.join(m['en_US']) if isinstance(m['en_US'], list) else m['en_US']).replace('₧₦', 'Pokémon')
+        female = {'HALL_MATRON', 'ARCADE_STAR', 'MAID', 'DP_PLAYER_FEMALE_2'}
+        for i in range(98, len(cls)):
+            out.setdefault(cls[i], (flat(txt[0][i]), flat(txt[1][i]), int(cls[i] in female)))
+    return out
 
 
 def class_registry():
     """data/pearl_trainer_classes.json, with any Pearl class not in it added (existing entries never move)."""
     import sinnoh_trainers
-    reg = json.load(open(REGISTRY)) if os.path.exists(REGISTRY) else {'classes': {}}
+    reg = json.load(open(REGISTRY)) if os.path.exists(REGISTRY) else \
+        json.load(open(os.path.join(ROOT, 'data', 'pearl_trainer_classes.json'))) if version.PLATINUM else {'classes': {}}
     reg['_doc'] = ('Pearl trainer class -> Black 2 class (registry: fixed once given; patches/pearl_trainers.py '
                    '--classes adds missing ones). Edits applied by patches/pearl_trainers.py: sprite/sex/eye_bgm in '
                    'arm9 TRAINER_CLASS_RESOURCES, name/name_with_article in system text 383/485, special = the class\'s '
@@ -128,7 +148,8 @@ def class_registry():
     taken = {e['b2'] for e in classes.values()}
     spare = [c for c in SPARE if c not in taken]
     for pc, (b2c, how) in sinnoh_trainers.CLASS_MAP.items():
-        if pc in classes or how in ('same', 'near') or (pc not in SPECIAL and pc not in pics):
+        if pc in classes or how in ('same', 'near') or (pc not in SPECIAL and pc not in pics and
+                                                         pc not in version.NEW_TRAINER_CLASSES):
             continue                    # (Pearl's player classes 0/1: no picture of their own, the stand-in stays)
         name, article, sex = names[pc]
         sex = SEX_FIX.get(pc, 0 if sex == 2 else sex)
@@ -141,7 +162,15 @@ def class_registry():
                 e['special']['bgm_group'] = GROUP[pc]
             if pc in NAME:
                 e['name'], e['name_with_article'] = NAME[pc], ('an ' if NAME[pc][0] in 'AEIOU' else 'a ') + NAME[pc]
+        elif pc in version.NEW_TRAINER_CLASSES:     # (plat-frontier-rooms) a class past Black 2's 236: Black 2's spare
+            import pearl_trainer_pics               # classes are all Pearl's; the decomp's resident/trainer_class.c reads it
+            b2 = B2_CLASS_COUNT + version.NEW_TRAINER_CLASSES.index(pc)
+            assert b2 < CLASS_LIMIT, f'{pc}: class {b2} is not below {CLASS_LIMIT}'
+            e = {'b2': b2, 'b2_name': f'PEARLB2_{pc}', 'how': 'new', 'sprite': pearl_trainer_pics.sprite_id(pc), 'sex': sex,
+                 'eye_bgm': eye(stand_in), 'name': name, 'name_with_article': article}
         else:
+            if not spare and version.PLATINUM:      # (Black 2's spare classes are all Pearl's: Platinum's Frontier Brains keep their stand-ins
+                continue                               # until step 8 finds them classes; notes/PORT_AUDIT.md)
             b2 = spare.pop(0)
             e = {'b2': b2, 'b2_name': b2_names[b2][14:], 'how': 'spare', 'sprite': pics[pc], 'sex': sex,
                  'eye_bgm': eye(stand_in), 'name': name, 'name_with_article': article}
@@ -157,7 +186,7 @@ def pearl_messages():
     """{Pearl trainer id: [(Gen 4 type, Black 2 script-text line)]} from the dump."""
     import gen4_text
     from gen4rom import Rom, narc_members
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    rom = Rom(version.WORLD_DUMP)
     tbl = narc_members(rom.read('poketool/trmsg/trtbl.narc'))[0]
     bank = gen4_text.bank(558)
     out = {}
@@ -194,7 +223,7 @@ def wanted(ids):
     pd = pearl_story.PearlData()
     by_num = pd.zones_of_script_file()
     out = set()
-    for path in glob.glob(os.path.join(ROOT, 'src', 'field_scripts', '*_pearl_*.s')):
+    for path in [p for p in version.sources(os.path.join(ROOT, 'src', 'field_scripts'), '.s') if '_pearl_' in p]:
         num = int(os.path.basename(path)[:4])
         if num not in by_num:
             continue
@@ -221,14 +250,26 @@ def _run(tree, args):
 
 def apply(files):
     import pokebw2_mod
-    ids = json.load(open(os.path.join(ROOT, 'data', 'pearl_story_ids.json')))
+    ids = json.load(open(version.data_path('pearl_story_ids.json')))
     index = json.load(open(os.path.join(TRAINERS, 'index.json')))
     reg = class_registry()
     b2_classes, b2_trainers = b2_constants()
+    new = new_classes(reg)          # (plat-frontier-rooms) classes past Black 2's: their constants follow Black 2's 236
+    b2_classes += ['TRAINER_CLASS_' + e['b2_name'] for e in new]
     todo = wanted(ids)
     msgs = pearl_messages()
     tree = pokebw2_mod.make_tree('pearl_trainers')
     data_dir = os.path.join(tree, 'res', 'trainers', 'data')
+    last = max(ids['trainers'][str(t)]['b2'] for t in todo) if todo else 0
+    if last >= len(b2_trainers):        # Platinum's ids past Black 2's 813 (patches/platinum_trainer_flags.py): new trainers.txt rows,
+        names_txt = os.path.join(tree, 'generated', 'trainers.txt')   # each with a record (a copy of trainer 1's until one is installed)
+        first = json.load(open(os.path.join(data_dir, b2_trainers[1][8:].lower() + '.json'), encoding='utf-8'))
+        with open(names_txt, 'a') as f:
+            for n in range(len(b2_trainers), last + 1):
+                b2_trainers.append(f'TRAINER_PLATINUM_{n}')
+                f.write(b2_trainers[-1] + '\n')
+                json.dump(first, open(os.path.join(data_dir, b2_trainers[-1][8:].lower() + '.json'), 'w', encoding='utf-8'),
+                          ensure_ascii=False, indent=4)
     done, used_classes = [], set()
     for t in todo:
         b2 = ids['trainers'][str(t)]['b2']
@@ -252,6 +293,12 @@ def apply(files):
     json.dump(keep, open(order_path, 'w'), indent=4)
     # class names
     cdir = os.path.join(tree, 'res', 'trainers', 'classes')
+    if new:                     # (plat-frontier-rooms) classes past Black 2's: lines 236 on of the class name texts
+        with open(os.path.join(tree, 'generated', 'trainer_classes.txt'), 'a') as f:
+            for e in new:
+                f.write('TRAINER_CLASS_' + e['b2_name'] + '\n')
+                json.dump({'$schema': 'trainer_class.schema.json', 'name': '', 'name_with_article': ''},
+                          open(os.path.join(cdir, e['b2_name'].lower() + '.json'), 'w', encoding='utf-8'), indent=4)
     for pc, e in reg['classes'].items():
         if 'name' in e:
             p = os.path.join(cdir, b2_classes[e['b2']][14:].lower() + '.json')
@@ -280,8 +327,9 @@ def apply(files):
         os.unlink(path)
     open(path + '.tmp', 'wb').write(write_narc(cur)); os.replace(path + '.tmp', path)
     json.dump(reg, open(REGISTRY, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    added = ', '.join(f'{e["b2"]} {e["name"]}' for e in new)
     return (f'pearl_trainers: {len(done)} trainers ({", ".join(done)}); classes {sorted(used_classes)}; '
-            f'{len(keep)} trainers with messages; system text {TEXT_FILES}')
+            f'{len(keep)} trainers with messages; system text {TEXT_FILES}' + (f'; new classes {added}' if new else ''))
 
 
 def apply_code(code):
@@ -292,6 +340,8 @@ def apply_code(code):
     entries = {data[SPECIAL_CLASSES - ARM9_BASE + 3 * e]: e for e in range(29)}
     special = {}
     for pc, e in reg['classes'].items():
+        if e['b2'] >= B2_CLASS_COUNT:       # (plat-frontier-rooms) past Black 2's table: gPearlB2TrainerClassExt (below)
+            continue
         o = CLASS_RESOURCES - ARM9_BASE + 4 * e['b2']
         data[o], data[o + 1] = e['sprite'], e['sex']
         if 'eye_bgm' in e:
@@ -315,8 +365,43 @@ def apply_code(code):
     if os.path.islink(path):
         os.unlink(path)
     open(path, 'wb').write(ov)
+    ext = install_new_classes(code, reg)
     return (f'pearl_trainers: {n} classes (sprite, sex, eye music), {len(special)} special classes (encounter effect '
-            f'{PLAIN_ENCEFF}), group music {reg["group_bgm"]}')
+            f'{PLAIN_ENCEFF}), group music {reg["group_bgm"]}' + ext)
+
+
+def new_classes(reg):
+    """The registry's classes past Black 2's 236 (version.NEW_TRAINER_CLASSES), in id order: 236, 237, ... without a gap."""
+    new = sorted((e for e in reg['classes'].values() if e['b2'] >= B2_CLASS_COUNT), key=lambda e: e['b2'])
+    assert [e['b2'] for e in new] == list(range(B2_CLASS_COUNT, B2_CLASS_COUNT + len(new))), \
+        f'pearl_trainers: the classes past {B2_CLASS_COUNT} have a gap: {[e["b2"] for e in new]}'
+    assert not new or new[-1]['b2'] < CLASS_LIMIT
+    return new
+
+
+def ext_blob(new):
+    """PearlB2TrainerClassExt (the decomp's include/pearlb2/trainer_class.h): u16 count, u16 0, then each class's sprite,
+    sex and u16 eye-contact song, as Black 2's TRAINER_CLASS_RESOURCES rows."""
+    return struct.pack('<HH', len(new), 0) + b''.join(struct.pack('<BBH', e['sprite'], e['sex'], e['eye_bgm']) for e in new)
+
+
+def install_new_classes(code, reg):
+    """(plat-frontier-rooms) The classes past Black 2's: their rows in the resident pool, its address in
+    gPearlB2TrainerClassExt (the decomp's resident/trainer_class.c). Nothing for a version without them (Pearl, Diamond)."""
+    new = new_classes(reg)
+    if not new:
+        return ''
+    import decomp, resident
+    slot = decomp.symbol('gPearlB2TrainerClassExt', code)
+    if slot is None:
+        raise SystemExit('pearl_trainers: the decomp has no gPearlB2TrainerClassExt (its src/pearlb2/resident/'
+                         'trainer_class.c): build on a decomp with it')
+    assert resident.read(code, slot, 4) == bytes(4), f'gPearlB2TrainerClassExt at {slot:#x} is not NULL'
+    blob = ext_blob(new)
+    base, _, _ = resident.install(code, lambda b: (blob, {}))
+    resident.write(code, slot, struct.pack('<I', base))
+    return (f'; classes {B2_CLASS_COUNT}-{new[-1]["b2"]} ({", ".join(e["name"] for e in new)}) at {base:#x} '
+            f'(gPearlB2TrainerClassExt {slot:#x})')
 
 
 def sound_ids():

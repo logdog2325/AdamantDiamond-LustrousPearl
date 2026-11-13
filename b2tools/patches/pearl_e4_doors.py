@@ -19,12 +19,16 @@ decomp: res/field/events, res/field/scripts, src), gets Pearl's door model:
   a copy of MODEL_1's, and the doors blocked but were invisible.)
 data/pearl_sprite_map.json gives graphics 209 that code, so pearl_events installs the eight doors and the rooms'
 scripts add and remove them as Pearl's do.
+Platinum (2026-11-02, plat-rooms): the same doors. Its OBJ_EVENT_GFX_ELITE_FOUR_ROOM_DOOR is 209 too (Platinum numbers ids
+0-209 as Pearl does), its rooms keep the two door objects each, and its fldeff member 110 is Pearl's door2 byte for byte
+(door_model reads the version's dump).
 """
 import os, struct, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import narcio, sprites  # noqa: E402
 
@@ -38,7 +42,7 @@ NO_RESOURCE = 0xFFFF
 
 def door_model():
     from gen4rom import Rom, narc_members
-    m = narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read(FLDEFF))[DOOR_MODEL]
+    m = narc_members(Rom(version.WORLD_DUMP).read(FLDEFF))[DOOR_MODEL]
     assert m[:4] == b'BMD0' and b'door2' in m[:0x100], 'Pearl fldeff 110 is not the door2 model'
     n = struct.unpack_from('<H', m, 0xE)[0]
     blocks = [m[struct.unpack_from('<I', m, 0x10 + 4 * k)[0]:][:4] for k in range(n)]

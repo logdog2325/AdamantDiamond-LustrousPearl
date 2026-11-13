@@ -67,5 +67,19 @@
   "SEQ_BA_DPOKE2": "pearl", "SEQ_BA_SECRET1": "pearl", "SEQ_BA_SECRET2": "SEQ_BGM_VS_DPLEGEND",
   "SEQ_WINPOKE": "black2", "SEQ_WINTRAIN": "black2", "SEQ_WINTGYM": "SEQ_BGM_WIN3", "SEQ_WINTENNO": "SEQ_BGM_WIN3",
   "SEQ_WINCHAMP": "SEQ_BGM_WIN5", "SEQ_WINGINGA": "pearl", "SEQ_WINAKAGI": "pearl"
+ },
+ "_versions_doc": "A version's changes to the rules above (2026-11-07, plat-music; patches/battle_music.py rules() adds the build's own row over Pearl's, key by key). Platinum, from pokeplatinum: field_bgm.c sTrainerEncounterBGMs is Pearl's eye table plus the Maid (98, Platinum's new class, Black 2's own MAID class); enc_effects.c gives Giratina BATTLE_GIRATINA (SEQ_PL_BA_GIRA), the Regi trio BATTLE_REGI_TRIO (SEQ_PL_BA_REGI) and the Kanto birds BATTLE_LEGENDARY (SEQ_BA_SECRET2), both outside Pal Park only (here everywhere: the table has no zone; a Regi or bird in Pal Park's Catching Show would need C in PearlB2_DecideEnvWild), Cresselia and Shaymin the wild theme as Pearl's default; battle_controller_player.c's victories and the trainer classes' battle music are Pearl's. With Black 2's music: Giratina's theme has no Black 2 counterpart (Platinum's in both modes), the Regi theme is Black 2's own SEQ_BGM_VS_REGI (the same tune, melody() 0.68, as the PWT remixes 0.64-0.77). The Frontier Brains (plat-frontier-rooms, 2026-11-07): Tower Tycoon, Hall Matron, Factory Head, Arcade Star, Castle Valet battle SEQ_PL_BA_BRAIN and victory SEQ_PL_WINBRAIN (enc_effects.c ENCEFF_FRONTIER_BRAIN, battle_controller_player.c), on their own Black 2 classes (Palmer 198, the other four 236-239: data/platinum/pearl_trainer_classes.json). A Frontier battle is the Subway's (battle type 2), whose song the facility's table gives (gPlatFactoryTable.brainBgm, gPlatHallTable.brainBgm and brainWinBgm: patches/platinum_factory.py, platinum_hall.py read the ids this patch gives); the victory rows here play after any Brain battle (Black 2's victory song by the first opponent's class). Both songs have no Black 2 counterpart (Platinum's in both modes). SEQ_PL_EYEBRAIN is not installed: nothing in Platinum plays it (only its sound archive and the sound test's names list it); Platinum's Brain cut-in plays BATTLE_FRONTIER_BRAIN (SEQ_PL_BA_BRAIN).",
+ "versions": {
+  "platinum": {
+   "eye": {"MAID": "SEQ_EYE_FUN"},
+   "battle": {"TOWER_TYCOON": "SEQ_PL_BA_BRAIN", "HALL_MATRON": "SEQ_PL_BA_BRAIN", "FACTORY_HEAD": "SEQ_PL_BA_BRAIN",
+              "ARCADE_STAR": "SEQ_PL_BA_BRAIN", "CASTLE_VALET": "SEQ_PL_BA_BRAIN"},
+   "victory": {"TOWER_TYCOON": "SEQ_PL_WINBRAIN", "HALL_MATRON": "SEQ_PL_WINBRAIN", "FACTORY_HEAD": "SEQ_PL_WINBRAIN",
+               "ARCADE_STAR": "SEQ_PL_WINBRAIN", "CASTLE_VALET": "SEQ_PL_WINBRAIN"},
+   "wild": {"144": "SEQ_BA_SECRET2", "145": "SEQ_BA_SECRET2", "146": "SEQ_BA_SECRET2", "377": "SEQ_PL_BA_REGI",
+            "378": "SEQ_PL_BA_REGI", "379": "SEQ_PL_BA_REGI", "487": "SEQ_PL_BA_GIRA"},
+   "unova": {"SEQ_PL_BA_GIRA": "pearl", "SEQ_PL_BA_REGI": "SEQ_BGM_VS_REGI", "SEQ_PL_BA_BRAIN": "pearl",
+             "SEQ_PL_WINBRAIN": "pearl"}
+  }
  }
 }

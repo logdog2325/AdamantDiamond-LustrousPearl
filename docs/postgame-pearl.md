@@ -13,6 +13,19 @@ Becoming Champion opens the rest of the game. This page also has the one-time Po
 - **The event gifts.** See [the deliveryman](#the-deliveryman-and-the-event-pokémon).
 - **The Spring Path** on Mt. Coronet, to Sendoff Spring and Turnback Cave, once you have the National Pokédex.
 - **More Pokémon** in the Great Marsh, the Trophy Garden and [the Hideaways](underground.md), plus daily Mysterious Shards and fossils there.
+- **Every Pokémon of the National Pokédex**, Adamant Diamond's too: see [the whole National Pokédex](#the-whole-national-pokédex).
+
+## The whole National Pokédex
+
+After the Hall of Fame all 493 Pokémon of the National Pokédex can be had in Lustrous Pearl without a trade: caught, or evolved or bred from one you catch. What makes that possible:
+
+- **Adamant Diamond's wild Pokémon**, where Adamant Diamond has them: in the grass and on the water, each slot where the two versions differ brings Adamant Diamond's Pokémon half of the time (Seel, Dewgong, Mr. Mime, Scyther, Murkrow, Silcoon, Beautifly, Volbeat, Illumise, Roselia, Gastrodon (East Sea), Stunky, Skuntank and Mime Jr.). Each area's "after the Hall of Fame" table on the [wild Pokémon page](wild-pokemon-pearl.md) has them.
+- **Stantler, Smeargle, Swellow and Loudred**, which only the Poké Radar found, in the grass where the Radar would find them, half of the time in its slots: Stantler on Route 207; Smeargle on Route 212 North; Swellow on Route 213; Loudred on Mt. Coronet North Mountainside and Mt. Coronet South Mountainside.
+- **Adamant Diamond's Pokémon in the Hideaways** of the Grand Underground: see [the Champion rows](wild-pokemon-pearl.md#grand-underground-hideaways).
+- **Adamant Diamond's fossil:** the daily fossil balls can hold the Skull Fossil too ([the Underground](underground.md#treasures)).
+- **All 11 rooms of Pal Park**, Adamant Diamond's too: the Johto Room (Raikou, Entei and Suicune) and the Rainbow Room (Ho-Oh). See [Pal Park](ramanas-park-pearl.md).
+- **Dialga** (level 47) at Spear Pillar, once you've caught Palkia: it waits where Palkia stood. Knock it out and it's back on your next visit. Catch it and you also get the Adamant Orb.
+- **Mew, Celebi, Jirachi and Deoxys** from [the deliveryman](#the-deliveryman-and-the-event-pokémon), after his other gifts.
 
 ## The Battle Zone
 
@@ -31,6 +44,7 @@ In the Battle Park, next to the Fight Area. Win seven battles in a row to clear 
 - **Battle Points for a cleared set:** 3, 3, 4, 4, 5, 5, then 7 a set from the seventh on.
 - **Palmer** appears at the end of the third and the seventh sets of Single Battles (battles 21 and 49). Beating him pays 20 BP.
 - Battle Points go into one purse with the World Tournament's.
+- **In the lobby,** the three results machines show your latest and longest win streaks. The leaders machine has no data: it needs Wi-Fi. The attendant there appears when you've earned a trophy, at 20, 50 and 100 wins in a row ([Secret Bases](secret-bases.md#mr-goods-and-the-battle-tower)).
 
 ### The Exchange Service Corner
 
@@ -50,7 +64,7 @@ In the Battle Park, the west door of its building. Its two counters:
 | Power Band | 16 | | TM30 Shadow Ball | 64 |
 | Power Anklet | 16 | | TM53 Energy Ball | 64 |
 | Power Weight | 16 | | TM36 Sludge Bomb | 80 |
-| Toxic Orb | 16 | | TM59 Incinerate | 80 |
+| Toxic Orb | 16 | | TM109 Dragon Pulse | 80 |
 | Flame Orb | 16 | | TM71 Stone Edge | 80 |
 | White Herb | 32 | | TM26 Earthquake | 80 |
 | Power Herb | 32 | |  |  |
@@ -65,7 +79,7 @@ In the Battle Park, the west door of its building. Its two counters:
 | Razor Fang | 48 | |  |  |
 | Rare Candy | 48 | |  |  |
 
-TM59 is Black 2's, not the original games' (in the original, the Exchange's TM59 is Dragon Pulse). Dragon Pulse is TM109 here, in the Stargleam Cavern Hideaway.
+The original games' TM59, Dragon Pulse, is TM109 here.
 
 ### The Pokémon World Tournament
 
@@ -116,8 +130,26 @@ After the Hall of Fame a deliveryman stands in every Poké Mart. Talk to him for
 | 2 | Oak's Letter | Route 224: with the National Pokédex, show it to Professor Oak there and name who you want to thank at the stone tablet. The Seabreak Path opens to Flower Paradise: **Shaymin** (level 30). If it isn't caught it's back next visit |
 | 3 | Azure Flute | Go to Spear Pillar with it, with the National Pokédex: the flute sounds and takes you to the Hall of Origin: **Arceus** (level 80). If it isn't caught it's back next visit |
 | 4 | Manaphy Egg | Hatches into Manaphy. It needs a free spot in your party, or he waits |
+| 5 | Matchup Checker | A [Pokétch](poketch.md) app |
+| 6 | Stopwatch | A Pokétch app |
+| 7 | Alarm Clock | A Pokétch app |
+| 8 | Mew | An [event Pokémon](#the-event-pokémon). It needs a free spot in your party, or he waits |
+| 9 | Celebi | An [event Pokémon](#the-event-pokémon). It needs a free spot in your party, or he waits |
+| 10 | Jirachi | An [event Pokémon](#the-event-pokémon). It needs a free spot in your party, or he waits |
+| 11 | Deoxys | An [event Pokémon](#the-event-pokémon). It needs a free spot in your party, or he waits |
 
 Shaymin's tablet doesn't keep your inscription (see [known issues](known-issues.md)).
+
+### The event Pokémon
+
+Each is a copy of a real event Pokémon of the Gen 4 games, with its level, moves, held item, Original Trainer and ID No. Each comes in a Cherish Ball.
+
+| Pokémon | Level | Held item | Moves | OT | ID No. | Ribbon |
+|---|---|---|---|---|---|---|
+| Mew | 50 |  | Synthesis, Return, Hypnosis, Teleport | Hayley | 01000 |  |
+| Celebi | 50 | Jaboca Berry | Leaf Storm, Recover, Nasty Plot, Healing Wish | WIN2011 | 02211 | Classic Ribbon |
+| Jirachi | 5 | Liechi Berry | Wish, Confusion, Rest, Draco Meteor | GAMESTP | 02270 | Classic Ribbon |
+| Deoxys | 50 | NeverMeltIce | Psycho Boost, Zap Cannon, Iron Defense, ExtremeSpeed | Gamestp | 06218 | Classic Ribbon |
 
 ## One-time Pokémon of the story
 
@@ -130,4 +162,4 @@ Shaymin's tablet doesn't keep your inscription (see [known issues](known-issues.
 | Spiritomb | 25 | Route 209, Hallowed Tower | Put the Odd Keystone in the tower, then have 32 battles in [the Hideaways](underground.md), and come back |
 | Rotom | 15 | Old Chateau, 2F: the TV | At night, after the Hall of Fame with the National Pokédex. One try a day until you catch it |
 
-Dialga is the other version's legendary: it isn't in Lustrous Pearl. The ball with the Lustrous Orb is at Spear Pillar.
+The ball with the Lustrous Orb is at Spear Pillar. Dialga comes after the Hall of Fame: see [the whole National Pokédex](#the-whole-national-pokédex).

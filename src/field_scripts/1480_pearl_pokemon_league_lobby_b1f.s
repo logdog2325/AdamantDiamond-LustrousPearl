@@ -115,7 +115,7 @@ C388_1_000E:
 C388_1_003A:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 83  // Pearl bank 379 line 2
-    ListMenu_AnchorTopRight 31, 13, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 31, 13, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 13, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 31, 13, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 84, 65535, 0  // Pearl AddMenuEntryImm 153, 0
     ListMenuAdd 85, 65535, 1  // Pearl AddMenuEntryImm 154, 1
@@ -129,7 +129,7 @@ C388_1_003A:
 
 C388_1_007A:
     pl_msg_sys 86  // Pearl bank 379 line 3
-    ListMenu_AnchorTopRight 31, 13, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 31, 13, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 13, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 31, 13, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 87, 65535, 0  // Pearl AddMenuEntryImm 155, 0
     ListMenuAdd 85, 65535, 1  // Pearl AddMenuEntryImm 154, 1
@@ -181,7 +181,7 @@ T388_2_010C:
 
 T388_2_0117:
     pl_msg_talk 90  // Pearl bank 379 line 6
-    ListMenu_AnchorTopRight 31, 13, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 31, 13, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 13, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 31, 13, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 84, 65535, 0  // Pearl AddMenuEntryImm 153, 0
     ListMenuAdd 85, 65535, 1  // Pearl AddMenuEntryImm 154, 1
@@ -195,7 +195,7 @@ T388_2_0117:
 
 T388_2_0157:
     pl_msg_talk 86  // Pearl bank 379 line 3
-    ListMenu_AnchorTopRight 31, 13, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 31, 13, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 13, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 31, 13, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 87, 65535, 0  // Pearl AddMenuEntryImm 155, 0
     ListMenuAdd 85, 65535, 1  // Pearl AddMenuEntryImm 154, 1
@@ -326,8 +326,8 @@ T388_3_0328:
     pl_stub 0A3  // Pearl 0x0A3 Unk00A3 : not translated yet
 
 T388_3_032A:
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (WaitForTransition, 0A3, 0A3: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_LoadDoorAnimation 77, 8, 2  // the door at cell (0,0) tile (8,2)
     pl_Call T388_3_02EE

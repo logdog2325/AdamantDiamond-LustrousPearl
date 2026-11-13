@@ -58,7 +58,7 @@ def build_pack():
 def apply(files):
     import subprocess
     subprocess.run([sys.executable, os.path.join(os.path.dirname(HERE), 'secret_base_scripts.py'), '--check'], check=True)
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     rooms = world['rooms']
     headers, entries = zoneheaders.load(files)
     assert len(headers) > SB.BASE_ZONE, 'secret_bases: the zone table has no block for the base (allocate_sinnoh, sinnoh_world)'
@@ -135,7 +135,7 @@ def apply_code(code):
     slot = decomp.symbol('gPearlB2SecretBase', code)
     if slot is None:
         raise SystemExit('secret_bases: the decomp has no gPearlB2SecretBase (src/pearlb2/resident/secret_base.c)')
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     res = [world['rooms']['building_res'][str(m)] for m in SB.HOLE_MODELS]
     holes = [h['hole'] for h in ug_data.hideaways()]
     table = SB.blob(state['pack'], res, holes, SS.SCRIPT)

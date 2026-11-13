@@ -44,7 +44,14 @@ P63_0049:
     pl_GoToIf 0, P63_0493
     pl_CompareVarToValue PVAR_40B4, 0
     pl_GoToIf 5, P63_03E6
-    pl_stub GetFossilCount  // Pearl 0x1F1 CountFossils 32768: not translated yet
+    pl_SetVarFromValue PVAR_8000, 0  // GetFossilCount: every fossil in the Bag, added up
+    pl_FossilCountAdd PVAR_8000, 103  // Old Amber
+    pl_FossilCountAdd PVAR_8000, 101  // Helix Fossil
+    pl_FossilCountAdd PVAR_8000, 102  // Dome Fossil
+    pl_FossilCountAdd PVAR_8000, 99  // Root Fossil
+    pl_FossilCountAdd PVAR_8000, 100  // Claw Fossil
+    pl_FossilCountAdd PVAR_8000, 104  // Armor Fossil
+    pl_FossilCountAdd PVAR_8000, 105  // Skull Fossil
     pl_CompareVarToValue PVAR_8000, 0
     pl_GoToIf 1, P63_0488
     pl_msg_talk 2
@@ -72,7 +79,7 @@ P63_0049:
     pl_GoToIf 1, P63_03B0
     pl_SetVarFromValue PVAR_8004, 0
     pl_SetVarFromValue PVAR_8005, 0
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8003  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8003
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8003  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8003
 
 P63_0132:
     pl_CompareVarToValue PVAR_8005, 0
@@ -107,7 +114,42 @@ P63_0132:
     pl_CallIf 1, P63_0370
     pl_SetVarFromVar PVAR_8006, PVAR_8005
     pl_AddVar PVAR_8006, 156
-    pl_stub AddMenuEntry  // line from PVAR_8006: Black 2 menus take a fixed line
+    WorkCmpConst PVAR_8006, 156  // AddMenuEntry: the line in PVAR_8006
+    VMJumpIf CMP_NE, P63_0201_Line0
+    ListMenuAdd 24, 65535, PVAR_8004  // Pearl AddMenuEntry 156, PVAR_8004
+    VMJump P63_0201_LineDone
+P63_0201_Line0:
+    WorkCmpConst PVAR_8006, 157  // AddMenuEntry: the line in PVAR_8006
+    VMJumpIf CMP_NE, P63_0201_Line1
+    ListMenuAdd 25, 65535, PVAR_8004  // Pearl AddMenuEntry 157, PVAR_8004
+    VMJump P63_0201_LineDone
+P63_0201_Line1:
+    WorkCmpConst PVAR_8006, 158  // AddMenuEntry: the line in PVAR_8006
+    VMJumpIf CMP_NE, P63_0201_Line2
+    ListMenuAdd 26, 65535, PVAR_8004  // Pearl AddMenuEntry 158, PVAR_8004
+    VMJump P63_0201_LineDone
+P63_0201_Line2:
+    WorkCmpConst PVAR_8006, 159  // AddMenuEntry: the line in PVAR_8006
+    VMJumpIf CMP_NE, P63_0201_Line3
+    ListMenuAdd 27, 65535, PVAR_8004  // Pearl AddMenuEntry 159, PVAR_8004
+    VMJump P63_0201_LineDone
+P63_0201_Line3:
+    WorkCmpConst PVAR_8006, 160  // AddMenuEntry: the line in PVAR_8006
+    VMJumpIf CMP_NE, P63_0201_Line4
+    ListMenuAdd 28, 65535, PVAR_8004  // Pearl AddMenuEntry 160, PVAR_8004
+    VMJump P63_0201_LineDone
+P63_0201_Line4:
+    WorkCmpConst PVAR_8006, 161  // AddMenuEntry: the line in PVAR_8006
+    VMJumpIf CMP_NE, P63_0201_Line5
+    ListMenuAdd 29, 65535, PVAR_8004  // Pearl AddMenuEntry 161, PVAR_8004
+    VMJump P63_0201_LineDone
+P63_0201_Line5:
+    WorkCmpConst PVAR_8006, 162  // AddMenuEntry: the line in PVAR_8006
+    VMJumpIf CMP_NE, P63_0201_Line6
+    ListMenuAdd 30, 65535, PVAR_8004  // Pearl AddMenuEntry 162, PVAR_8004
+    VMJump P63_0201_LineDone
+P63_0201_Line6:
+P63_0201_LineDone:
     pl_GoTo P63_0219
 
 P63_020D:
@@ -119,7 +161,7 @@ P63_0219:
     pl_AddVar PVAR_8005, 1
     pl_CompareVarToVar PVAR_8004, PVAR_8001
     pl_GoToIf 5, P63_0132
-    ListMenuAdd 24, 65535, PVAR_8004  // Pearl AddMenuEntry 44, PVAR_8004
+    ListMenuAdd 31, 65535, PVAR_8004  // Pearl AddMenuEntry 44, PVAR_8004
     ListMenuShow
     pl_CompareVarToValue PVAR_8003, 255
     pl_GoToIf 1, P63_03DB
@@ -139,7 +181,15 @@ P63_0219:
     pl_CallIf 1, P63_03A0
     pl_CompareVarToValue PVAR_8003, 6
     pl_CallIf 1, P63_03A8
-    pl_stub GetSpeciesFromFossil  // Pearl 0x1F4 GetFossilPokemon 16564, 32770: not translated yet
+    WorkSet PL_TMP, PVAR_8002  // GetSpeciesFromFossil: the item
+    pl_SetVarFromValue PVAR_40B4, 0
+    pl_FossilSpecies PVAR_40B4, 103, 142  // Old Amber: Aerodactyl
+    pl_FossilSpecies PVAR_40B4, 101, 138  // Helix Fossil: Omanyte
+    pl_FossilSpecies PVAR_40B4, 102, 140  // Dome Fossil: Kabuto
+    pl_FossilSpecies PVAR_40B4, 99, 345  // Root Fossil: Lileep
+    pl_FossilSpecies PVAR_40B4, 100, 347  // Claw Fossil: Anorith
+    pl_FossilSpecies PVAR_40B4, 104, 410  // Armor Fossil: Shieldon
+    pl_FossilSpecies PVAR_40B4, 105, 408  // Skull Fossil: Cranidos
     pl_CompareVarToValue PVAR_40B4, 0
     pl_GoToIf 1, P63_03DB
     pl_RemoveItem PVAR_8002, 1, PVAR_800C
@@ -237,8 +287,27 @@ P63_03A8:
     pl_Return
 
 P63_03B0:
-    pl_stub FindFossilAtThreshold  // Pearl 0x1F5 GetFossilMinimumAmount 32770, 32772, 1: not translated yet
-    pl_stub GetSpeciesFromFossil  // Pearl 0x1F4 GetFossilPokemon 16564, 32770: not translated yet
+    WorkSetConst PL_TMP3, 1
+    WorkSetConst PL_TMP2, 0  // FindFossilAtThreshold: the counts so far
+    pl_SetVarFromValue PVAR_8002, 0
+    pl_SetVarFromValue PVAR_8004, 0
+    pl_FossilFind PVAR_8002, PVAR_8004, 103, 0, .Lfossil_P63_03B0  // Old Amber
+    pl_FossilFind PVAR_8002, PVAR_8004, 101, 1, .Lfossil_P63_03B0  // Helix Fossil
+    pl_FossilFind PVAR_8002, PVAR_8004, 102, 2, .Lfossil_P63_03B0  // Dome Fossil
+    pl_FossilFind PVAR_8002, PVAR_8004, 99, 3, .Lfossil_P63_03B0  // Root Fossil
+    pl_FossilFind PVAR_8002, PVAR_8004, 100, 4, .Lfossil_P63_03B0  // Claw Fossil
+    pl_FossilFind PVAR_8002, PVAR_8004, 104, 5, .Lfossil_P63_03B0  // Armor Fossil
+    pl_FossilFind PVAR_8002, PVAR_8004, 105, 6, .Lfossil_P63_03B0  // Skull Fossil
+.Lfossil_P63_03B0:
+    WorkSet PL_TMP, PVAR_8002  // GetSpeciesFromFossil: the item
+    pl_SetVarFromValue PVAR_40B4, 0
+    pl_FossilSpecies PVAR_40B4, 103, 142  // Old Amber: Aerodactyl
+    pl_FossilSpecies PVAR_40B4, 101, 138  // Helix Fossil: Omanyte
+    pl_FossilSpecies PVAR_40B4, 102, 140  // Dome Fossil: Kabuto
+    pl_FossilSpecies PVAR_40B4, 99, 345  // Root Fossil: Lileep
+    pl_FossilSpecies PVAR_40B4, 100, 347  // Claw Fossil: Anorith
+    pl_FossilSpecies PVAR_40B4, 104, 410  // Armor Fossil: Shieldon
+    pl_FossilSpecies PVAR_40B4, 105, 408  // Skull Fossil: Cranidos
     pl_RemoveItem PVAR_8002, 1, PVAR_800C
     pl_GoTo P63_03CC
 

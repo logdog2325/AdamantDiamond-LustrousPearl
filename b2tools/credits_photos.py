@@ -10,6 +10,8 @@ the player's actor for the shot; the place's own people stay), so one set serves
     python3 b2tools/credits_photos.py SPEC.json      SPEC: {"photos": [[shot.png, place, dy], ... 12], "final": [shot.png, place]}
 
 Writes data/credits/NN_<slug>.png, final_<slug>.png and data/credits/credits.json (both gender entries the same file).
+PEARL_VERSION=platinum writes data/platinum/credits/ (version.data_out), which game_clear then reads for Platinum. A photo
+whose shot is "keep:NN_<slug>.png" is Pearl's finished photo of a place the version didn't change, copied as it is.
 """
 import json, os, re, sys
 import numpy as np
@@ -17,7 +19,10 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
-OUT = os.path.join(ROOT, 'data', 'credits')
+sys.path.insert(0, HERE)
+import version  # noqa: E402
+OUT = version.data_out('credits')
+PEARL_OUT = os.path.join(ROOT, 'data', 'credits')
 GREY_OUT, WHITE = 165, 255
 GAMMA = 1.35
 
@@ -106,7 +111,11 @@ def main(spec_path):
            'photos': [], 'final': None}
     for k, (shot, place, dy) in enumerate(spec['photos']):
         name = f'{k:02d}_{slug(place)}.png'
-        photo(shot, dy).save(os.path.join(OUT, name))
+        if shot.startswith('keep:'):                     # Pearl's photo as it is (a place the version didn't change)
+            import shutil
+            shutil.copyfile(os.path.join(PEARL_OUT, shot[5:]), os.path.join(OUT, name))
+        else:
+            photo(shot, dy).save(os.path.join(OUT, name))
         cfg['photos'].append({'place': place, 'm': name, 'f': name})
     shot, place = spec['final']
     name = f'final_{slug(place)}.png'

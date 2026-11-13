@@ -22,6 +22,7 @@ P344_0010:
     pl_FacePlayer
     MsgWinCloseAll  // (as Black 2's own uses: its window needs the message window gone)
     CallPokemonPreview 481, 0, 0, 0  // ShowPokemonPic
+    PokeDexRegist 0, 481  // DrawPokemonPreview marks the species seen (Black 2's preview doesn't)
 // WaitABPress: Black 2's Pokémon window waits itself
 // RemovePokemonPreview: Black 2's window closed itself
     pl_PlayCry 481
@@ -47,7 +48,7 @@ P344_0010:
     pl_WaitTime 8, PVAR_800C
     pl_SetFlag PFLAG_01FD
     pl_RemoveObject 0, PFLAG_01FD
-    pl_stub ActivateRoamingPokemon  // Pearl 0x21C CreateRoamer 0: not translated yet
+    pl_ActivateRoamingPokemon 0  // the roamer of slot 0 released (Black 2's roamer save)
     pl_msg_sys 1
     pl_CloseMessage
     pl_WaitTime 30, PVAR_800C

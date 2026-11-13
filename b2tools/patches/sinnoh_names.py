@@ -27,12 +27,18 @@ place. Runs after sinnoh_world and sinnoh_rooms.
   Cave), so the banner shows wherever Pearl shows its sign (not in buildings), when the place name changes.
 - The banner itself showed for no Sinnoh place until the decomp's PlaceName_LoadMessage took lines past 153
   (pokebw2 pearlb2 field_place_name.c, 2026-10-26): it cancelled every line from 154 on.
+- Platinum (2026-11-02, the dialogue step): its names come from its own dump (bank 382's slot, through gen4_text: Pearl's
+  111 sections with one renamed, "Cafe" -> "Café", plus 14 new ones, 112-125: the Battle Frontier and its four halls,
+  the Distortion World, the Global Terminal, the Villa, the Battleground, Rotom's Room, the T.G. Eterna Bldg and the
+  three Regi ruins). Line 265 is the Grand Underground's (data/text_overrides/underground.json, notes/LINK.md), so the
+  new sections go on lines 266-279 (place_line); Pearl's and Diamond's lines don't change.
 """
 import json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import zoneheaders  # noqa: E402
 import pokebw2_mod  # noqa: E402
 
@@ -52,6 +58,23 @@ STYLE_TEMPLATE = {'town': 427, 'route': 437, 'other': 437, 'room': 441, 'cave': 
 # lakes, Eterna Forest, Mt. Coronet's sides, the Great Marsh, Battle Park, ...) takes the style of Black 2's
 # Wellspring Cave (324: shown), a building Floccesy's house's (441: none).
 PEARL_BUILDING_TYPES = (4, 5)
+PEARL_SECTIONS = 112                              # Pearl's map sections 0-111; Platinum's 112-125 are its own
+PLATINUM_FIRST_LINE = 266                         # line of Platinum's section 112 (265: the Grand Underground)
+
+
+def place_line(section):
+    """The line of system text 109 that names a map section (PLACE_LINES 'high'; 'low' is Pearl's old layout)."""
+    if section >= PEARL_SECTIONS and PLACE_LINES == 'high':
+        return PLATINUM_FIRST_LINE + section - PEARL_SECTIONS
+    return section + FIRST_LINE
+
+
+def place_names():
+    """The version's place names by map section: Pearl's English .gmm (Pearl and Diamond), or Platinum's own dump."""
+    if not version.PLATINUM:
+        return pearl_names()
+    import gen4_text
+    return [gen4_text.to_b2(t, punctuation='pearl') for t in gen4_text.bank(382)]
 
 
 def pearl_names():
@@ -80,9 +103,13 @@ def text_overrides(tree):
     A label written "+Label" is a NEW line, appended at the file's end (before its \\pad line) in the JSON's order,
     e.g. new moves' names after the 560 lines \\from{moves.name} makes (HoennB2's text.py appends past a file's end
     the same way). A key "res/<path>.json" instead of a file name merges its fields into that data file of the clone:
-    the texts pokebw2 makes from its data through \\from{...} (an item's name, plural, description ...)."""
-    d, done = os.path.join(ROOT, 'data', 'text_overrides'), 0
-    for name in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+    the texts pokebw2 makes from its data through \\from{...} (an item's name, plural, description ...).
+    A Diamond or Platinum build then applies data/text_overrides/<version>/*.json the same way (a version row: its own
+    words over the shared ones, e.g. Platinum's changed Town Map lines); Pearl reads no such folder. A version file only
+    replaces lines (no "+Label"), so every new line keeps the message id the shared files give it (exp_share.py counts)."""
+    base, done = os.path.join(ROOT, 'data', 'text_overrides'), 0
+    folders = [base] + ([os.path.join(base, version.VERSION)] if version.VERSION != 'pearl' else [])
+    for d, name in [(d, n) for d in folders for n in (sorted(os.listdir(d)) if os.path.isdir(d) else [])]:
         if not name.endswith('.json'): continue
         for f, lines in json.load(open(os.path.join(d, name), encoding='utf-8')).items():
             if f.startswith('_'): continue
@@ -99,6 +126,7 @@ def text_overrides(tree):
             end = next((i for i in range(len(text) - 1, -1, -1) if text[i].startswith('\\pad{')), len(text) - 1)
             for label, value in lines.items():
                 new = label.startswith('+')
+                assert not (new and d != base), f'{d}/{name}: {label}: a version\'s file only replaces lines'
                 at = [i for i, l in enumerate(text) if l.split('=', 1)[0].strip() == label.lstrip('+')]   # 'X =' too
                 assert len(at) == (0 if new else 1), f'{name}: label {label} found {len(at)} times in {f}.txt'
                 if new:
@@ -111,8 +139,35 @@ def text_overrides(tree):
 
 
 def apply(files):
-    names = pearl_names()
-    tree = pokebw2_mod.make_tree('names')
+    tree, names, changed, overrides = system_text_tree('names')
+    text = pokebw2_mod.pack_text(tree, 'system')['a/0/0/2']
+    out = os.path.join(files, 'a', '0', '0', '2')
+    if os.path.islink(out): os.unlink(out)
+    open(out + '.tmp', 'wb').write(text); os.replace(out + '.tmp', out)
+
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
+    vanilla, _ = zoneheaders.load(VANILLA)
+    headers, entries = zoneheaders.load(files)
+    def room_kind(pid):
+        return 'room' if zones[int(pid)]['map_type'] in PEARL_BUILDING_TYPES else 'cave'
+    for group, kind_of in ((world['zones'], lambda pid, z: z['kind']),
+                           (world['rooms']['zones'], lambda pid, z: room_kind(pid))):
+        for pid, z in group.items():
+            sec = zones[int(pid)]['mapsec']
+            hd = headers[z['b2_zone']]
+            hd['place'] = place_line(sec) if sec else 1
+            hd['place_display'] = vanilla[STYLE_TEMPLATE[kind_of(pid, z)]]['place_display']
+    zoneheaders.save(files, headers, entries)
+    return (f'sinnoh_names: {changed} place names (lines {1 + FIRST_LINE}-{place_line(len(names) - 1)}, {PLACE_LINES}), '
+            f'{overrides} other system lines; zones placed')
+
+
+def system_text_tree(name):
+    """A pokebw2 clone (pokebw2_mod) with the place names and data/text_overrides in its system text sources:
+    (tree, names, place names written, override lines). apply() packs it; b2tools/text_check.py reads it offline."""
+    names = place_names()
+    tree = pokebw2_mod.make_tree(name)
     plist = os.path.join(tree, 'generated', 'places.txt')
     places = [l.split('=')[0].strip() for l in open(plist) if l.startswith('PLACE_')]
     assert len(places) == B2_PLACES, f'places.txt has {len(places)} places, expected Black 2\'s {B2_PLACES}'
@@ -132,7 +187,7 @@ def apply(files):
     if PLACE_LINES == 'high':
         for line, name in json.load(open(os.path.join(ROOT, 'data', 'hoenn_places.json')))['lines'].items():
             put(int(line), name)
-    for section in range(1, len(names)):
+    for section in range(1, min(len(names), PEARL_SECTIONS)):
         put(section + FIRST_LINE, names[section])
         changed += 1
     if PLACE_LINES == 'high':
@@ -144,28 +199,11 @@ def apply(files):
             json.dump({'$schema': 'place.schema.json', 'name': faraway},
                       open(os.path.join(pdir, places[-1][6:].lower() + '.json'), 'w', encoding='utf-8'),
                       ensure_ascii=False, indent=4)
+        for section in range(PEARL_SECTIONS, len(names)):          # (Platinum's new sections, on padded lines)
+            put(place_line(section), names[section])
+            changed += 1
     overrides = text_overrides(tree)
-    text = pokebw2_mod.pack_text(tree, 'system')['a/0/0/2']
-    out = os.path.join(files, 'a', '0', '0', '2')
-    if os.path.islink(out): os.unlink(out)
-    open(out + '.tmp', 'wb').write(text); os.replace(out + '.tmp', out)
-
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
-    vanilla, _ = zoneheaders.load(VANILLA)
-    headers, entries = zoneheaders.load(files)
-    def room_kind(pid):
-        return 'room' if zones[int(pid)]['map_type'] in PEARL_BUILDING_TYPES else 'cave'
-    for group, kind_of in ((world['zones'], lambda pid, z: z['kind']),
-                           (world['rooms']['zones'], lambda pid, z: room_kind(pid))):
-        for pid, z in group.items():
-            sec = zones[int(pid)]['mapsec']
-            hd = headers[z['b2_zone']]
-            hd['place'] = sec + FIRST_LINE if sec else 1
-            hd['place_display'] = vanilla[STYLE_TEMPLATE[kind_of(pid, z)]]['place_display']
-    zoneheaders.save(files, headers, entries)
-    return (f'sinnoh_names: {changed} place names (lines {1 + FIRST_LINE}-{len(names) - 1 + FIRST_LINE}, {PLACE_LINES}), '
-            f'{overrides} other system lines; zones placed')
+    return tree, names, changed, overrides
 
 
 def apply_code(code):

@@ -9,7 +9,8 @@ sinnoh_story:
     TEST_START=525,8,6 build_rom.py --clean ... scripts pearl_text sinnoh_story ... test_story_start
 
 TEST_SET="PVAR_4077=2,PFLAG_008F" sets the earlier story's works and flags (names from src/include/pearl.h, or
-numbers); TEST_LINES="pl_xxx ...;..." adds any other script lines (badges, items with counts).
+numbers); TEST_LINES="pl_xxx ...;..." adds any other script lines (badges, items with counts). TEST_START=zone,x,z,y starts at
+height y (the field actor's grid height, as story_play's ACTORS shows it) on a raised floor.
 """
 import glob, os, re, sys, tempfile
 
@@ -17,10 +18,16 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.dirname(HERE))
-import narcio, zoneheaders  # noqa: E402
+import narcio, version, zoneheaders  # noqa: E402
 import scripts  # noqa: E402
 
 TWINLEAF = 1670
+
+
+def zone_files(num):
+    """The installed script files of script number num: version.sources, so a Platinum build takes its own generated files
+    (work/platinum/src) over Pearl's (2026-11-07); Pearl's and Diamond's are src/field_scripts' as before."""
+    return [p for p in version.sources(scripts.SRC, '.s') if re.match(rf'{num:04d}_pearl_.*\.s$', os.path.basename(p))]
 
 
 def arrive_index(path):
@@ -32,7 +39,8 @@ def apply(files):
     start = os.environ.get('TEST_START')
     if not start:
         return 'test_story_start: TEST_START not set, nothing changed'
-    zone, x, z = (int(v) for v in start.split(','))
+    zone, x, z, *rest = (int(v) for v in start.split(','))
+    y = rest[0] if rest else 0          # TEST_START=zone,x,z,y: a start on a raised floor (the Canalave Gym's Byron, y 29)
     headers, _ = zoneheaders.load(files)
     if headers[zone]['matrix'] == 0:      # overworld: the tile's matrix cell decides the zone the game loads, and only
         # that zone's arrival script fades the screen in (2026-10-20: zone 321 at (173, 799), a Jubilife tile -> black)
@@ -43,10 +51,10 @@ def apply(files):
         if cell != zone:
             raise SystemExit(f'TEST_START: tile ({x}, {z}) is in zone {cell}, not {zone}: use TEST_START={cell},{x},{z}')
     num = headers[zone]['scripts']
-    dest = glob.glob(os.path.join(scripts.SRC, f'{num:04d}_pearl_*.s'))
+    dest = zone_files(num)
     assert dest, f'zone {zone} has script file {num}, not a translated Pearl zone'
     arrive = arrive_index(dest[0])
-    src = open(glob.glob(os.path.join(scripts.SRC, f'{TWINLEAF}_pearl_*.s'))[0]).read()
+    src = open(zone_files(TWINLEAF)[0]).read()
     inc = open(os.path.join(scripts.SRC, 'pearl', 'newgame.inc')).read()
     level = int(os.environ.get('TEST_LEVEL', '10'))
     items = [int(i) for i in os.environ.get('TEST_ITEMS', '').split(',') if i.strip()]
@@ -73,6 +81,9 @@ def apply(files):
             + ''.join(f'    ItemAdd {i}, 1, 0x8010\n' for i in items) + sets)
     assert inc.count('    VMCall C377_1_S1\n') == 1
     inc = inc.replace('    VMCall C377_1_S1\n', '    VMCall C377_1_S1\n' + give)
+    if y:
+        assert inc.count('PEARL_START_X, 0, PEARL_START_Z') == 1
+        inc = inc.replace('PEARL_START_X, 0, PEARL_START_Z', f'PEARL_START_X, {y}, PEARL_START_Z')
     for name, value in (('ZONE', zone), ('X', x), ('Z', z), ('ARRIVE', arrive)):
         src, n = re.subn(rf'^#define PEARL_START_{name} .*$', f'#define PEARL_START_{name} {value}', src, flags=re.M)
         assert n == 1, name

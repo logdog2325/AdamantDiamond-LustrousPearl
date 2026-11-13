@@ -10646,6 +10646,14 @@
   "PFLAG_POKE_FOLLOWER": {
    "b2": 1072,
    "why": "Rowan's following-Pok\u00e9mon question (patches/pearl_intro.py, followers.py): set = the first Pok\u00e9mon in the party walks behind the player everywhere; clear (old saves, NO) = no follower"
+  },
+  "PFLAG_PG_LEGEND_HIDDEN": {
+   "b2": 1073,
+   "why": "Spear Pillar: the other version's legendary hidden (its person's flag; its zone init sets it each visit: shown after the Hall of Fame once the version's own is caught)"
+  },
+  "PFLAG_PG_LEGEND_CAUGHT": {
+   "b2": 1074,
+   "why": "Spear Pillar: the other version's legendary caught (the other Orb given)"
   }
  },
  "trainers": {
@@ -14665,7 +14673,7 @@
   }
  },
  "free_left": {
-  "flags": 256,
+  "flags": 254,
   "works": 129,
   "daily_flags": 23,
   "trainer_ids": 0

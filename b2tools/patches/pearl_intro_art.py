@@ -25,29 +25,35 @@ import os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
-import narcio, sprites  # noqa: E402
+import narcio, sprites, version  # noqa: E402
 
 ARC_INTRO = 168
 GENDER_MODELS = (22, 23)
-ART = os.path.join(ROOT, 'art_sources', 'intro')
+# The official artwork the user supplied: Platinum's own Lucas and Dawn in their folder
+ART = os.path.join(ROOT, 'art_sources', 'intro', 'platinum') if version.PLATINUM else os.path.join(ROOT, 'art_sources', 'intro')
+# Platinum's files have a faint halo around the figure, and Dawn's pointing arm makes her wide: the crop goes by solid pixels, and Lucas is
+# capped so the two keep Pearl's pair's height ratio (240 : 222) (the user, 2026-11-02; to check on screen)
+SOLID_CROP = version.PLATINUM
+MAX_HEIGHT = {'lucas.png': 212} if version.PLATINUM else {}
 # (art file, texture prefix, box (x0, y0, x1, y1) Black 2's own picture fills)
 GENDER = [('lucas.png', 'int_swan_m', (11, 7, 123, 247)), ('dawn.png', 'int_swan_f', (15, 10, 111, 246))]
 DARK = 0.28
 RIVAL_NCGR, RIVAL_NCLR = 10, 11
 PROF = dict(nanr=24, parts=25, quads=26, ncer=27, nclr=28, nmar=29, nmcr=30)
-PEARL_INTRO, ROWAN_NCGR, ROWAN_NCLR = 'demo/intro/intro.narc', 18, 19
+PEARL_INTRO = 'demo/intro/intro.narc'
+ROWAN_NCGR, ROWAN_NCLR = (19, 20) if version.PLATINUM else (18, 19)   # (the same picture and colours in both dumps)
 JUNIPER_FEET_Y, JUNIPER_CENTRE_X = 48, -1
 NODE_ATTR = 0x21                        # as Black 2's nodes: cell animation 0, visible
 RIVAL_OBJS = [(0, 0, 64, 64), (64, 0, 16, 32), (64, 32, 16, 32), (0, 64, 32, 16), (32, 64, 32, 16), (64, 64, 16, 16)]
 
 
-def gender_picture(path, box, size=(128, 256)):
+def gender_picture(path, box, size=(128, 256), solid=False, max_height=None):
     """(bright, dark) indexed 128 x 256 PIL images of the artwork, scaled into box (bottom-aligned, centred)."""
     from PIL import Image
     art = Image.open(path).convert('RGBA')
-    art = art.crop(art.getbbox())
+    art = art.crop((art.getchannel('A').point(lambda a: 255 if a >= 128 else 0) if solid else art).getbbox())
     bw, bh = box[2] - box[0], box[3] - box[1]
-    k = min(bh / art.height, (size[0] - 4) / art.width)
+    k = min((max_height or bh) / art.height, bh / art.height, (size[0] - 4) / art.width)
     w, h = max(1, round(art.width * k)), max(1, round(art.height * k))
     small = art.resize((w, h), Image.LANCZOS)
     canvas = Image.new('RGBA', size, (0, 0, 0, 0))
@@ -89,7 +95,6 @@ def pearl_tiled(ncgr):
 
 
 def rowan_picture():
-    import version
     from gen4rom import Rom, narc_members
     m = narc_members(Rom(version.SOURCE_DUMP).read(PEARL_INTRO))
     w, h, pix = pearl_tiled(m[ROWAN_NCGR])
@@ -136,7 +141,7 @@ def apply(files):
     if all(os.path.exists(os.path.join(ART, a)) for a, _, _ in GENDER):
         with tempfile.TemporaryDirectory() as t:
             for art, prefix, box in GENDER:
-                bright, dark = gender_picture(os.path.join(ART, art), box)
+                bright, dark = gender_picture(os.path.join(ART, art), box, solid=SOLID_CROP, max_height=MAX_HEIGHT.get(art))
                 for model in GENDER_MODELS:
                     for suffix, im in (('.2', bright), ('.1', dark)):
                         name = prefix + suffix
@@ -149,6 +154,8 @@ def apply(files):
                         assert len(new) == len(entries[model])
                         entries[model] = new
         done.append('Lucas and Dawn on the boy/girl choice')
+    elif version.PLATINUM:
+        raise SystemExit(f'pearl_intro_art: {ART} needs lucas.png and dawn.png (the official artwork, git-ignored)')
     else:
         done.append('boy/girl choice kept (no art_sources/intro/lucas.png, dawn.png)')
     # the friend: Barry

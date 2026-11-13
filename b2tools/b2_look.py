@@ -33,6 +33,7 @@ import functools, json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import pearl_mesh  # noqa: E402
 
@@ -56,7 +57,9 @@ SRT = {'outdoor': 0, 'cave': 3}  # a/0/6/8: 'area_ita_00' (sea, ponds, rivers), 
 PEARL_WATER = {'sea': ('base', 'sea'), 'asasea': ('base', 'sea'), 'puddle_b': ('base', None),
                'puddleb_x': ('base', 'pond'), 'dun_sea': ('base', 'cave'),
                'puddle': ('surface', None), 'puddle_x': ('surface', 'pond'), 'lake': ('surface', 'pond'),
-               'l_lake': ('surface', 'pond')}
+               'l_lake': ('surface', 'pond'),
+               'bf_lake': ('base', 'pond')}   # (Platinum: the Fight Area's two pools at the Battle Frontier's gate, flat
+#                                               light blue, sea tiles; their shore bf_lakep.1 stays, as Pearl's shores)
 LAKE_PROPS = {311}               # Pearl build model l_lake (Lakes Verity, Valor, Acuity): moved into the chunk
 GRASS = ('ngrass', 'grass01ax', 'grass01ax_pl', (1, 1, 0, 64), 64)
 B2_SEASON_SETS = (2, 3, 4, 5)    # Black 2's spring..winter map texture sets (Aspertia's: its grass01ax per season)
@@ -81,7 +84,7 @@ def grass_on():
 
 @functools.lru_cache(maxsize=None)
 def _world():
-    return json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    return json.load(open(version.data_path('sinnoh_world.json')))
 
 
 @functools.lru_cache(maxsize=None)
@@ -89,11 +92,12 @@ def outdoor_room_areas():
     """Pearl room areas lit by the outdoor day cycle (its area data u16 at 6 not 0) or exterior: the lakes, the
     moon islands, Pal Park, the Great Marsh, ... (sinnoh_rooms' day_light and seasonal groups)."""
     from gen4rom import Rom, narc_members
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    rom = Rom(version.WORLD_DUMP)
     ad = narc_members(rom.read('fielddata/areadata/area_data.narc'))
     rooms = _world()['rooms']['areas']
     return frozenset(int(pa) for pa, a in rooms.items()
-                     if struct.unpack_from('<H', ad[int(pa)], 6)[0] or a['exterior'])
+                     if (struct.unpack_from('<H', ad[int(pa)], 6)[0] == 0 if version.PLATINUM else struct.unpack_from('<H', ad[int(pa)], 6)[0])
+                     or a['exterior'])          # (Platinum: a file of data/arealight.narc, 0 the day cycle: sinnoh_rooms.pearl_light_field)
 
 
 @functools.lru_cache(maxsize=None)
@@ -101,7 +105,7 @@ def _room_chunk_areas():
     w = _world()
     out = {}
     for r in w['rooms']['zones'].values():
-        m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f"{r['pearl_matrix']:03d}.json")))
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{r['pearl_matrix']:03d}.json")))
         for row in m['maps']:
             for c in row:
                 if c != 0xffff: out.setdefault(c, r['pearl_area'])
@@ -400,7 +404,7 @@ def room_water_areas():
     for c, pa in _room_chunk_areas().items():
         if str(c) not in _world()['rooms']['chunks']: continue
         texs = {t[0] for t in pearl_render.bindings(pearl_chunk.pearl_model(c))}
-        props = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))['props']
+        props = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{land_id(c):03d}.json')))['props']
         if texs & set(PEARL_WATER) or any(p['model'] in LAKE_PROPS for p in props): out.add(pa)
     return frozenset(out)
 

@@ -1,0 +1,162 @@
+diff --git a/include/follower.h b/include/follower.h
+index 2a4cb91..5cb2de1 100644
+--- a/include/follower.h
++++ b/include/follower.h
+@@ -32,6 +32,7 @@
+ 
+ #include "types.h"
+ #include "struct_decls.h"
++#include "nitro/fx.h"
+ #include "follower_port.h"
+ 
+ // 0xfc: Black 2 draws a walking Pokémon (scene node 10/11) of this uid where it stands, without the bob, the lift and
+@@ -94,4 +95,20 @@ void Follower_Hide(void);
+ void Follower_PairStart(FieldActor *actor, u16 moveCode);
+ u32 Follower_SightCollCheck(FieldActor *actor, s16 x, s16 y, s16 z, u16 dir);
+ 
++// Its picture (as above):
++// - ov036 field_rail_loader.c RailActorAnim_DrawWalking (scene nodes 10 and 11: Black 2's walking Pokémon) and
++//   func_ov036_0219656c (scene node 2: a person's walker, the hack's own sheets): CopyActorPosAllAdd(actor, &pos) ->
++//   Follower_DrawPos(actor, &pos) (the same; the follower on the player's row is drawn behind them, below).
++// Beside the player on their row the follower's billboard is at the player's depth exactly (the field camera looks
++// straight north, so x changes no depth), and the DS's depth test keeps the first of two equal pixels: which one wins
++// goes by the order of their billboard slots, and its picture, wider than a tile, covered the player. Black 2
++// steps its own walking Pokémon 2 units north for this (RailActorAnim_UpdateWalkOffset), which uid 0xfc leaves out (the
++// step also draws the picture 1.8 px higher at camera 0, and 2 units are under one depth step there). Here the
++// follower's billboard goes back along the line from the eye to its place, by two depth steps of the DS's Z-buffer at
++// that distance (d * d / (16384 * near) units, at most 8): its place stays on its pixel and only the depth changes,
++// but for the picture drawn 1.4 % smaller at camera 0 (its top under half a pixel lower; 2.2 % at most). The push is
++// whole on the player's row and fades out over one row north and south (none a row away or more): a follower behind
++// the player stays behind, one in front stays in front, and when they cross the order changes once.
++void Follower_DrawPos(FieldActor *actor, VecFx32 *pos);
++
+ #endif // POKEBW2_FOLLOWER_H
+diff --git a/src/ov036/field_rail_loader.c b/src/ov036/field_rail_loader.c
+index 31d3448..f0a7361 100644
+--- a/src/ov036/field_rail_loader.c
++++ b/src/ov036/field_rail_loader.c
+@@ -3,6 +3,7 @@
+ // scene node's table follows its update function, where the size sort lays the tables out in the ROM's order
+ // Names from swan (https://github.com/ds-pokemon-hacking/swan, GPL-3.0).
+ // Additional helper and table names are our descriptive guesses.
++#include "follower.h"
+ #include "types.h"
+ #include "constants/arc.h"
+ #include "constants/obj_codes.h"
+@@ -310,7 +311,12 @@ static void func_ov036_0219656c(FieldActor *actor) {
+         VecFx32 pos;
+ 
+         RailActorAnim_Update(&work->anim, actor, sys, work->index);
++#if PEARLB2
++        // PearlB2: the following Pokémon drawn behind the player on their row (include/follower.h)
++        Follower_DrawPos(actor, &pos);
++#else
+         CopyActorPosAllAdd(actor, &pos);
++#endif
+         RailActorAnim_AddHeightOffset(actor, &pos);
+         BlActScene_SetActorPos(BlActSys_GetScene(sys), work->index, &pos);
+         FldAct_SyncLights(sys, actor, work);
+@@ -692,7 +698,12 @@ static void RailActorAnim_DrawWalking(FieldActor *actor) {
+             }
+         }
+         RailActorAnim_UpdateWalkOffset(actor, work, dir);
++#if PEARLB2
++        // PearlB2: the following Pokémon drawn behind the player on their row (include/follower.h)
++        Follower_DrawPos(actor, &pos);
++#else
+         CopyActorPosAllAdd(actor, &pos);
++#endif
+         RailActorAnim_AddHeightOffset(actor, &pos);
+         BlActScene_SetActorPos(BlActSys_GetScene(sys), work->index, &pos);
+         RailActor_UpdateVisibilityAndAnimation(actor, sys, work->index, changed, FALSE);
+diff --git a/src/pearlb2/resident/follower.c b/src/pearlb2/resident/follower.c
+index b68e84f..69cf039 100644
+--- a/src/pearlb2/resident/follower.c
++++ b/src/pearlb2/resident/follower.c
+@@ -5,13 +5,16 @@
+ #include "field/field.h"
+ #include "field/field_acmd.h"
+ #include "field/field_actor.h"
++#include "field/field_camera.h"
+ #include "field/field_effect.h"
+ #include "field/pair_sys.h"
+ #include "field/player_state.h"
+ #include "field/zone.h"
+ #include "gfl/arc_util.h"
++#include "gfl/g3d.h"
+ #include "gfl/heap.h"
+ #include "gfl/sound.h"
++#include "nitro/fx.h"
+ #include "pml/poke_party.h"
+ #include "save/event_work.h"
+ #include "system/game_data.h"
+@@ -470,4 +473,69 @@ u32 Follower_SightCollCheck(FieldActor *actor, s16 x, s16 y, s16 z, u16 dir) {
+     return result;
+ }
+ 
++// Its picture behind the player on their row (follower.h Follower_DrawPos): its billboard's place goes back along the
++// line from the eye, by two steps of the Z-buffer there (z / w to 1 / 16384: a step is d * d / (2 * near * 16384) units
++// when far is much beyond near), at most PUSH_MAX, all of it on the player's row and none a row (ROW) or more north or
++// south
++#define ROW FX32_CONST(16)
++#define PUSH_MAX FX32_CONST(8)
++
++void Follower_DrawPos(FieldActor *actor, VecFx32 *pos) {
++    MMSys *mmSys;
++    FieldActor *player;
++    Field *field;
++    G3DCamera *camera;
++    VecFx32 own;
++    VecFx32 at;
++    VecFx32 eye;
++    VecFx32 ray;
++    fx32 dz;
++    fx32 near;
++    fx32 dist;
++    fx32 push;
++    fx32 k;
++
++    CopyActorPosAllAdd(actor, pos);
++    if (GetActorUID(actor) != FOLLOWER_UID || GetActorMoveCode(actor) != MOVE_CODE_FOLLOW) {
++        return;
++    }
++    mmSys = GetActorMModelSystem(actor);
++    player = FindPlayerFieldActor(mmSys);
++    field = GetMMSysField(mmSys);
++    if (player == NULL || field == NULL) {
++        return;
++    }
++    CopyActorWPos(actor, &own);
++    CopyActorWPos(player, &at);
++    dz = own.z - at.z;
++    if (dz < 0) {
++        dz = -dz;
++    }
++    if (dz >= ROW) {
++        return;
++    }
++    camera = FieldCamera_GetG3DCamera(Field_GetCameraSystem(field));
++    GFL_G3DCameraGetLookatPos(camera, &eye);
++    GFL_G3DCameraGetProjectionZNear(camera, &near);
++    if (near <= 0) {
++        near = FX32_ONE;
++    }
++    VEC_Subtract(pos, &eye, &ray);
++    dist = VEC_Mag(&ray);
++    if (dist <= 0) {
++        return;
++    }
++    // two steps: d * d / (16384 * near), as (d * (d / 1024) / 16) / near so that nothing overflows up to 2,000 units
++    push = FX_Div(FX_Mul(dist, FX_Div(dist, FX32_CONST(1024))) >> 4, near);
++    if (push > PUSH_MAX) {
++        push = PUSH_MAX;
++    }
++    push = FX_Mul(push, (ROW - dz) >> 4);       // (ROW - dz) / ROW: 1 on the player's row, 0 a row away
++    // every axis by the same k: the place stays on the line, so on its pixel
++    k = FX_Div(push, dist);
++    pos->x += FX_Mul(ray.x, k);
++    pos->y += FX_Mul(ray.y, k);
++    pos->z += FX_Mul(ray.z, k);
++}
++
+ #endif

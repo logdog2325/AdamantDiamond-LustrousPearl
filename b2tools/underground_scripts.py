@@ -49,6 +49,25 @@ def text_file():
     return ''.join(f'Underground_Text_{i:03d} = {t}\n' for i, t in enumerate(text_lines()))
 
 
+def other_fossil_defines():
+    """(postdex, 2026-11-09; notes/POSTGAME_DEX.md) The other version's fossil in the daily fossil balls, one in six: the
+    shared file picks it by the build's PEARLB2_GAME_VERSION (version.POSTGAME_OTHER_BY, the other column's
+    "version_fossil"). A version with no other (Platinum: both fossils in its grottos already) keeps the five."""
+    import version
+    vf = ug_data.data()['grotto_items']['version_fossil']
+    out = ['// (postdex) the other version\'s fossil joins the daily fossil balls after the Champion (version.POSTGAME_OTHER)']
+    first = True
+    for v in version.VERSIONS:
+        other = version.POSTGAME_OTHER_BY[v]
+        if not other:
+            continue
+        fossil = vf[ug_data.COLUMN_OF[other]]
+        out += [f'#{"if" if first else "elif"} PEARLB2_GAME_VERSION == {version.GAME_VERSION_BY[v]}',
+                f'#define UG_OTHER_FOSSIL {ug_data.item(fossil)}       // {v}: {other}\'s {fossil.replace("_", " ").title()}']
+        first = False
+    return out + (['#endif', ''] if not first else [''])
+
+
 def script_file():
     ids = ug_data.script_ids()
     hs = ug_data.hideaways()
@@ -57,6 +76,7 @@ def script_file():
     out = ['// The Grand Underground (zones 633-651), one script file for all its zones. Written by',
            '// b2tools/underground_scripts.py from data/underground.json: do not edit (notes/UNDERGROUND.md).',
            '#include "asm/field_script.inc"', '#include "pearl.h"', '#include "pearl_story.inc"', '']
+    out += other_fossil_defines()
     entries = (['UG_GoUp'] + [f'UG_Name_{i}' for i in range(len(hs))] + [f'UG_Item_{k}' for k in range(len(balls))]
                + [f'UG_Shard_{k}' for k in range(len(shards))] + [f'UG_Fossil_{k}' for k in range(len(fossils))]
                + ['UG_ShardInit'])
@@ -87,12 +107,16 @@ def script_file():
                 f'    pl_SetVarFromValue PVAR_8008, {it}', '    pl_SetVarFromValue PVAR_8009, 1',
                 '    VMCall UG_ItemBall', '    pl_End', '']
     for k, (i, x, z, flag) in enumerate(fossils):
+        n = len(fossil_items)
         out += [f'UG_Fossil_{k}:                        // {hs[i]["pokemon"]["name"]}: a daily fossil at ({x}, {z})',
-                f'    pl_GetRandom PVAR_800C, {len(fossil_items)}']
+                '#ifdef UG_OTHER_FOSSIL', f'    pl_GetRandom PVAR_800C, {n + 1}', '#else',
+                f'    pl_GetRandom PVAR_800C, {n}', '#endif']
         out += [f'    pl_SetVarFromValue PVAR_8008, {fossil_items[0]}']
-        for n, it in enumerate(fossil_items[1:], 1):
-            out += [f'    pl_CompareVarToValue PVAR_800C, {n}', f'    pl_GoToIf 5, UG_Fossil_{k}_{n}',
-                    f'    pl_SetVarFromValue PVAR_8008, {it}', f'UG_Fossil_{k}_{n}:']
+        for m, it in enumerate(fossil_items[1:], 1):
+            out += [f'    pl_CompareVarToValue PVAR_800C, {m}', f'    pl_GoToIf 5, UG_Fossil_{k}_{m}',
+                    f'    pl_SetVarFromValue PVAR_8008, {it}', f'UG_Fossil_{k}_{m}:']
+        out += ['#ifdef UG_OTHER_FOSSIL', f'    pl_CompareVarToValue PVAR_800C, {n}', f'    pl_GoToIf 5, UG_Fossil_{k}_{n}',
+                '    pl_SetVarFromValue PVAR_8008, UG_OTHER_FOSSIL', f'UG_Fossil_{k}_{n}:', '#endif']
         out += ['    pl_SetVarFromValue PVAR_8009, 1', '    VMCall UG_ItemBall', '    pl_End', '']
     out += ['// the daily shard and fossil balls only after becoming Champion (zone init: hidden by their daily flags',
             '// until then)',

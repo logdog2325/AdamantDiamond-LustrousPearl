@@ -1,7 +1,8 @@
 # Pokémon Adamant Diamond & Lustrous Pearl
 
-Sinnoh's Diamond and Pearl rebuilt inside Pokémon Black 2, in the Gen 5 style. Version 1.0 has both games: Lustrous
-Pearl and Adamant Diamond. Releases are `.bps` patches only; no ROMs are ever included.
+Sinnoh's Diamond, Pearl and Platinum rebuilt inside Pokémon Black 2, in the Gen 5 style: Lustrous Pearl and Adamant
+Diamond (version 1.0.1) and Griseous Platinum (version 1.0). Releases are `.bps` patches only; no ROMs are ever
+included.
 
 ## Playing it
 1. Get a clean **Pokémon Black 2 (USA)** ROM from your own cartridge (game code IREO, CRC32 D4427FD1).
@@ -9,7 +10,7 @@ Pearl and Adamant Diamond. Releases are `.bps` patches only; no ROMs are ever in
    computer: a 512 MB game is too much for a phone browser.
 3. Play it in melonDS or on hardware. DeSmuME hides some bugs that melonDS and hardware show.
 
-## Status: 1.0
+## Lustrous Pearl and Adamant Diamond: 1.0.1
 - **Story:** the whole story, from Twinleaf to the Hall of Fame, with Palkia in Lustrous Pearl and Dialga in Adamant
   Diamond, each with its version's wild Pokémon, Orb, title screen and Pokédex entries. Post-game: the National
   Pokédex at Champion, the Battle Zone with the Battle Tower and the PWT, Stark Mountain, Snowpoint Temple, Turnback
@@ -23,11 +24,27 @@ Pearl and Adamant Diamond. Releases are `.bps` patches only; no ROMs are ever in
   score. Black 2's sounds stand in for the contests' and the Digger Drill's. Cooking Poffins is solo, with simplified
   art. Secret Bases have no Radar or other players' bases, and a placed good can wall you in, as in the original: Move
   Goods frees you.
-- **Not in yet:** digging in the Underground; the Veilstone Game Corner; online features. Some people can't do their
-  job yet, including the Mining Museum's fossil restoring and in-game trades. Pal Park's migration from a GBA game is
-  in the build but unconfirmed. The full list is in [Known issues](docs/known-issues.md).
+- **New in 1.0.1:** after the Hall of Fame every Pokémon can be caught in either version. The fossil restorer, the
+  in-game trades, the Move Deleter and the ribbon givers work, and the Game Corner's prizes are sold at the Veilstone
+  Department Store. Many bugs and map fixes: see [Known issues](docs/known-issues.md#fixed-in-101).
+- **Not in yet:** digging in the Underground; the Game Corner's slots; Jubilife TV's Loto, Route 222's size contest and
+  Vista Lighthouse's binoculars; online features. Pal Park's migration from a GBA game is in the build but unconfirmed.
+  The full list is in [Known issues](docs/known-issues.md).
 
-Please report bugs: this is a big game, and some parts have been tested only in an emulator.
+## Griseous Platinum: 1.0
+- **Story:** Platinum's story from Twinleaf to the Hall of Fame, with its changed towns, routes, Gyms and trainers,
+  its own Lucas and Dawn, Giratina and the Griseous Orb.
+- **The Distortion World:** walk on its walls and ceilings, ride its moving platforms, solve the boulder puzzle with
+  the lake trio, and face Giratina.
+- **Post-game:** the Battle Frontier (the Battle Tower, Factory, Hall, Castle and Arcade) with its Frontier Brains,
+  Stark Mountain, the Villa, and Regigigas from the Poké Mart deliveryman.
+- Everything from Lustrous Pearl's 1.0.1 that Platinum has: Super Contests, Secret Bases, the Grand Underground, the
+  Pokétch, Pal Park's rooms, following Pokémon and seasons.
+- **Not as in Platinum:** online features and the Global Terminal's upper floors are closed, and so is the Game
+  Corner (its prizes are sold at the Veilstone Department Store). The Frontier has no Vs. Recorder, and its picture
+  rooms have no moving floors, lights or particles. The player guide covers Lustrous Pearl and Adamant Diamond only.
+
+Please report bugs: these are big games, and some parts have been tested only in an emulator.
 
 ## Player guide
 The [player guide](docs/README.md) lists each version's wild Pokémon, item locations, important trainers and post-game,

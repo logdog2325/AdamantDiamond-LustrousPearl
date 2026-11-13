@@ -28,6 +28,7 @@ import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import narcio, sprites  # noqa: E402
 
 MMODEL = 'data/mmodel/mmodel.narc'
@@ -255,9 +256,10 @@ def apply_fly(files):
 # left corner and its ball comes in from the lower left, as Pearl's does. Tried 2026-10-25: the scene point shown at
 # Pearl's (-30, 160) (depth 4, keeping Black 2's arc) made the ball come in at the left edge above the foe's HP box
 # (Black 2's arc is steeper than Pearl's): left as Black 2's (work/agents/fixes/shots/demo_catch_throw_sheet.png).
-BATT_OBJ = 'battle/graphic/batt_obj.narc'
-THROW_FILES = (195, 47, 203, 211)           # NCGR, NCLR, NCER, NANR of back 0 (+ 1 for back 1)
-BALL_FILES = (221, 55, 220)                 # the Poke Ball's NCGR, NCLR, NCER (ov08_0222D398 row 4)
+BATT_OBJ = version.ARCHIVE['batt_obj']
+# NCGR, NCLR, NCER, NANR of back 0 (+ 1 for back 1); the Poke Ball's NCGR, NCLR, NCER (ov08_0222D398 row 4). Platinum's pl_batt_obj.narc holds
+# the same files (byte for byte) at other numbers, for its partners; its player's own backs are in trbgra (platinum_throws)
+THROW_FILES, BALL_FILES = ((259, 83, 267, 275), (285, 91, 284)) if version.PLATINUM else ((195, 47, 203, 211), (221, 55, 220))
 BALL_IN_HAND = {1: (-34, 4), 2: (-28, -11)}  # ov11_0225E8D0 (the same for backs 0 and 1)
 PEARL_RELEASE = (50, -12)                    # ov11_0225E8D0 frame 3: the ball's start, from the sprite's origin
 RELEASE_CELL, RELEASE_TICK = 3, 40           # the throw frame shows with Black 2's ball (filmed: the MCSS shows a tick late)
@@ -458,8 +460,36 @@ def ball_starts(release):
             for g, (x, y) in release.items()}
 
 
+def platinum_throws():
+    """{0 Lucas, 1 Dawn}: Platinum's own backs, pixel for pixel (poketool/trgra/trbgra.narc, 5 files a back: tiles, palette, cells, animation,
+    scan; 8 cells; animation 1 is the throw, cell 3 the arm going forward), in pearl_throws's shape. Platinum draws no ball over them here:
+    Pearl's ball-in-hand offsets are for Pearl's cells. (To check on screen with the first battle.)"""
+    import mcss
+    from gen4rom import Rom, narc_members
+    m = narc_members(Rom(version.SOURCE_DUMP).read('poketool/trgra/trbgra.narc'))
+    out = {}
+    for g in (0, 1):
+        tiles, pal, ncer, nanr = m[5 * g:5 * g + 4]
+        cells = _oam_cells(tiles, ncer)
+        seq = mcss.parse_anim(nanr)[1]['frames']
+        assert [r['idx'] for _, r in seq][:8] == list(range(8)), seq
+        all_ticks = [2 * d for d, _ in seq][:8]
+        # Black 2's texture (256 x 128) holds five 80 x 80 poses, as Pearl's five: 0-3 and 7, each pixel for pixel; 4-6 are the arm settling
+        # between 3 and 7, a few pixels apart, and their time goes to 3. Black 2's ball leaves at tick 40, and Platinum's wind-up is 60
+        # ticks: the three frames before the throw keep their proportions.
+        ticks = all_ticks[:3] + [sum(all_ticks[3:7]), all_ticks[7]]
+        cells = [cells[k] for k in (0, 1, 2, 3, 7)]
+        before = sum(ticks[:RELEASE_CELL])
+        ticks[:RELEASE_CELL] = [max(1, t * RELEASE_TICK // before) for t in ticks[:RELEASE_CELL]]
+        ticks[0] += RELEASE_TICK - sum(ticks[:RELEASE_CELL])
+        out[g] = ([{(x, y + PEARL_DY): v for (x, y), v in c.items()} for c in cells], ticks, _pal16(pal))
+    return out
+
+
 def backs():
-    """{0 Lucas (the fan back), 1 Dawn (Pearl's)}: (poses, ticks, colours, the ball's start in sprite coordinates)."""
+    """{0 Lucas (the fan back), 1 Dawn (Pearl's)}: (poses, ticks, colours, the ball's start in sprite coordinates). Platinum: its own two."""
+    if version.PLATINUM:
+        return {g: t + ((PEARL_RELEASE[0], PEARL_RELEASE[1] + PEARL_DY),) for g, t in platinum_throws().items()}
     poses, ticks, pal, ball = fan_throw()
     out = {0: (poses, ticks, pal, ball)}
     dawn = pearl_throws()[1]

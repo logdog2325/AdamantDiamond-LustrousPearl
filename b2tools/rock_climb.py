@@ -20,6 +20,7 @@ ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 os.environ.setdefault('MAP_FIXES', 'none')
 import bridge_check  # noqa: E402  (its Grid: Pearl's and the converted tiles of one zone map, by global tile)
+import version  # noqa: E402
 
 CLIMB_NS, CLIMB_EW = 0x4B, 0x4C
 CLIMB = {CLIMB_NS: 'N/S', CLIMB_EW: 'E/W'}
@@ -27,7 +28,7 @@ CLIMB = {CLIMB_NS: 'N/S', CLIMB_EW: 'E/W'}
 
 def maps():
     """[(Grid, zone name by chunk cell)] of the overworld and every room map (as bridge_check)."""
-    world = bridge_check._json(ROOT, 'data', 'sinnoh_world.json')
+    world = json.load(open(version.data_path('sinnoh_world.json')))     # (Platinum: its own rooms)
     zones = bridge_check._json(bridge_check.PEARL, 'zones.json')
     m0 = bridge_check._json(bridge_check.PEARL, 'matrices', '000.json')
     names0 = {(cx, cz): zones[h]['name'] for cz, row in enumerate(m0['headers']) for cx, h in enumerate(row)
@@ -112,7 +113,7 @@ def _wall(g, beh, group, with_b2):
 JUMP_NEAR_FAST = {0: 0x34, 1: 0x35, 2: 0x36, 3: 0x37}     # by direction: 0 up (north), 1 down, 2 left (west), 3 right
 WALK_FAST = {0: 0x10, 1: 0x11, 2: 0x12, 3: 0x13}
 STEP = {0: (0, -1), 1: (0, 1), 2: (-1, 0), 3: (1, 0)}
-JSON = os.path.join(ROOT, 'data', 'pearl_rock_climb.json')
+JSON = version.data_out('pearl_rock_climb.json')    # (Platinum: data/platinum/, from its own walls; pearl_events reads it)
 
 
 def ends(rows):
@@ -134,6 +135,9 @@ def ends(rows):
                 hops = max(length + 1, 3)
                 land = (sx + dx * hops, sz + dz * hops)
                 ps, pl = g.pearl(sx, sz), g.pearl(*land)
+                # (a tile the dump's height reader gives no plate for, while the converted map stands on it: Platinum's
+                # Sendoff Spring chunk 444, whose BDHC bdhc_dp_heights does not read; the converted heights then count)
+                ps, pl = [p and (p[0], p[1], p[2] or [h for h, _, _ in g.b2(*xz) or []]) for p, xz in ((ps, (sx, sz)), (pl, land))]
                 row = {'stand': [sx, sz], 'dir': d, 'bg': [sx + dx, sz + dz], 'length': length,
                        'moves': [[JUMP_NEAR_FAST[d], 1], [WALK_FAST[d], max(length - 1, 1)], [JUMP_NEAR_FAST[d], 1]],
                        'land': list(land)}

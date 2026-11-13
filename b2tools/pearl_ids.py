@@ -5,7 +5,7 @@
 Every flag and var any Pearl script, level script or map event uses (scanned from the dump, as pearl_story reads it)
 gets a Black 2 id here, once: an id already in data/pearl_story_ids.json is kept (the file is the registry), new ones
 take the next free id. --names: the research file with Platinum's names for Pearl's ids (checked by number), copied
-into the registry as comments.
+into the registry as comments. Platinum's own registry takes its names from the decomp instead (platinum_names).
 
 Rules (Black 2 side: pokebw2 + HoennB2's survey of every flag/work Black 2's code and scripts touch, rechecked
 2026-10-18; Pearl side: pokediamond):
@@ -35,8 +35,19 @@ import collections, json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
-REGISTRY = os.path.join(ROOT, 'data', 'pearl_story_ids.json')
+import version  # noqa: E402
+REGISTRY = version.data_path('pearl_story_ids.json')
 HEADER = os.path.join(ROOT, 'src', 'include', 'pearl.h')
+if version.PLATINUM:                    # (its own numbers; patches/scripts.py looks in src/include/platinum first)
+    REGISTRY = version.data_out('pearl_story_ids.json')
+    HEADER = os.path.join(ROOT, 'src', 'include', 'platinum', 'pearl.h')
+# Where the flag ranges end (pokediamond; Platinum: generated/vars_flags.txt): its hidden items reach 1013 (n 283), so its item balls
+# start later, at 1014
+HIDDEN_END = 1014 if version.PLATINUM else 986
+# Hidden item n's Black 2 flag is 2820 + n (PearlB2_HiddenItemFlag), which for Platinum's 256-283 would pass the saved flags (3063).
+# Those take 1100 + n - 256 instead: the item-ball flags Pearl's registry gave its flags 986-1013, which are Platinum's hidden
+# items 256-283 (its balls are 1014 on). patches/platinum_hidden_items.py gives the field the same rule (2026-11-07, plat-story).
+HIDDEN_EXTRA = (256, 1100) if version.PLATINUM else (0x10000, 0)
 
 # Black 2's free saved flags and works (HoennB2 data/story_ids.json "free", rechecked against pokebw2 2026-10-18;
 # 3033-3048 left out for Pearl's hidden items 213-228)
@@ -63,6 +74,8 @@ FREE_WORKS = [(0x403B, 0x4040), (0x4042, 0x4042), (0x404E, 0x4072), (0x4075, 0x4
               (0x414F, 0x4161), (0x4163, 0x4164), (0x4166, 0x4173), (0x4175, 0x4175), (0x4177, 0x4177), (0x417B, 0x417E),
               (0x4180, 0x4180), (0x4182, 0x4187), (0x418A, 0x418F), (0x4193, 0x4194), (0x4196, 0x41AE)]
 DAILY_FLAGS = [(2744, 2772), (2774, 2777), (2779, 2793)]
+if version.PLATINUM:                    # its 44 daily flags and our 7 are over those 48; Black 2 clears up to 2819, and nothing names these
+    DAILY_FLAGS += [(2794, 2803)]
 TRAINER_NEVER = ({95, 96, 183, 184, 185, 186, 296, 299, 302, 303, 333, 752} | set(range(381, 386))
                  | {i for a, b in ((1, 3), (7, 9), (13, 15), (17, 18), (20, 30), (48, 132), (227, 251))
                     for i in range(a, b + 1)})
@@ -70,17 +83,42 @@ TRAINER_NEVER = ({95, 96, 183, 184, 185, 186, 296, 299, 302, 303, 333, 752} | se
 # written as Trainer names. These three have no reference in Black 2's C or global scripts (2026-11-01, the leftovers
 # agent), so nothing can touch their defeat flags in Sinnoh: Pearl's rematches take them after the free ids.
 REMATCH_EXTRA = [227, 228, 229]
+# Platinum's Trainers don't fit Black 2's 1-813 less TRAINER_NEVER (666 + REMATCH_EXTRA; notes/PORT_AUDIT.md "Trainers"): its ids go on after 813,
+# with the defeat flags moved in code (patches/platinum_trainer_flags.py).
+EXTENDED_TRAINERS = range(814, 1000) if version.PLATINUM else ()
+LAST_B2_TRAINER, EXTENDED_TRAINER_FLAGS = 813, 2561     # patches/platinum_trainer_flags.py: flags 2561-2639, kept out of the free list below
+if version.PLATINUM:
+    FREE_FLAGS = [r for r in FREE_FLAGS if r != (2561, 2639)]
 # Partner trainers that work/pearl/b2_trainers/index.json files as 'variant' (same class and name as a battled one),
 # so the rule below would skip them: Barry's three Spear Pillar teams (by the player's starter, set in a Call'd
 # subroutine before Pearl's StartTagBattle 0x8004, Mars 528, Jupiter 407: file 230 P230_09B0) (2026-10-26, chapter 7)
 PARTNER_VARIANTS = {607: "Barry's Spear Pillar partner (the player chose Piplup)",
                     619: "Barry's Spear Pillar partner (the player chose Turtwig)",
                     620: "Barry's Spear Pillar partner (the player chose Chimchar)"}
+# ---- plat-ch11 (2026-11-07): Platinum's post-game Trainers. The index files these as 'variant' (a Leader's or Barry's class and
+# name, as battled ones), but scripts battle them: the Battleground's eight Leaders by a var (scripts_battleground.s
+# Battleground_SetTrainer*: StartTrainerBattle VAR_MAP_LOCAL_0x05) and Barry's Fight Area teams, the tag battle's partner by the
+# starter (scripts_fight_area.s FightArea_SetRivalPartnerTeam: StartTagBattle VAR_0x8004). Platinum's 785 and 786
+# (TRAINER_DUMMY_785/786: no script or table battles them) had 814 and 815, which Barry's Route 201 teams 850 and 851 got
+# again; and Barry's 852 shared 816 with Riley's Battleground team 861 (one Black 2 record: the later team overwrote the other).
+# The pool below used ids past 813 again (it didn't leave out the ones taken): now it does; the two dummies get no id, and of
+# two Trainers on one id the higher number gets a new one (861: 852, chapter 1's first battle, keeps its 816).
+PLATINUM_SCRIPT_TRAINERS = {**{t: 'a Battleground Leader (battled by a var)' for t in range(853, 861)},
+                            923: "Barry, the Fight Area tag battle's partner (the player chose Piplup)",
+                            924: "Barry, the Fight Area tag battle's partner (the player chose Turtwig)",
+                            925: "Barry, the Fight Area tag battle's partner (the player chose Chimchar)"} \
+    if version.PLATINUM else {}
+PLATINUM_NO_ID = {785, 786} if version.PLATINUM else set()
+# ---- end plat-ch11
 SYSTEM_SAME = {0x964: 2400,            # Pearl FLAG_GAME_COMPLETED -> Black 2's game clear
                0x9BA: 2480}            # Pearl's first arrival in Eterna (pokediamond UNK_020F2224: the fly entry of map
 # 0x41 MAP_ETERNA sets 0x9B0 + 10 on arrival, in code) -> Black 2's arrival flag of the entry patches/sinnoh_respawn
 # gives Eterna (entry 9, RESPAWN_ZONE_INFO[8] 0x9B0 = 2480, discover on visit): Rowan's National Pokédex scene and
 # his PC rating's "come to my lab" check it; nothing set the free flag it had (902). 2026-10-26, chapter 9a.
+if version.PLATINUM:                   # (plat-ch7, 2026-11-07) Platinum's scripts read two more towns' first arrivals: Canalave's
+    SYSTEM_SAME.update({0x9B8: 2478,   # (the Celestic elder at home, CelesticTownNorthHouse_Elder) and Sunyshore's (the Sandgem
+                        0x9BE: 2485})  # lab, the counterpart's talk). Black 2's arrival flags of those towns, as Eterna's
+# (patches/town_map.fly_flags: set on entering the town). They had free flags nothing set: the lines after never showed.
 LOCAL_FLAG_MOVE = {1: 0x50}
 NEW_VARS = {                           # new saved works Pearl NDS needs: name -> why
     'PVAR_STARTER': 'Pearl keeps the starter species in its save (pokediamond GetStarter); written when the starter '
@@ -112,6 +150,10 @@ NEW_VARS = {                           # new saved works Pearl NDS needs: name -
                                   f'pl_AddTrophyGardenMon); the wild code puts slots 1 and 2 on grass slots 6 and 7 '
                                   f'with the National Pokédex' for i in (1, 2)},
 }
+if version.PLATINUM:                    # (Platinum's own: Pearl's and Diamond's registries never get it)
+    NEW_VARS['PVAR_SAFARI_START_COUNT'] = ('Platinum\'s Great Marsh: the Pokémon in the party and the boxes when the Safari '
+                                           'Game starts (pl_SafariCountStart), so GetCurrentSafariGameCaughtNum is the '
+                                           'count at the end less this one (the Matchup Checker for 5 caught)')
 NEW_FLAGS = {                          # new saved flags Pearl NDS needs: name -> why (from FREE_FLAGS, after Pearl's)
     'PFLAG_EXP_SHARE_OFF': 'the Exp. Share switched off in the Bag (patches/exp_share.py): clear = on, so the Exp. '
                            'Share works as soon as it is received (PFLAG_010B), as Gen 6 gives it',
@@ -129,6 +171,11 @@ NEW_FLAGS = {                          # new saved flags Pearl NDS needs: name -
     'PFLAG_POKE_FOLLOWER': "Rowan's following-Pokémon question (patches/pearl_intro.py, followers.py): set = the first Pokémon in "
                            "the party walks behind the player everywhere; clear (old saves, NO) = no follower",
 }
+if not version.PLATINUM:               # (postdex, 2026-11-09) Spear Pillar's other legendary (b2tools/postgame_legend.py;
+    NEW_FLAGS.update({                 # Platinum has both of its own after its Hall of Fame)
+        'PFLAG_PG_LEGEND_HIDDEN': "Spear Pillar: the other version's legendary hidden (its person's flag; its zone init "
+                                  "sets it each visit: shown after the Hall of Fame once the version's own is caught)",
+        'PFLAG_PG_LEGEND_CAUGHT': "Spear Pillar: the other version's legendary caught (the other Orb given)"})
 NEW_DAILY_FLAGS = {                    # new flags cleared at midnight (from DAILY_FLAGS, after Pearl's daily flags)
     'PFLAG_NEWS_PRESS_TODAY': 'the Solaceon News Press assignment was given today (pearl_story SetNewsPressDeadline / '
                               'GetNewsPressDeadline: Pearl counts its own deadline days in its save; "bring it today, '
@@ -137,13 +184,26 @@ NEW_DAILY_FLAGS = {                    # new flags cleared at midnight (from DAI
     **{f'PFLAG_UG_FOSSIL_{i}': f'the Grand Underground: daily item ball {i} (a Kanto or Hoenn fossil, from becoming '
                                f'Champion; data/underground.json "fossil", patches/underground.py)' for i in range(2)},
 }
+if version.PLATINUM:                   # (2026-11-02, plat-rooms) Platinum's Villa: its code picks the day's visitor when the
+    NEW_DAILY_FLAGS['PFLAG_VILLA_VISITOR_TODAY'] = (   # date changes (system_vars.c SystemVars_UpdateVillaVisitor)
+        'the Villa\'s visitor of the day is picked (pearl_story VILLA_VISITOR_ZONES: the Resort Area\'s zone init picks '
+        'it once a day, as Platinum\'s code does when the date changes)')
 UG_ITEM_BALLS = 38                     # the Grand Underground Hideaways' item balls (BDSP's, data/underground.json)
 NEW_ITEM_BALL_FLAGS = {                # new item balls' flags: Black 2's item-ball flags (1100-1499), after Pearl's
     **{f'PFLAG_UG_ITEM_{i:02d}': f'the Grand Underground: item ball {i} (data/underground.json "items", '
                                  f'patches/underground.py)' for i in range(UG_ITEM_BALLS)},
 }
 ITEM_BALL_FLAGS = (1100, 1499)
+# Platinum's flag and var names (2026-11-07, plat-ch1): its registry began as a copy of Pearl's, so the names were Platinum's
+# names for Pearl's numbers, wrong for 526 of its 1,118 named flags. They come from the decomp's enum now, by number.
+PLATINUM_NAMES = os.path.join(ROOT, 'external', 'pokeplatinum', 'generated', 'vars_flags.txt')
 RESERVED_WORKS = {}                   # works held for a tree not merged yet (empty: 9a's 0x40EF is merged)
+# ---- plat-dw-world (2026-11-07): the Distortion World's ids that only Platinum's C sets (overlay 9; the engine's overlay 377
+# sets them here): VAR_DISTORTION_WORLD_CYRUS_APPEARANCE (1: Cyrus rode B4F's elevator) and FLAG_DISTORTION_WORLD_GIRATINA_
+# SHADOW_1 and _2 (B4F's two shadows seen). Their own numbers, so the registry names them from the decomp as any other.
+PLATINUM_C_FLAGS = (0x9AE, 0x9AF) if version.PLATINUM else ()
+PLATINUM_C_VARS = (0x405B,) if version.PLATINUM else ()
+# ---- end plat-dw-world
 
 
 def expand(ranges):
@@ -154,9 +214,9 @@ def scan():
     """(flags {id: [kinds]}, vars {id: [kinds]}) over every Pearl script, level script and event file."""
     import gen4_script
     from gen4rom import Rom, narc_members
-    files = narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read('fielddata/script/scr_seq_release.narc'))
+    files = version.slotted('scripts', narc_members(Rom(version.WORLD_DUMP).read(version.ARCHIVE['scripts'])))
     table = gen4_script.load_table()
-    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
     level = {z['level_scripts'] for z in zones}
     scripts = {z['scripts'] for z in zones}
     flags, vars_ = collections.defaultdict(set), collections.defaultdict(set)
@@ -182,8 +242,8 @@ def scan():
             for ty, v in args:
                 if ty == 'var' and v >= 0x4000:
                     vars_[v].add('script')
-    for p in sorted(os.listdir(os.path.join(ROOT, 'work', 'pearl', 'events'))):
-        e = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'events', p)))
+    for p in sorted(os.listdir(os.path.join(version.WORLD_WORK, 'events'))):
+        e = json.load(open(os.path.join(version.WORLD_WORK, 'events', p)))
         for o in e['object_events']:
             if o['hidden_flag']:
                 flags[o['hidden_flag']].add('object')
@@ -197,12 +257,68 @@ def scan():
     return flags, vars_
 
 
+def platinum_item_flags(rf, rnf, kept=()):
+    """Platinum's hidden-item and item-ball flags (2026-11-07, plat-story). The registry started as Pearl's, where 986-1013 are item
+    balls; in Platinum they are hidden items 256-283 (kept on Pearl's 1100 + f - 986, HIDDEN_EXTRA's rule). Platinum's own balls
+    (flags Pearl's registry doesn't have) took 1100 + f - 1013 beside Pearl's 1100 + f - 986, so 65 of them shared a flag with
+    another ball or an Underground item: each of Platinum's own whose flag another id has moves to the next free item-ball flag.
+    Nothing of Pearl's moves."""
+    for f in range(986, HIDDEN_END):
+        e = rf.get(f'0x{f:04X}')
+        if e:
+            assert e['b2'] == HIDDEN_EXTRA[1] + f - 730 - HIDDEN_EXTRA[0], (f, e)
+            e['kind'] = 'hidden item'
+    pearl = json.load(open(os.path.join(ROOT, 'data', 'pearl_story_ids.json')))['flags']
+    owners = collections.Counter([e['b2'] for e in rf.values()] + [e['b2'] for e in rnf.values()])
+    extra = range(HIDDEN_EXTRA[1], HIDDEN_EXTRA[1] + HIDDEN_END - 730 - HIDDEN_EXTRA[0])     # hidden items 256-283's, used or not
+    free = [f for f in range(ITEM_BALL_FLAGS[0], ITEM_BALL_FLAGS[1] + 1) if not owners[f] and f not in extra]
+    # (plat-dw-world: an item ball the registry already has keeps its flag; a new one that meets it moves, as the Distortion
+    # World's Griseous Orb ball, 0x538, met Route 207's Timer Ball, 0x537, on 1422)
+    for k in sorted(rf, key=lambda k: (k in kept, k)):
+        e = rf[k]
+        if e['kind'] == 'item ball' and k not in pearl and owners[e['b2']] > 1:
+            owners[e['b2']] -= 1
+            e['b2'] = free.pop(0)
+            owners[e['b2']] += 1
+    shared = sorted(b for b, c in owners.items() if c > 1)
+    assert not shared, f'flags given to two ids: {shared}'
+
+
+def decomp_names(path=PLATINUM_NAMES):
+    """{number: name} of Platinum's flags and vars, read as the decomp's C enum (generated/vars_flags.txt, in order): a bare
+    line takes the next number, `X = Y` takes Y's (a number or an earlier name), and the next line goes on from there. So a
+    range marker and the flag a later `X = MARKER` names share one number. Only FLAG_ and VAR_ names count (not the
+    markers); where two share a number, the first."""
+    vals, names, n = {}, {}, -1
+    for line in open(path):
+        name, _, e = (s.strip() for s in line.partition('='))
+        if not name:
+            continue
+        n = (int(e, 0) if e[0].isdigit() else vals[e]) if e else n + 1
+        vals[name] = n
+        if name.startswith(('FLAG_', 'VAR_')):
+            names.setdefault(n, name)
+    return names
+
+
+def platinum_names(rf, rv):
+    """Every flag and var of Platinum's registry gets the decomp's name for its number (placeholders like FLAG_UNK_0x0041
+    included); only the comments change, never an id."""
+    names = decomp_names()
+    for table in (rf, rv):
+        for k, e in table.items():
+            if int(k, 16) in names:
+                e['name'] = names[int(k, 16)]
+            else:
+                e.pop('name', None)
+
+
 def flag_kind(f):
     if f < 0x40:
         return 'map-local'
     if f < 730:
         return 'saved'
-    if f < 986:
+    if f < HIDDEN_END:
         return 'hidden item'
     if f < 1360:
         return 'item ball'
@@ -227,8 +343,17 @@ def var_kind(v):
 
 def allocate(names=None):
     reg = json.load(open(REGISTRY)) if os.path.exists(REGISTRY) else {}
+    if version.PLATINUM and not reg:    # Pearl's finished build is the base: every id it gave stays; Platinum only adds
+        reg = json.load(open(os.path.join(ROOT, 'data', 'pearl_story_ids.json')))
     flags, vars_ = scan()
+    # ---- plat-dw-world (2026-11-07): ids only Platinum's C sets (overlay 9, the Distortion World), which no script names
+    for f in PLATINUM_C_FLAGS:
+        flags[f].add('C')
+    for v in PLATINUM_C_VARS:
+        vars_[v].add('C')
+    # ---- end plat-dw-world
     rf, rv, rt, rn, rnf = (reg.get(k, {}) for k in ('flags', 'vars', 'trainers', 'new', 'new_flags'))
+    kept_flags = set(rf)                # (plat-dw-world: the item balls the registry has keep their flags)
     used_f = {e['b2'] for e in rf.values()} | {e['b2'] for e in rnf.values()}
     used_w = {int(e['b2'], 16) for e in rv.values()} | {int(e['b2'], 16) for e in rn.values()}
     free_f = [f for f in expand(FREE_FLAGS) if f not in used_f]
@@ -256,8 +381,11 @@ def allocate(names=None):
         elif kind == 'hidden item':
             n = f - 730
             b2 = 2820 + n if n < 213 else 3033 + n - 213
+            if n >= HIDDEN_EXTRA[0]:
+                b2 = HIDDEN_EXTRA[1] + n - HIDDEN_EXTRA[0]
+            assert b2 <= 3063 and (n < 229 or n >= HIDDEN_EXTRA[0]), f'hidden item {n}: no saved flag for it'
         elif kind == 'item ball':
-            b2 = 1100 + f - 986
+            b2 = 1100 + f - HIDDEN_END
         elif kind == 'daily':
             b2 = free_d.pop(0)
         elif f in SYSTEM_SAME:
@@ -285,6 +413,9 @@ def allocate(names=None):
         rv[k] = dict(b2=f'0x{b2:04X}', kind=kind, uses=sorted(vars_[v]))
         if pname(pnames[1], k):
             rv[k]['name'] = pname(pnames[1], k)
+    if version.PLATINUM:
+        platinum_item_flags(rf, rnf, kept_flags)
+        platinum_names(rf, rv)
     for n, why in NEW_VARS.items():
         if n not in rn:
             rn[n] = dict(b2=f'0x{free_w.pop(0):04X}', why=why)
@@ -301,11 +432,25 @@ def allocate(names=None):
         if n not in rnf:
             rnf[n] = dict(b2=free_i.pop(0), why=why)
     # trainers
-    index = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'b2_trainers', 'index.json')))
-    pool = [i for i in range(1, 814) if i not in TRAINER_NEVER and i not in {e['b2'] for e in rt.values()}]
+    index = json.load(open(os.path.join(version.WORLD_WORK, 'b2_trainers', 'index.json')))
+    if version.PLATINUM:                # (plat-ch11: the dummies out, a shared id moved, the taken ids past 813 out of the pool)
+        for t in PLATINUM_NO_ID:
+            rt.pop(str(t), None)
+        by_b2 = collections.defaultdict(list)
+        for k, e in rt.items():
+            by_b2[e['b2']].append(int(k))
+        for ks in by_b2.values():
+            for k in sorted(ks)[1:]:
+                rt.pop(str(k))
+    taken = {e['b2'] for e in rt.values()}
+    pool = [i for i in range(1, 814) if i not in TRAINER_NEVER and i not in taken] + \
+        [i for i in EXTENDED_TRAINERS if i not in taken]
     for tid in sorted(index, key=int):
         e = index[tid]
-        if tid in rt or (e['category'] not in ('battled', 'other') and int(tid) not in PARTNER_VARIANTS):
+        if int(tid) in PLATINUM_NO_ID:
+            continue
+        if tid in rt or (e['category'] not in ('battled', 'other') and int(tid) not in PARTNER_VARIANTS
+                         and int(tid) not in PLATINUM_SCRIPT_TRAINERS):
             continue
         rt[tid] = dict(b2=pool.pop(0), name=e['name'], pearl_class=e['pearl_class'], b2_class=e['b2_class'])
     # the Vs. Seeker's rematch Trainers (patches/vs_seeker.py: Pearl's table, records whose base has an id)
@@ -317,12 +462,18 @@ def allocate(names=None):
             e = index[tid]
             rt[tid] = dict(b2=(pool or REMATCH_EXTRA).pop(0), name=e['name'], pearl_class=e['pearl_class'],
                            b2_class=e['b2_class'])
+    if version.PLATINUM:                # (plat-ch11) ids past 813 take flags 2561-2639 (patches/platinum_trainer_flags.py): 814-892
+        over = sorted(int(k) for k, e in rt.items() if e['b2'] > LAST_B2_TRAINER + 2639 - EXTENDED_TRAINER_FLAGS + 1)
+        assert not over, f'Platinum trainers {over} past id 892: no moved defeat flag left for them (flags 2561-2639)'
+        dup = collections.Counter(e['b2'] for e in rt.values())
+        assert all(n == 1 for n in dup.values()), f'Black 2 trainer ids given twice: {[b for b, n in dup.items() if n > 1]}'
     reg = {'_doc': 'Pearl flag/var/trainer -> Black 2 id registry, written by b2tools/pearl_ids.py (rules in its '
                    'docstring; notes/STORY.md "Ids"). An id once given is kept: edit only by rerunning the tool.',
            'flags': dict(sorted(rf.items())), 'vars': dict(sorted(rv.items())), 'new': rn, 'new_flags': rnf,
            'trainers': dict(sorted(rt.items(), key=lambda kv: int(kv[0]))),
            'free_left': {'flags': len(free_f), 'works': len(free_w), 'daily_flags': len(free_d),
                          'trainer_ids': len(pool)}}
+    os.makedirs(os.path.dirname(REGISTRY), exist_ok=True)
     json.dump(reg, open(REGISTRY, 'w'), indent=1)
     write_header(reg)
     return reg
@@ -349,6 +500,7 @@ def write_header(reg):
     for k, e in reg['trainers'].items():
         out.append(f'#define PTRAINER_{k} {e["b2"]}'.ljust(32) + f'// {e["pearl_class"]} {e["name"]}')
     out += ['', '#endif', '']
+    os.makedirs(os.path.dirname(HEADER), exist_ok=True)
     open(HEADER, 'w').write('\n'.join(out))
 
 

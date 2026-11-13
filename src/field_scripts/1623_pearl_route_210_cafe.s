@@ -34,7 +34,7 @@ P413_002B:
     pl_LockAll
     pl_FacePlayer
     MoneyWinDisp 31, 1  // Pearl ShowMoney 20, 2 (Black 2's place)
-    pl_msg_talk 1
+    pl_msg_talk_low 1
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P413_00B4
@@ -48,7 +48,7 @@ P413_002B:
     pl_GoToIf 1, P413_009A
     pl_RemoveMoney 500
     MoneyWinUpdate
-    pl_msg_talk 2
+    pl_msg_talk_low 2
     VMCall C205_17_S17  // CallCommonScript 2016 (Pearl file 205 script 17)
     pl_CloseMessage
     MoneyWinClose
@@ -56,7 +56,7 @@ P413_002B:
     pl_End
 
 P413_009A:
-    pl_msg_talk 3
+    pl_msg_talk_low 3
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -64,7 +64,7 @@ P413_009A:
     pl_End
 
 P413_00A7:
-    pl_msg_talk 4
+    pl_msg_talk_low 4
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose
@@ -72,7 +72,7 @@ P413_00A7:
     pl_End
 
 P413_00B4:
-    pl_msg_talk 5
+    pl_msg_talk_low 5
     pl_WaitButton
     pl_CloseMessage
     MoneyWinClose

@@ -118,13 +118,13 @@ P136_013A:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_msg_talk 0
+    pl_msg_talk_low 0
     pl_CheckItem 444, 1, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P136_019D
     pl_CheckFlag PFLAG_0130
     pl_GoToIf 1, P136_01A8
-    pl_stub CheckBonusRoundStreak  // Pearl 0x275 Unk0275 32780: not translated yet
+    WorkSetConst PVAR_800C, 1  // CheckBonusRoundStreak: the slots are closed, counted as met
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P136_01A8
     pl_SetVarFromValue PVAR_8004, 391  // Pearl item 391 (TM64) = TM64 Explosion
@@ -135,7 +135,7 @@ P136_013A:
     pl_GoTo P136_02BE
 
 P136_019D:
-    pl_msg_talk 1
+    pl_msg_talk_low 1
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -146,8 +146,8 @@ P136_01A8:
     MoneyWinDisp 31, 1  // Pearl ShowMoney 20, 7 (Black 2's place)
 
 P136_01B4:
-    pl_msg_talk 2
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    pl_msg_talk_low 2
+    ListMenu_AnchorTopRight 31, 5, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 23, 65535, 0  // Pearl AddMenuEntryImm 125, 0
     ListMenuAdd 24, 65535, 1  // Pearl AddMenuEntryImm 126, 1
     ListMenuAdd 25, 65535, 2  // Pearl AddMenuEntryImm 127, 2
@@ -163,7 +163,7 @@ P136_01F3:
     MoneyCheck PVAR_800C, 1000
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P136_0291
-    pl_stub CheckCanAddCoins  // Pearl 0x276 CanGiveCoins 32780, 50: not translated yet
+    WorkSetConst PVAR_800C, 0  // CheckCanAddCoins: the slots are closed, no Coins sold
     pl_stub Noop  // Pearl 0x000 Nop : not translated yet
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P136_02A0
@@ -173,7 +173,7 @@ P136_01F3:
     MoneyWinUpdate
     pl_PlaySE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
     pl_WaitSE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
-    pl_msg_talk 3
+    pl_msg_talk_low 3
     pl_WaitTime 30, PVAR_800C
     pl_GoTo P136_01B4
 
@@ -181,7 +181,7 @@ P136_0242:
     MoneyCheck PVAR_800C, 10000
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P136_0291
-    pl_stub CheckCanAddCoins  // Pearl 0x276 CanGiveCoins 32780, 500: not translated yet
+    WorkSetConst PVAR_800C, 0  // CheckCanAddCoins: the slots are closed, no Coins sold
     pl_stub Noop  // Pearl 0x000 Nop : not translated yet
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P136_02A0
@@ -191,12 +191,12 @@ P136_0242:
     MoneyWinUpdate
     pl_PlaySE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
     pl_WaitSE SEQ_SE_SYS_22  // Pearl SEQ_SE_DP_REGI
-    pl_msg_talk 3
+    pl_msg_talk_low 3
     pl_WaitTime 30, PVAR_800C
     pl_GoTo P136_01B4
 
 P136_0291:
-    pl_msg_talk 4
+    pl_msg_talk_low 4
     pl_WaitButton
     pl_CloseMessage
     pl_stub HideCoins  // Pearl 0x076 HideCoinBox : not translated yet
@@ -205,7 +205,7 @@ P136_0291:
     pl_End
 
 P136_02A0:
-    pl_msg_talk 5
+    pl_msg_talk_low 5
     pl_WaitButton
     pl_CloseMessage
     pl_stub HideCoins  // Pearl 0x076 HideCoinBox : not translated yet
@@ -214,7 +214,7 @@ P136_02A0:
     pl_End
 
 P136_02AF:
-    pl_msg_talk 6
+    pl_msg_talk_low 6
     pl_WaitButton
     pl_CloseMessage
     pl_stub HideCoins  // Pearl 0x076 HideCoinBox : not translated yet
@@ -223,11 +223,11 @@ P136_02AF:
     pl_End
 
 P136_02BE:
-    pl_msg_talk 7
+    pl_msg_talk_low 7
     VMCall C205_45_S45  // CallCommonScript 2044 (Pearl file 205 script 45)
     pl_SetFlag PFLAG_0130
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 8
+    pl_msg_talk_low 8
     pl_WaitButton
     pl_CloseMessage
     pl_ReleaseAll
@@ -254,7 +254,7 @@ P136_02F2:
     pl_GoToIf 1, P136_034D
     pl_CheckFlag PFLAG_012E
     pl_GoToIf 1, P136_0358
-    pl_stub CheckCanAddCoins  // Pearl 0x276 CanGiveCoins 32780, 20: not translated yet
+    WorkSetConst PVAR_800C, 0  // CheckCanAddCoins: the slots are closed, no Coins sold
     pl_stub Noop  // Pearl 0x000 Nop : not translated yet
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P136_0358
@@ -293,7 +293,7 @@ P136_0363:
     pl_GoToIf 1, P136_03BE
     pl_CheckFlag PFLAG_012F
     pl_GoToIf 1, P136_03C9
-    pl_stub CheckCanAddCoins  // Pearl 0x276 CanGiveCoins 32780, 50: not translated yet
+    WorkSetConst PVAR_800C, 0  // CheckCanAddCoins: the slots are closed, no Coins sold
     pl_stub Noop  // Pearl 0x000 Nop : not translated yet
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P136_03C9

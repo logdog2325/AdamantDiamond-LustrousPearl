@@ -19,15 +19,19 @@ import functools, json, os, struct, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 from b2files import gf_container_build  # noqa: E402
 
-LAND = os.path.join(ROOT, 'work', 'pearl', 'land')
+LAND = os.path.join(version.WORLD_WORK, 'land')
 APICULA = os.path.join(ROOT, 'tools', 'apicula')
 OV036 = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'build', 'arm9_ov036.bin')
 OV036_BASE, SLOPES_AT, SLOPES_N, OFFSETS_AT, OFFSETS_N = 0x0217F600, 0x021d2a04, 317, 0x021d3174, 1285
 MAX_ERR = 1.0
-SKIP_MATERIALS = ('tree', 'shadow', 'kage', 't3_fl')   # canopies, shadow decals and flower carpets are not ground
+SKIP_MATERIALS = ('tree', 'shadow', 'kage', 't3_fl',    # canopies, shadow decals and flower carpets are not ground;
+                  's_snow', 's_sonwp')                   # nor Platinum's snow patches, 1 unit over the grass (Twinleaf,
+#                                                          Routes 201-202, Verity Lakefront, Lake Verity: its BDHC walks on
+#                                                          the grass under them; Pearl has no such material)
 # Flower carpets (t3_fl_b/g/p/r/y: Floaroma 32/33, Floaroma Meadow 414-417, Flower Paradise 123, the Seabreak Path
 # 119/124-131) are drawn 12 units over Pearl's ground (its BDHC), with no ground mesh under them: such a tile's ground
 # is the carpet's surface lowered by FLOWER_LIFT (ground(); checked against Pearl's BDHC on every flower map,
@@ -51,6 +55,9 @@ BEHAVIOURS = {
     0x21: (0x0b, 0x88),            # SAND
     0x38: (0x72, 0x01), 0x39: (0x73, 0x01), 0x3a: (0x74, 0x01), 0x3b: (0x75, 0x01),   # JUMP_EAST/WEST/NORTH/SOUTH
     0xa1: (0x0e, 0x08), 0xa8: (0x0e, 0x08),  # SNOW_DEEP, SNOW_SHALLOW -> snow
+    0xa9: None if version.SNOW_PATCHES_WINTER_ONLY else (0x0e, 0x08),   # SNOW_WITH_SHADOWS (Platinum's Twinleaf snow
+    #                                patches: tracks and the snow step, no slowing; Black 2's class 0x0e: snow footprints,
+    #                                ov012 field_actor_tool.c). Winter-only patches: plain ground, as Pearl has there
     0xa2: (0x0f, 0x08), 0xa3: (0x0f, 0x08),  # SNOW_DEEPER, SNOW_DEEPEST -> snow, no cycling
     0xa4: (0x1c, 0x40), 0xa5: (0x1c, 0x40),   # MUD, MUD_DEEP -> swamp, no encounters (as in Pearl)
     0xa6: (0x1c, 0x44), 0xa7: (0x1c, 0x44),   # MUD(_DEEP)_WITH_GRASS -> swamp with encounters
@@ -137,10 +144,176 @@ def ground(tris, flowers, x, z):
     return s
 
 
+# ------------------------------------------------------------------------------------------------ BDHC's ground
+# (2026-11-07, Platinum step 4; version.GROUND_AT_BDHC.) A tile's highest drawn surface is its ground only where it lies
+# at one of the BDHC's plates there, within GROUND_MATCH (most rooms draw their floor 2 under the BDHC, and the converter
+# keeps people on the drawn floor). Platinum's walker stands on its BDHC (pokeplatinum terrain_collision_manager.c
+# GetHeight), so anywhere else the model draws something that is not the ground:
+# - over every plate: something overhead. The Veilstone Gym's ceiling rails ('sen', 'lambert20', 74-77 units over the
+#   floor at -2, BDHC 0) were taken for the floor on 122 tiles, so the player would have walked on the rails; also the
+#   caves' light shafts at their exits ('dun_light', 17 over the floor), Pokémon Centers' screens, walls, arches and
+#   roofs that overhang a walkable tile. The ground is the drawn surface nearest the highest plate that has one (the
+#   floor under the rails), else the plate itself.
+# - under every plate: ground the model doesn't draw at the walking level: the lakes' water (a prop, l_lake, over the
+#   lake bed), the lake caverns' walk-on pools (drawn 32 under the floor), Amity Square's ponds, Sendoff Spring. The
+#   ground is the nearest plate. Not in the Gyms (gym_chunks): there the floors over the model are their gimmicks'
+#   (Pastoria's water, Canalave's floors, Sunyshore's walkways); only what is overhead goes.
+# - no plate on the tile: Gen 4 keeps the height the walker came with (map_object_move.c
+#   MapObject_RecalculatePositionHeight), so the tile takes the plates of the nearest tiles that have some (NO_PLATE_REACH).
+#   Fantina's tile in Platinum's Leader room has none, under the back wall drawn at 62: she stood on the wall's top. A
+#   walkable tile with no drawn surface and no plate (the top of the Contest Hall's stairs) takes the plane of a walkable
+#   neighbour whose height is on a plate, not height 0 (a 32-unit wall there).
+# The walkable tiles and the solid ones a person stands on (person_tiles: the Battle Tower's attendants under its
+# overhangs, berry plants); other solid tiles keep their drawn surface (nothing stands there; signs and bump warps take
+# their neighbours' heights). Not in the Underground (FLAT_MAPS): Gen 4 reads no heights there.
+# Pearl's and Diamond's 1.0 maps kept the drawn surface everywhere; 1.0.1 turns the rule on for them too (heights_check 0).
+GROUND_MATCH = 4
+NO_PLATE_REACH = 4          # a tile with no plate looks this many tiles away (Manhattan) for the nearest that have some
+
+
+def bdhc_ground(chunk, tris, flowers, tx, tz, s):
+    """GROUND_AT_BDHC: the ground (height, normal) of tile (tx, tz), given ground()'s s for it. A tile with no plate
+    takes the plates of the nearest tiles that have some (NO_PLATE_REACH)."""
+    if s is None or chunk in flat_chunks(): return s
+    from gen4_land import bdhc_dp_heights
+    b = bdhc(chunk)
+    x, z = tx * 16 - 256 + 8, tz * 16 - 256 + 8
+    def plates_at(px, pz):
+        return [(y, tuple(-k for k in n) if n[1] < 0 else tuple(n)) for y, n in bdhc_dp_heights(b, px, pz)] if b else []
+    plates = plates_at(x, z)
+    for r in range(1, NO_PLATE_REACH + 1):           # (no plate: Gen 4 keeps the height the walker came with, so
+        if plates: break                             # the plates of the nearest tiles that have some)
+        plates = sorted({p for dx in range(-r, r + 1) for dz in (r - abs(dx), abs(dx) - r)
+                         if 0 <= tx + dx < 32 and 0 <= tz + dz < 32 for p in plates_at(x + 16 * dx, z + 16 * dz)},
+                        key=lambda p: -p[0])
+    if not plates: return s
+
+    def at_plate(y):
+        return any(abs(y - h) <= GROUND_MATCH for h, _ in plates)
+    if at_plate(s[0]): return s
+    drawn = surfaces(tris, x, z) or [(y - FLOWER_LIFT, n) for y, n in surfaces(flowers, x, z)]
+    for h, _ in plates:                              # (the highest plate drawn at: its nearest drawn surface)
+        near = [d for d in drawn if abs(d[0] - h) <= GROUND_MATCH]
+        if near: return min(near, key=lambda d: abs(d[0] - h))
+    if s[0] < plates[0][0] and chunk in gym_chunks(): return s
+    y, n = min(plates, key=lambda p: abs(p[0] - s[0]))
+    return (float(y), list(n))
+
+
+FLAT_MAPS = {'MAP_UNDERGROUND'}   # Gen 4 reads no heights there (its map load mode's useSimpleTerrainCollisions:
+#                                   pokeplatinum terrain_collision_manager.c GetSimpleHeight, 0 everywhere): its BDHC is unused
+
+
+@functools.lru_cache(maxsize=None)
+def flat_chunks():
+    """Chunks of the rooms in FLAT_MAPS: their drawn surface is all there is (bdhc_ground leaves them alone)."""
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    out = set()
+    for r in world['rooms']['zones'].values():
+        if r['name'] in FLAT_MAPS:
+            m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{r['pearl_matrix']:03d}.json")))
+            out |= {c for row in m['maps'] for c in row if c != 0xffff}
+    return frozenset(out)
+
+
+# (plat-dw-rom, 2026-11-08) The Distortion World's floors: Platinum keeps the player's height where the BDHC has no plate
+# (MapObject_RecalculatePositionHeight), and its elevator areas, landings and walkways are often neither drawn in the land
+# model (the platforms are props) nor plated: 1F's elevator area (17-21, 42-46) took height 0, 16 under its walkway, so the
+# player dropped a tile after the double jump onto it and the elevator (at y 1) never started; and the floors' people stood
+# 16 low (platinum_events --heights: 196 faults). There, a walkable tile with no surface and no plate takes the height of
+# the nearest tile of its chunk that has a plate (all at 16, but B5F's water at 8), as the walker arrives with it
+DW_ZONES = range(699, 710)
+
+
+@functools.lru_cache(maxsize=None)
+def dw_chunks():
+    """Chunks of the Distortion World's floors (Platinum's rooms 699-709), or none in another version."""
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    out = set()
+    for r in world['rooms']['zones'].values():
+        if r['b2_zone'] in DW_ZONES:
+            path = os.path.join(version.WORLD_WORK, 'matrices', f"{r['pearl_matrix']:03d}.json")
+            if os.path.exists(path):
+                out |= {c for row in json.load(open(path))['maps'] for c in row if c != 0xffff}
+    return frozenset(out)
+
+
+def dw_plate_heights(chunk):
+    """{(tx, tz): height} of the chunk's tiles with a BDHC plate (the highest), for dw_chunks."""
+    from gen4_land import bdhc_dp_heights
+    b = bdhc(chunk)
+    out = {}
+    if b:
+        for tz in range(32):
+            for tx in range(32):
+                hs = bdhc_dp_heights(b, tx * 16 - 256 + 8, tz * 16 - 256 + 8)
+                if hs:
+                    out[(tx, tz)] = max(y for y, _ in hs)
+    return out
+
+
+@functools.lru_cache(maxsize=None)
+def person_tiles():
+    """{chunk: {(tx, tz)}} where the installed zones' people (object events) stand: the overworld's and the rooms'."""
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
+    out = {}
+    for pid, mid in [(int(k), 0) for k in world['zones']] + [(int(k), r['pearl_matrix'])
+                                                              for k, r in world['rooms']['zones'].items()]:
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f'{mid:03d}.json')))
+        ev = json.load(open(os.path.join(version.WORLD_WORK, 'events', f"{zones[pid]['events']:03d}.json")))
+        for o in ev['object_events']:
+            cx, cz = o['x'] // 32, o['z'] // 32
+            if 0 <= cz < m['height'] and 0 <= cx < m['width'] and m['maps'][cz][cx] != 0xffff:
+                out.setdefault(m['maps'][cz][cx], set()).add((o['x'] % 32, o['z'] % 32))
+    return out
+
+
+def on_plate(chunk, tx, tz, y):
+    """Is height y of tile (tx, tz) at one of the chunk's BDHC plates there (within GROUND_MATCH)?"""
+    from gen4_land import bdhc_dp_heights
+    b = bdhc(chunk)
+    return bool(b) and any(abs(y - h) <= GROUND_MATCH for h, _ in bdhc_dp_heights(b, tx * 16 - 248, tz * 16 - 248))
+
+
+def _candidates(tris, x, z):
+    """The triangles of `tris` whose box (widened past surface()'s 1e-4 tolerance) holds (x, z), in their order: the
+    only ones surface() can take, so its answer is the same, ties included (2026-11-07: a chunk's 1,024 tiles asked
+    the whole list each, 2.7 s of a 6.5 s overworld chunk). The index is kept for the last few lists asked."""
+    if len(tris) < 64: return tris
+    hit = _INDEX.get(id(tris))
+    if hit is None or hit[0] is not tris:
+        cells = {}
+        for i, t in enumerate(tris):
+            xs, zs = [p[0] for p in t], [p[2] for p in t]
+            mx = 1e-3 * (max(xs) - min(xs) + max(zs) - min(zs)) + 0.01      # (u, v >= -1e-4: at most 6e-4 of a span)
+            for bx in range(int((min(xs) - mx) // 16), int((max(xs) + mx) // 16) + 1):
+                for bz in range(int((min(zs) - mx) // 16), int((max(zs) + mx) // 16) + 1):
+                    cells.setdefault((bx, bz), []).append(i)
+        if len(_INDEX) >= 8: _INDEX.clear()
+        hit = _INDEX[id(tris)] = (tris, cells)
+    return [tris[i] for i in hit[1].get((int(x // 16), int(z // 16)), ())]
+
+
+_INDEX = {}
+
+
 def surface(tris, x, z):
     """(height, unit normal) of the highest upward-facing triangle over (x, z), or None."""
     best = None
-    for a, b, c in tris:
+    for y, n in _upward(tris, x, z):
+        if best is None or y > best[0]: best = (y, n)
+    return best
+
+
+def surfaces(tris, x, z):
+    """[(height, unit normal)] of every upward-facing triangle over (x, z), highest first (surface() is the first)."""
+    return sorted(_upward(tris, x, z), key=lambda s: -s[0])
+
+
+def _upward(tris, x, z):
+    """(height, unit normal) of each upward-facing triangle of `tris` over (x, z), in their order."""
+    for a, b, c in _candidates(tris, x, z):
         d = (b[0] - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (b[2] - a[2])
         if abs(d) < 1e-6: continue
         u = ((x - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (z - a[2])) / d
@@ -152,18 +325,39 @@ def surface(tris, x, z):
         n = [k / ln for k in n]
         if n[1] < 0: n = [-k for k in n]
         if n[1] < 0.5: continue                          # walls and steep faces
-        y = a[1] + u * e1[1] + v * e2[1]
-        if best is None or y > best[0]: best = (y, n)
-    return best
+        yield a[1] + u * e1[1] + v * e2[1], n
+
+
+def _nearest_slope(slopes, n):
+    """The slope table's entry nearest normal n (plane_record), remembered per normal for the table last asked."""
+    if _SLOPE_OF.get('table') is not slopes: _SLOPE_OF.clear(); _SLOPE_OF['table'] = slopes
+    k = tuple(n)
+    if k not in _SLOPE_OF:
+        def score(i):
+            sx, sy, sz = slopes[i]
+            return (sx * n[0] + sy * n[1] - sz * n[2]) / max(1, (sx ** 2 + sy ** 2 + sz ** 2) ** 0.5)
+        _SLOPE_OF[k] = max(range(len(slopes)), key=score)
+    return _SLOPE_OF[k]
+
+
+_SLOPE_OF = {}
+
+
+def _nearest_offset(offsets, want):
+    """min(range(len(offsets)), key=lambda i: abs(offsets[i] - want)), the first of equals, in numpy (the same float
+    operations) for the table last asked."""
+    import numpy as np
+    if _SLOPE_OF.get('offsets') is not offsets:
+        _SLOPE_OF['offsets'], _SLOPE_OF['offsets_np'] = offsets, np.array(offsets, float)
+    return int(np.argmin(np.abs(_SLOPE_OF['offsets_np'] - want)))
 
 
 def plane_record(slopes, offsets, y, n, x, z):
     """Black 2 (a, b) for the plane through (x, y, z) with normal n: nearest slope normal, then nearest offset."""
-    si = max(range(len(slopes)), key=lambda i: (slopes[i][0] * n[0] + slopes[i][1] * n[1] - slopes[i][2] * n[2])
-             / max(1, (slopes[i][0] ** 2 + slopes[i][1] ** 2 + slopes[i][2] ** 2) ** 0.5))
+    si = _nearest_slope(slopes, n)
     nx, ny, nz = slopes[si][0], slopes[si][1], -slopes[si][2]          # the game negates the third component
     want = -(nx * x + ny * y + nz * z)       # y = -(nx*x + nz*z + d) / ny: n raw fx16, x/z/y units, d raw (GEN5_MAPS.md)
-    oi = min(range(len(offsets)), key=lambda i: abs(offsets[i] - want))
+    oi = _nearest_offset(offsets, want)
     got = -(nx * x + nz * z + offsets[oi]) / ny
     return si << 2, oi, got
 
@@ -206,7 +400,7 @@ def build_model_names():
     from gen4rom import Rom, narc_members
     import pearl_mesh
     out = {}
-    for k, b in enumerate(narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read(
+    for k, b in enumerate(narc_members(Rom(version.WORLD_DUMP).read(
             'fielddata/build_model/build_model.narc'))):
         try:
             mdl = struct.unpack_from('<I', b, 0x10)[0]
@@ -272,6 +466,8 @@ def stairs_of(chunk, around=None):
             if land['behaviour'][tz][tx] not in STAIR_DX: continue
             x, z = tx * 16 - 256 + 8, tz * 16 - 256 + 8
             s = ground(tris, flowers, x, z)
+            if version.GROUND_AT_BDHC:
+                s = bdhc_ground(chunk, tris, flowers, tx, tz, s)    # (as convert)
             if s is None: continue
             a, b, got = plane_record(slopes, offsets, s[0], s[1], x, z)
             heights[(tx, tz)], exact[(tx, tz)] = round(got), got
@@ -391,14 +587,14 @@ def _raised_box(model_id):
 @functools.lru_cache(maxsize=None)
 def _chunk_zones(chunk):
     """[(Pearl zone, matrix, [(cx, cz) cells holding the chunk], events)] of the room zones that use the chunk."""
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
     out = []
     for pid, r in sorted(world['rooms']['zones'].items(), key=lambda kv: int(kv[0])):
-        m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f"{r['pearl_matrix']:03d}.json")))
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{r['pearl_matrix']:03d}.json")))
         cells = [(cx, cz) for cz, row in enumerate(m['maps']) for cx, c in enumerate(row) if c == chunk]
         if cells:
-            ev = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'events', f"{zones[int(pid)]['events']:03d}.json")))
+            ev = json.load(open(os.path.join(version.WORLD_WORK, 'events', f"{zones[int(pid)]['events']:03d}.json")))
             out.append((int(pid), m, cells, ev))
     return out
 
@@ -522,9 +718,9 @@ WATER_BEHAVIOURS = {0x10, 0x13, 0x15}
 def _room_around(chunk):
     """Neighbours ({(dx, dz): chunk}) of a room chunk in the first room matrix that holds it (where sinnoh_rooms
     converts it)."""
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     for mid in world['rooms']['matrices']:
-        m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f'{int(mid):03d}.json')))
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f'{int(mid):03d}.json')))
         for z in range(m['height']):
             for x in range(m['width']):
                 if m['maps'][z][x] == chunk: return neighbours(m, x, z)
@@ -544,7 +740,7 @@ def _prop_box(model_id):
     import numpy as np, pearl_mesh, pearl_buildings, pearl_model_fix
     from gen4rom import Rom, narc_members
     if not hasattr(_prop_box, 'build'):
-        _prop_box.build = narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read(
+        _prop_box.build = narc_members(Rom(version.WORLD_DUMP).read(
             'fielddata/build_model/build_model.narc'))
     try:
         m = pearl_mesh.Model(pearl_buildings.mdl_only(_prop_box.build[model_id]))
@@ -610,7 +806,7 @@ def people_props_moved(chunk, props, props_too=True):
 @functools.lru_cache(maxsize=None)
 def room_chunks():
     """Pearl chunks installed as rooms (data/sinnoh_world.json "rooms")."""
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     return frozenset(int(c) for c in world['rooms']['chunks'])
 
 
@@ -619,16 +815,16 @@ def _room_people():
     """{chunk: {(tx, tz)}}: where people stand in the room zones, per chunk of their matrix: the walkable tiles
     (Pearl's collision, not water) reachable from the zone's warps (from its objects' tiles when it has none) and its
     objects' tiles (Pearl's object events: the nurse behind her counter)."""
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
     lands = {}
     def land(c):
         if c not in lands: lands[c] = json.load(open(os.path.join(LAND, f'{land_id(c):03d}.json')))
         return lands[c]
     out = {}
     for pid, r in world['rooms']['zones'].items():
-        m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f"{r['pearl_matrix']:03d}.json")))
-        ev = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'events', f"{zones[int(pid)]['events']:03d}.json")))
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{r['pearl_matrix']:03d}.json")))
+        ev = json.load(open(os.path.join(version.WORLD_WORK, 'events', f"{zones[int(pid)]['events']:03d}.json")))
         def chunk_at(x, z):
             cx, cz = x // 32, z // 32
             if 0 <= cz < m['height'] and 0 <= cx < m['width'] and m['maps'][cz][cx] != 0xffff:
@@ -662,11 +858,11 @@ def _room_margins():
     """{chunk: the people fix's depth margin}: pearl_model_fix.PEOPLE_MARGIN where a building zone (map type 4 or 1:
     projection type 0) uses the chunk, PEOPLE_MARGIN_CAVE where only caves and outdoor rooms do (type 1)."""
     import pearl_model_fix
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
     out = {}
     for pid, r in world['rooms']['zones'].items():
-        m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f"{r['pearl_matrix']:03d}.json")))
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{r['pearl_matrix']:03d}.json")))
         margin = (pearl_model_fix.PEOPLE_MARGIN if zones[int(pid)]['map_type'] in (4, 1)
                   else pearl_model_fix.PEOPLE_MARGIN_CAVE)
         for row in m['maps']:
@@ -690,7 +886,9 @@ def people_tiles(chunk):
     for tx, tz in sorted(spots):
         x, z = tx * 16 - 256 + 8, tz * 16 - 256 + 8
         k = np.nonzero((lo[:, 0] <= x) & (hi[:, 0] >= x) & (lo[:, 2] <= z) & (hi[:, 2] >= z))[0]
-        s = surface([tris[i] for i in k], x, z)
+        near = [tris[i] for i in k]
+        s = surface(near, x, z)
+        if version.GROUND_AT_BDHC: s = bdhc_ground(chunk, near, (), tx, tz, s)   # (as convert)
         if s is not None: out.append((float(x), float(z), float(s[0]), margin))
     return tuple(out)
 
@@ -798,12 +996,24 @@ def gym_chunks():
     Roark's Gym has no gimmick and has a bridge with a way under it (4 tiles, (4-7, 17)), as the Eterna Gym has none:
     not in the list. (The user, 2026-11-01: "you can't go under the bridges": the tiles stood at the deck's height, a
     32-unit wall from the pit's floor.)"""
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     out = set()
     for r in world['rooms']['zones'].values():
         if '_GYM' in r['name'] and r['name'] != 'MAP_OREBURGH_GYM':
-            m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f"{r['pearl_matrix']:03d}.json")))
+            m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{r['pearl_matrix']:03d}.json")))
             out |= {c for row in m['maps'] for c in row if c != 0xffff}
+    return frozenset(out)
+
+
+@functools.lru_cache(maxsize=None)
+def room_chunks():
+    """Chunks of the installed rooms (version.SOLID_AT_BDHC: their solid tiles take the BDHC's ground, bdhc_ground, as
+    a walker a script moves through a wall has it in Gen 4)."""
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    out = set()
+    for r in world['rooms']['zones'].values():
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{r['pearl_matrix']:03d}.json")))
+        out |= {c for row in m['maps'] for c in row if c != 0xffff}
     return frozenset(out)
 
 
@@ -847,7 +1057,7 @@ def two_levels(chunk):
 @functools.lru_cache(maxsize=None)
 def filler_chunks():
     """Overworld chunks in no zone (every matrix-0 cell holding them has header 0: the mountains between routes)."""
-    m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', '000.json')))
+    m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', '000.json')))
     zoned, seen = set(), set()
     for cz, row in enumerate(m['maps']):
         for cx, c in enumerate(row):
@@ -968,11 +1178,15 @@ def convert(chunk, slopes=None, offsets=None, around=None, solid_behaviours=()):
             if solid and not flags & 1: flags |= 1
             x, z = tx * 16 - 256 + 8, tz * 16 - 256 + 8
             s = ground(tris, flowers, x, z)
+            stood = not solid or (version.GROUND_AT_BDHC and ((tx, tz) in person_tiles().get(chunk, ())
+                                                              or version.SOLID_AT_BDHC and chunk in room_chunks()))
+            if version.GROUND_AT_BDHC and stood:
+                s = bdhc_ground(chunk, tris, flowers, tx, tz, s)    # (the drawn surface only at a BDHC plate)
             if (tx, tz) in plates:
                 s = (float(plates[(tx, tz)]), [0.0, 1.0, 0.0])
-            if s is None and not solid:                    # no ground in the model (Route 228's bike slopes 0xda: its
+            if s is None and stood:                        # no ground in the model (Route 228's bike slopes 0xda: its
                 lv = bdhc_levels(chunk, tx, tz)            # 3 bridges' ramps stood at height 0, a wall): Pearl's own
-                if lv: s = (float(lv[0][0]), list(lv[0][1]))   # level
+                if lv: s = (float(lv[0][0]), list(lv[0][1]))   # level (GROUND_AT_BDHC: a person's solid tile too)
             surf[(tx, tz)] = s
             if s is None:
                 nohit += not solid; a, b = 0, min(range(len(offsets)), key=lambda i: abs(offsets[i]))
@@ -982,6 +1196,32 @@ def convert(chunk, slopes=None, offsets=None, around=None, solid_behaviours=()):
                 if not solid and cls in (0x00, 0x0b): walkable[(tx, tz)] = round(got)   # plain ground (fly points)
                 heights[(tx, tz)] = round(got)                                            # every tile (warps)
             cells.append(struct.pack('<HHI', a, b, cls | flags << 16))
+    if version.GROUND_AT_BDHC and chunk not in flat_chunks():   # (no surface, no plate: a neighbour's plane, bdhc_ground)
+        for tz in range(32):
+            for tx in range(32):
+                if surf[(tx, tz)] is not None or land['collision'][tz][tx] or (tx, tz) in beds: continue
+                for dx, dz in ((0, 1), (0, -1), (-1, 0), (1, 0)):
+                    n = (tx + dx, tz + dz)
+                    if n in heights and surf.get(n) is not None and not land['collision'][n[1]][n[0]] \
+                            and on_plate(chunk, *n, surf[n][0]):  # (a neighbour on a plate: the walker's height)
+                        k = tz * 32 + tx
+                        cells[k] = cells[n[1] * 32 + n[0]][:4] + cells[k][4:]
+                        a, b = struct.unpack_from('<HH', cells[k])
+                        heights[(tx, tz)] = round(plane_y(slopes, offsets, a, b, tx * 16 - 256 + 8, tz * 16 - 256 + 8))
+                        nohit -= 1
+                        break
+    if version.GROUND_AT_BDHC and chunk in dw_chunks():     # (plat-dw-rom: the Distortion World, dw_chunks)
+        plated = dw_plate_heights(chunk)
+        for tz in range(32):
+            for tx in range(32):
+                if surf[(tx, tz)] is not None or land['collision'][tz][tx] or (tx, tz) in heights or not plated:
+                    continue
+                y = plated[min(plated, key=lambda t: (abs(t[0] - tx) + abs(t[1] - tz), t))]
+                a, b, got = plane_record(slopes, offsets, y, [0.0, 1.0, 0.0], tx * 16 - 256 + 8, tz * 16 - 256 + 8)
+                k = tz * 32 + tx
+                cells[k] = struct.pack('<HH', a, b) + cells[k][4:]
+                heights[(tx, tz)] = round(got)
+                nohit -= 1
     mats = floor_mats(land, cells, heights, solid_behaviours, slopes, offsets)   # (rooms: warp mats on their floor)
     stairs = []
     for st in stair_planes(land, tris, heights, slopes, offsets):   # the flights' 45-degree planes (STAIRS above)

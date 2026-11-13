@@ -29,6 +29,8 @@ Commands (each prints what happened):
   WAITZONE<zone>            wait (pressing nothing) until that zone's field is up
   WEATHER                   the zone's weather now (GameData +0x1c9, GetWeatherAll's answer) and the kept season
   WORK<hex>                 an event work's value; FLAG<n> an event flag
+  FLAGSET<n>,<0|1>          TEST ONLY, writes RAM: an event flag cleared or set (postdex: the game clear 2400 off)
+  WORKSET<hex>,<value>      TEST ONLY, writes RAM: an event work's value
   BAG                       the Bag's items, key items, TMs & HMs and medicine pockets: (item, count)
   PARTY                     party species and levels
   MOVES                     party species and their four move ids
@@ -63,6 +65,7 @@ import os, struct, sys, time
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 from emu import Emu, fresh_battery, KEYS  # noqa: E402
 from desmume.controls import keymask  # noqa: E402
@@ -392,20 +395,20 @@ class P:
         import json
         root = os.path.abspath(os.path.join(HERE, '..', '..'))
         if not hasattr(self, '_world'):
-            w = json.load(open(os.path.join(root, 'data', 'sinnoh_world.json')))
+            w = json.load(open(version.data_path('sinnoh_world.json')))
             self._pearl = {v['b2_zone']: int(k) for k, v in w['zones'].items()}
             self._pearl.update({v['b2_zone']: int(k) for k, v in w['rooms']['zones'].items()})
-            self._world = {z['id']: z for z in json.load(open(os.path.join(root, 'work', 'pearl', 'zones.json')))}
+            self._world = {z['id']: z for z in json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))}
             self._grid = {}
         mid = self._world[self._pearl[self.zone()]]['matrix']
         if mid not in self._grid:
-            m = json.load(open(os.path.join(root, 'work', 'pearl', 'matrices', f'{mid:03d}.json')))
+            m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f'{mid:03d}.json')))
             tiles = {}
             for cz in range(m['height']):
                 for cx in range(m['width']):
                     c = m['maps'][cz][cx]
                     if c == 0xffff: continue
-                    land = json.load(open(os.path.join(root, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))
+                    land = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{land_id(c):03d}.json')))
                     for tz in range(32):
                         for tx in range(32):
                             b = land['behaviour'][tz][tx]
@@ -582,6 +585,18 @@ def run_cmds(p, cmds):
                 if p.zone() == want and p.field(): break
                 e.run(5)
             e.run(30); p.say('WAITZONE', p.zone(), p.tile())
+        elif c.startswith('FLAGSET'):                  # TEST ONLY (postdex): an event flag in RAM
+            f, v = (int(n, 0) for n in c[7:].split(','))
+            ew = p.u32(p.gdata() + 0x1ac)
+            at = ew + 2 * 431 + f // 8
+            b = p.m[at]
+            p.e.d.memory.write_byte(at, (b | 1 << (f % 8)) if v else (b & ~(1 << (f % 8)) & 0xff))
+            p.say('FLAG', f, '=', p.flag(f))
+        elif c.startswith('WORKSET'):                  # TEST ONLY (postdex): an event work in RAM
+            w, v = (int(n, 0) for n in c[7:].split(','))
+            ew = p.u32(p.gdata() + 0x1ac)
+            p.e.d.memory.write_short(ew + 2 * (w - 0x4000), v)
+            p.say('WORK', hex(w), '=', p.work(w))
         elif c.startswith('WORK'):
             w = int(c[4:], 16); p.say(f'WORK {w:#06x} =', p.work(w))
         elif c.startswith('FLAG'):

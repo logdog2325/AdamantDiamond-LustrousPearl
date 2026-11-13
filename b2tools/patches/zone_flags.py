@@ -56,10 +56,11 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import zoneheaders  # noqa: E402
 
 VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
-PEARL_ZONES = os.path.join(ROOT, 'work', 'pearl', 'zones.json')    # gen4_extract: Pearl's map headers
+PEARL_ZONES = os.path.join(version.WORLD_WORK, 'zones.json')    # gen4_extract: Pearl's map headers
 PEARL_NAMES = os.path.join(ROOT, 'external', 'pokediamond', 'files', 'msgdata', 'msg', 'narc_0382.gmm')
 BG_ARC, BG_ENTRY = 151, 0x2C                                        # a/1/5/1 file 0: one 0x2C entry per background
 
@@ -82,6 +83,19 @@ PEARL_BG = {
              # Road's: the same backdrop as 4)
     11: 5,   # CAVE_3 (Wayward Cave, Iron Island, the lake caverns, Turnback Cave) -> cave
 }
+# Platinum's own backgrounds: the Elite Four's and the Champion's rooms (12-16, BACKGROUND_AARON..CYNTHIA) are Pearl's indoor 7 there, so the
+# same as Pearl's build; the Distortion World's (17)
+if version.PLATINUM:
+    PEARL_BG.update({**{k: PEARL_BG[7] for k in range(12, 17)}, 17: PEARL_BG[11]})
+# ---- plat-dw-world (2026-11-07): the Distortion World (Platinum's BACKGROUND_DISTORTION_WORLD, 17) battles on Black 2's 11,
+# Shauntal's: a dark purple-blue void over a dark floor, the nearest of Black 2's 21 to Platinum's dark distorted void (looked at
+# as textures: 4/5 are grey cave rock, 15/17 a bright sky, 16 the Champion's blue-grey with sparkles, 20 Kyurem's is set by code).
+# Platinum plays no surf song there (its zone flag; plat-music's note): the bike/surf music bit is 0 in its ten zones.
+DW_BG = 11
+DW_NO_SURF_BGM = re.compile(r'^MAP_DISTORTION_WORLD_') if version.PLATINUM else None
+if version.PLATINUM:
+    PEARL_BG[17] = DW_BG
+# ---- end plat-dw-world
 WINTER_BG = 5                          # Pearl's SNOW: these zones battle in winter all year (gPearlB2WinterZones)
 # Places whose Black 2 background is not PEARL_BG's, by Pearl map name. Empty: the League's rooms keep Pearl's indoors
 # (lead 2026-10-25: Black 2's Elite Four backdrops are themed for Unova's types). The switch, if wanted: Black 2's
@@ -117,7 +131,11 @@ def pack(f):
 
 
 def place_names():
-    """Pearl's map section names (English), row = map section."""
+    """Pearl's map section names (English), row = map section. Platinum: its own list (pokeplatinum res/text/location_names.json, the
+    dump's bank; the same rows as Pearl's, then its new places)."""
+    if version.PLATINUM:
+        rows = json.load(open(os.path.join(ROOT, 'external', 'pokeplatinum', 'res', 'text', 'location_names.json'), encoding='utf-8'))
+        return [''.join(m['en_US']) if isinstance(m['en_US'], list) else m['en_US'] for m in rows['messages']]
     xml = open(PEARL_NAMES, encoding='utf-8').read()
     rows = re.findall(r'<row[^>]*>(.*?)</row>', xml, re.S)
     return [re.search(r'<language name="English">(.*?)</language>', r, re.S).group(1) for r in rows]
@@ -126,7 +144,7 @@ def place_names():
 def places():
     """[(Black 2 zone, Pearl zone header, kind, place name)] of every Sinnoh place: overworld 'town'/'route'/'other',
     'room'."""
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     pearl = json.load(open(PEARL_ZONES))
     names = place_names()
     out = []
@@ -141,8 +159,13 @@ def places():
 def ours(p):
     """The flags word's fields for a Pearl zone header."""
     return dict(trans=PEARL_TRANSITION[p['map_type']], bg=PLACE_BG.get(p['name'], PEARL_BG[p['battle_bg']]),
-                cycling=int(p['bike']), unk11=1, rope=int(p['escape_rope']), fly=int(p['fly']), surf_bgm=1,
+                cycling=int(p['bike']), unk11=1, rope=int(p['escape_rope']), fly=int(p['fly']), surf_bgm=surf_bgm(p),
                 entralink=0)
+
+
+def surf_bgm(p):
+    """The bike/surf music bit: 1 but in Platinum's Distortion World (plat-dw-world)."""
+    return 0 if DW_NO_SURF_BGM and DW_NO_SURF_BGM.match(p['name']) else 1
 
 
 def icon(kind, name):
@@ -184,7 +207,7 @@ def check(rows, bg_count):
     for z, p, kind, name, old, new in rows:
         f = unpack(new[0])
         assert f['bg'] < bg_count and f['bg'] not in BG_SET_BY_CODE, (z, p['name'], f['bg'])
-        assert f['unk11'] == 1 and f['entralink'] == 0 and f['surf_bgm'] == 1, (z, p['name'], f)
+        assert f['unk11'] == 1 and f['entralink'] == 0 and f['surf_bgm'] == surf_bgm(p), (z, p['name'], f)
         assert (f['cycling'], f['rope'], f['fly']) == (p['bike'], p['escape_rope'], p['fly']), (z, p['name'], f)
         assert (f['trans'] == 3) == (p['map_type'] == 3), (z, p['name'], f)
         assert kind != 'room' or f['trans'] != 0 or p['map_type'] in (1, 2), (z, p['name'], f)

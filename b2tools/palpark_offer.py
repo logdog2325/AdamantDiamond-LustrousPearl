@@ -9,6 +9,7 @@ import json, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
+import version  # noqa: E402
 MIGRATE_BANK = 403                      # Pearl's migration text (Platinum's TEXT_BANK_MIGRATE_FROM_GBA)
 # Pearl's line for each GBA game (bank 403 lines 0-4: Ruby, Sapphire, Emerald, FireRed, LeafGreen) by the game's
 # origin-game id (1 Sapphire, 2 Ruby, 3 Emerald, 4 FireRed, 5 LeafGreen)

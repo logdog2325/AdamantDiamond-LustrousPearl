@@ -5,7 +5,7 @@
 
 On the bottom screen, in place of Black 2's C-Gear. You get it in Jubilife City during the story: collect a Coupon from each of the three clowns, by answering their questions, and bring them to the Pokétch Company's president. Press its button to change app.
 
-25 apps, with the original art, in both versions. 22 can be obtained in 1.0.
+25 apps, with the original art, in both versions. All of them can be obtained.
 
 ## The apps
 
@@ -33,14 +33,13 @@ On the bottom screen, in place of Black 2's C-Gear. You get it in Jubilife City 
 | Trainer Counter | The Route 221 gate, on your first visit. | Stays empty: this game has no Poké Radar. |
 | Kitchen Timer | The Route 221 gate, with a Snorlax in your party. |  |
 | Color Changer | The Route 221 gate, with a Kecleon in your party. |  |
-| Matchup Checker | Nobody gives it in 1.0. |  |
-| Stopwatch | Nobody gives it in 1.0. |  |
-| Alarm Clock | Nobody gives it in 1.0. |  |
+| Matchup Checker | The deliveryman in any Poké Mart, after the Hall of Fame: his fifth gift ([post-game](postgame-pearl.md#the-deliveryman-and-the-event-pokémon)). |  |
+| Stopwatch | The deliveryman in any Poké Mart, after the Hall of Fame: his sixth gift ([post-game](postgame-pearl.md#the-deliveryman-and-the-event-pokémon)). |  |
+| Alarm Clock | The deliveryman in any Poké Mart, after the Hall of Fame: his seventh gift ([post-game](postgame-pearl.md#the-deliveryman-and-the-event-pokémon)). |  |
 
-Talk to the developer in Sunyshore once to meet him, then again for each app. He names a nature, but in 1.0 he doesn't check your party.
+Talk to the developer in Sunyshore once to meet him, then again for each app. He names a nature, and gives the app when a Pokémon of that nature is in your party.
 
 ## Not usable yet
 
-- **Matchup Checker, Stopwatch, Alarm Clock:** no one gives them in this version (the Pokétch Company's tips still mention them).
 - **Trainer Counter:** it counts Poké Radar chains, and there's no Poké Radar, so it stays empty.
 - **Link Searcher:** always finds nobody.

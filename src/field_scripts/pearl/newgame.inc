@@ -6,6 +6,9 @@
 // which Pearl's new-game event runs: translated as subroutine C377_1_S1 of this file) and starts where Pearl starts:
 // the bedroom (PEARL_START_*, defined by the generator), whose PearlArrive script fades in. Barry's scene there is the
 // bedroom's own map script (Pearl's frame table: var 0x40A3 = 0).
+// The screens stay black from Rowan's fade to the bedroom's fade-in, as in Pearl and Platinum: patches/pearl_intro.py
+// skips Black 2's fade-in of zone 427 before script 30 (its Mom's phone call is seen there; nothing of ours is), so
+// script 30 does not fade out either (FadeOutBlack starts from full light: Twinleaf would flash).
 
 PearlNewGame_29:
     VMHalt
@@ -13,9 +16,7 @@ PearlNewGame_29:
 PearlNewGame_30:
     ActorsPauseAll
     VMCall C377_1_S1
-    FadeOutBlack
     RTReserveScript PEARL_START_ARRIVE
-    FadeWait
     MapChangeCore PEARL_START_ZONE, PEARL_START_X, 0, PEARL_START_Z, PEARL_START_DIR
     FinishAllEvents
     ActorsUnpauseAll

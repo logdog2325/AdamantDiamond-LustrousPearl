@@ -3,7 +3,7 @@
 
 # The Grand Underground
 
-The tunnels under Sinnoh, with Hideaways full of wandering Pokémon. The place is the same in both versions; what lives there differs: see the [Lustrous Pearl](wild-pokemon-pearl.md#grand-underground-hideaways) and [Adamant Diamond](wild-pokemon-diamond.md#grand-underground-hideaways) wild pages.
+The tunnels under Sinnoh, with Hideaways full of wandering Pokémon. The place is the same in both versions; what lives there differs until you're the Champion, when each version's Hideaways get the other's Pokémon too: see the [Lustrous Pearl](wild-pokemon-pearl.md#grand-underground-hideaways) and [Adamant Diamond](wild-pokemon-diamond.md#grand-underground-hideaways) wild pages.
 
 ## Getting there
 
@@ -45,7 +45,7 @@ In the tunnels, Use opens DIGGER DRILL / GOODS / GO UP / CLOSE. The Digger Drill
 There's no digging in the walls in this game (no Sphere, trap or treasure hunting). What digging would have given comes in other ways:
 
 - **Mysterious Shards:** once you're the Champion, a daily ball in Rocky Cave (Shard S), Dazzling Cave (Shard S), Big Bluff Cavern (Shard S) and Stargleam Cavern (Shard L). They trade for slates at [Pal Park](ramanas-park-pearl.md).
-- **Fossils:** once you're the Champion, a daily ball in Rocky Cave and Sandsear Cave: at random Root Fossil, Claw Fossil, Helix Fossil, Dome Fossil, Old Amber. The version's own fossil comes from Hidden Grottos. The Oreburgh Mining Museum can't restore fossils in 1.0 ([known issues](known-issues.md)).
+- **Fossils:** once you're the Champion, a daily ball in Rocky Cave and Sandsear Cave: at random Root Fossil, Claw Fossil, Helix Fossil, Dome Fossil, Old Amber, or the other version's fossil (the Skull Fossil in Lustrous Pearl, the Armor Fossil in Adamant Diamond), each one time in six. The version's own fossil comes from Hidden Grottos. The Oreburgh Mining Museum restores them into Pokémon.
 
 ## Hidden Grottos
 

@@ -12,7 +12,7 @@
 
 P325_S1:
 P325_000A:
-    pl_stub CheckShouldShowGhost  // Pearl 0x292 Unk0292 10, 16384: not translated yet
+    pl_CheckShouldShowGhost 10, PVAR_4000
     pl_CompareVarToValue PVAR_4000, 1
     pl_GoToIf 1, P325_0022
     pl_SetFlag PFLAG_0299

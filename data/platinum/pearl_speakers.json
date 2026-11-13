@@ -1,0 +1,112 @@
+{
+  "_doc": "Platinum's speakers (data/pearl_speakers.json's rows by Platinum's own line numbers and objects; b2tools/pearl_story.py reads this file in a Platinum build: version.data_path). {zone name: {line of the zone's bank: object local id, or \"sys\" for a narration line (the plain window)}}. Pearl's rows were moved to the same lines by their words and checked against Platinum's scripts (pokeplatinum res/field/scripts), objects by Platinum's events. The rest (2026-11-02, the dialogue step, found by b2tools/text_check.py --speakers): lines in a talk script after the talked-to person or thing was removed (RemoveObject: Black 2's balloon has nobody to point at), and lines that name another speaker. MAP_ROUTE_201: Platinum's starter scene runs in the briefcase's talk script after the briefcase goes: the rival (2), Rowan (5) and the counterpart (6) speak. MAP_VALOR_LAKEFRONT: the grunt's talk script goes on after he runs off: Cynthia (0) and the rival (10). MAP_VEILSTONE: after the tag battle Looker (26) comes in the counterpart's talk script (29, 32, 35), and again in the storage-key grunt's after the grunt leaves (38-40). MAP_SNOWPOINT: Cynthia (10) comes in the ship sailor's talk script. MAP_ROUTE_213: Looker (33) after the grunt leaves. MAP_ROUTE_212_POKEMON_MANSION_EAST_ROOM: the butler (2) in Mr. Backlot's talk script. MAP_VEILSTONE_GALACTIC_HEADQUARTERS_4F_BACK: Saturn (0) in Charon's. MAP_ETERNA_GALACTIC_BUILDING_1F: the wall to Rotom's room is a thing, and it goes: the plain window. Looker (Veilstone 26, Route 213 33) has no sprite here yet (step 6): until his person is installed, pearl_story shows his lines in the plain window, with Platinum's \"Looker:\" in front (Black 2's ActorMsg would skip a line for a missing person). MAP_RESORT_AREA_SOUTHWEST_HOUSE (the Villa) 89-91: one line holds both Flint and Volkner (\"Flint: ...\\nVolkner: ...\"), so the plain window, as Platinum shows it in one box.",
+  "MAP_TWINLEAF_RIVAL_HOUSE_1F": {
+    "19": 1,
+    "21": 1,
+    "24": 1,
+    "25": 1,
+    "26": 1
+  },
+  "MAP_JUBLIFE_TRAINER_SCHOOL": {
+    "1": "sys"
+  },
+  "MAP_ETERNA_GALACTIC_BUILDING_1F": {
+    "6": "sys",
+    "7": "sys"
+  },
+  "MAP_ETERNA_GALACTIC_BUILDING_4F": {
+    "4": 2
+  },
+  "MAP_FLOAROMA": {
+    "0": 7,
+    "1": 8
+  },
+  "MAP_ROUTE_205_SOUTH": {
+    "2": 13,
+    "3": 12,
+    "4": 12
+  },
+  "MAP_VALLEY_WINDWORKS_EXTERIOR": {
+    "4": "sys"
+  },
+  "MAP_VEILSTONE": {
+    "16": 7,
+    "17": 7,
+    "18": 20,
+    "29": 26,
+    "32": 26,
+    "35": 26,
+    "38": 26,
+    "39": 26,
+    "40": 26
+  },
+  "MAP_ROUTE_210_SOUTH": {
+    "0": "sys",
+    "1": "sys",
+    "2": "sys",
+    "3": 20,
+    "4": 20,
+    "5": 20
+  },
+  "MAP_LAKE_VERITY_GALACTIC": {
+    "13": 5
+  },
+  "MAP_SANDGEM_ROWANS_LAB": {
+    "32": 4,
+    "35": 4,
+    "36": "sys",
+    "37": 4,
+    "39": 4,
+    "40": 4,
+    "41": 4
+  },
+  "MAP_SNOWPOINT": {
+    "15": 10,
+    "16": 10
+  },
+  "MAP_VALOR_LAKEFRONT": {
+    "4": 0,
+    "5": 10,
+    "6": 10,
+    "7": 10,
+    "8": 0,
+    "9": 0,
+    "10": 0,
+    "11": 0,
+    "12": 0,
+    "13": 0
+  },
+  "MAP_ROUTE_201": {
+    "36": 2,
+    "37": 5,
+    "38": 5,
+    "39": 6,
+    "40": 6,
+    "41": 6,
+    "42": 6,
+    "43": 2,
+    "44": 2,
+    "45": 2,
+    "47": 2,
+    "48": 2,
+    "49": 2
+  },
+  "MAP_ROUTE_212_POKEMON_MANSION_EAST_ROOM": {
+    "7": 2,
+    "9": 2
+  },
+  "MAP_ROUTE_213": {
+    "4": 33,
+    "5": 33,
+    "6": 33
+  },
+  "MAP_RESORT_AREA_SOUTHWEST_HOUSE": {
+    "89": "sys",
+    "90": "sys",
+    "91": "sys"
+  },
+  "MAP_VEILSTONE_GALACTIC_HEADQUARTERS_4F_BACK": {
+    "6": 0,
+    "8": 0
+  }
+}

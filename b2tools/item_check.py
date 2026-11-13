@@ -6,7 +6,7 @@
    with a generated script file; each ball a person with Black 2's item-ball sprite and script 7000+n, each hidden item
    a sign of condition 2 and script 8000+n.
 2. The flags: a ball's flag is Pearl's flag through the registry, in Black 2's item-ball flags (1100-1499) and shared
-   only by balls of one script; a hidden item's flag is 2820 + n (the decomp's rule).
+   only by balls of one script; a hidden item's flag is 2820 + n (the decomp's rule; Platinum's 256-283: pearl_items.hidden_flag).
 3. The scripts: src/field_scripts/1240, 1241 and their text are what pearl_items.py writes now, and they assemble.
 4. Reachable: from the player's room, through the walkable tiles (Pearl's collision: water counts, as Surf), every warp
    that can be set off, every Warp of Pearl's scripts (as warp_check.py) and every Rock Climb lane, the player gets
@@ -21,6 +21,7 @@ import collections, glob, json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 sys.path.insert(0, os.path.join(HERE, 'patches'))
 import pearl_events, pearl_ids, pearl_items, pearl_story, scripts as scripts_patch, warp_check  # noqa: E402
 import pearl_shops, sinnoh_story  # noqa: E402
@@ -105,8 +106,8 @@ class World:
         # Pearl's scripts' warps: boats, the Great Marsh, the League. A zone they name counts as entered: at the tile they
         # name, else (a var) at each warp of the zone
         script_warps = re.compile(r'\bWarp (0x[0-9A-Fa-f]+|\d+), \w+, (\w+), (\w+), ')
-        for f in os.listdir(os.path.join(ROOT, 'work', 'pearl', 'scripts')):
-            for m in script_warps.finditer(open(os.path.join(ROOT, 'work', 'pearl', 'scripts', f)).read()):
+        for f in os.listdir(os.path.join(version.WORLD_WORK, 'scripts')):
+            for m in script_warps.finditer(open(os.path.join(version.WORLD_WORK, 'scripts', f)).read()):
                 b2 = W.b2_of.get(int(m.group(1), 0))
                 if b2 is None:
                     continue
@@ -115,8 +116,8 @@ class World:
                 else:
                     starts += [(self.place(b2),) + W.at(w) for w in W.warps.get(b2, ()) if w['x'] < warp_check.OFF_MAP]
         ships = re.compile(r'\bShipAnimation \w+, \w+, (0x[0-9A-Fa-f]+|\d+), (0x[0-9A-Fa-f]+|\d+), (0x[0-9A-Fa-f]+|\d+)')
-        for f in os.listdir(os.path.join(ROOT, 'work', 'pearl', 'scripts')):
-            for m in ships.finditer(open(os.path.join(ROOT, 'work', 'pearl', 'scripts', f)).read()):
+        for f in os.listdir(os.path.join(version.WORLD_WORK, 'scripts')):
+            for m in ships.finditer(open(os.path.join(version.WORLD_WORK, 'scripts', f)).read()):
                 b2 = W.b2_of.get(int(m.group(1), 0))
                 if b2 is not None:
                     starts.append((self.place(b2), int(m.group(2), 0), int(m.group(3), 0)))
@@ -233,8 +234,8 @@ def main(argv):
         by_flag[r['flag']].add(r['script'])
         if r['kind'] == 'ball' and not 1100 <= r['flag'] <= 1499:
             report('flag', f'{r["zone"]} ball script {r["script"]}: flag {r["flag"]} outside 1100-1499')
-        if r['kind'] == 'hidden' and r['flag'] != 2820 + r['script'] - 8000:
-            report('flag', f'{r["zone"]} hidden script {r["script"]}: flag {r["flag"]} is not 2820 + n')
+        if r['kind'] == 'hidden' and r['flag'] != pearl_items.hidden_flag(r['script'] - 8000):
+            report('flag', f'{r["zone"]} hidden script {r["script"]}: flag {r["flag"]} is not the field\'s (pearl_items.hidden_flag)')
     for f, s in by_flag.items():
         if len(s) > 1:
             report('flag', f'flag {f} is shared by scripts {sorted(s)}')

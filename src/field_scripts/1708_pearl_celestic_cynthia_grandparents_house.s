@@ -64,6 +64,7 @@ P1017_0060:
 P1017_0092:
     MsgWinCloseAll  // (as Black 2's own uses: its window needs the message window gone)
     CallPokemonPreview 484, 0, 0, 0  // ShowPokemonPic
+    PokeDexRegist 0, 484  // DrawPokemonPreview marks the species seen (Black 2's preview doesn't)
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 4
     pl_Return
@@ -71,6 +72,7 @@ P1017_0092:
 P1017_009D:
     MsgWinCloseAll  // (as Black 2's own uses: its window needs the message window gone)
     CallPokemonPreview 483, 0, 0, 0  // ShowPokemonPic
+    PokeDexRegist 0, 483  // DrawPokemonPreview marks the species seen (Black 2's preview doesn't)
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 5
     pl_Return

@@ -23,16 +23,16 @@ P158_0016:
     pl_LockAll
     pl_FacePlayer
     pl_GetFirstNonEggInParty PVAR_8000
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 0, 24: not translated yet
+    pl_GetPartyMonParam PVAR_800C, 0, 0x65  // GetPartyMonRibbon: the Effort Ribbon
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P158_0082
     pl_BufferPartyMonSpecies 0, PVAR_8000
     pl_msg_talk 0
-    pl_stub GetPartyMonEVTotal  // Pearl 0x233 GetTotalPokemonEVs 32780, 32768: not translated yet
+    PokePartyGetEVTotal PVAR_800C, PVAR_8000  // GetPartyMonEVTotal
     pl_CompareVarToValue PVAR_800C, 510
     pl_GoToIf 0, P158_0077
     pl_msg_talk 1
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32768, 24: not translated yet
+    pl_SetPartyMonRibbon PVAR_8000, 0x65  // SetPartyMonRibbon: the Effort Ribbon
     pl_PlayFanfare SEQ_ME_POKEGET  // Pearl SEQ_FANFA1
     pl_BufferPlayerName 1
     pl_msg_talk 2

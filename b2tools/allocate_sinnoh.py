@@ -20,6 +20,10 @@
   **Underground 633-651**, **Ramanas Park 652-660** (661-662: the Diamond version's Johto and Rainbow Rooms).
   sinnoh_world grows the header file to the end of the last block. Areas the Underground reuses (388, 198-201) are
   never handed out (RESERVED_AREAS).
+- **Platinum (2026-11-02, notes/PORT_AUDIT.md)**: -> data/platinum/sinnoh_world.json, seeded from Pearl's (platinum_seed: every number
+  stays; work/platinum names its chunks by Pearl's numbers). Zone
+  numbers 685-718 are reserved for its 34 new zones, in order, 685 + id - 559 (PLATINUM_BLOCK); Pearl and Diamond don't take that
+  block or grow the header file for it. 4 of the 34 are unused placeholders and get nothing installed.
 - **Released numbers never move**: the allocation is recomputed from Pearl's data each run; keep_released() puts back
   every number data/sinnoh_world.json already has (and says which ones a fresh run would have given differently), so
   a rerun only adds.
@@ -36,11 +40,12 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 import narcio, zoneheaders  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
 
 B2_FILES = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 
 DENY = ({0, 52, 75, 76, 78, 150, 151, 191, 192, 193, 422, 424, 428, 518, 573} | set(range(81, 88))
         | set(range(241, 249)) | set(range(279, 317)) | set(range(478, 494)) | set(range(597, 608))) - {84, 85}
@@ -109,6 +114,20 @@ APPEND_BLOCKS = {'Battle Tower': range(616, 623), 'Turnback Cave': range(623, 63
                  'Turnback Cave (2)': range(663, 665),
                  'Secret Bases': range(670, 685)}    # (670: the base; the others kept for it: notes/SECRET_BASES.md)
 DIAMOND_ONLY = APPEND_BLOCKS['Ramanas Park, Diamond only (Johto, Rainbow Rooms)']
+# Platinum's new zones (ids 559-592, in Platinum's order) on 685-718. Reserved in every version, used only in Platinum: no block of
+# Pearl's or Diamond's may take them (the assert below), and the header file only grows for them in a Platinum build.
+PLATINUM_BLOCK = range(685, 719)
+PLATINUM_FIRST_ZONE = 559
+assert all(PLATINUM_BLOCK.start >= r.stop for r in APPEND_BLOCKS.values())
+if version.PLATINUM:
+    APPEND_BLOCKS['Platinum'] = PLATINUM_BLOCK
+# ---- plat-frontier-rooms (2026-11-07): the Battle Frontier's picture rooms (b2tools/frontier_rooms.py: the Factory's, Hall's,
+# Castle's and Arcade's corridors and battle rooms, which Platinum draws as 2D scenes with no map). Platinum only, after its block:
+# pseudo map ids 593-600 on 719-726 by the block's own rule (685 + id - 559). The patch frontier_rooms writes their headers.
+FRONTIER_ROOMS_BLOCK = range(719, 727)
+if version.PLATINUM:
+    APPEND_BLOCKS['Platinum Frontier rooms'] = FRONTIER_ROOMS_BLOCK
+# ---- end plat-frontier-rooms
 # Features whose rooms are not Pearl maps (the Underground's Hideaways, Ramanas Park) write their zones' headers in
 # their own patches: sinnoh_world grows the header file to the end of the last block (APPEND_END), so every reserved
 # zone has a blank header to fill.
@@ -141,6 +160,7 @@ APPENDED = {'MAP_UNDERGROUND': 633, 'MAP_TURNBACK_CAVE_GIRATINA_ROOM': 624,
 # models (over a pack's 128); the tunnels place only Pearl's four Secret Base holes (build models 429-432, ug_hole_b/f/l/r:
 # patches/underground.py puts one on each Hideaway's tunnel wall)
 AREA_MODELS = {2: [429, 430, 431, 432]}
+# The rooms Platinum adds, by name, are appended too (platinum_appended). Its placeholders (MAP_UNKNOWN_*) get nothing.
 assert all(zoneheaders.is_appended(z) for r in APPEND_BLOCKS.values() for z in r)
 assert len({z for r in APPEND_BLOCKS.values() for z in r}) == sum(len(r) for r in APPEND_BLOCKS.values())
 
@@ -167,7 +187,7 @@ def main():
         kind = 'route' if short.startswith('ROUTE_') else 'town' if short in TOWNS else 'other'
         b2 = FIXED.get(name) or take(kind)
         out_zones[str(pid)] = {'name': name, 'kind': kind, 'b2_zone': b2, 'pearl_area': zones[pid]['area']}
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    rom = Rom(version.WORLD_DUMP)
     area_data = narc_members(rom.read('fielddata/areadata/area_data.narc'))
     area_build = narc_members(rom.read('fielddata/areadata/area_build_model/area_build.narc'))
     pearl_areas = sorted({z['pearl_area'] for z in out_zones.values()})
@@ -210,14 +230,16 @@ def main():
     rooms = allocate_rooms(zones, set(int(k) for k in out_zones), used, headers, chunk_ids, rom, len(areas))
     out = {'_doc': __doc__.strip().splitlines()[0], 'zones': out_zones, 'areas': areas, 'building_res': res,
            'chunks': chunk_ids, 'rooms': rooms}
-    path = os.path.join(ROOT, 'data', 'sinnoh_world.json')
+    path = version.data_out('sinnoh_world.json')
     differ = []
-    if os.path.exists(path):
-        old = json.load(open(path))
+    old = json.load(open(path)) if os.path.exists(path) else platinum_seed() if version.PLATINUM else None
+    if old:
+        if version.PLATINUM:
+            platinum_free_rooms(out, old)
         out, differ = keep_released(out, old)
         renumber_new(out, old)
     check_unique(out)
-    os.makedirs(os.path.join(ROOT, 'data'), exist_ok=True)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     json.dump(out, open(path, 'w'), indent=1)
     rooms = out['rooms']
     print(f'{len(out["zones"])} zones, {len(out["areas"])} areas, {len(out["building_res"])} building models, '
@@ -228,6 +250,41 @@ def main():
     if differ:
         print(f'kept {len(differ)} released numbers a fresh run gives differently: {differ[:8]}'
               f'{" ..." if len(differ) > 8 else ""}')
+
+
+def platinum_appended(zones):
+    """{name: Black 2 zone} of Platinum's new zones, placeholders left out."""
+    return {z['name']: PLATINUM_BLOCK.start + z['id'] - PLATINUM_FIRST_ZONE for z in zones[PLATINUM_FIRST_ZONE:]
+            if not z['name'].startswith('MAP_UNKNOWN')} if version.PLATINUM else {}
+
+
+def platinum_seed():
+    """Pearl's released sinnoh_world.json for Platinum: every number stays (Pearl's finished build is the base, and work/platinum names land,
+    matrices and files by Pearl's numbers: platinum_maps.py). The other fields are recomputed from Platinum's data."""
+    pearl = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    numbers_only = lambda d, *keep: {k: {f: r[f] for f in keep} for k, r in d.items()}
+    rooms = pearl['rooms']
+    return {'zones': numbers_only(pearl['zones'], 'b2_zone'), 'areas': numbers_only(pearl['areas'], 'b2_area_group', 'b2_pack'),
+            'building_res': pearl['building_res'], 'chunks': pearl['chunks'],
+            'rooms': {'zones': numbers_only(rooms['zones'], 'b2_zone'), 'matrices': numbers_only(rooms['matrices'], 'b2_matrix'),
+                      'chunks': rooms['chunks'], 'areas': numbers_only(rooms['areas'], 'b2_area'),      # (packs are numbered in a row by the build)
+                      'building_res': rooms['building_res']}}
+
+
+def platinum_free_rooms(new, old):
+    """The seed loses what Platinum doesn't use. Rooms that no warp in Platinum reaches any more (the Battle Park, which the Frontier
+    replaced) give their zones to the rooms Platinum reaches that Pearl didn't (Mt. Coronet's room 221), outside PLATINUM_BLOCK."""
+    orooms, nrooms = old['rooms']['zones'], new['rooms']['zones']
+    free = sorted(orooms[k]['b2_zone'] for k in orooms if k not in nrooms)
+    for a, b in ((old, new), (old['rooms'], new['rooms'])):
+        for part in ('zones', 'matrices', 'chunks', 'areas', 'building_res'):
+            if part in a:
+                for k in [k for k in a[part] if k not in b[part]]:
+                    del a[part][k]
+    for k, r in nrooms.items():
+        if k not in orooms and r['b2_zone'] not in PLATINUM_BLOCK:
+            assert free, f'{r["name"]}: no zone left to give it'
+            r['b2_zone'] = free.pop(0)
 
 
 def keep_released(new, old):
@@ -298,7 +355,8 @@ def check_unique(out):
 
 def allocate_rooms(zones, overworld, used, headers, chunk_ids, rom, n_overworld_areas):
     """Every Pearl zone reached by warps from the overworld (breadth first, in Pearl id order) -> Black 2 numbers."""
-    seen, order, todo = set(overworld), [], sorted(overworld)
+    appended = dict(APPENDED, **platinum_appended(zones))
+    seen, order, todo = set(overworld) | {i for i, z in enumerate(zones) if z['name'] in platinum_appended(zones)}, [], sorted(overworld)
     while todo:
         pid = todo.pop(0)
         ev = json.load(open(os.path.join(PEARL, 'events', f"{zones[pid]['events']:03d}.json")))
@@ -391,7 +449,7 @@ def allocate_rooms(zones, overworld, used, headers, chunk_ids, rom, n_overworld_
     # rooms only a script Warp reaches (SCRIPT_WARP_SKIP), after the shared rooms
     have = set(overworld) | {int(p) for p in out['zones']} | {i for v in out['shared'].values() for i in v}
     todo = sorted(d for d in script_warp_destinations(rom) if d < len(zones) and d not in have
-                  and zones[d]['name'] not in SCRIPT_WARP_SKIP)
+                  and zones[d]['name'] not in SCRIPT_WARP_SKIP and zones[d]['name'] not in appended)
     out['script_warp'] = []
 
     def install(pid, b2):
@@ -446,6 +504,7 @@ def allocate_rooms(zones, overworld, used, headers, chunk_ids, rom, n_overworld_
         ev = json.load(open(os.path.join(PEARL, 'events', f"{z['events']:03d}.json")))
         todo += sorted(w['dest_header_id'] for w in ev['warp_events'] if w['dest_header_id'] < len(zones)
                        and w['dest_header_id'] not in have and zones[w['dest_header_id']]['name'] not in SCRIPT_WARP_SKIP
+                       and zones[w['dest_header_id']]['name'] not in appended
                        and not zones[w['dest_header_id']]['name'].endswith(EXCLUDED_ROOMS))
     # zones that share a room matrix with an allocated room, one per cell (GREAT_MARSH_ZONES), after everything else:
     # their matrix, chunks and area are the allocated room's; rooms['cell_zones'] lists the matrices sinnoh_rooms
@@ -496,12 +555,12 @@ def allocate_rooms(zones, overworld, used, headers, chunk_ids, rom, n_overworld_
     # lists them. Their warps lead where Pearl's do; a destination with no zone yet is not followed (list it too).
     out['appended'] = []
     taken = {r['b2_zone'] for r in out['zones'].values()}
-    for name, b2 in sorted(APPENDED.items(), key=lambda kv: kv[1]):
+    for name, b2 in sorted(appended.items(), key=lambda kv: kv[1]):
         pid = by_name[name]
         zoneheaders.check_zone(b2)
         assert zoneheaders.is_appended(b2), f'{name}: zone {b2} is not an appended zone (616-1023)'
         assert any(b2 in r for r in APPEND_BLOCKS.values()), f'{name}: zone {b2} is in no APPEND_BLOCKS block'
-        assert b2 not in DIAMOND_ONLY or __import__('version').DIAMOND, f'{name}: zone {b2} is for the Diamond version'
+        assert b2 not in DIAMOND_ONLY or version.DIAMOND or version.PLATINUM, f'{name}: zone {b2} is for the Diamond version'
         assert b2 not in taken and str(pid) not in out['zones'], f'{name} (zone {b2}): already allocated'
         install(pid, b2)
         taken.add(b2)
@@ -514,7 +573,7 @@ def script_warp_destinations(rom):
     import gen4_script
     table = gen4_script.load_table()
     out = set()
-    for data in narc_members(rom.read('fielddata/script/scr_seq_release.narc')):
+    for data in narc_members(rom.read(version.ARCHIVE['scripts'])):
         if not data:
             continue
         try:

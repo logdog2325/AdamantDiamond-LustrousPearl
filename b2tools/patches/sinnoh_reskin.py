@@ -22,6 +22,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import narcio, nsbtx, recolour, maplook, b2_look  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
@@ -30,13 +31,17 @@ VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
 NORTH_AREA = 14
 
 
-def pearl_pairs(chunks):
-    """Pearl texture -> palette name, from the overworld chunks' materials."""
+def pearl_pairs(chunks, every=False):
+    """Pearl texture -> palette name, from the overworld chunks' materials. every: texture -> every palette name its
+    materials draw it with, the first chunk's first (version.EVERY_PALETTE)."""
     out = {}
     for c in chunks:
-        bmd = open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.nsbmd'), 'rb').read()
-        for t, p in nsbtx.material_pairs(bmd):
-            out.setdefault(t, p)
+        bmd = open(os.path.join(version.WORLD_WORK, 'land', f'{land_id(c):03d}.nsbmd'), 'rb').read()
+        for t, p in sorted(nsbtx.material_pairs(bmd), key=str) if every else nsbtx.material_pairs(bmd):
+            if every:
+                if p not in out.setdefault(t, []): out[t].append(p)
+            else:
+                out.setdefault(t, p)
     return out
 
 
@@ -71,7 +76,7 @@ def apply(files):
     chosen = maplook.fixes()
     sets, msg = reskin_sets(maplook.texture_fixes(chosen))
     write_sets(files, sets)
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     return msg + '; ' + maplook.apply_world_fixes(files, world, chosen)
 
 
@@ -107,15 +112,20 @@ def reskin_sets(fixes=(), areas=None, chunks=None):
     pearl_art = 'pearl_art' in fixes
     if pearl_art: fixes |= {'c0', 'refs', 'transfer', 'mismatch'}
     tmap = json.load(open(os.path.join(ROOT, 'data', 'texture_map.json')))
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    rom = Rom(version.WORLD_DUMP)
     pearl_sets = narc_members(rom.read('fielddata/areadata/area_map_tex/map_tex_set.narc'))
     b2_sets = narcio.load(VANILLA, 14)
     parsed = {}
     def b2(i):
         if i not in parsed: parsed[i] = nsbtx._parse(b2_sets[i])
         return parsed[i]
-    pairs = pearl_pairs(int(c) for c in (world['chunks'] if chunks is None else chunks))
+    chunks = [int(c) for c in (world['chunks'] if chunks is None else chunks)]
+    pairs = pearl_pairs(chunks)
+    extra = {t: [p for p in ps if p and p != pairs.get(t)] for t, ps in pearl_pairs(chunks, True).items()} \
+        if version.EVERY_PALETTE else {}         # (a texture's second palettes: version.EVERY_PALETTE)
+    extra = {t: ps for t, ps in extra.items() if ps}
+    seconds = 0
     if areas is None: areas = world['areas']
     sets = {}
     used = kept = recoloured = edged = 0
@@ -134,7 +144,7 @@ def reskin_sets(fixes=(), areas=None, chunks=None):
             count = season == (2 if pearl_art else 0)              # the report counts one season per area set
             if pearl_art and season < 2 and int(pa) not in RECOLOUR_ALL_YEAR:
                 sets[a['b2_area_group'] + season] = b2_look.add_textures(   # spring, summer: Pearl's own set (its
-                    b2_grass_rims(src, P, pairs, ptex, season), 'outdoor', season)   # grass rims on Black 2's grass)
+                    b2_grass_rims(src, P, pairs, ptex, season, extra), 'outdoor', season)   # grass rims on Black 2's grass)
                 continue
             # pass 1: the Black 2 choice of each texture (None = keep Pearl's)
             choice, mismatched = {}, {}
@@ -161,9 +171,10 @@ def reskin_sets(fixes=(), areas=None, chunks=None):
             # recolour plan: Pearl palette -> the Black 2 colours of its composite entries' reference texture
             ramps, refs, users, mains, derive, flowers = {}, {}, {}, {}, set(), set()
             ground_tex = (section.get('ngrass') or {}).get('b2')
-            for name, _ in P['texs']:
+            drawn = [(name, pal) for name, _ in P['texs']
+                     for pal in [pairs.get(name)] + [p for p in extra.get(name, ()) if p in pearl_pals]]
+            for name, pal in drawn:
                 m = section.get(name) if isinstance(section.get(name), dict) else None
-                pal = pairs.get(name)
                 if name in choice or not pal: continue
                 users.setdefault(pal, []).append(name)
                 if pearl_art and not seasonal(name):
@@ -279,15 +290,27 @@ def reskin_sets(fixes=(), areas=None, chunks=None):
                     adds.append((src, name, pal, name, pal, ramps[pal])); recoloured += count
                 else:
                     adds.append((src, name, pal if pal in pearl_pals else None)); kept += count
+            for name, _ in P['texs']:                   # a texture's second palettes (version.EVERY_PALETTE)
+                for pal in extra.get(name, ()) if name not in choice else ():
+                    if pal in pearl_pals:
+                        adds.append((src, None, pal, None, pal, ramps[pal]) if pal in ramps else (src, None, pal))
+                        seconds += count
             sets[a['b2_area_group'] + season] = b2_look.add_textures(       # (+ Black 2's water and grass: b2_look)
                 nsbtx.merge(src, adds, keep_base=False), 'outdoor', season, int(pa) == NORTH_AREA)
+    for pa, a in areas.items():                     # Platinum's snow patches: winter only; its dusted trees: never (version.py)
+        if version.SNOW_PATCHES_WINTER_ONLY and int(pa) != NORTH_AREA:
+            for season in range(4):
+                g = a['b2_area_group'] + season
+                if season < 3: sets[g] = nsbtx.clear(sets[g], version.SNOW_PATCHES_WINTER_ONLY)
+                sets[g] = nsbtx.copy_texels(sets[g], version.SNOW_DUSTED)
     return sets, (f'sinnoh_reskin: {used} textures from Black 2, {recoloured} recoloured to Black 2, {kept} kept from '
                   f'Pearl (per area set, {"autumn" if pearl_art else "spring"}); '
                   f'palette clashes kept as Pearl: {len(clashes)}; grass rims of Pearl art recoloured: {edged}'
+                  + (f'; second palettes of a texture: {seconds}' if seconds else '')
                   + (f'; map-look fixes {sorted(fixes)}' if fixes else ''))
 
 
-def b2_grass_rims(src, P, pairs, ptex, season):
+def b2_grass_rims(src, P, pairs, ptex, season, extra={}):
     """Spring and summer with Black 2's grass ground (b2_look 'b2_grass'): Pearl's own art keeps its colours but its
     grass colours (path, lawn, beach and puddle edges, tree shadows on the ground, the flowers' grass, imped's grass,
     bare patches) take Black 2's grass01ax colours of the season at Pearl's relative brightness (recolour.
@@ -299,6 +322,8 @@ def b2_grass_rims(src, P, pairs, ptex, season):
     users = {}
     for name, _ in P['texs']:
         if pairs.get(name): users.setdefault(pairs[name], []).append(name)
+        for p in extra.get(name, ()):                  # (its second palettes: version.EVERY_PALETTE)
+            users.setdefault(p, []).append(name)
     pearl_pals = {p for p, _ in P['pals']}
     changes = {}
     for pal, names in users.items():

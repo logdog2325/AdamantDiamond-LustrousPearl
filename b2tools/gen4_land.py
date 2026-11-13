@@ -1,6 +1,8 @@
-"""Phase 1/2 reader: Pearl's map chunks (land_data_release.narc) to JSON + NSBMD.
+"""Phase 1/2 reader: a Gen 4 game's map chunks (land_data_release.narc, Platinum's land_data.narc) to JSON + NSBMD.
 
-    python3 gen4_land.py [ROM] [OUT_DIR]          defaults: roms/pearl.nds, work/pearl/land
+    python3 gen4_land.py [ROM] [OUT_DIR]          defaults: the version's world dump, work/<world>/land
+                                                  (Pearl and Diamond: roms/pearl.nds, work/pearl/land;
+                                                  PEARL_VERSION=platinum: roms/platinum.nds, work/platinum/land)
 
 Each 32x32-tile chunk holds: tile attributes (u16 per tile: collision bit 15, behaviour in the low byte), placed
 buildings ("props": model id into build_model.narc, position, rotation, scale), the terrain model (NSBMD) and the
@@ -9,8 +11,9 @@ pokeplatinum docs/maps/file_format_specifications.md "Land data"; every chunk's 
 file size. Read-only.
 
 BDHC: Pearl's height blocks do NOT match Platinum's documented BDHC, and pokediamond's loader is not decompiled. Each
-chunk's BDHC is written raw (NNN.bdhc); read_bdhc() is for Platinum-style data, read_bdhc_dp() reads Pearl's own
-layout (decoded 2026-10-25 from the files themselves, for the bridges' two levels; below).
+chunk's BDHC is written raw (NNN.bdhc); read_bdhc() is for Platinum's layout, read_bdhc_dp() reads Pearl's own
+(decoded 2026-10-25 from the files themselves, for the bridges' two levels; below) and turns a Platinum file into the same
+shape (bdhc_platinum_as_dp), so the tools that use heights ask read_bdhc_dp in every version.
 """
 import json, os, struct, sys
 
@@ -18,6 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 from gen4rom import Rom, narc_members  # noqa: E402
+import version  # noqa: E402
 
 FX = 1 << 12
 
@@ -65,6 +69,18 @@ def read_bdhc_dp(b):
     if b[:4] != b'BDHC':
         return None
     u = struct.unpack_from('<14H', b, 4)
+    if u[0] != 0x20 and is_platinum_bdhc(b):
+        return bdhc_platinum_as_dp(b)
+    out = _read_dp(b, u)
+    if out is None and is_platinum_bdhc(b):
+        # (a Platinum file of 32 points: its first count, 0x20, reads as Pearl's header size, and nothing came out:
+        # Sendoff Spring 444, Route 214 152 and four rooms 385, 436, 468, 477; found by the events piece, 2026-11-02)
+        return bdhc_platinum_as_dp(b)
+    return out
+
+
+def _read_dp(b, u):
+    """read_bdhc_dp's Pearl layout (u: the 14 u16 after the magic), or None."""
     if u[0] != 0x20 or (u[2], u[4], u[6]) != (12, 12, 12):
         return None
     n_points, n_normals, n_plates = u[3], u[5], u[7]
@@ -81,6 +97,28 @@ def read_bdhc_dp(b):
         if max(i0, i1, i2) >= n_points or n >= n_normals:
             return None
         plates.append((i0, i1, i2, n, d / FX))
+    return {'points': points, 'normals': normals, 'plates': plates}
+
+
+def is_platinum_bdhc(b):
+    """Does the file fit Platinum's layout exactly (six counts, then sections that end at the file's end)?"""
+    np_, nn, nc, npl, ns, na = struct.unpack_from('<6H', b, 4)
+    return 16 + 8 * np_ + 12 * nn + 4 * nc + 8 * npl + 8 * ns + 2 * na == len(b)
+
+
+def bdhc_platinum_as_dp(b):
+    """A Platinum BDHC in read_bdhc_dp's shape. Platinum's plate is a rectangle on a plane (two corners, normal, constant;
+    pokeplatinum src/overlay005/bdhc.c), read_bdhc_dp's a triangle: each rectangle gives Pearl's two triangles (0,1,2) + (0,2,3)."""
+    r = read_bdhc(b)
+    points, normals, plates = [], [tuple(n) for n in r['normals']], []
+    for a, c, n, k in r['plates']:
+        (x0, z0), (x1, z1) = r['points'][a], r['points'][c]
+        nx, ny, nz = r['normals'][n]
+        d = r['constants'][k]
+        y = (lambda x, z: -(nx * x + nz * z + d) / ny) if ny else (lambda x, z: 0.0)
+        i = len(points)
+        points += [(px, y(px, pz), pz) for px, pz in ((x0, z0), (x1, z0), (x1, z1), (x0, z1))]
+        plates += [(i, i + 1, i + 2, n, d), (i, i + 2, i + 3, n, d)]
     return {'points': points, 'normals': normals, 'plates': plates}
 
 
@@ -119,19 +157,59 @@ def read_chunk(m):
             'props': props}, model, bdhc
 
 
+# Platinum names some of its new map materials by its exporter's default: 'file1Material' for the Battle Zone's palm
+# tree3_01, 'file3Material' tree3_02, 'file4Material' the palm rows conttree3_2, 'a' for Pastoria's building shadow h_kage;
+# in rooms the rebuilt Eterna Gym's 'fgds', 'qq', 's', 'ss' (its trees and their shadow), chairs' and counters' shadows.
+# Pearl always puts the texture's name in the material's, and the tools tell trees, shadows and snow from the ground by the
+# material's name (pearl_chunk.SKIP_MATERIALS for heights, pearl_model_fix.is_tree for the layers, season_decals): the
+# palms' crowns became ground, 30-54 units over the walkable tiles under them (walls in Route 229 and the Fight Area). So such
+# a material takes its texture's name in front of its own (2026-11-02; Pearl's and Diamond's models have none: unchanged).
+NAME_KEYS = ('tree', 'shadow', 'kage', 's_snow', 's_sonwp')
+
+
+def named_materials(bmd):
+    """(BMD0, [(old name, new name)]): the land model with each material whose texture's name has a NAME_KEYS word that its
+    own name lacks renamed '<texture>_<name>' (16 characters at most, unique); the material dictionary is written anew
+    (pearl_mesh.write_model), every other part of the model as it was."""
+    import pearl_mesh, pearl_render
+    model = pearl_mesh.Model(bmd)
+    info = pearl_render.bindings(model)
+    names = list(model.materials)
+    renames = []
+    for i, (name, t) in enumerate(zip(model.materials, info)):
+        tex = (t[0] or '').lower()
+        if not any(k in tex and k not in name.lower() for k in NAME_KEYS): continue
+        base, new, n = f'{t[0]}_{name}'[:16], None, 0
+        new = base
+        while new in names:
+            n += 1; new = base[:16 - len(str(n))] + str(n)
+        names[i] = new
+        renames.append((name, new))
+    if not renames: return bmd, []
+    mats, shapes, _ = pearl_mesh.unchanged_parts(model)
+    for i, n in enumerate(names): mats[i] = dict(mats[i], name=n)
+    return pearl_mesh.write_model(model, mats, shapes, pearl_mesh.sbc_with(model)), renames
+
+
 def main():
-    rom = Rom(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'roms', 'pearl.nds'))
-    out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, 'work', 'pearl', 'land')
+    rom = Rom(sys.argv[1] if len(sys.argv) > 1 else version.WORLD_DUMP)
+    out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(version.WORLD_WORK, 'land')
     os.makedirs(out, exist_ok=True)
-    chunks = narc_members(rom.read('fielddata/land_data/land_data_release.narc'))
+    chunks = version.slotted('land', narc_members(rom.read(version.ARCHIVE['land'])))
     props = 0
+    renamed = []
     for i, m in enumerate(chunks):
+        if not m:
+            continue
         data, model, bdhc = read_chunk(m)
+        model, names = named_materials(model)
+        renamed += [(i, a, b) for a, b in names]
         json.dump(data, open(os.path.join(out, f'{i:03d}.json'), 'w'))
         open(os.path.join(out, f'{i:03d}.nsbmd'), 'wb').write(model)
         open(os.path.join(out, f'{i:03d}.bdhc'), 'wb').write(bdhc)
         props += len(data['props'])
-    print(f'{len(chunks)} chunks -> {out}: {props} placed buildings')
+    print(f'{len(chunks)} chunks -> {out}: {props} placed buildings; materials named after their textures '
+          f'(named_materials): {len(renamed)} in {len({c for c, _, _ in renamed})} chunks')
 
 
 if __name__ == '__main__':

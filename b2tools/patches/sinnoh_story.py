@@ -23,6 +23,7 @@ import glob, json, os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import narcio, zoneheaders  # noqa: E402
 from zones import parse_entities, build_entities  # noqa: E402
@@ -33,8 +34,8 @@ CLONE_UID = 200
 
 def generated():
     """{a/0/5/6 number: path} and {a/0/0/3 number: path} of the translated Pearl files."""
-    s = {int(os.path.basename(p)[:4]): p for p in glob.glob(os.path.join(ROOT, 'src', 'field_scripts', '*_pearl_*.s'))}
-    t = {int(os.path.basename(p)[:4]): p for p in glob.glob(os.path.join(ROOT, 'src', 'text', 'script', '*_pearl_*.txt'))}
+    s = {int(os.path.basename(p)[:4]): p for p in version.sources(os.path.join(ROOT, 'src', 'field_scripts'), '.s') if '_pearl_' in p}
+    t = {int(os.path.basename(p)[:4]): p for p in version.sources(os.path.join(ROOT, 'src', 'text', 'script'), '.txt') if '_pearl_' in p}
     return s, t
 
 
@@ -123,7 +124,7 @@ def apply(files):
                         f'{len(signs)} signs, {len(trigs)} triggers)')
     narcio.save(files, 126, ents)
     zoneheaders.save(files, headers, hentries)
-    log = os.path.join(ROOT, 'work', 'pearl', 'sinnoh_story.log')
+    log = os.path.join(version.WORLD_WORK, 'sinnoh_story.log')
     open(log, 'w').write('\n'.join(['installed:'] + done + ['', 'left out:'] + notes + ['', 'problems:'] + problems)
                          + '\n')
     if problems and not os.environ.get('PEARL_STORY_ALLOW'):

@@ -47,6 +47,7 @@ from collections import Counter
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import itcm, resident, narcio, zoneheaders  # noqa: E402
 from gen4rom import Rom  # noqa: E402
@@ -63,7 +64,8 @@ PEARL_TO_B2 = {0: 0, 1: 0, 5: 1, 6: 5, 7: 4, 11: 8}
 B2_SNOW = {1: 1, 5: 2, 4: 3, 8: 1}      # Black 2 calendar snow -> code (1 flakes, 2 heavy snow, 3 blizzard)
 SNOW_WEATHER = (0, 1, 5, 4)
 SEASONAL_OK = {0, 1, 8, 25}             # Pearl weathers that take winter snow (clear, cloudy, 8, Route 213's sunny year)
-PEARL_TABLE, PEARL_TABLE_ZONES = 0x020F2364, 5   # 366 days x (Route 212 S, 213, 216, Acuity Lakefront, Snowpoint)
+PEARL_TABLE, PEARL_TABLE_ZONES = 0x020E98F4 if version.PLATINUM else 0x020F2364, 5   # (Platinum's: pokeplatinum sYearlyWeather, 10 days differ)
+#   # 366 days x (Route 212 S, 213, 216, Acuity Lakefront, Snowpoint)
 PEARL_TABLE_FIRST = 24                  # Pearl zone weather 24-28 = the table's columns
 WINTER_MONTHS = (4, 8, 12)
 MONTH_START = (0, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335)
@@ -71,7 +73,7 @@ MONTH_START = (0, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335)
 
 def pearl_table():
     """Pearl's day-by-day weather (pokediamond field_system_rtc_weather.c sWeatherTable), from the dump's arm9."""
-    d = Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).data
+    d = Rom(version.WORLD_DUMP).data
     off, _, load, size = struct.unpack_from('<4I', d, 0x20)
     o = off + PEARL_TABLE - load
     t = d[o:o + 366 * PEARL_TABLE_ZONES]
@@ -82,9 +84,9 @@ def pearl_table():
 def zone_kinds(nzones):
     """({Black 2 zone: kind}, {Black 2 zone: header weather}, [(zone, day, weather)]) (season_weather.c)."""
     import sinnoh_rooms
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    pearl = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    pearl = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
+    rom = Rom(version.WORLD_DUMP)
     field = sinnoh_rooms.pearl_light_field(rom)
     rooms = world['rooms']
     outdoor_rooms = {int(pa) for pa, a in rooms['areas'].items() if field.get(int(pa)) or a['exterior']}

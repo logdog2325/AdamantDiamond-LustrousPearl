@@ -1,0 +1,2630 @@
+{
+ "_doc": "Platinum's frontier script commands by opcode (b2tools/frontier_script.py --table, from pokeplatinum include/data/scripts/frscrcmd.h and asm/macros/frscrcmd.inc). args: [kind, macro parameter]; u16 is a var-or-value. macro false: no macro writes it (no script uses it).",
+ "commands": {
+  "0": {
+   "const": "FRSCRCMD_NOOP",
+   "handler": "FrontierScrCmd_Noop",
+   "name": "Noop",
+   "args": [],
+   "macro": true
+  },
+  "1": {
+   "const": "FRSCRCMD_END",
+   "handler": "FrontierScrCmd_End",
+   "name": "End",
+   "args": [],
+   "macro": true,
+   "flow": "end"
+  },
+  "2": {
+   "const": "FRSCRCMD_EXITFRONTIER",
+   "handler": "FrontierScrCmd_ExitFrontier",
+   "name": "ExitFrontier",
+   "args": [],
+   "macro": true,
+   "flow": "end"
+  },
+  "3": {
+   "const": "FRSCRCMD_CHANGESCENEWITHINSCRIPT",
+   "handler": "FrontierScrCmd_ChangeSceneWithinScript",
+   "name": "ChangeSceneWithinScript",
+   "args": [
+    [
+     "u16",
+     "sceneID"
+    ]
+   ],
+   "macro": true
+  },
+  "4": {
+   "const": "FRSCRCMD_CHANGESCRIPT",
+   "handler": "FrontierScrCmd_ChangeScript",
+   "name": "ChangeScript",
+   "args": [
+    [
+     "u16",
+     "sceneID"
+    ],
+    [
+     "u16",
+     "entryPointOffset"
+    ]
+   ],
+   "macro": true
+  },
+  "5": {
+   "const": "FRSCRCMD_WAITTIME",
+   "handler": "FrontierScrCmd_WaitTime",
+   "name": "WaitTime",
+   "args": [
+    [
+     "u16",
+     "frames"
+    ],
+    [
+     "u16",
+     "countdownVarID"
+    ]
+   ],
+   "macro": true
+  },
+  "6": {
+   "const": "FRSCRCMD_SETVARFROMVALUE",
+   "handler": "FrontierScrCmd_SetVarFromValue",
+   "name": "SetVar",
+   "args": [
+    [
+     "u16",
+     "destVarID"
+    ],
+    [
+     "u16",
+     "valueOrVarID"
+    ]
+   ],
+   "macro": true
+  },
+  "7": {
+   "const": "FRSCRCMD_SETVARFROMVAR",
+   "handler": "FrontierScrCmd_SetVarFromVar",
+   "name": "SetVar",
+   "args": [
+    [
+     "u16",
+     "destVarID"
+    ],
+    [
+     "u16",
+     "valueOrVarID"
+    ]
+   ],
+   "macro": true
+  },
+  "8": {
+   "const": "FRSCRCMD_ADDVAR",
+   "handler": "FrontierScrCmd_AddVar",
+   "name": "AddVar",
+   "args": [
+    [
+     "u16",
+     "destVarID"
+    ],
+    [
+     "u16",
+     "valueOrVarID"
+    ]
+   ],
+   "macro": true
+  },
+  "9": {
+   "const": "FRSCRCMD_SUBVAR",
+   "handler": "FrontierScrCmd_SubVar",
+   "name": "SubVar",
+   "args": [
+    [
+     "u16",
+     "destVarID"
+    ],
+    [
+     "u16",
+     "valueOrVarID"
+    ]
+   ],
+   "macro": true
+  },
+  "10": {
+   "const": "FRSCRCMD_GOTO",
+   "handler": "FrontierScrCmd_GoTo",
+   "name": "GoTo",
+   "args": [
+    [
+     "rel",
+     "offset"
+    ]
+   ],
+   "macro": true,
+   "flow": "jump"
+  },
+  "11": {
+   "const": "FRSCRCMD_GOTOIF",
+   "handler": "FrontierScrCmd_GoToIf",
+   "name": "GoToIf",
+   "args": [
+    [
+     "u8",
+     "condition"
+    ],
+    [
+     "rel",
+     "offset"
+    ]
+   ],
+   "macro": true,
+   "flow": "cjump"
+  },
+  "12": {
+   "const": "FRSCRCMD_CALL",
+   "handler": "FrontierScrCmd_Call",
+   "name": "Call",
+   "args": [
+    [
+     "rel",
+     "offset"
+    ]
+   ],
+   "macro": true,
+   "flow": "call"
+  },
+  "13": {
+   "const": "FRSCRCMD_RETURN",
+   "handler": "FrontierScrCmd_Return",
+   "name": "Return",
+   "args": [],
+   "macro": true,
+   "flow": "return"
+  },
+  "14": {
+   "const": "FRSCRCMD_CALLIF",
+   "handler": "FrontierScrCmd_CallIf",
+   "name": "CallIf",
+   "args": [
+    [
+     "u8",
+     "condition"
+    ],
+    [
+     "rel",
+     "offset"
+    ]
+   ],
+   "macro": true,
+   "flow": "ccall"
+  },
+  "15": {
+   "const": "FRSCRCMD_MESSAGEINSTANT",
+   "handler": "FrontierScrCmd_MessageInstant",
+   "name": "MessageInstant",
+   "args": [
+    [
+     "u16",
+     "messageID"
+    ]
+   ],
+   "macro": true
+  },
+  "16": {
+   "const": "FRSCRCMD_MESSAGENOSKIP",
+   "handler": "FrontierScrCmd_MessageNoSkip",
+   "name": "MessageNoSkip",
+   "args": [
+    [
+     "u16",
+     "messageID"
+    ]
+   ],
+   "macro": true
+  },
+  "17": {
+   "const": "FRSCRCMD_MESSAGE",
+   "handler": "FrontierScrCmd_Message",
+   "name": "Message",
+   "args": [
+    [
+     "u16",
+     "messageID"
+    ]
+   ],
+   "macro": true
+  },
+  "18": {
+   "const": "FRSCRCMD_CLOSEMESSAGE",
+   "handler": "FrontierScrCmd_CloseMessage",
+   "name": "CloseMessage",
+   "args": [],
+   "macro": true
+  },
+  "19": {
+   "const": "FRSCRCMD_FADESCREEN",
+   "handler": "FrontierScrCmd_FadeScreen",
+   "name": "FadeScreen",
+   "args": [
+    [
+     "u16",
+     "transition"
+    ],
+    [
+     "u16",
+     "frames"
+    ],
+    [
+     "u16",
+     "type"
+    ],
+    [
+     "u16",
+     "color"
+    ]
+   ],
+   "macro": true
+  },
+  "20": {
+   "const": "FRSCRCMD_WAITFADESCREEN",
+   "handler": "FrontierScrCmd_WaitFadeScreen",
+   "name": "WaitFadeScreen",
+   "args": [],
+   "macro": true
+  },
+  "21": {
+   "const": "FRSCRCMD_INITGLOBALTEXTMENU",
+   "handler": "FrontierScrCmd_InitGlobalTextMenu",
+   "name": "InitGlobalTextMenu",
+   "args": [
+    [
+     "u8",
+     "anchorX"
+    ],
+    [
+     "u8",
+     "anchorY"
+    ],
+    [
+     "u8",
+     "initialCursorPos"
+    ],
+    [
+     "u8",
+     "canExitWithB"
+    ],
+    [
+     "u16",
+     "selectedOption"
+    ]
+   ],
+   "macro": true
+  },
+  "22": {
+   "const": "FRSCRCMD_INITLOCALTEXTMENU",
+   "handler": "FrontierScrCmd_InitLocalTextMenu",
+   "name": "InitLocalTextMenu",
+   "args": [
+    [
+     "u8",
+     "anchorX"
+    ],
+    [
+     "u8",
+     "anchorY"
+    ],
+    [
+     "u8",
+     "initialCursorPos"
+    ],
+    [
+     "u8",
+     "canExitWithB"
+    ],
+    [
+     "u16",
+     "selectedOption"
+    ]
+   ],
+   "macro": true
+  },
+  "23": {
+   "const": "FRSCRCMD_ADDMENUENTRY",
+   "handler": "FrontierScrCmd_AddMenuEntry",
+   "name": "AddMenuEntry",
+   "args": [
+    [
+     "u16",
+     "entryID"
+    ],
+    [
+     "u16",
+     "index"
+    ]
+   ],
+   "macro": true
+  },
+  "24": {
+   "const": "FRSCRCMD_ADDMENUENTRYWITHDESC",
+   "handler": "FrontierScrCmd_AddMenuEntryWithDesc",
+   "name": "AddMenuEntryWithDesc",
+   "args": [
+    [
+     "u16",
+     "entryID"
+    ],
+    [
+     "u16",
+     "descriptionID"
+    ],
+    [
+     "u16",
+     "index"
+    ]
+   ],
+   "macro": true
+  },
+  "25": {
+   "const": "FRSCRCMD_SHOWMENU",
+   "handler": "FrontierScrCmd_ShowMenu",
+   "name": "ShowMenu",
+   "args": [],
+   "macro": true
+  },
+  "26": {
+   "const": "FRSCRCMD_INITGLOBALTEXTLISTMENU",
+   "handler": "FrontierScrCmd_InitGlobalTextListMenu",
+   "name": "InitGlobalTextListMenu",
+   "args": [
+    [
+     "u8",
+     "anchorX"
+    ],
+    [
+     "u8",
+     "anchorY"
+    ],
+    [
+     "u8",
+     "initialCursorPos"
+    ],
+    [
+     "u8",
+     "canExitWithB"
+    ],
+    [
+     "u16",
+     "selectedOption"
+    ]
+   ],
+   "macro": true
+  },
+  "27": {
+   "const": "FRSCRCMD_INITLOCALTEXTLISTMENU",
+   "handler": "FrontierScrCmd_InitLocalTextListMenu",
+   "name": "InitLocalTextListMenu",
+   "args": [
+    [
+     "u8",
+     "anchorX"
+    ],
+    [
+     "u8",
+     "anchorY"
+    ],
+    [
+     "u8",
+     "initialCursorPos"
+    ],
+    [
+     "u8",
+     "canExitWithB"
+    ],
+    [
+     "u16",
+     "selectedOption"
+    ]
+   ],
+   "macro": true
+  },
+  "28": {
+   "const": "FRSCRCMD_ADDLISTMENUENTRY",
+   "handler": "FrontierScrCmd_AddListMenuEntry",
+   "name": "AddListMenuEntry",
+   "args": [
+    [
+     "u16",
+     "entryID"
+    ],
+    [
+     "u16",
+     "descriptionID"
+    ],
+    [
+     "u16",
+     "index"
+    ]
+   ],
+   "macro": true
+  },
+  "29": {
+   "const": "FRSCRCMD_SHOWLISTMENU",
+   "handler": "FrontierScrCmd_ShowListMenu",
+   "name": "ShowListMenu",
+   "args": [],
+   "macro": true
+  },
+  "30": {
+   "const": "FRSCRCMD_FREELISTMENU",
+   "handler": "FrontierScrCmd_FreeListMenu",
+   "name": "FreeListMenu",
+   "args": [],
+   "macro": true
+  },
+  "31": {
+   "const": "FRSCRCMD_SHOWYESNOMENU",
+   "handler": "FrontierScrCmd_ShowYesNoMenu",
+   "name": "ShowYesNoMenu",
+   "args": [
+    [
+     "u16",
+     "destVarID"
+    ],
+    [
+     "u8",
+     "cursorStart"
+    ]
+   ],
+   "macro": true
+  },
+  "32": {
+   "const": "FRSCRCMD_COMPAREVARTOVALUE",
+   "handler": "FrontierScrCmd_CompareVarToValue",
+   "name": "CompareVar",
+   "args": [
+    [
+     "u16",
+     "varID"
+    ],
+    [
+     "u16",
+     "valueOrVarID"
+    ]
+   ],
+   "macro": true
+  },
+  "33": {
+   "const": "FRSCRCMD_COMPAREVARTOVAR",
+   "handler": "FrontierScrCmd_CompareVarToVar",
+   "name": "CompareVar",
+   "args": [
+    [
+     "u16",
+     "varID"
+    ],
+    [
+     "u16",
+     "valueOrVarID"
+    ]
+   ],
+   "macro": true
+  },
+  "34": {
+   "const": "FRSCRCMD_22",
+   "handler": "FrontierScrCmd_22",
+   "name": "FrontierScrCmd_22",
+   "args": [
+    [
+     "rel",
+     "offset"
+    ]
+   ],
+   "macro": true,
+   "data": "objgfx"
+  },
+  "35": {
+   "const": "FRSCRCMD_23",
+   "handler": "FrontierScrCmd_23",
+   "name": "FrontierScrCmd_23",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "36": {
+   "const": "FRSCRCMD_24",
+   "handler": "FrontierScrCmd_24",
+   "name": "FrontierScrCmd_24",
+   "args": [
+    [
+     "rel",
+     "offset"
+    ]
+   ],
+   "macro": true,
+   "data": "objects"
+  },
+  "37": {
+   "const": "FRSCRCMD_25",
+   "handler": "FrontierScrCmd_25",
+   "name": "FrontierScrCmd_25",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "38": {
+   "const": "FRSCRCMD_26",
+   "handler": "FrontierScrCmd_26",
+   "name": "FrontierScrCmd_26",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ],
+    [
+     "u8",
+     "arg1"
+    ]
+   ],
+   "macro": true
+  },
+  "39": {
+   "const": "FRSCRCMD_DUMMY27",
+   "handler": "FrontierScrCmd_Dummy27",
+   "name": "FrontierScrCmd_Dummy27",
+   "args": [],
+   "macro": true
+  },
+  "40": {
+   "const": "FRSCRCMD_APPLYMOVEMENT",
+   "handler": "FrontierScrCmd_ApplyMovement",
+   "name": "ApplyMovement",
+   "args": [
+    [
+     "u16",
+     "localID"
+    ],
+    [
+     "rel",
+     "offset"
+    ]
+   ],
+   "macro": true,
+   "data": "movement"
+  },
+  "41": {
+   "const": "FRSCRCMD_WAITMOVEMENT",
+   "handler": "FrontierScrCmd_WaitMovement",
+   "name": "WaitMovement",
+   "args": [],
+   "macro": true
+  },
+  "42": {
+   "const": "FRSCRCMD_2A",
+   "handler": "FrontierScrCmd_2A",
+   "name": "FrontierScrCmd_2A",
+   "args": [
+    [
+     "rel",
+     "offset"
+    ]
+   ],
+   "macro": true,
+   "data": "ids"
+  },
+  "43": {
+   "const": "FRSCRCMD_2B",
+   "handler": "FrontierScrCmd_2B",
+   "name": "FrontierScrCmd_2B",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "44": {
+   "const": "FRSCRCMD_2C",
+   "handler": "FrontierScrCmd_2C",
+   "name": "FrontierScrCmd_2C",
+   "args": [
+    [
+     "rel",
+     "offset"
+    ]
+   ],
+   "macro": true,
+   "data": "sprites"
+  },
+  "45": {
+   "const": "FRSCRCMD_2D",
+   "handler": "FrontierScrCmd_2D",
+   "name": "FrontierScrCmd_2D",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "46": {
+   "const": "FRSCRCMD_2E",
+   "handler": "FrontierScrCmd_2E",
+   "name": "FrontierScrCmd_2E",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ],
+    [
+     "u8",
+     "draw"
+    ]
+   ],
+   "macro": true
+  },
+  "47": {
+   "const": "FRSCRCMD_2F",
+   "handler": "FrontierScrCmd_2F",
+   "name": "FrontierScrCmd_2F",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "48": {
+   "const": "FRSCRCMD_30",
+   "handler": "FrontierScrCmd_30",
+   "name": "FrontierScrCmd_30",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ],
+    [
+     "u16",
+     "arg1"
+    ]
+   ],
+   "macro": true
+  },
+  "49": {
+   "const": "FRSCRCMD_31",
+   "handler": "FrontierScrCmd_31",
+   "name": "FrontierScrCmd_31",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ],
+    [
+     "u16",
+     "arg1"
+    ]
+   ],
+   "macro": true
+  },
+  "50": {
+   "const": "FRSCRCMD_32",
+   "handler": "FrontierScrCmd_32",
+   "name": "FrontierScrCmd_32",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "51": {
+   "const": "FRSCRCMD_33",
+   "handler": "FrontierScrCmd_33",
+   "name": "FrontierScrCmd_33",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "52": {
+   "const": "FRSCRCMD_34",
+   "handler": "FrontierScrCmd_34",
+   "name": "FrontierScrCmd_34",
+   "args": [],
+   "macro": true
+  },
+  "53": {
+   "const": "FRSCRCMD_SYNCCONNECTEDPLAYERS",
+   "handler": "FrontierScrCmd_SyncConnectedPlayers",
+   "name": "SyncConnectedPlayers",
+   "args": [
+    [
+     "u16",
+     "syncNo"
+    ]
+   ],
+   "macro": true
+  },
+  "54": {
+   "const": "FRSCRCMD_CLEARRECEIVEDTEMPDATAALLPLAYERS",
+   "handler": "FrontierScrCmd_ClearReceivedTempDataAllPlayers",
+   "name": "ClearReceivedTempDataAllPlayers",
+   "args": [],
+   "macro": true
+  },
+  "55": {
+   "const": "FRSCRCMD_ENDCOMMUNICATION",
+   "handler": "FrontierScrCmd_EndCommunication",
+   "name": "EndCommunication",
+   "args": [],
+   "macro": true
+  },
+  "56": {
+   "const": "FRSCRCMD_GETRANDOM",
+   "handler": "FrontierScrCmd_GetRandom",
+   "name": "GetRandom",
+   "args": [
+    [
+     "u16",
+     "destVarID"
+    ],
+    [
+     "u16",
+     "upperBound"
+    ]
+   ],
+   "macro": true
+  },
+  "57": {
+   "const": "FRSCRCMD_HEALPARTY",
+   "handler": "FrontierScrCmd_HealParty",
+   "name": "HealParty",
+   "args": [],
+   "macro": true
+  },
+  "58": {
+   "const": "FRSCRCMD_WAITABPRESS",
+   "handler": "FrontierScrCmd_WaitABPress",
+   "name": "WaitABPress",
+   "args": [],
+   "macro": true
+  },
+  "59": {
+   "const": "FRSCRCMD_WAITABPRESSTIME",
+   "handler": "FrontierScrCmd_WaitABPressTime",
+   "name": "WaitABPressTime",
+   "args": [
+    [
+     "u16",
+     "frames"
+    ]
+   ],
+   "macro": true
+  },
+  "60": {
+   "const": "FRSCRCMD_DUMMY3C",
+   "handler": "FrontierScrCmd_Dummy3C",
+   "name": "FrontierScrCmd_Dummy3C",
+   "args": [
+    [
+     "u16",
+     "unused"
+    ]
+   ],
+   "macro": true
+  },
+  "61": {
+   "const": "FRSCRCMD_SETSYSTEMVAR",
+   "handler": "FrontierScrCmd_SetSystemVar",
+   "name": "SetSystemVar",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ],
+    [
+     "u16",
+     "value"
+    ]
+   ],
+   "macro": true
+  },
+  "62": {
+   "const": "FRSCRCMD_GETSYSTEMVAR",
+   "handler": "FrontierScrCmd_GetSystemVar",
+   "name": "GetSystemVar",
+   "args": [
+    [
+     "u16",
+     "srcVar"
+    ],
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "63": {
+   "const": "FRSCRCMD_3F",
+   "handler": "FrontierScrCmd_3F",
+   "name": "FrontierScrCmd_3F",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "64": {
+   "const": "FRSCRCMD_GETPLAYEROBJEVENTGFX",
+   "handler": "FrontierScrCmd_GetPlayerObjEventGfx",
+   "name": "GetPlayerObjEventGfx",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "65": {
+   "const": "FRSCRCMD_INITPARTICLESYSTEM",
+   "handler": "FrontierScrCmd_InitParticleSystem",
+   "name": "InitParticleSystem",
+   "args": [
+    [
+     "u16",
+     "index"
+    ],
+    [
+     "u16",
+     "narcIdx"
+    ],
+    [
+     "u16",
+     "projection"
+    ]
+   ],
+   "macro": true
+  },
+  "66": {
+   "const": "FRSCRCMD_FREEPARTICLESYSTEM",
+   "handler": "FrontierScrCmd_FreeParticleSystem",
+   "name": "FreeParticleSystem",
+   "args": [
+    [
+     "u16",
+     "index"
+    ]
+   ],
+   "macro": true
+  },
+  "67": {
+   "const": "FRSCRCMD_CREATEPARTICLESYSTEMEMITTER",
+   "handler": "FrontierScrCmd_CreateParticleSystemEmitter",
+   "name": "CreateParticleSystemEmitter",
+   "args": [
+    [
+     "u16",
+     "index"
+    ],
+    [
+     "u16",
+     "resourceID"
+    ]
+   ],
+   "macro": true
+  },
+  "68": {
+   "const": "FRSCRCMD_WAITFORPARTICLESYSTEMEMITTERS",
+   "handler": "FrontierScrCmd_WaitForParticleSystemEmitters",
+   "name": "WaitForParticleSystemEmitters",
+   "args": [],
+   "macro": true
+  },
+  "69": {
+   "const": "FRSCRCMD_45",
+   "handler": "FrontierScrCmd_45",
+   "name": "FrontierScrCmd_45",
+   "args": [
+    [
+     "u16",
+     "slot"
+    ],
+    [
+     "u16",
+     "x"
+    ],
+    [
+     "u16",
+     "y"
+    ],
+    [
+     "u16",
+     "arg3"
+    ],
+    [
+     "u16",
+     "blendFraction"
+    ],
+    [
+     "u16",
+     "blendTarget"
+    ]
+   ],
+   "macro": true
+  },
+  "70": {
+   "const": "FRSCRCMD_46",
+   "handler": "FrontierScrCmd_46",
+   "name": "FrontierScrCmd_46",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "71": {
+   "const": "FRSCRCMD_PLAYFRONTIERBRAINENCOUNTEREFFECT",
+   "handler": "FrontierScrCmd_PlayFrontierBrainEncounterEffect",
+   "name": "PlayFrontierBrainEncounterEffect",
+   "args": [
+    [
+     "u16",
+     "facility"
+    ]
+   ],
+   "macro": true
+  },
+  "72": {
+   "const": "FRSCRCMD_INCREMENTRECORDVALUE",
+   "handler": "FrontierScrCmd_IncrementRecordValue",
+   "name": "IncrementRecordValue",
+   "args": [
+    [
+     "u16",
+     "recordID"
+    ]
+   ],
+   "macro": true
+  },
+  "73": {
+   "const": "FRSCRCMD_ADDTORECORDVALUE",
+   "handler": "FrontierScrCmd_AddToRecordValue",
+   "name": "AddToRecordValue",
+   "args": [
+    [
+     "u16",
+     "recordID"
+    ],
+    [
+     "u16",
+     "value"
+    ]
+   ],
+   "macro": true
+  },
+  "74": {
+   "const": "FRSCRCMD_INCREMENTTRAINERSCORE",
+   "handler": "FrontierScrCmd_IncrementTrainerScore",
+   "name": "IncrementTrainerScore",
+   "args": [
+    [
+     "u16",
+     "scoreID"
+    ]
+   ],
+   "macro": true
+  },
+  "75": {
+   "const": "FRSCRCMD_4B",
+   "handler": "FrontierScrCmd_4B",
+   "name": "FrontierScrCmd_4B",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "76": {
+   "const": "FRSCRCMD_4C",
+   "handler": "FrontierScrCmd_4C",
+   "name": "FrontierScrCmd_4C",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ],
+    [
+     "u16",
+     "arg1"
+    ],
+    [
+     "u16",
+     "arg2"
+    ],
+    [
+     "u16",
+     "arg3"
+    ]
+   ],
+   "macro": true
+  },
+  "77": {
+   "const": "FRSCRCMD_4D",
+   "handler": "FrontierScrCmd_4D",
+   "name": "FrontierScrCmd_4D",
+   "args": [],
+   "macro": true
+  },
+  "78": {
+   "const": "FRSCRCMD_4E",
+   "handler": "FrontierScrCmd_4E",
+   "name": "FrontierScrCmd_4E",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ],
+    [
+     "u16",
+     "arg1"
+    ],
+    [
+     "u16",
+     "arg2"
+    ],
+    [
+     "u16",
+     "arg3"
+    ],
+    [
+     "u16",
+     "arg4"
+    ],
+    [
+     "u16",
+     "arg5"
+    ]
+   ],
+   "macro": true
+  },
+  "79": {
+   "const": "FRSCRCMD_4F",
+   "handler": "FrontierScrCmd_4F",
+   "name": "FrontierScrCmd_4F",
+   "args": [],
+   "macro": true
+  },
+  "80": {
+   "const": "FRSCRCMD_SHOWCASTLEPOINTSWINDOWS",
+   "handler": "FrontierScrCmd_ShowCastlePointsWindows",
+   "name": "ShowCastlePointsWindows",
+   "args": [],
+   "macro": true
+  },
+  "81": {
+   "const": "FRSCRCMD_CLEARCASTLEPOINTSWINDOWS",
+   "handler": "FrontierScrCmd_ClearCastlePointsWindows",
+   "name": "ClearCastlePointsWindows",
+   "args": [],
+   "macro": true
+  },
+  "82": {
+   "const": "FRSCRCMD_REPRINTCASTLEPOINTSINFO",
+   "handler": "FrontierScrCmd_ReprintCastlePointsInfo",
+   "name": "ReprintCastlePointsInfo",
+   "args": [],
+   "macro": true
+  },
+  "83": {
+   "const": "FRSCRCMD_53",
+   "handler": "FrontierScrCmd_53",
+   "name": "FrontierScrCmd_53",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "84": {
+   "const": "FRSCRCMD_54",
+   "handler": "FrontierScrCmd_54",
+   "name": "FrontierScrCmd_54",
+   "args": [],
+   "macro": true
+  },
+  "85": {
+   "const": "FRSCRCMD_PLAYSOUNDEFFECT",
+   "handler": "FrontierScrCmd_PlaySoundEffect",
+   "name": "PlaySoundEffect",
+   "args": [
+    [
+     "u16",
+     "seqID"
+    ]
+   ],
+   "macro": true
+  },
+  "86": {
+   "const": "FRSCRCMD_STOPSOUNDEFFECT",
+   "handler": "FrontierScrCmd_StopSoundEffect",
+   "name": "StopSoundEffect",
+   "args": [
+    [
+     "u16",
+     "seqID"
+    ]
+   ],
+   "macro": true
+  },
+  "87": {
+   "const": "FRSCRCMD_WAITSOUNDEFFECT",
+   "handler": "FrontierScrCmd_WaitSoundEffect",
+   "name": "WaitSoundEffect",
+   "args": [
+    [
+     "u16",
+     "seqID"
+    ]
+   ],
+   "macro": true
+  },
+  "88": {
+   "const": "FRSCRCMD_PLAYFANFARE",
+   "handler": "FrontierScrCmd_PlayFanfare",
+   "name": "PlayFanfare",
+   "args": [
+    [
+     "u16",
+     "seqID"
+    ]
+   ],
+   "macro": true
+  },
+  "89": {
+   "const": "FRSCRCMD_WAITFANFARE",
+   "handler": "FrontierScrCmd_WaitFanfare",
+   "name": "WaitFanfare",
+   "args": [],
+   "macro": true
+  },
+  "90": {
+   "const": "FRSCRCMD_PLAYBGM",
+   "handler": "FrontierScrCmd_PlayBGM",
+   "name": "PlayBGM",
+   "args": [
+    [
+     "u16",
+     "seqID"
+    ]
+   ],
+   "macro": true
+  },
+  "91": {
+   "const": "FRSCRCMD_STOPBGM",
+   "handler": "FrontierScrCmd_StopBGM",
+   "name": "StopBGM",
+   "args": [
+    [
+     "u16",
+     "seqID"
+    ]
+   ],
+   "macro": true
+  },
+  "92": {
+   "const": "FRSCRCMD_INITBATTLEFACTORY",
+   "handler": "FrontierScrCmd_InitBattleFactory",
+   "name": "InitBattleFactory",
+   "args": [
+    [
+     "u16",
+     "resumingFromSave"
+    ],
+    [
+     "u16",
+     "challengeType"
+    ],
+    [
+     "u16",
+     "isOpenLevel"
+    ]
+   ],
+   "macro": true
+  },
+  "93": {
+   "const": "FRSCRCMD_BATTLEFACTORY_LOADTRAINERSFORROUND",
+   "handler": "FrontierScrCmd_BattleFactory_LoadTrainersForRound",
+   "name": "BattleFactory_LoadTrainersForRound",
+   "args": [
+    [
+     "u16",
+     "resumingFromSave"
+    ]
+   ],
+   "macro": true
+  },
+  "94": {
+   "const": "FRSCRCMD_FREEBATTLEFACTORY",
+   "handler": "FrontierScrCmd_FreeBattleFactory",
+   "name": "FreeBattleFactory",
+   "args": [],
+   "macro": true
+  },
+  "95": {
+   "const": "FRSCRCMD_OPENBATTLEFACTORYAPPINITIAL",
+   "handler": "FrontierScrCmd_OpenBattleFactoryAppInitial",
+   "name": "OpenBattleFactoryAppInitial",
+   "args": [],
+   "macro": true
+  },
+  "96": {
+   "const": "FRSCRCMD_BATTLEFACTORY_CLEANUPBATTLE",
+   "handler": "FrontierScrCmd_BattleFactory_CleanupBattle",
+   "name": "BattleFactory_CleanupBattle",
+   "args": [],
+   "macro": true
+  },
+  "97": {
+   "const": "FRSCRCMD_BATTLEFACTORY_STARTBATTLE",
+   "handler": "FrontierScrCmd_BattleFactory_StartBattle",
+   "name": "BattleFactory_StartBattle",
+   "args": [],
+   "macro": true
+  },
+  "98": {
+   "const": "FRSCRCMD_OPENBATTLEFACTORYAPPFORTRADE",
+   "handler": "FrontierScrCmd_OpenBattleFactoryAppForTrade",
+   "name": "OpenBattleFactoryAppForTrade",
+   "args": [],
+   "macro": true
+  },
+  "99": {
+   "const": "FRSCRCMD_ADDSELECTEDRENTALSTOPARTY",
+   "handler": "FrontierScrCmd_AddSelectedRentalsToParty",
+   "name": "AddSelectedRentalsToParty",
+   "args": [],
+   "macro": true
+  },
+  "100": {
+   "const": "FRSCRCMD_BATTLEFACTORY_SETUPNEXTOPPONENT",
+   "handler": "FrontierScrCmd_BattleFactory_SetupNextOpponent",
+   "name": "BattleFactory_SetupNextOpponent",
+   "args": [],
+   "macro": true
+  },
+  "101": {
+   "const": "FRSCRCMD_BATTLEFACTORY_APPLYTRADE",
+   "handler": "FrontierScrCmd_BattleFactory_ApplyTrade",
+   "name": "BattleFactory_ApplyTrade",
+   "args": [],
+   "macro": true
+  },
+  "102": {
+   "const": "FRSCRCMD_BATTLEFACTORY_SETUPNEXTOPPONENTSPARTY",
+   "handler": "FrontierScrCmd_BattleFactory_SetupNextOpponentsParty",
+   "name": "BattleFactory_SetupNextOpponentsParty",
+   "args": [],
+   "macro": true
+  },
+  "103": {
+   "const": "FRSCRCMD_CALLBATTLEFACTORYFUNCTION",
+   "handler": "FrontierScrCmd_CallBattleFactoryFunction",
+   "name": "CallBattleFactoryFunction",
+   "args": [
+    [
+     "u8",
+     "command"
+    ],
+    [
+     "u8",
+     "arg1"
+    ],
+    [
+     "u8",
+     "arg2"
+    ],
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "104": {
+   "const": "FRSCRCMD_BATTLEFACTORY_CHECKWONBATTLE",
+   "handler": "FrontierScrCmd_BattleFactory_CheckWonBattle",
+   "name": "BattleFactory_CheckWonBattle",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "105": {
+   "const": "FRSCRCMD_BATTLEFACTORY_SENDCOMMMESSAGE",
+   "handler": "FrontierScrCmd_BattleFactory_SendCommMessage",
+   "name": "BattleFactory_SendCommMessage",
+   "args": [
+    [
+     "u16",
+     "command"
+    ],
+    [
+     "u16",
+     "arg"
+    ],
+    [
+     "u16",
+     "success"
+    ]
+   ],
+   "macro": true
+  },
+  "106": {
+   "const": "FRSCRCMD_BATTLEFACTORY_WAITFORCOMMRESPONSES",
+   "handler": "FrontierScrCmd_BattleFactory_WaitForCommResponses",
+   "name": "BattleFactory_WaitForCommResponses",
+   "args": [
+    [
+     "u16",
+     "unused"
+    ]
+   ],
+   "macro": true
+  },
+  "107": {
+   "const": "FRSCRCMD_BATTLEFACTORY_PRINTTRAINERINTRO",
+   "handler": "FrontierScrCmd_BattleFactory_PrintTrainerIntro",
+   "name": "BattleFactory_PrintTrainerIntro",
+   "args": [
+    [
+     "u8",
+     "index"
+    ]
+   ],
+   "macro": true
+  },
+  "108": {
+   "const": "FRSCRCMD_INITNEWBATTLERECORDING",
+   "handler": "FrontierScrCmd_InitNewBattleRecording",
+   "name": "InitNewBattleRecording",
+   "args": [],
+   "macro": true
+  },
+  "109": {
+   "const": "FRSCRCMD_6D",
+   "handler": "FrontierScrCmd_6D",
+   "name": "FrontierScrCmd_6D",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ],
+    [
+     "u16",
+     "arg1"
+    ],
+    [
+     "u16",
+     "arg2"
+    ],
+    [
+     "u16",
+     "arg3"
+    ]
+   ],
+   "macro": true
+  },
+  "110": {
+   "const": "FRSCRCMD_6E",
+   "handler": "FrontierScrCmd_6E",
+   "name": "FrontierScrCmd_6E",
+   "args": [],
+   "macro": true
+  },
+  "111": {
+   "const": "FRSCRCMD_FREEBATTLERECORDING",
+   "handler": "FrontierScrCmd_FreeBattleRecording",
+   "name": "FreeBattleRecording",
+   "args": [],
+   "macro": true
+  },
+  "112": {
+   "const": "FRSCRCMD_70",
+   "handler": "FrontierScrCmd_70",
+   "name": "FrontierScrCmd_70",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "113": {
+   "const": "FRSCRCMD_71",
+   "handler": "FrontierScrCmd_71",
+   "name": "FrontierScrCmd_71",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "114": {
+   "const": "FRSCRCMD_72",
+   "handler": "FrontierScrCmd_72",
+   "name": "FrontierScrCmd_72",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "115": {
+   "const": "FRSCRCMD_73",
+   "handler": "FrontierScrCmd_73",
+   "name": "FrontierScrCmd_73",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "116": {
+   "const": "FRSCRCMD_SAVEDATAEXTRAINIT",
+   "handler": "FrontierScrCmd_SaveDataExtraInit",
+   "name": "SaveDataExtraInit",
+   "args": [],
+   "macro": true
+  },
+  "117": {
+   "const": "FRSCRCMD_GETMISCSAVEBLOCKINITFLAG",
+   "handler": "FrontierScrCmd_GetMiscSaveBlockInitFlag",
+   "name": "FrontierScrCmd_GetMiscSaveBlockInitFlag",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "118": {
+   "const": "FRSCRCMD_BATTLEHALL_UPDATEWINRECORD",
+   "handler": "FrontierScrCmd_BattleHall_UpdateWinRecord",
+   "name": "BattleHall_UpdateWinRecord",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "119": {
+   "const": "FRSCRCMD_SHOWSAVINGICON",
+   "handler": "FrontierScrCmd_ShowSavingIcon",
+   "name": "ShowSavingIcon",
+   "args": [],
+   "macro": true
+  },
+  "120": {
+   "const": "FRSCRCMD_HIDESAVINGICON",
+   "handler": "FrontierScrCmd_HideSavingIcon",
+   "name": "HideSavingIcon",
+   "args": [],
+   "macro": true
+  },
+  "121": {
+   "const": "FRSCRCMD_BUFFERITEMNAME",
+   "handler": "FrontierScrCmd_BufferItemName",
+   "name": "BufferItemName",
+   "args": [
+    [
+     "u8",
+     "templateArg"
+    ],
+    [
+     "u16",
+     "item"
+    ]
+   ],
+   "macro": true
+  },
+  "122": {
+   "const": "FRSCRCMD_BUFFERNUMBER",
+   "handler": "FrontierScrCmd_BufferNumber",
+   "name": "BufferNumber",
+   "args": [
+    [
+     "u8",
+     "templateArg"
+    ],
+    [
+     "u16",
+     "number"
+    ]
+   ],
+   "macro": true
+  },
+  "123": {
+   "const": "FRSCRCMD_BUFFERPLAYERNAME",
+   "handler": "FrontierScrCmd_BufferPlayerName",
+   "name": "BufferPlayerName",
+   "args": [
+    [
+     "u8",
+     "templateArg"
+    ]
+   ],
+   "macro": true
+  },
+  "124": {
+   "const": "FRSCRCMD_BUFFERPARTNERNAME",
+   "handler": "FrontierScrCmd_BufferPartnerName",
+   "name": "BufferPartnerName",
+   "args": [
+    [
+     "u8",
+     "templateArg"
+    ]
+   ],
+   "macro": true
+  },
+  "125": {
+   "const": "FRSCRCMD_BUFFERMOVENAME",
+   "handler": "FrontierScrCmd_BufferMoveName",
+   "name": "BufferMoveName",
+   "args": [
+    [
+     "u8",
+     "templateArg"
+    ],
+    [
+     "u16",
+     "move"
+    ]
+   ],
+   "macro": true
+  },
+  "126": {
+   "const": "FRSCRCMD_BUFFERSPECIESNAME",
+   "handler": "FrontierScrCmd_BufferSpeciesName",
+   "name": "BufferSpeciesName",
+   "args": [
+    [
+     "u8",
+     "templateArg"
+    ],
+    [
+     "u16",
+     "species"
+    ],
+    [
+     "u16",
+     "unused1"
+    ],
+    [
+     "u8",
+     "unused2"
+    ]
+   ],
+   "macro": true
+  },
+  "127": {
+   "const": "FRSCRCMD_BUFFERTYPENAME",
+   "handler": "FrontierScrCmd_BufferTypeName",
+   "name": "BufferTypeName",
+   "args": [
+    [
+     "u8",
+     "templateArg"
+    ],
+    [
+     "u16",
+     "type"
+    ]
+   ],
+   "macro": true
+  },
+  "128": {
+   "const": "FRSCRCMD_BUFFERRIVALNAME",
+   "handler": "FrontierScrCmd_BufferRivalName",
+   "name": "BufferRivalName",
+   "args": [
+    [
+     "u8",
+     "templateArg"
+    ]
+   ],
+   "macro": true
+  },
+  "129": {
+   "const": "FRSCRCMD_GETNUMBATTLEPOINTS",
+   "handler": "FrontierScrCmd_GetNumBattlePoints",
+   "name": "GetNumBattlePoints",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "130": {
+   "const": "FRSCRCMD_GIVEBATTLEPOINTS",
+   "handler": "FrontierScrCmd_GiveBattlePoints",
+   "name": "GiveBattlePoints",
+   "args": [
+    [
+     "u16",
+     "battlePoints"
+    ]
+   ],
+   "macro": true
+  },
+  "131": {
+   "const": "FRSCRCMD_REMOTEBATTLEPOINTS",
+   "handler": "FrontierScrCmd_RemoteBattlePoints",
+   "name": "RemoteBattlePoints",
+   "args": [
+    [
+     "u16",
+     "battlePoints"
+    ]
+   ],
+   "macro": true
+  },
+  "132": {
+   "const": "FRSCRCMD_CALLBATTLETOWERFUNCTION",
+   "handler": "FrontierScrCmd_CallBattleTowerFunction",
+   "name": "CallBattleTowerFunction",
+   "args": [
+    [
+     "u16",
+     "functionIndex"
+    ],
+    [
+     "u16",
+     "functionArgument"
+    ],
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "133": {
+   "const": "FRSCRCMD_85",
+   "handler": "FrontierScrCmd_85",
+   "name": "FrontierScrCmd_85",
+   "args": [
+    [
+     "u8",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "134": {
+   "const": "FRSCRCMD_FREETOWERSTRUCT",
+   "handler": "FrontierScrCmd_FreeTowerStruct",
+   "name": "FreeTowerStruct",
+   "args": [],
+   "macro": true
+  },
+  "135": {
+   "const": "FRSCRCMD_BATTLETOWER_STARTBATTLE",
+   "handler": "FrontierScrCmd_BattleTower_StartBattle",
+   "name": "BattleTower_StartBattle",
+   "args": [],
+   "macro": true
+  },
+  "136": {
+   "const": "FRSCRCMD_BATTLETOWER_CHECKWONBATTLE",
+   "handler": "FrontierScrCmd_BattleTower_CheckWonBattle",
+   "name": "BattleTower_CheckWonBattle",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "137": {
+   "const": "FRSCRCMD_89",
+   "handler": "FrontierScrCmd_89",
+   "name": "FrontierScrCmd_89",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ],
+    [
+     "u16",
+     "arg1"
+    ],
+    [
+     "u16",
+     "arg2"
+    ]
+   ],
+   "macro": true
+  },
+  "138": {
+   "const": "FRSCRCMD_8A",
+   "handler": "FrontierScrCmd_8A",
+   "name": "FrontierScrCmd_8A",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ],
+    [
+     "u16",
+     "arg1"
+    ]
+   ],
+   "macro": true
+  },
+  "139": {
+   "const": "FRSCRCMD_INITBATTLEHALL",
+   "handler": "FrontierScrCmd_InitBattleHall",
+   "name": "InitBattleHall",
+   "args": [
+    [
+     "u16",
+     "resumingFromSave"
+    ],
+    [
+     "u16",
+     "challengeType"
+    ],
+    [
+     "u16",
+     "partySlot1"
+    ],
+    [
+     "u16",
+     "partySlot2"
+    ]
+   ],
+   "macro": true
+  },
+  "140": {
+   "const": "FRSCRCMD_BATTLEHALL_SETUP_NEXT_OPPONENT",
+   "handler": "FrontierScrCmd_BattleHall_SetupNextOpponent",
+   "name": "BattleHall_SetupNextOpponent",
+   "args": [
+    [
+     "u16",
+     "unused"
+    ]
+   ],
+   "macro": true
+  },
+  "141": {
+   "const": "FRSCRCMD_FREEBATTLEHALL",
+   "handler": "FrontierScrCmd_FreeBattleHall",
+   "name": "FreeBattleHall",
+   "args": [],
+   "macro": true
+  },
+  "142": {
+   "const": "FRSCRCMD_OPENBATTLEHALLAPP",
+   "handler": "FrontierScrCmd_OpenBattleHallApp",
+   "name": "OpenBattleHallApp",
+   "args": [],
+   "macro": true
+  },
+  "143": {
+   "const": "FRSCRCMD_BATTLEHALL_CLEANUPBATTLE",
+   "handler": "FrontierScrCmd_BattleHall_CleanupBattle",
+   "name": "BattleHall_CleanupBattle",
+   "args": [],
+   "macro": true
+  },
+  "144": {
+   "const": "FRSCRCMD_BATTLEHALL_STARTBATTLE",
+   "handler": "FrontierScrCmd_BattleHall_StartBattle",
+   "name": "BattleHall_StartBattle",
+   "args": [],
+   "macro": true
+  },
+  "145": {
+   "const": "FRSCRCMD_CALLBATTLEHALLFUNCTION",
+   "handler": "FrontierScrCmd_CallBattleHallFunction",
+   "name": "CallBattleHallFunction",
+   "args": [
+    [
+     "u8",
+     "command"
+    ],
+    [
+     "u8",
+     "arg1"
+    ],
+    [
+     "u8",
+     "arg2"
+    ],
+    [
+     "u16",
+     "returnVar"
+    ]
+   ],
+   "macro": true
+  },
+  "146": {
+   "const": "FRSCRCMD_BATTLEHALL_CHECKWONBATTLE",
+   "handler": "FrontierScrCmd_BattleHall_CheckWonBattle",
+   "name": "BattleHall_CheckWonBattle",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "147": {
+   "const": "FRSCRCMD_BATTLEHALL_SENDCOMMMESSAGE",
+   "handler": "FrontierScrCmd_BattleHall_SendCommMessage",
+   "name": "BattleHall_SendCommMessage",
+   "args": [
+    [
+     "u16",
+     "command"
+    ],
+    [
+     "u16",
+     "arg"
+    ],
+    [
+     "u16",
+     "returnVar"
+    ]
+   ],
+   "macro": true
+  },
+  "148": {
+   "const": "FRSCRCMD_94",
+   "handler": "FrontierScrCmd_94",
+   "name": "FrontierScrCmd_94",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "149": {
+   "const": "FRSCRCMD_BATTLEHALL_PRINTTRAINERINTRO",
+   "handler": "FrontierScrCmd_BattleHall_PrintTrainerIntro",
+   "name": "BattleHall_PrintTrainerIntro",
+   "args": [
+    [
+     "u8",
+     "index"
+    ]
+   ],
+   "macro": true
+  },
+  "150": {
+   "const": "FRSCRCMD_DUMMY96",
+   "handler": "FrontierScrCmd_Dummy96",
+   "name": "FrontierScrCmd_Dummy96",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "151": {
+   "const": "FRSCRCMD_INITBATTLECASTLE",
+   "handler": "FrontierScrCmd_InitBattleCastle",
+   "name": "InitBattleCastle",
+   "args": [
+    [
+     "u16",
+     "resumingFromSave"
+    ],
+    [
+     "u16",
+     "challengeType"
+    ],
+    [
+     "u16",
+     "partySlot1"
+    ],
+    [
+     "u16",
+     "partySlot2"
+    ],
+    [
+     "u16",
+     "partySlot3"
+    ],
+    [
+     "u16",
+     "arg5"
+    ]
+   ],
+   "macro": true
+  },
+  "152": {
+   "const": "FRSCRCMD_LOADTRAINERSFORROUND",
+   "handler": "FrontierScrCmd_LoadTrainersForRound",
+   "name": "LoadTrainersForRound",
+   "args": [
+    [
+     "u16",
+     "resumingFromSave"
+    ]
+   ],
+   "macro": true
+  },
+  "153": {
+   "const": "FRSCRCMD_FREEBATTLECASTLE",
+   "handler": "FrontierScrCmd_FreeBattleCastle",
+   "name": "FreeBattleCastle",
+   "args": [],
+   "macro": true
+  },
+  "154": {
+   "const": "FRSCRCMD_OPENBATTLECASTLESELFAPP",
+   "handler": "FrontierScrCmd_OpenBattleCastleSelfApp",
+   "name": "OpenBattleCastleSelfApp",
+   "args": [],
+   "macro": true
+  },
+  "155": {
+   "const": "FRSCRCMD_BATTLECASTLE_CLEANUPBATTLE",
+   "handler": "FrontierScrCmd_BattleCastle_CleanupBattle",
+   "name": "BattleCastle_CleanupBattle",
+   "args": [],
+   "macro": true
+  },
+  "156": {
+   "const": "FRSCRCMD_BATTLECASTLE_STARTBATTLE",
+   "handler": "FrontierScrCmd_BattleCastle_StartBattle",
+   "name": "BattleCastle_StartBattle",
+   "args": [],
+   "macro": true
+  },
+  "157": {
+   "const": "FRSCRCMD_OPENBATTLECASTLEOPPONENTAPP",
+   "handler": "FrontierScrCmd_OpenBattleCastleOpponentApp",
+   "name": "OpenBattleCastleOpponentApp",
+   "args": [],
+   "macro": true
+  },
+  "158": {
+   "const": "FRSCRCMD_BATTLECASTLE_SETUPFIRSTOPPONENT",
+   "handler": "FrontierScrCmd_BattleCastle_SetupFirstOpponent",
+   "name": "BattleCastle_SetupFirstOpponent",
+   "args": [],
+   "macro": true
+  },
+  "159": {
+   "const": "FRSCRCMD_BATTLECASTLE_SETUPNEXTOPPONENT",
+   "handler": "FrontierScrCmd_BattleCastle_SetupNextOpponent",
+   "name": "BattleCastle_SetupNextOpponent",
+   "args": [],
+   "macro": true
+  },
+  "160": {
+   "const": "FRSCRCMD_CALLBATTLECASTLEFUNCTION",
+   "handler": "FrontierScrCmd_CallBattleCastleFunction",
+   "name": "CallBattleCastleFunction",
+   "args": [
+    [
+     "u8",
+     "command"
+    ],
+    [
+     "u8",
+     "arg1"
+    ],
+    [
+     "u8",
+     "arg2"
+    ],
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "161": {
+   "const": "FRSCRCMD_BATTLECASTLE_CHECKWONBATTLE",
+   "handler": "FrontierScrCmd_BattleCastle_CheckWonBattle",
+   "name": "BattleCastle_CheckWonBattle",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "162": {
+   "const": "FRSCRCMD_BATTLECASTLE_SENDCOMMMESSAGE",
+   "handler": "FrontierScrCmd_BattleCastle_SendCommMessage",
+   "name": "BattleCastle_SendCommMessage",
+   "args": [
+    [
+     "u16",
+     "command"
+    ],
+    [
+     "u16",
+     "arg"
+    ],
+    [
+     "u16",
+     "result"
+    ]
+   ],
+   "macro": true
+  },
+  "163": {
+   "const": "FRSCRCMD_BATTLECASTLE_WAITFORCOMMRESPONSES",
+   "handler": "FrontierScrCmd_BattleCastle_WaitForCommResponses",
+   "name": "BattleCastle_WaitForCommResponses",
+   "args": [
+    [
+     "u16",
+     "unused"
+    ]
+   ],
+   "macro": true
+  },
+  "164": {
+   "const": "FRSCRCMD_DUMMYOPENBATTLECASTLEAPP",
+   "handler": "FrontierScrCmd_DummyOpenBattleCastleApp",
+   "name": "DummyOpenBattleCastleApp",
+   "args": [],
+   "macro": true
+  },
+  "165": {
+   "const": "FRSCRCMD_A5",
+   "handler": "FrontierScrCmd_A5",
+   "name": "FrontierScrCmd_A5",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "166": {
+   "const": "FRSCRCMD_GETCURRENTCASTLEPOINTS",
+   "handler": "FrontierScrCmd_GetCurrentCastlePoints",
+   "name": "GetCurrentCastlePoints",
+   "args": [
+    [
+     "u16",
+     "challengeType"
+    ],
+    [
+     "u16",
+     "result"
+    ]
+   ],
+   "macro": true
+  },
+  "167": {
+   "const": "FRSCRCMD_SPENDCASTLEPOINTS",
+   "handler": "FrontierScrCmd_SpendCastlePoints",
+   "name": "SpendCastlePoints",
+   "args": [
+    [
+     "u16",
+     "challengeType"
+    ],
+    [
+     "u16",
+     "cp"
+    ]
+   ],
+   "macro": true
+  },
+  "168": {
+   "const": "FRSCRCMD_RECEIVECASTLEPOINTS",
+   "handler": "FrontierScrCmd_ReceiveCastlePoints",
+   "name": "ReceiveCastlePoints",
+   "args": [
+    [
+     "u16",
+     "challengeType"
+    ],
+    [
+     "u16",
+     "cp"
+    ]
+   ],
+   "macro": true
+  },
+  "169": {
+   "const": "FRSCRCMD_BATTLECASTLE_PRINTRAINERINTRO",
+   "handler": "FrontierScrCmd_BattleCastle_PrintTrainerIntro",
+   "name": "BattleCastle_PrintTrainerIntro",
+   "args": [
+    [
+     "u8",
+     "index"
+    ]
+   ],
+   "macro": true
+  },
+  "170": {
+   "const": "FRSCRCMD_INITWFCFACILITYSELECTOR",
+   "handler": "FrontierScrCmd_InitWFCFacilitySelector",
+   "name": "InitWFCFacilitySelector",
+   "args": [],
+   "macro": true
+  },
+  "171": {
+   "const": "FRSCRCMD_FREEWFCFACILITYSELECTOR",
+   "handler": "FrontierScrCmd_FreeWFCFacilitySelector",
+   "name": "FreeWFCFacilitySelector",
+   "args": [],
+   "macro": true
+  },
+  "172": {
+   "const": "FRSCRCMD_WFCFACILITYSELECTOR_SENDCOMMMESSAGE",
+   "handler": "FrontierScrCmd_WFCFacilitySelector_SendCommMessage",
+   "name": "WFCFacilitySelector_SendCommMessage",
+   "args": [
+    [
+     "u16",
+     "command"
+    ],
+    [
+     "u16",
+     "arg1"
+    ],
+    [
+     "u16",
+     "arg2"
+    ],
+    [
+     "u16",
+     "success"
+    ]
+   ],
+   "macro": true
+  },
+  "173": {
+   "const": "FRSCRCMD_WFCFACILITYSELECTOR_WAITFORCOMMRESPONSES",
+   "handler": "FrontierScrCmd_WFCFacilitySelector_WaitForCommResponses",
+   "name": "WFCFacilitySelector_WaitForCommResponses",
+   "args": [
+    [
+     "u16",
+     "unused"
+    ]
+   ],
+   "macro": true
+  },
+  "174": {
+   "const": "FRSCRCMD_CHECKIFSAMEFACILITYCHOSEN",
+   "handler": "FrontierScrCmd_CheckIfSameFacilityChosen",
+   "name": "CheckIfSameFacilityChosen",
+   "args": [
+    [
+     "u16",
+     "facility"
+    ],
+    [
+     "u16",
+     "result"
+    ]
+   ],
+   "macro": true
+  },
+  "175": {
+   "const": "FRSCRCMD_MANAGEFACILITYSELECTORSUBAPP",
+   "handler": "FrontierScrCmd_ManageFacilitySelectorSubApp",
+   "name": "ManageFacilitySelectorSubApp",
+   "args": [
+    [
+     "u16",
+     "unused"
+    ],
+    [
+     "u16",
+     "action"
+    ],
+    [
+     "u16",
+     "result"
+    ]
+   ],
+   "macro": true
+  },
+  "176": {
+   "const": "FRSCRCMD_GETSELECTEDPARTYMENUSLOTS",
+   "handler": "FrontierScrCmd_GetSelectedPartyMenuSlots",
+   "name": "GetSelectedPartyMenuSlots",
+   "args": [
+    [
+     "u16",
+     "selectedSlot1"
+    ],
+    [
+     "u16",
+     "selectedSlot2"
+    ]
+   ],
+   "macro": true
+  },
+  "177": {
+   "const": "FRSCRCMD_CHECKIFPARTNERDROPPEDOUT",
+   "handler": "FrontierScrCmd_CheckIfPartnerDroppedOut",
+   "name": "CheckIfPartnerDroppedOut",
+   "args": [
+    [
+     "u16",
+     "didDropOut"
+    ]
+   ],
+   "macro": true
+  },
+  "178": {
+   "const": "FRSCRCMD_CALLWFCFACILITYSELECTORFUNCTION",
+   "handler": "FrontierScrCmd_CallWFCFacilitySelectorFunction",
+   "name": "CallWFCFacilitySelectorFunction",
+   "args": [
+    [
+     "u8",
+     "command"
+    ],
+    [
+     "u8",
+     "arg1"
+    ],
+    [
+     "u8",
+     "arg2"
+    ],
+    [
+     "u16",
+     "returnVar"
+    ]
+   ],
+   "macro": true
+  },
+  "179": {
+   "const": "FRSCRCMD_INITBATTLETOWER",
+   "handler": "FrontierScrCmd_InitBattleTower",
+   "name": "InitBattleTower",
+   "args": [],
+   "macro": true
+  },
+  "180": {
+   "const": "FRSCRCMD_SENDTOWERTRAINERIDLIST",
+   "handler": "FrontierScrCmd_SendTowerTrainerIDList",
+   "name": "SendTowerTrainerIDList",
+   "args": [
+    [
+     "u16",
+     "success"
+    ]
+   ],
+   "macro": true
+  },
+  "181": {
+   "const": "FRSCRCMD_WAITFORTOWERTRAINERIDLISTRESPONSES",
+   "handler": "FrontierScrCmd_WaitForTowerTrainerIDListResponses",
+   "name": "WaitForTowerTrainerIDListResponses",
+   "args": [],
+   "macro": true
+  },
+  "182": {
+   "const": "FRSCRCMD_FREEBATTLETOWER",
+   "handler": "FrontierScrCmd_FreeBattleTower",
+   "name": "FreeBattleTower",
+   "args": [],
+   "macro": true
+  },
+  "183": {
+   "const": "FRSCRCMD_SETWIFILISTHOSTFRIENDCURRENTDATE",
+   "handler": "FrontierScrCmd_SetWiFiListHostFriendCurrentDate",
+   "name": "SetWiFiListHostFriendCurrentDate",
+   "args": [],
+   "macro": true
+  },
+  "184": {
+   "const": "FRSCRCMD_INITBATTLEARCADE",
+   "handler": "FrontierScrCmd_InitBattleArcade",
+   "name": "InitBattleArcade",
+   "args": [
+    [
+     "u16",
+     "resumingFromSave"
+    ],
+    [
+     "u16",
+     "challengeType"
+    ],
+    [
+     "u16",
+     "partySlot1"
+    ],
+    [
+     "u16",
+     "partySlot2"
+    ],
+    [
+     "u16",
+     "partySlot3"
+    ],
+    [
+     "u16",
+     "arg5"
+    ]
+   ],
+   "macro": true
+  },
+  "185": {
+   "const": "FRSCRCMD_BATTLEARCADE_LOADTRAINERSFORROUND",
+   "handler": "FrontierScrCmd_BattleArcade_LoadTrainersForRound",
+   "name": "BattleArcade_LoadTrainersForRound",
+   "args": [
+    [
+     "u16",
+     "resumingFromSave"
+    ]
+   ],
+   "macro": true
+  },
+  "186": {
+   "const": "FRSCRCMD_FREEBATTLEARCADE",
+   "handler": "FrontierScrCmd_FreeBattleArcade",
+   "name": "FreeBattleArcade",
+   "args": [],
+   "macro": true
+  },
+  "187": {
+   "const": "FRSCRCMD_BATTLEARCADE_CLEANUPBATTLE",
+   "handler": "FrontierScrCmd_BattleArcade_CleanupBattle",
+   "name": "BattleArcade_CleanupBattle",
+   "args": [],
+   "macro": true
+  },
+  "188": {
+   "const": "FRSCRCMD_BATTLEARCADE_STARTBATTLE",
+   "handler": "FrontierScrCmd_BattleArcade_StartBattle",
+   "name": "BattleArcade_StartBattle",
+   "args": [],
+   "macro": true
+  },
+  "189": {
+   "const": "FRSCRCMD_BATTLEARCADE_SETUPFIRSTOPPONENT",
+   "handler": "FrontierScrCmd_BattleArcade_SetupFirstOpponent",
+   "name": "BattleArcade_SetupFirstOpponent",
+   "args": [],
+   "macro": true
+  },
+  "190": {
+   "const": "FRSCRCMD_BATTLEARCADE_SETUPNEXTOPPONENT",
+   "handler": "FrontierScrCmd_BattleArcade_SetupNextOpponent",
+   "name": "BattleArcade_SetupNextOpponent",
+   "args": [],
+   "macro": true
+  },
+  "191": {
+   "const": "FRSCRCMD_CALLBATTLEARCADEFUNCTION",
+   "handler": "FrontierScrCmd_CallBattleArcadeFunction",
+   "name": "CallBattleArcadeFunction",
+   "args": [
+    [
+     "u8",
+     "command"
+    ],
+    [
+     "u16",
+     "arg1"
+    ],
+    [
+     "u16",
+     "arg2"
+    ],
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "192": {
+   "const": "FRSCRCMD_BATTLEARCADE_CHECKWONBATTLE",
+   "handler": "FrontierScrCmd_BattleArcade_CheckWonBattle",
+   "name": "BattleArcade_CheckWonBattle",
+   "args": [
+    [
+     "u16",
+     "destVar"
+    ]
+   ],
+   "macro": true
+  },
+  "193": {
+   "const": "FRSCRCMD_BATTLEARCADE_SENDCOMMMESSAGE",
+   "handler": "FrontierScrCmd_BattleArcade_SendCommMessage",
+   "name": "BattleArcade_SendCommMessage",
+   "args": [
+    [
+     "u16",
+     "command"
+    ],
+    [
+     "u16",
+     "arg"
+    ],
+    [
+     "u16",
+     "successs"
+    ]
+   ],
+   "macro": true
+  },
+  "194": {
+   "const": "FRSCRCMD_BATTLEARCADE_WAITFORCOMMRESPONSES",
+   "handler": "FrontierScrCmd_BattleArcade_WaitForCommResponses",
+   "name": "BattleArcade_WaitForCommResponses",
+   "args": [
+    [
+     "u16",
+     "unused"
+    ]
+   ],
+   "macro": true
+  },
+  "195": {
+   "const": "FRSCRCMD_OPENBATTLEARCADEAPP",
+   "handler": "FrontierScrCmd_OpenBattleArcadeApp",
+   "name": "OpenBattleArcadeApp",
+   "args": [],
+   "macro": true
+  },
+  "196": {
+   "const": "FRSCRCMD_BATTLEARCADE_PRINTTRAINERINFO",
+   "handler": "FrontierScrCmd_BattleArcade_PrintTrainerIntro",
+   "name": "BattleArcade_PrintTrainerInfo",
+   "args": [
+    [
+     "u8",
+     "index"
+    ]
+   ],
+   "macro": true
+  },
+  "197": {
+   "const": "FRSCRCMD_APPLYARCADEEFFECT",
+   "handler": "FrontierScrCmd_ApplyArcadeEffect",
+   "name": "ApplyArcadeEffect",
+   "args": [],
+   "macro": true
+  },
+  "198": {
+   "const": "FRSCRCMD_SETITEMDRAWFLAG",
+   "handler": "FrontierScrCmd_SetItemDrawFlag",
+   "name": "SetItemDrawFlag",
+   "args": [
+    [
+     "u16",
+     "isOpponent"
+    ],
+    [
+     "u16",
+     "slot"
+    ],
+    [
+     "u16",
+     "draw"
+    ]
+   ],
+   "macro": true
+  },
+  "199": {
+   "const": "FRSCRCMD_C7",
+   "handler": "FrontierScrCmd_C7",
+   "name": "FrontierScrCmd_C7",
+   "args": [],
+   "macro": true
+  },
+  "200": {
+   "const": "FRSCRCMD_C8",
+   "handler": "FrontierScrCmd_C8",
+   "name": "FrontierScrCmd_C8",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "201": {
+   "const": "FRSCRCMD_C9",
+   "handler": "FrontierScrCmd_C9",
+   "name": "FrontierScrCmd_C9",
+   "args": [
+    [
+     "u16",
+     "arg0"
+    ]
+   ],
+   "macro": true
+  },
+  "202": {
+   "const": "FRSCRCMD_SETMENUXORIGINSIDE",
+   "handler": "FrontierScrCmd_SetMenuXOriginSide",
+   "name": "SetMenuXOriginSide",
+   "args": [
+    [
+     "u8",
+     "isRightSide"
+    ]
+   ],
+   "macro": true
+  },
+  "203": {
+   "const": "FRSCRCMD_SETMENUYORIGINSIDE",
+   "handler": "FrontierScrCmd_SetMenuYOriginSide",
+   "name": "SetMenuYOriginSide",
+   "args": [
+    [
+     "u8",
+     "isBottomSide"
+    ]
+   ],
+   "macro": true
+  }
+ }
+}

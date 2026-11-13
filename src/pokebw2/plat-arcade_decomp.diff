@@ -1,0 +1,50 @@
+diff --git a/include/pearlb2.h b/include/pearlb2.h
+index 4c44b93..513af1c 100644
+--- a/include/pearlb2.h
++++ b/include/pearlb2.h
+@@ -353,6 +353,13 @@ GameEvent *PearlB2_CommonEvent(u32 id, GameSystem *gsys, Field *field);
+ void PearlB2_UserStep(GameData *gameData);
+ u32 PearlB2_ConvFieldWeather(Field *field);
+ u32 PearlB2_MoveAccuracy(BtlServerFlow *flow, BattleMon *mon, BattleMon *target, void *param);
++// (plat-arcade, 2026-11-07) Platinum's Battle Arcade (src/pearlb2/plat_arcade/, overlay 381, include/pearlb2/plat_arcade.h):
++// the board's Foggy Battle sets Pearl's fog for the next battle, after SaveBtlFieldStatus noted the zone's
++// (src/pearlb2/resident/leftovers.c); and BtlServerFlow_StartBattle's ServerControl_AfterSwitchIn call (ov167
++// btl_server_flow.c) comes to PearlB2_Arcade_AfterSwitchIn (src/pearlb2/resident/plat_arcade_ext.c): the Arcade's battle that
++// the board gave Trick Room starts with it for five turns, before the abilities on entry, as Platinum's
++void PearlB2_SetBattleFog(BOOL fog);
++BOOL PearlB2_Arcade_AfterSwitchIn(BtlServerFlow *flow);
+ u32 PearlB2_RockClimbCheck(struct PlayerActionPossibilities *context);
+ GameEvent *PearlB2_RockClimbCreate(struct HiddenEventArgs *args, struct PlayerActionPossibilities *context);
+ void PearlB2_GaugePinch(struct BtlvGauge *gauge);
+diff --git a/src/ov167/btl_server_flow.c b/src/ov167/btl_server_flow.c
+index fd4df78..b226465 100644
+--- a/src/ov167/btl_server_flow.c
++++ b/src/ov167/btl_server_flow.c
+@@ -143,7 +143,11 @@ BOOL BtlServerFlow_StartBattle(BtlServerFlow *flow) {
+             }
+         }
+     }
++#if PEARLB2
++    if (PearlB2_Arcade_AfterSwitchIn(flow)) {   // the Arcade's Trick Room first (plat-arcade), then the original
++#else
+     if (ServerControl_AfterSwitchIn(flow)) {
++#endif
+         result = TRUE;
+     }
+     return result;
+diff --git a/src/pearlb2/resident/leftovers.c b/src/pearlb2/resident/leftovers.c
+index 951c69e..a257f6f 100644
+--- a/src/pearlb2/resident/leftovers.c
++++ b/src/pearlb2/resident/leftovers.c
+@@ -163,6 +163,11 @@ u32 PearlB2_ConvFieldWeather(Field *field) {
+     return ConvFieldWeatherToBtl(field);
+ }
+ 
++// (plat-arcade) the Battle Arcade's Foggy Battle: the next battle under fog, whatever the zone's (plat_arcade/arcade_field.c)
++void PearlB2_SetBattleFog(BOOL fog) {
++    sBattleFog = fog;
++}
++
+ u32 PearlB2_MoveAccuracy(BtlServerFlow *flow, BattleMon *mon, BattleMon *target, void *param) {
+     u32 accuracy = ServerEvent_GetMoveAccuracy(flow, mon, target, param);
+ 

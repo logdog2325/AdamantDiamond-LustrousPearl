@@ -33,6 +33,7 @@ import numpy as np
 import pearl_mesh
 from pearl_mesh import Vertex, lerp
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
+import version  # noqa: E402
 
 GAP = 2.25             # HoennB2's 2-unit rule (exterior_layers MIN_GAP 2.0), plus a margin: pieces bent over
 #                        curved cliffs move as one and their planes differ by a few degrees
@@ -43,6 +44,7 @@ TREE_GAP = 3.25        # tree cards (the polish pass, 2026-10-20; user, melonDS:
 #                        to one depth value; 3.25 gives >= 1.1 steps at every row (pearl_seams_check --depth). Levels:
 #                        rows' cards 0, single trees 3.25 / 6.5 (= MAX_PUSH) by column
 UNDER = 4.0            # under-floor drop (HoennB2 world.py UNDERFLOOR / water.py SEAM_DROP)
+UNDER_DEEP = 8.0       # (GROUND_STAYS) the second try where the copy at UNDER would crowd another surface
 TRIM = 8.0             # under-floor cut back from an edge the camera can see past (at most)
 FLAT = 0.95            # the under-floor goes under flat ground only (not the gentle bottoms and tops of cliffs)
 EPS = 0.05             # a vertex this close to an edge lies on it (HoennB2 tjunction.EPS)
@@ -83,17 +85,43 @@ def _normal(P):
     return (np.array(n) / L, L / 2) if L > 1e-9 else (None, 0)
 
 
-def items(model, shift=(0.0, 0.0), own=True):
-    """[Item] of a pearl_mesh.Model (positions in map units, moved by shift = (dx, dz))."""
+NODE_SHIFT = version.NODE_SHIFT
+
+
+def node_shift(model):
+    """Per shape, the translation of the node it is drawn with, in map units (pearl_mesh shape_translations): what the DS
+    adds to its vertices. Zeros without version.NODE_SHIFT (Pearl's and Diamond's builds: their chunks 410 and 417 keep the
+    older fixes)."""
+    t = getattr(model, '_node_shift', None)
+    if t is None:
+        t = [np.array(v, float) for v in model.shape_translations()] if NODE_SHIFT else \
+            [np.zeros(3) for _ in model.shapes]
+        model._node_shift = t
+    return t
+
+
+def _world_key(model, si, v, ps):
+    """Where a corner of shape si is drawn, as apply_shifts keys its moves: the raw position without NODE_SHIFT (as
+    before), else the position in map units with the node's translation (corners of shapes on different nodes meet)."""
+    if not NODE_SHIFT: return v.pos
+    t = node_shift(model)[si]
+    return _key((v[0] * ps + t[0], v[1] * ps + t[1], v[2] * ps + t[2]))
+
+
+def items(model, shift=(0.0, 0.0), own=True, nodes=False):
+    """[Item] of a pearl_mesh.Model (positions in map units, moved by shift = (dx, dz)). nodes: a land model: each shape
+    where it is drawn, its node's translation added (node_shift; nothing without version.NODE_SHIFT)."""
     out = []
     ps = model.pos_scale / 4096
     off = np.array([shift[0], 0.0, shift[1]])
+    tr = node_shift(model) if nodes else None
     for si, s in enumerate(model.shapes):
         if s.material is None: continue
         pa = model.poly_attr(s.material)
+        o = off + tr[si] if nodes else off
         for gi, (_, polys) in enumerate(s.groups):
             for k, p in enumerate(polys):
-                P = np.array([v.pos for v in p], float) * ps + off
+                P = np.array([v.pos for v in p], float) * ps + o
                 n, area = _normal(P)
                 if n is None: continue
                 it = Item()
@@ -186,8 +214,9 @@ def same_texels(a, b, pts):
 
 
 def overlaps(its, gap=GAP, same=same_texels):
-    """[(i, j, g, area)]: items i, j (indexes) facing the same way whose overlap is at least 0.5 units^2, with j's plane
-    g (>= 0) behind i's along i's normal, g < gap. Skips pairs same_texels(a, b, points) says draw the same texels."""
+    """[(i, j, g, area, cross, width)]: items i, j (indexes) facing the same way whose overlap is at least 0.5 units^2,
+    with j's plane g (>= 0) behind i's along i's normal, g < gap; cross: their planes cross inside the overlap (g 0);
+    width: the overlap's area over its length. Skips pairs same_texels(a, b, points) says draw the same texels."""
     buckets = collections.defaultdict(list)
     for i, it in enumerate(its):
         ax = int(np.argmax(np.abs(it.n)))
@@ -220,9 +249,12 @@ def overlaps(its, gap=GAP, same=same_texels):
                 else: g = 0.0                                # (they cross: level)
                 if abs(g) >= gap: continue
                 if same and same(a, b, pts3): continue
+                cross = lo < -0.01 and hi > 0.01             # (the planes cross inside the overlap)
+                ar = _area2(ov)
+                wide = ar / max(1e-6, max(math.dist(p, q) for p in ov for q in ov))   # (its width across its length)
                 if g > 0 or (g == 0 and lo >= -0.01 and hi > 0.01):
-                    out.append((j, i, g, _area2(ov)))        # (front, back): j is in front of i
-                else: out.append((i, j, -g, _area2(ov)))
+                    out.append((j, i, g, ar, cross, wide))   # (front, back): j is in front of i
+                else: out.append((i, j, -g, ar, cross, wide))
     return out
 
 
@@ -252,6 +284,54 @@ def base_shift(it):
     return TREE_GAP * (1 + math.floor(it.P.mean(0)[0] / 32) % 2)
 
 
+# The ground stays (2026-11-02, Platinum's snow patches; version.GROUND_STAYS): a big ground piece (4 tiles or more) moves
+# only against a bigger piece, whichever polygon of the two lies over the other (a smaller decal moves, ground or not); one
+# ground texture drawn twice in one plane stays as it is; of two level ground pieces the smaller one is on top. Moved, a
+# piece of the ground parts from the ground round it: black seams in Platinum's Twinleaf (its snow patches) and Survival
+# Area (overlapping grass). Pearl's and Diamond's 1.0 chunks had the older rule; 1.0.1 turns it on for them (notes/V1_0_1.md
+# "The ground fix").
+GROUND_STAYS = version.GROUND_STAYS
+SELF_PAIRS_STAY = version.SELF_PAIRS_STAY
+SELF_PAIRS = [0]                       # pairs inside one piece left alone (SELF_PAIRS_STAY)
+BOTH_STAY = [0]        # times GROUND_STAYS left one ground drawn twice where it is
+CROSS_STAY = [0]       # times GROUND_STAYS left two crossing planes, or two pieces meeting in a sliver, alone
+EDGE_SLIVER = 1.0      # units: an overlap narrower than this along an edge is the joint, not a layer
+# A face that shares corners with a moved piece follows it unless it is (nearly) parallel: walls follow a moved floor, decals
+# beside it stay. GROUND_STAYS: a slope follows too, up to 25 degrees from the moved piece's plane, when it shares an edge (two
+# corners) with that piece, or is a small polygon (FOLLOW_SMALL units^2: the corner pieces between) and the piece moved toward
+# the camera: Platinum's Lost Tower stair landings went up 3.5 over their shadow decals and parted from the ramps below them
+# (2026-11-02). One corner of a big polygon isn't enough: twisted, it parts from the rest (a shadow decal's corner on a
+# platform's bevel, chunk 55; a jump ledge's foot on Victory Road 2F's long wall); nor a small one's of a decal that went back
+# (a bridge's shadow on Route 215, chunks 69 and 70).
+FOLLOW = 0.9 if GROUND_STAYS else 0.5
+FOLLOW_SMALL = 64.0
+DECAL_FLIPS = [0]      # times separate()'s decal rule kept a big ground piece still (or with DECAL_PIECES any bigger piece)
+# The seams seen from the side (1.0.1, 2026-11-07, v101-seams; version.SEAM_GUARDS, all three versions). A piece moved
+# toward or away from the camera along VIEW stays where it was on screen only seen along VIEW; the DS's perspective camera
+# sees it from up to 26 degrees aside, so a moved piece parts from the faces round it there (pearl_seams_check --holes
+# --views). Three guards, so the smaller piece moves, or nothing does, or a small polygon isn't twisted off its floor:
+# - DECAL_PIECES: the decal rule moves the piece of the polygon that lies wholly over or under the other; a bigger piece
+#   that faces the camera (|n . VIEW| >= 0.5) never goes as the decal of a smaller one (GROUND_STAYS did this for big ground
+#   pieces only). The Contest Hall lobby's back wall (1,804 units^2) went back 1.81 under a 512 units^2 band (two black
+#   lines), Route 210 North's cliff (993) 1.32 under a 172 units^2 shadow (a line at the corner). Side faces keep the old
+#   rule: flipped there, Veilstone Dept. Store's shelves kept more layers too close (flicker pairs 1F 39 -> 55).
+# - SLIVER_TREES: the sliver rule (EDGE_SLIVER) for a tree against anything that isn't a tree too: a neighbour chunk's
+#   tree card that overlapped Valor Lakefront's cliff foot in a sliver 0.5 units wide (2.2 units^2) sent the whole strip
+#   (993 units^2) 3.8 units back: the long line along the foot (1.0) and, with FOLLOW, the corner's line (1.0.1).
+# - SLOPES_HELD: when a piece moves LIFT units or more, a small polygon that would follow one of its corners (FOLLOW_SMALL)
+#   stays where an unmoved polygon in the moved piece's plane holds that corner by an edge (_held_corners): the floor beside
+#   a lifted mat holds the wall's foot. In Turnback Cave's Giratina room (449) the entrance mat went up 2.25 and the wall's
+#   foot beside it twisted after it: two short black marks by the entrance (1.0 had none; a speck is left). Smaller moves
+#   follow as before (they keep small gaps closed). (A wider guard that also kept slopes from following a decal lifted off the floor fixed the
+#   entrance fully but opened Sendoff Spring's shore, chunks 443 and 444: left out.)
+SEAM_GUARDS = version.SEAM_GUARDS
+SLIVER_TREES = GROUND_STAYS and SEAM_GUARDS
+DECAL_PIECES = GROUND_STAYS and SEAM_GUARDS
+SLOPES_HELD = GROUND_STAYS and SEAM_GUARDS
+LIFT = 1.0             # (SLOPES_HELD) units a piece moves before a held small polygon stays behind
+LEVEL_FLIPS = [0]      # times a level pair of ground pieces put the smaller piece on top against _level_front's choice
+
+
 def separate(its, gap=GAP):
     """Shifts {piece: units along its normal (negative: back)} that put every overlapping same-facing pair `gap`
     apart: tree cards by base_shift, then every pair still closer: across a chunk border our own piece moves away
@@ -265,11 +345,47 @@ def separate(its, gap=GAP):
         if it.piece not in shift: shift[it.piece] = base_shift(it)
         piece_area[it.piece] += it.area
     big_ground = lambda it: is_ground(it) and piece_area[it.piece] >= 1024
+    # (GROUND_STAYS) two pieces of one ground texture in one plane that overlap: the ground drawn twice (Platinum's
+    # Survival Area: slivers of its grass pieces overlap), not a layer; parted, a piece tears from the ground round it
+    twice = lambda a, b, g: abs(g) < 0.01 and coplanar(a, b) and a.mat.split('_lm')[0] == b.mat.split('_lm')[0]
     rel = []                                           # (front item, back item, current gap)
-    for i, j, g, ar in pairs:
+    for i, j, g, ar, cross, wide in pairs:
         a, b = its[i], its[j]                          # a in front of b by g
+        if SELF_PAIRS_STAY and a.piece == b.piece:
+            # (two polygons of one piece: the piece moves as one, so no shift can part them; counted, each round
+            # pushed it 2.25 further to MAX_PUSH: Platinum's Veilstone Store B1F's back wall went 4.5 units forward over
+            # its B1 sign and the panels on it, holes along the wall; 2026-11-02, plat-rooms)
+            SELF_PAIRS[0] += 1
+            continue
+        if GROUND_STAYS and wide < EDGE_SLIVER and not (is_tree(a.mat) and is_tree(b.mat) if SLIVER_TREES else
+                                                        is_tree(a.mat) or is_tree(b.mat)):   # (SEAM_GUARDS: a tree too)
+            CROSS_STAY[0] += 1; continue               # (two pieces that overlap only in a sliver less than a unit wide,
+        #                                                along an edge: a flicker there would be a line under a pixel,
+        #                                                and parted they open a seam along it: the Global Terminal's
+        #                                                trim band on its wall, the caverns' floor patches over their
+        #                                                lm2 quads, 2026-11-02)
+        if GROUND_STAYS and cross and not coplanar(a, b) and not (is_tree(a.mat) or is_tree(b.mat)):
+            CROSS_STAY[0] += 1; continue               # (two planes that cross: each shows where it is in front, as
+        #                                                Platinum draws them; moved, one comes off its neighbours: the
+        #                                                Global Terminal's trim band and wall, 2026-11-02)
+        if GROUND_STAYS and not (is_tree(a.mat) or is_tree(b.mat)) and twice(a, b, g):
+            BOTH_STAY[0] += 1; continue                # (one texture drawn twice in one plane, a wall as the ground:
+        #                                                Platinum's Lost Tower stairwells, pieces of st3 overlapping;
+        #                                                parted, they opened seams down the stairwell, 2026-11-02)
+        if GROUND_STAYS and abs(g) < 0.01 and coplanar(a, b) and min(a.area, b.area) > 0 \
+                and ar >= 0.99 * max(a.area, b.area):  # (two polygons on the same corners: the same depth at every
+            BOTH_STAY[0] += 1; continue                # pixel, so the one drawn first shows, as in Platinum; Veilstone
+        #                                                Store 1F's walls are drawn twice at the foot, d002 and lambert19:
+        #                                                moved, the floor's edge went with them, 2026-11-02)
         if g < 0.01 and coplanar(a, b) and not (tree_card(a) and tree_card(b)):
             f = _level_front(a, b) if is_tree(a.mat) == is_tree(b.mat) else (a if is_tree(a.mat) else b)
+            if GROUND_STAYS and is_ground(a) and is_ground(b) and (big_ground(a) or big_ground(b)) \
+                    and abs(piece_area[a.piece] - piece_area[b.piece]) > 1:
+                # (two level ground pieces, one of them big: the smaller piece is the one on top, whatever the two
+                # polygons' sizes, as the big one stays: Platinum's snow patches, blobs over edges at one height)
+                g_f = a if piece_area[a.piece] < piece_area[b.piece] else b
+                if g_f is not f: LEVEL_FLIPS[0] += 1
+                f = g_f
             a, b = (a, b) if f is a else (b, a)
         rel.append((a, b, g, ar))
     for _ in range(8):
@@ -284,6 +400,21 @@ def separate(its, gap=GAP):
             on_a, on_b = ar >= 0.9 * a.area, ar >= 0.9 * b.area   # (lies wholly over / under the other: a decal)
             if on_a != on_b and a.own == b.own and not (is_tree(a.mat) or is_tree(b.mat)):
                 back = on_b                            # (the decal moves: a ledge row on the grass, a rug)
+                # (one polygon decides it, but the whole piece moves: a big ground piece never goes as the decal of a
+                # smaller piece; Platinum's snow patches are polygons bigger than the grass tiles under them, and the
+                # town's whole ground went down under them in steps: black seams, no under-floor; 2026-11-02)
+                mover, other = (b, a) if back else (a, b)
+                if GROUND_STAYS and big_ground(mover):
+                    if twice(mover, other, g):         # (one ground drawn twice: both stay)
+                        BOTH_STAY[0] += 1; continue
+                    if piece_area[other.piece] < piece_area[mover.piece]:
+                        back = not back
+                        DECAL_FLIPS[0] += 1
+                elif DECAL_PIECES and piece_area[other.piece] < piece_area[mover.piece] and abs(float(mover.n @ VIEW)) >= 0.5:
+                    back = not back                    # (SEAM_GUARDS: a bigger piece facing the camera stays; the
+                    DECAL_FLIPS[0] += 1                # smaller one moves. Not a side face: flipped there, a store's
+                    #                                    shelves kept more layers too close: flicker, Veilstone Dept.
+                    #                                    Store 1F 39 -> 55 pairs)
                 if back and fa - need >= -MAX_PUSH: shift[b.piece] = fa - need; changed = True
                 elif not back and fb + need <= MAX_PUSH: shift[a.piece] = fb + need; changed = True
                 continue
@@ -297,9 +428,10 @@ def separate(its, gap=GAP):
             mover, other = (b, a) if back else (a, b)
             if big_ground(mover):                      # a big ground piece (4 tiles or more) moves only against a
                 if not other.own: continue             # bigger ground piece of this chunk; against a smaller one,
-                if is_ground(other) and piece_area[other.piece] < piece_area[mover.piece]:
-                    back = not back                    # that one moves; across a chunk border nothing (two grounds
-                    #                                    overlapping there; a room's floor)
+                if GROUND_STAYS and twice(mover, other, g):   # that one moves; across a chunk border nothing (two
+                    BOTH_STAY[0] += 1; continue        # grounds overlapping there; a room's floor). GROUND_STAYS: one
+                if (is_ground(other) or GROUND_STAYS) and piece_area[other.piece] < piece_area[mover.piece]:
+                    back = not back                    # ground drawn twice stays; a smaller decal moves, ground or not
             if back and fa - need >= -MAX_PUSH:
                 shift[b.piece] = fa - need; changed = True
             elif not back and fb + need <= MAX_PUSH:
@@ -366,26 +498,56 @@ def apply_shifts(model, its, shift):
             for it in by_piece[q]:
                 moved_items.add((it.shape, it.g, it.k))
                 for v in model.shapes[it.shape].groups[it.g][1][it.k]:
-                    moves.setdefault(v.pos, (raw, n))
+                    moves.setdefault(_world_key(model, it.shape, v, ps), (raw, n, shift.get(q, 0.0) > 0,
+                                                                         abs(shift.get(q, 0.0))))
     if not moves: return 0
+    held = _held_corners(own, moved_items) if SLOPES_HELD else {}
     for si, s in enumerate(model.shapes):
         for gi, (gt, polys) in enumerate(s.groups):
             for k, p in enumerate(polys):
                 mine = (si, gi, k) in moved_items
-                if not mine and not any(v.pos in moves for v in p): continue
+                if not mine and not any(_world_key(model, si, v, ps) in moves for v in p): continue
                 if not mine:                           # (another face: follows only if it is not parallel)
                     P = np.array([v.pos for v in p], float)
                     n, _ = _normal(P)
                 new = []
-                for v in p:
-                    m = moves.get(v.pos)
-                    if m and (mine or (n is not None and abs(float(n @ m[1])) < 0.5)):
+                hit = [moves.get(_world_key(model, si, v, ps)) for v in p]
+                small = not mine and FOLLOW > 0.5 and _normal(np.array([v.pos for v in p], float) * ps)[1] <= FOLLOW_SMALL
+                one = sum(h is not None for h in hit) == 1
+                hold = held.get((si, gi, k), ())       # (SLOPES_HELD: corners an unmoved polygon holds by an edge)
+                for i, (v, m) in enumerate(zip(p, hit)):
+                    if m and (mine or (n is not None and (abs(float(n @ m[1])) < 0.5 or (
+                            abs(float(n @ m[1])) < FOLLOW and ((small and m[2] and not (one and m[3] >= LIFT and any(
+                                float(hn @ m[1]) > 0.999 for j, hn in hold if j == i)))
+                                or sum(h is not None and h[1] is m[1] for h in hit) >= 2))))):
                         d = m[0]
                         new.append(v.moved(v[0] + d[0], v[1] + d[1], v[2] + d[2]))
                     else:
                         new.append(v)
                 polys[k] = new
     return len(moved_items)
+
+
+def _held_corners(own, moved_items):
+    """(SEAM_GUARDS) {(shape, group, index): [(corner index, normal)]}: for each own polygon, the corners on an edge it
+    shares with an unmoved own polygon, with that polygon's normal. A small polygon that follows one corner of a moved
+    piece does not follow it where an unmoved polygon in the moved piece's plane holds that corner by an edge: the floor
+    beside a lifted mat holds the wall's foot."""
+    edges = collections.defaultdict(list)
+    for it in own:
+        if (it.shape, it.g, it.k) in moved_items: continue
+        ks = [_key(q) for q in it.P]
+        for a in range(len(ks)):
+            edges[frozenset((ks[a], ks[(a + 1) % len(ks)]))].append(it.n)
+    out = {}
+    for it in own:
+        ks = [_key(q) for q in it.P]
+        for a in range(len(ks)):
+            b = (a + 1) % len(ks)
+            for hn in edges.get(frozenset((ks[a], ks[b])), ()):
+                if hn is it.n: continue
+                out.setdefault((it.shape, it.g, it.k), []).extend([(a, hn), (b, hn)])
+    return out
 
 
 # ----------------------------------------------------------------------------------------------------- T-junctions
@@ -430,9 +592,10 @@ def split(model, its, extra_points=()):
             extra.append(dedup)
         if not any(extra): continue
         nsplit += sum(1 for x in extra if x)
-        def vert(e, s, c):
+        t = node_shift(model)[it.shape] if NODE_SHIFT else None
+        def vert(e, s, c, t=t):
             va, vb = poly[e], poly[(e + 1) % k]
-            return lerp(va, vb, s, tuple(int(round(x / ps)) for x in c))
+            return lerp(va, vb, s, tuple(int(round(x / ps)) for x in (c if t is None else c - t)))
         edges = [e for e in range(k) if extra[e]]
         out = []
         if len(edges) == 1:
@@ -532,23 +695,36 @@ def underfloor(model, its, rays, skip=()):
     items left out (moved decals). Returns (added, trimmed, left out as crowded)."""
     from pearl_seams_check import Grid, tris_xz
     ps = model.pos_scale / 4096
-    drop = int(round(UNDER / ps))
     dirs = np.array(RAYS)
     added = trimmed = crowded = 0
     new = collections.defaultdict(list)
     flat = Grid(*tris_xz([it for it in its if it.alpha == 31 and abs(it.n[1]) > 0.7]))
     for it in its:
         if not (it.own and is_ground(it)) or it.n[1] < FLAT or (it.shape, it.g, it.k) in skip: continue
-        poly = [v.moved(y=v[1] - drop) for v in model.shapes[it.shape].groups[it.g][1][it.k]]
-        P = it.P - np.array([0, UNDER, 0])
-        k = len(P)
         # no copy where another surface lies within GAP of it (a lamp post's base 2.6 over the plaza: its copy would
-        # be 1.4 under the plaza floor and show through it)
-        ctr = P.mean(0)
-        S = np.array([ctr] + [ctr + 0.9 * (p - ctr) for p in P])
-        hs = flat.heights(S[:, [0, 2]])
-        if any(np.any(np.abs(h - y) < GAP) for h, y in zip(hs, S[:, 1])):
+        # be 1.4 under the plaza floor and show through it); with GROUND_STAYS a second try UNDER_DEEP down (Platinum's
+        # Twinleaf: a sand quad 3 under the path's edges, which crowded their copies out)
+        for under in (UNDER, UNDER_DEEP) if GROUND_STAYS else (UNDER,):
+            P = it.P - np.array([0, under, 0])
+            ctr = P.mean(0)
+            S = np.array([ctr] + [ctr + 0.9 * (p - ctr) for p in P])
+            if under != UNDER:                 # (the second try: the edges' middles too)
+                S = np.concatenate([S, [ctr + 0.9 * ((P[e] + P[(e + 1) % len(P)]) / 2 - ctr) for e in range(len(P))]])
+            hs = flat.heights(S[:, [0, 2]])
+            near = [h[np.abs(h - y) < GAP] for h, y in zip(hs, S[:, 1])]
+            if not any(len(h) for h in near): break
+            # (a second try only under a backing layer: every surface that crowded the first copy lies between it and
+            # the ground; a lower ground beside a terrace would fight the deeper copy)
+            if any(np.any((h <= y) | (h >= y + under)) for h, y in zip(near, S[:, 1])): break_ok = False
+            else: break_ok = True
+            if not break_ok: under = None; break
+        else:
+            under = None
+        if under is None:
             crowded += 1; continue
+        drop = int(round(under / ps))
+        poly = [v.moved(y=v[1] - drop) for v in model.shapes[it.shape].groups[it.g][1][it.k]]
+        k = len(P)
         # clip at each edge the camera could see past (its outward side not toward the north)
         cuts = []
         for e in range(k):
@@ -561,13 +737,14 @@ def underfloor(model, its, rays, skip=()):
             if nz < -0.5: continue                         # facing north: the camera looks at it over the ground
             m = max(2, int(L // 4) + 1)
             S = np.array([a + (b - a) * (i + 0.5) / m - np.array([nx, 0, nz]) * 0.5 for i in range(m)])
-            free = ~rays.hits(S, dirs, UNDER * 2.5 / 0.55)
+            free = ~rays.hits(S, dirs, under * 2.5 / 0.55)
             if free.any():                                 # cut as far in as an escaping ray reaches while it rises
-                reach = max(UNDER * (d[0] * nx + d[2] * nz) / d[1] for d, f in zip(dirs, free.any(0)) if f)
-                cuts.append((a, nx, nz, min(TRIM, max(1.0, reach + 1.0))))
+                reach = max(under * (d[0] * nx + d[2] * nz) / d[1] for d, f in zip(dirs, free.any(0)) if f)
+                cuts.append((a, nx, nz, min(TRIM * under / UNDER, max(1.0, reach + 1.0))))
+        t = node_shift(model)[it.shape]                   # (NODE_SHIFT: P is where the shape is drawn)
         for a, nx, nz, cut in cuts:                        # keep what lies `cut` or more inside the edge
-            def keep(v, a=a, nx=nx, nz=nz, cut=cut):
-                x, z = v[0] * ps, v[2] * ps
+            def keep(v, a=a, nx=nx, nz=nz, cut=cut, t=t):
+                x, z = v[0] * ps + t[0], v[2] * ps + t[2]
                 return -((x - a[0]) * nx + (z - a[2]) * nz) - cut
             poly = _clip_poly(poly, keep)
             if len(poly) < 3: break
@@ -591,7 +768,7 @@ def near_items(near):
     """Items of neighbour models [(pearl_mesh.Model, dx, dz)] within 32 units of this chunk's square."""
     out = []
     for nm, dx, dz in near:
-        for it in items(nm, (512 * dx, 512 * dz), own=False):
+        for it in items(nm, (512 * dx, 512 * dz), own=False, nodes=True):
             if np.all(np.abs(it.P[:, 0]) > 288) or np.all(np.abs(it.P[:, 2]) > 288): continue
             out.append(it)
     return out
@@ -607,14 +784,14 @@ def fix(bmd, near=(), fits=None, steps=STEPS, max_polys=None):
     tries = [steps] + [tuple(s for s in steps if s not in drop) for drop in (('split',), ('split', 'underfloor'))]
     for want in tries:
         model = pearl_mesh.Model(bmd)
-        its = items(model) + others
+        its = items(model, nodes=True) + others
         pieces(its)
         moved = set()
         if 'layers' in want:
             shift = separate(its)
             rep['moved'] = apply_shifts(model, its, shift)
             moved = {(it.shape, it.g, it.k) for it in its if it.own and it.piece in shift}
-            its = items(model) + others
+            its = items(model, nodes=True) + others
             pieces(its)
         if 'underfloor' in want:
             rep['underfloor'], rep['trimmed'], rep['crowded'] = underfloor(model, its, Rays(its), skip=moved)
@@ -887,13 +1064,15 @@ def people_amount(polys, box, tiles, lift=(0.0, 0.0)):
     return min(a, hs), min(a, hb), 0.0
 
 
-def _people_apply(model, members, box, s, b):
-    """Move the vertices of the polygons members [(shape, group, k)] by the block transform (raw positions)."""
+def _people_apply(model, members, box, s, b, nodes=False):
+    """Move the vertices of the polygons members [(shape, group, k)] by the block transform (raw positions; nodes: a
+    land model, box where its shapes are drawn: node_shift)."""
     ps = model.pos_scale / 4096
     for si, gi, k in members:
         poly = model.shapes[si].groups[gi][1][k]
-        P = np.array([v.pos for v in poly], float) * ps
-        Q = _people_moved(P, box, s, b)
+        t = node_shift(model)[si] if nodes else np.zeros(3)
+        P = np.array([v.pos for v in poly], float) * ps + t
+        Q = _people_moved(P, box, s, b) - t
         model.shapes[si].groups[gi][1][k] = [v.moved(int(round(q[0] / ps)), int(round(q[1] / ps)), int(round(q[2] / ps)))
                                              for v, q in zip(poly, Q)]
 
@@ -908,9 +1087,9 @@ def people_fix(bmd, tiles, raw=None):
     caps (the top of the same footprint in Pearl's model)."""
     if people_off() or not tiles: return bmd, []
     model = pearl_mesh.Model(bmd)
-    its = [it for it in items(model) if it.alpha > 0]
+    its = [it for it in items(model, nodes=True) if it.alpha > 0]
     if not its: return bmd, []
-    raw_its = [it for it in items(pearl_mesh.Model(raw)) if it.alpha > 0] if raw is not None else None
+    raw_its = [it for it in items(pearl_mesh.Model(raw), nodes=True) if it.alpha > 0] if raw is not None else None
     floor = min(t[2] for t in tiles)
     feet = sorted({round(t[2], 1) for t in tiles})
     lo = np.array([it.P.min(0) for it in its]); hi = np.array([it.P.max(0) for it in its])
@@ -977,7 +1156,7 @@ def people_fix(bmd, tiles, raw=None):
         s, b, left = people_amount([its[i].P for i in mem], box, near, lift)
         if left > 0: s, b = 0.0, 0.0                          # (not mendable within the caps: left as Pearl's)
         if s or b:
-            _people_apply(model, [(its[i].shape, its[i].g, its[i].k) for i in mem], box, s, b)
+            _people_apply(model, [(its[i].shape, its[i].g, its[i].k) for i in mem], box, s, b, nodes=True)
         report.append(dict(mats=sorted({its[i].mat for i in mem}), box=box, x=(float(L[0]), float(Hh[0])),
                            sink=s, pull=b, left=round(left, 2)))
     return model.encode(), report
@@ -1015,7 +1194,7 @@ def people_props():
     from gen4rom import Rom, narc_members
     root = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
     world = json.load(open(os.path.join(root, 'data', 'sinnoh_world.json')))
-    build = narc_members(Rom(os.path.join(root, 'roms', 'pearl.nds')).read('fielddata/build_model/build_model.narc'))
+    build = narc_members(Rom(version.WORLD_DUMP).read('fielddata/build_model/build_model.narc'))
     uses = collections.defaultdict(list)          # model id -> [(people tiles in the prop's frame)]
     for c in sorted(int(k) for k in world['rooms']['chunks']):
         land = json.load(open(os.path.join(pearl_chunk.LAND, f'{land_id(c):03d}.json')))
@@ -1185,7 +1364,7 @@ def stair_props():
     import pearl_chunk, pearl_buildings
     from gen4rom import Rom, narc_members
     root = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-    build = narc_members(Rom(os.path.join(root, 'roms', 'pearl.nds')).read('fielddata/build_model/build_model.narc'))
+    build = narc_members(Rom(version.WORLD_DUMP).read('fielddata/build_model/build_model.narc'))
     out = {}
     for mid, places in sorted(stair_placements().items()):
         pos = []

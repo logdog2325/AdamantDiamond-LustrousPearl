@@ -1,0 +1,34 @@
+{
+ "_doc": [
+  "The deliveryman's event Pokémon after his other gifts (the user, 2026-11-09: \"Mew, Celebi, Jirachi and Deoxys come from the",
+  "deliveryman after the Champion, as copies of real Gen 4-era events\"; notes/POSTGAME_DEX.md). patches/event_gifts.py makes each",
+  "a Black 2 Mystery Gift card (the fateful mark and met data come from Black 2's own maker, CreateMysteryGiftPokemon) for the",
+  "decomp's extension 0xA9; src/include/pearl_story.inc pl_DeliveryGive gives them in this order (pl_DeliveryEventSpecies names",
+  "them in the same order). Nature, IVs and personality at random, as the events'; the Met game is the build's (version.MET_GAME);",
+  "the met date is the day it is received. Moves and items by the decomp's names; place: Black 2's event place (system text",
+  "bank 110: 40001 + its line, 40001 'Lovely place', 40059 'Pokémon Event'). Source: Serebii's event pages",
+  "(serebii.net/events/dex/151, 251, 385, 386.shtml), read 2026-11-09; the Ranch Mew's ball and met place also from Project",
+  "Pokémon's event file (as a search quoted it). The four are English (USA) distributions for the Gen 4 games."],
+ "gifts": [
+  {"species": "SPECIES_MEW", "event": "My Pokémon Ranch, USA, from 9 May 2008 (Diamond, Pearl): Hayley's trade",
+   "level": 50, "ot": "Hayley", "ot_gender": 1, "id": 1000, "ball": "ITEM_CHERISH_BALL", "item": null,
+   "moves": ["MOVE_SYNTHESIS", "MOVE_RETURN", "MOVE_HYPNOSIS", "MOVE_TELEPORT"], "ribbons": [],
+   "place": 40001, "place_name": "Lovely place"},
+  {"species": "SPECIES_CELEBI", "event": "GameStop giveaway, USA, 21 Feb - 7 Mar 2011 (Diamond, Pearl, Platinum, HeartGold, SoulSilver)",
+   "level": 50, "ot": "WIN2011", "ot_gender": 0, "id": 2211, "ball": "ITEM_CHERISH_BALL", "item": "ITEM_JABOCA_BERRY",
+   "moves": ["MOVE_LEAF_STORM", "MOVE_RECOVER", "MOVE_NASTY_PLOT", "MOVE_HEALING_WISH"], "ribbons": ["classic"],
+   "place": 40059, "place_name": "Pokémon Event"},
+  {"species": "SPECIES_JIRACHI", "event": "GameStop, USA, 17 Feb - 13 May 2010 (Diamond, Pearl, Platinum)",
+   "level": 5, "ot": "GAMESTP", "ot_gender": 0, "id": 2270, "ball": "ITEM_CHERISH_BALL", "item": "ITEM_LIECHI_BERRY",
+   "moves": ["MOVE_WISH", "MOVE_CONFUSION", "MOVE_REST", "MOVE_DRACO_METEOR"], "ribbons": ["classic"],
+   "place": 40059, "place_name": "Pokémon Event"},
+  {"species": "SPECIES_DEOXYS", "event": "GameStop, USA, 20 Jun - 29 Jul 2008 (Diamond, Pearl); Normal Forme",
+   "level": 50, "ot": "Gamestp", "ot_gender": 0, "id": 6218, "ball": "ITEM_CHERISH_BALL", "item": "ITEM_NEVER_MELT_ICE",
+   "moves": ["MOVE_PSYCHO_BOOST", "MOVE_ZAP_CANNON", "MOVE_IRON_DEFENSE", "MOVE_EXTREME_SPEED"], "ribbons": ["classic"],
+   "place": 40059, "place_name": "Pokémon Event",
+   "note": "OT as Serebii spells it (its Jirachi of the same shop: GAMESTP); the event's own wc4 would settle it"}
+ ],
+ "ribbon_bits": {"_doc": "MysteryGiftPokemon.ribbons bits (decomp include/app/mystery/mystery_gift_data.h sRibbonParams: bit 4 = 0x33, the Classic Ribbon)",
+  "country": 0, "national": 1, "earth": 2, "world": 3, "classic": 4, "premier": 5, "event": 6, "birthday": 7, "special": 8,
+  "souvenir": 9, "wishing": 10}
+}

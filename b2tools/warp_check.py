@@ -35,6 +35,7 @@ import collections, json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 from patches import sinnoh_events  # noqa: E402
 pearl_chunk_ENTRANCES = sinnoh_events.pearl_chunk.ENTRANCES
@@ -147,9 +148,9 @@ class Warps:
     def reachable(self):
         """({zone: walkable tiles reached}, {(zone, warp index) usable})."""
         script_arrivals = collections.defaultdict(set)
-        for f in os.listdir(os.path.join(ROOT, 'work', 'pearl', 'scripts')):
+        for f in os.listdir(os.path.join(version.WORLD_WORK, 'scripts')):
             for m in re.finditer(r'\bWarp (0x[0-9A-F]+|\d+), \w+, (0x[0-9A-F]+|\d+), (0x[0-9A-F]+|\d+), ',
-                                 open(os.path.join(ROOT, 'work', 'pearl', 'scripts', f)).read()):
+                                 open(os.path.join(version.WORLD_WORK, 'scripts', f)).read()):
                 b2 = self.b2_of.get(int(m.group(1), 0))
                 if b2 is not None: script_arrivals[b2].add((int(m.group(2), 0), int(m.group(3), 0)))
         region = collections.defaultdict(set)
@@ -293,7 +294,7 @@ def check_heights(argv):
             built[c] = [layer[4:] for layer in layers]  # (each layer: u16 32, u16 32, then 8 bytes a tile)
             new_heights[c] = rep['heights']
             old = dict(rep['heights'])                  # what floor_mats recorded before 2026-10-26: the neighbour's
-            land = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{land_id(c):03d}.json')))
+            land = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{land_id(c):03d}.json')))
             for tx, tz, was, _ in rep.get('mats', []):
                 dx, dz = pearl_chunk.MAT_FROM[land['behaviour'][tz][tx]]
                 if was is None: old.pop((tx, tz), None)   # (before: a mat with no height kept none)

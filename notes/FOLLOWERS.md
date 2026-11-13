@@ -54,7 +54,8 @@ Test builds (TEST_START) leave the config out unless `TEST_FOLLOW=1`: the test d
 | ov036 entrance_camera.c | EventWarpSequence_StartWalkTask | `GameData_CheckPairFlag(warp->gameData)` | `Follower_WarpWalk(...)` (step 2): lets the follower walk out of the door with the player, then answers the pair flag |
 | ov012 pair_sys.c | s0250_ActorPairSet | `ChangeActorMoveCodeSeq(actor, 0x30)` | `Follower_PairStart(actor, 0x30)` (step 3): a partner (or Amity Square's walk) takes the follower's place at once |
 | ov036 event_trainer_eye.c | EventTrainerEye_CheckPathObstacle | `ActorRouteCollCheck(...)` (both calls) | `Follower_SightCollCheck(...)` (step 3): the follower is no wall for a trainer's eyes |
-`decomp.py changed` lists exactly these functions (4 bytes each: the bl; 8 for the two sight calls) and the resident section. PearlB2's own gimmick code calls
+| ov036 field_rail_loader.c | RailActorAnim_DrawWalking (scene nodes 10/11: Black 2's walking Pokémon), func_ov036_0219656c (scene node 2: a person's walker, Pearl's 13 sheets) | `CopyActorPosAllAdd(actor, &pos)` | `Follower_DrawPos(actor, &pos)` (plat-fix3): the follower on the player's row is drawn behind them (below, "Drawn over the player beside it") |
+`decomp.py changed` lists exactly these functions (4 bytes each: the bl; 8 for the two sight calls and for field_rail_loader.c's two) and the resident section. PearlB2's own gimmick code calls
 `Follower_Hide()` when it carries the player (step 2): the lifts' rides (pearl_platforms_itcm.c, both starts), the
 Sunyshore gears' turn (sunyshore_gym_itcm.c), Pastoria's water (pastoria_gym_itcm.c). A hidden follower is no obstacle
 (actor flag 0x80) and comes back behind the player at their next step.
@@ -104,8 +105,8 @@ ChangeActorMoveCodeSeq) and trainers see past it (EventTrainerEye_CheckPathObsta
 talking (a global script: the cry and one of Pearl's 9 Amity Square lines).
 
 ## Alpha 0.1 fixes (2026-10-27, tested in DeSmuME: work/agents/followers3/shots1, shots2)
-- **Floating:** Black 2 draws a walking Pokémon (scene node 10/11) 1.5 units up on most frames (a bob), 2 nearer the
-  camera and 2 to the side (field_rail_loader.c RailActorAnim_UpdateWalkOffset), except for uid 0xfc (its comm
+- **Floating:** Black 2 draws a walking Pokémon (scene node 10/11) 1.5 units up on most frames (a bob), 2 north (farther
+  from the camera, not nearer: plat-fix3) and 2 to the side (field_rail_loader.c RailActorAnim_UpdateWalkOffset), except for uid 0xfc (its comm
   players'). The follower is now 0xfc (told apart from comm players by its move code 0x30; alpha 0.1 saves' 0xfd
   follower is removed when the field opens and comes back as 0xfc). And a follower placed on a tile (made, sent out,
   put back) takes the ground's height there (CheckRecalcActorY), not the tile's whole height. Piplup (Black 2's sheet)
@@ -151,3 +152,46 @@ same Intro_SetConfigBit, whose arguments >= 16 set an event flag.
    a seamless zone line; a door out and back; the lead an Egg, fainted, a species without a sprite, a hack sheet, a
    64 x 64 one; bike and Surf; a wild battle (single, nothing healed) and a trainer; save, soft reset, Continue; a
    partner scene. Look at every frame for graphical errors.
+
+## Drawn over the player beside it (plat-fix3, 2026-11-12; was "Open (plat-fix2, 2026-11-11)")
+Reported: the follower overlaps the player after the field reopens (plat-test, no place); then plat-fix2's final checks of
+Platinum 1.0 (work/agents/plat-fix2/final/follower_beside_player_drawn_over.png): Garchomp beside the player on the same
+row drawn over them, the Tower lobby at (14, 6) and (12, 6), the Hall lobby at (8, 11), after walks.
+- **Cause.** Black 2 steps each of its walking Pokémon (scene nodes 10/11) 2 units north of its place, every frame
+  (field_rail_loader.c RailActorAnim_UpdateWalkOffset `offset.z -= 0x2000`: farther from the camera, so a person on its
+  row is in front). Alpha 0.1 made the follower uid 0xfc, whose offsets Black 2 zeroes (the bob, the side shift and this
+  step), so it stands on its tile. Beside the player on their row it is then at exactly the player's depth: the field
+  camera looks straight north (yaw 0 in Black 2's camera records; only a sideways target offset turns it, as in the
+  Castle corridor's picture room), so x changes no depth, in Black 2's flat draw and in the upright depth
+  (resident/people_depth.c) alike (the model below: 0 steps apart). The DS's depth test passes only a nearer pixel, so of
+  two equal ones the one drawn first stays, and that goes by the order of their billboard slots, which changes with what
+  was made and deleted before (why it came and went). The follower's picture is wider than a tile, so it covered the
+  player. Pearl's 13 sheets are person walkers (scene node 2: no offsets at all) and tie the same way. Not the follow
+  move code, not the placing: the order of drawing at equal depth.
+- **Fix (decomp diff `src/pokebw2/plat-fix3_decomp.diff`, against pearlb2 c2b0227997).** `Follower_DrawPos` (follower.c),
+  called in place of `CopyActorPosAllAdd` in field_rail_loader.c's two draws (nodes 10/11 and node 2): the same, then for
+  the follower only its billboard's place goes back along the line from the eye to it by two depth steps of the Z-buffer
+  at that distance (d * d / (16384 * near) units, at most 8; camera 0: 3.43 units). On that line its place stays on its
+  pixel; the picture is drawn 1.4 % smaller at camera 0 (its top 0.44 px lower; 2.2 % at most, at 362 units). The push
+  is whole on the player's row and fades out over one row north and south (1 - |dz| / 16 units), none a row away or
+  more: behind stays behind, in front stays in front, the order changes once when they cross. Not Black 2's own 2-unit
+  step: that draws the picture 1.8 px higher (the old floating look) and is under one depth step at camera 0 (still a tie
+  about 3 times in 10). Only the follower moves (uid 0xfc with move code 0x30, as FindFollower); shadows, grass, reflections
+  and everyone else read their own places.
+- **Proven offline.** clang -fsyntax-only and the decomp's mwcc (its flags) on both files: no errors or warnings;
+  field_rail_loader.o has every section the same size, and its disassembly differs only in the two calls' targets;
+  follower.o grows 358 B (.text). `git apply --check` on the decomp at c2b0227997. A model of camera 0 (the person's
+  quad, Black 2's projection and object offset, the upright matrix as people_depth.c computes it, the C's fixed point;
+  work/agents/plat-fix3/depth_model.py): beside the player 0 steps apart before, +2 (flat) and +2..+3 (upright) after;
+  a row behind +5 / +14..+17 and a row in front -6 / -18..-21, unchanged; between, one sign change.
+- **To check on screen** (the combined ROM, any version): a wide follower (Garchomp) in the Tower lobby
+  (MAP_BATTLE_TOWER_LOBBY, Black 2 zone 443) and, on Platinum, the Hall lobby (MAP_BATTLE_HALL, zone 689); both rooms
+  draw with the upright depth. Walk east and west along a row so it walks behind on the same row; stop with it beside the
+  player at (14, 6) and (12, 6) in the Tower lobby and (8, 11) in the Hall lobby: the player whole, in front. Walk north
+  and south past it (it swaps places when walked into): it is behind while north of the player and in front while
+  south, the change once, no flicker. Its feet stay on its tile (no float). The same on a route (Black 2's flat draw):
+  walk east and west, the player in front of it. Each frame of those walks clean.
+- **Porting:** HoennB2 copies follower.c/.h as they are and adds the two call changes in field_rail_loader.c under its
+  own switch. Checked read only (HoennB2 external/pokebw2_new 8b4e42137, 2026-11-12): field_rail_loader.c is `complete`
+  there with the same two lines (func_ov036_0219656c, RailActorAnim_DrawWalking), and the headers declare every function
+  Follower_DrawPos calls.

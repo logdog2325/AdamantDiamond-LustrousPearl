@@ -38,6 +38,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import narcio, nsbtx, pearl_mesh  # noqa: E402
 import pearl_model_fix as F  # noqa: E402
 from b2files import gf_container, gf_container_build  # noqa: E402
@@ -394,9 +395,9 @@ def add_textures(sets, group):
 
 # ------------------------------------------------------------------------------------------------------ apply
 def apply(files):
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     tpl = json.load(open(os.path.join(ROOT, 'data', 'season_ribbons.json')))['chunks']
-    m0 = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', '000.json')))
+    m0 = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', '000.json')))
     zones = {int(k): v for k, v in world['zones'].items()}
     chunk_ids = {int(k): v for k, v in world['chunks'].items()}
     cells = {}                                    # Pearl chunk -> (cx, cz, Pearl area) of its first cell
@@ -410,7 +411,7 @@ def apply(files):
         if pa == NORTH_AREA: continue
         b2 = chunk_ids[c]
         magic, secs = gf_container(chunks[b2])
-        land = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.json')))
+        land = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{c:03d}.json')))
         room = CHUNK_MAX - len(chunks[b2])
         new, kept = decorate(secs[0], land, cx, cz, tpl, budget=room)
         if new is not secs[0] and new != secs[0]:

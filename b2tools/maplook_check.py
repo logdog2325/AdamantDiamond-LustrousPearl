@@ -16,6 +16,7 @@ import json, os, sys, subprocess, glob
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 sys.path.insert(0, os.path.join(HERE, 'patches'))
 WORK = os.path.join(ROOT, 'work', 'maplook')
 APICULA = os.path.join(ROOT, 'tools', 'apicula')
@@ -27,8 +28,8 @@ def _fixes():
 
 
 def _area_of_chunk(chunk):
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', '000.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', '000.json')))
     zones = {int(k): v for k, v in world['zones'].items()}
     for z in range(m['height']):
         for x in range(m['width']):
@@ -43,7 +44,7 @@ def render(chunk, out=None):
     from gen4rom import Rom, narc_members
     from PIL import Image, ImageDraw
     area = _area_of_chunk(chunk)
-    pearl = narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read(
+    pearl = narc_members(Rom(version.WORLD_DUMP).read(
         'fielddata/areadata/area_map_tex/map_tex_set.narc'))[area['pearl_texset']]
     before, _ = sinnoh_reskin.reskin_sets()
     now, msg = sinnoh_reskin.reskin_sets(_fixes())
@@ -56,7 +57,7 @@ def render(chunk, out=None):
             tex = os.path.join(WORK, f'{tag}.nsbtx')
             open(tex, 'wb').write(btx)
             d = os.path.join(WORK, f'c{chunk}_{tag}')
-            subprocess.run([APICULA, 'convert', os.path.join(ROOT, 'work', 'pearl', 'land', f'{chunk:03d}.nsbmd'),
+            subprocess.run([APICULA, 'convert', os.path.join(version.WORLD_WORK, 'land', f'{chunk:03d}.nsbmd'),
                             tex, '-o', d, '-f', 'dae', '--overwrite'], check=True, capture_output=True)
             dae = glob.glob(os.path.join(d, '*.dae'))[0]
             exterior_check._TEX.clear()
@@ -81,9 +82,9 @@ def specks():
     Pearl-green lines along path, lawn and tall-grass edges, the Pearl-blue specks on shores)."""
     import struct, sinnoh_reskin, nsbtx, recolour
     from gen4rom import Rom, narc_members
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     pairs = sinnoh_reskin.pearl_pairs(int(c) for c in world['chunks'])
-    psets = narc_members(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read(
+    psets = narc_members(Rom(version.WORLD_DUMP).read(
         'fielddata/areadata/area_map_tex/map_tex_set.narc'))
     def pal(Pp, name):
         o = dict(Pp['pals'])[name][0] << 3

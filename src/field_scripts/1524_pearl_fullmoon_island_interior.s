@@ -21,6 +21,7 @@ P274_000C:
     pl_WaitSE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     MsgWinCloseAll  // (as Black 2's own uses: its window needs the message window gone)
     CallPokemonPreview 488, 0, 1, 0  // ShowPokemonPic
+    PokeDexRegist 0, 488  // DrawPokemonPreview marks the species seen (Black 2's preview doesn't)
 // WaitABPress: Black 2's Pokémon window waits itself
 // RemovePokemonPreview: Black 2's window closed itself
     pl_PlayCry 488
@@ -34,7 +35,7 @@ P274_000C:
     pl_RemoveObject 0, PFLAG_026D
     pl_ClearFlag PFLAG_0436
     pl_AddObjectAt 1, 0, 0  // at its SetObjectEventPos
-    pl_stub ActivateRoamingPokemon  // Pearl 0x21C CreateRoamer 1: not translated yet
+    pl_ActivateRoamingPokemon 1  // the roamer of slot 1 released (Black 2's roamer save)
     pl_SetFlag PFLAG_011F
     pl_msg_sys 0
     pl_WaitButton

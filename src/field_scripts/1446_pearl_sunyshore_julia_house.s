@@ -62,31 +62,31 @@ P159_0070:
     pl_GoTo P159_0104
 
 P159_00C8:
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 65: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x26  // GetPartyMonRibbon: the Smile Ribbon
     pl_Return
 
 P159_00D2:
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 59: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x20  // GetPartyMonRibbon: the Alert Ribbon
     pl_Return
 
 P159_00DC:
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 60: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x21  // GetPartyMonRibbon: the Shock Ribbon
     pl_Return
 
 P159_00E6:
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 61: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x22  // GetPartyMonRibbon: the Downcast Ribbon
     pl_Return
 
 P159_00F0:
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 62: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x23  // GetPartyMonRibbon: the Careless Ribbon
     pl_Return
 
 P159_00FA:
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 63: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x24  // GetPartyMonRibbon: the Relax Ribbon
     pl_Return
 
 P159_0104:
-    pl_stub GetPartyMonRibbon  // Pearl 0x230 PartyMonHasRibbon 32780, 32770, 64: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8002, 0x25  // GetPartyMonRibbon: the Snooze Ribbon
     pl_Return
 
 P159_010E:
@@ -138,16 +138,16 @@ P159_019E:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32768: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
-    pl_CompareVarToValue PVAR_800C, 0
+    pl_CompareVarToValue PVAR_800C, 65535
     pl_GoToIf 1, P159_03EA
     pl_stub BufferCustomMessageWord  // Pearl 0x245 Unk0245 0, 32768: not translated yet
     pl_msg_talk 21
     pl_SetFlag PFLAG_0AA4
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 65: not translated yet
-    pl_stub BufferRibbonName  // Pearl 0x232 GetRibbonName 3, 65: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x26  // SetPartyMonRibbon: the Smile Ribbon
+    pl_BufferLineWord 3, 22  // BufferRibbonName: the Smile Ribbon
     pl_GoTo P159_010E
 
 P159_01F2:
@@ -157,16 +157,16 @@ P159_01F2:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32768: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
-    pl_CompareVarToValue PVAR_800C, 0
+    pl_CompareVarToValue PVAR_800C, 65535
     pl_GoToIf 1, P159_03EA
     pl_stub BufferCustomMessageWord  // Pearl 0x245 Unk0245 0, 32768: not translated yet
     pl_msg_talk 3
     pl_SetFlag PFLAG_0AA4
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 59: not translated yet
-    pl_stub BufferRibbonName  // Pearl 0x232 GetRibbonName 3, 59: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x20  // SetPartyMonRibbon: the Alert Ribbon
+    pl_BufferLineWord 3, 23  // BufferRibbonName: the Alert Ribbon
     pl_GoTo P159_010E
 
 P159_0246:
@@ -176,16 +176,16 @@ P159_0246:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32768: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
-    pl_CompareVarToValue PVAR_800C, 0
+    pl_CompareVarToValue PVAR_800C, 65535
     pl_GoToIf 1, P159_03EA
     pl_stub BufferCustomMessageWord  // Pearl 0x245 Unk0245 0, 32768: not translated yet
     pl_msg_talk 11
     pl_SetFlag PFLAG_0AA4
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 60: not translated yet
-    pl_stub BufferRibbonName  // Pearl 0x232 GetRibbonName 3, 60: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x21  // SetPartyMonRibbon: the Shock Ribbon
+    pl_BufferLineWord 3, 24  // BufferRibbonName: the Shock Ribbon
     pl_GoTo P159_010E
 
 P159_029A:
@@ -195,16 +195,16 @@ P159_029A:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32768: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
-    pl_CompareVarToValue PVAR_800C, 0
+    pl_CompareVarToValue PVAR_800C, 65535
     pl_GoToIf 1, P159_03EA
     pl_stub BufferCustomMessageWord  // Pearl 0x245 Unk0245 0, 32768: not translated yet
     pl_msg_talk 13
     pl_SetFlag PFLAG_0AA4
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 61: not translated yet
-    pl_stub BufferRibbonName  // Pearl 0x232 GetRibbonName 3, 61: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x22  // SetPartyMonRibbon: the Downcast Ribbon
+    pl_BufferLineWord 3, 25  // BufferRibbonName: the Downcast Ribbon
     pl_GoTo P159_010E
 
 P159_02EE:
@@ -214,16 +214,16 @@ P159_02EE:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32768: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
-    pl_CompareVarToValue PVAR_800C, 0
+    pl_CompareVarToValue PVAR_800C, 65535
     pl_GoToIf 1, P159_03EA
     pl_stub BufferCustomMessageWord  // Pearl 0x245 Unk0245 0, 32768: not translated yet
     pl_msg_talk 15
     pl_SetFlag PFLAG_0AA4
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 62: not translated yet
-    pl_stub BufferRibbonName  // Pearl 0x232 GetRibbonName 3, 62: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x23  // SetPartyMonRibbon: the Careless Ribbon
+    pl_BufferLineWord 3, 26  // BufferRibbonName: the Careless Ribbon
     pl_GoTo P159_010E
 
 P159_0342:
@@ -233,16 +233,16 @@ P159_0342:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32768: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
-    pl_CompareVarToValue PVAR_800C, 0
+    pl_CompareVarToValue PVAR_800C, 65535
     pl_GoToIf 1, P159_03EA
     pl_stub BufferCustomMessageWord  // Pearl 0x245 Unk0245 0, 32768: not translated yet
     pl_msg_talk 17
     pl_SetFlag PFLAG_0AA4
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 63: not translated yet
-    pl_stub BufferRibbonName  // Pearl 0x232 GetRibbonName 3, 63: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x24  // SetPartyMonRibbon: the Relax Ribbon
+    pl_BufferLineWord 3, 27  // BufferRibbonName: the Relax Ribbon
     pl_GoTo P159_010E
 
 P159_0396:
@@ -252,16 +252,16 @@ P159_0396:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32768: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
-    pl_CompareVarToValue PVAR_800C, 0
+    pl_CompareVarToValue PVAR_800C, 65535
     pl_GoToIf 1, P159_03EA
     pl_stub BufferCustomMessageWord  // Pearl 0x245 Unk0245 0, 32768: not translated yet
     pl_msg_talk 19
     pl_SetFlag PFLAG_0AA4
-    pl_stub SetPartyMonRibbon  // Pearl 0x231 GivePartyMonRibbon 32770, 64: not translated yet
-    pl_stub BufferRibbonName  // Pearl 0x232 GetRibbonName 3, 64: not translated yet
+    pl_SetPartyMonRibbon PVAR_8002, 0x25  // SetPartyMonRibbon: the Snooze Ribbon
+    pl_BufferLineWord 3, 28  // BufferRibbonName: the Snooze Ribbon
     pl_GoTo P159_010E
 
 P159_03EA:

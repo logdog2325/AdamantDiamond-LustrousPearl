@@ -534,7 +534,7 @@ P89_067D:
 
 P89_068E:
     pl_msg_sys 41
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 47, 65535, 0  // Pearl AddMenuEntryImm 180, 0
     ListMenuAdd 48, 65535, 1  // Pearl AddMenuEntryImm 181, 1
     ListMenuAdd 49, 65535, 2  // Pearl AddMenuEntryImm 182, 2

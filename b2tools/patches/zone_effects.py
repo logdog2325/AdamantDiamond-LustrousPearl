@@ -45,6 +45,7 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import narcio  # noqa: E402
 
 NONE16, NONE11 = 0xFFFF, 0x7FF
@@ -73,7 +74,7 @@ PEARL_MAP_HEADER = os.path.join(ROOT, 'external', 'pokediamond', 'arm9', 'src', 
 
 
 def world():
-    return json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    return json.load(open(version.data_path('sinnoh_world.json')))
 
 
 def our_zones():

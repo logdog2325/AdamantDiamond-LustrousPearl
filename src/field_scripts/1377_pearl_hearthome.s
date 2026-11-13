@@ -728,7 +728,7 @@ P90_0ABA:
 P90_0B02:
     pl_CheckFlag PFLAG_0151
     pl_GoToIf 1, P90_0B50
-    pl_stub GetUndergroundTalkCounter  // Pearl 0x293 Unk0293 32780: not translated yet
+    WorkSetConst PVAR_800C, 100  // GetUndergroundTalkCounter: people met in the tunnels, which this Underground has none of: counted as reached
     pl_CompareVarToValue PVAR_800C, 100
     pl_GoToIf 0, P90_0B50
     pl_msg_talk 47
@@ -746,7 +746,7 @@ P90_0B02:
 P90_0B50:
     pl_CheckFlag PFLAG_0152
     pl_GoToIf 1, P90_0B9E
-    pl_stub GetUndergroundItemsGivenAway  // Pearl 0x286 Unk0286 32780: not translated yet
+    WorkSetConst PVAR_800C, 100  // GetUndergroundItemsGivenAway: items given away there, which this Underground has none of: counted as reached
     pl_CompareVarToValue PVAR_800C, 100
     pl_GoToIf 0, P90_0B9E
     pl_msg_talk 48
@@ -764,7 +764,7 @@ P90_0B50:
 P90_0B9E:
     pl_CheckFlag PFLAG_0153
     pl_GoToIf 1, P90_0BEC
-    pl_stub GetUndergroundFossilsUnearthed  // Pearl 0x287 Unk0287 32780: not translated yet
+    WorkSetConst PVAR_800C, 100  // GetUndergroundFossilsUnearthed: Fossils dug up, which this Underground has none of: counted as reached
     pl_CompareVarToValue PVAR_800C, 100
     pl_GoToIf 0, P90_0BEC
     pl_msg_talk 49
@@ -782,7 +782,7 @@ P90_0B9E:
 P90_0BEC:
     pl_CheckFlag PFLAG_0154
     pl_GoToIf 1, P90_0C3A
-    pl_stub GetUndergroundTrapsSet  // Pearl 0x288 Unk0288 32780: not translated yet
+    WorkSetConst PVAR_800C, 100  // GetUndergroundTrapsSet: Traps set, which this Underground has none of: counted as reached
     pl_CompareVarToValue PVAR_800C, 100
     pl_GoToIf 0, P90_0C3A
     pl_msg_talk 50

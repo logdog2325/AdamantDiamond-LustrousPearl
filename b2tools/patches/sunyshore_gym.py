@@ -28,6 +28,7 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import itcm, resident, narcio  # noqa: E402
 
@@ -76,7 +77,7 @@ LISTS = [
 
 def _dump():
     from gen4rom import Rom
-    return Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    return Rom(version.WORLD_DUMP)
 
 
 def _find(data, pat, what):
@@ -119,7 +120,7 @@ def region_gears(r):
 
 
 def zones():
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))['rooms']['zones']
+    world = json.load(open(version.data_path('sinnoh_world.json')))['rooms']['zones']
     b2 = {v['name']: v['b2_zone'] for v in world.values()}
     return [b2[n] for n in ROOMS]
 
@@ -127,9 +128,9 @@ def zones():
 def check_triggers():
     """Pearl's buttons (the rooms' step triggers running RotateSunyshoreGymGear) lie on gear centres (the gimmick turns
     the gears of the room the player is in, whatever the button)."""
-    zs = {z['name']: z for z in json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))}
+    zs = {z['name']: z for z in json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))}
     for r, name in enumerate(ROOMS):
-        ev = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'events', f'{zs[name]["events"]:03d}.json')))
+        ev = json.load(open(os.path.join(version.WORLD_WORK, 'events', f'{zs[name]["events"]:03d}.json')))
         centres = {(x, z) for x, _, z, *_ in GEARS[r]}
         for c in ev['coord_events']:
             assert (c['x'], c['z']) in centres, f'{name}: trigger {(c["x"], c["z"])} is no gear centre'
@@ -223,7 +224,7 @@ def sound_id(name):
 
 def blob(base):
     models = pearl_tables()
-    reg = json.load(open(os.path.join(ROOT, 'data', 'pearl_story_ids.json')))
+    reg = json.load(open(version.data_path('pearl_story_ids.json')))
     request = int(reg['new']['PVAR_GIMMICK_REQUEST']['b2'], 16)
     first_file = len(narcio.load(VANILLA, MODEL_ARC))
     zs = zones()

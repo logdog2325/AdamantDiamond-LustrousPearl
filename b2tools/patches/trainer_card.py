@@ -85,7 +85,7 @@ CARD_ROWS = range(6, 16)                                         # the picture's
 def pearl_case():
     import gen4rom
     if not hasattr(pearl_case, 'm'):
-        pearl_case.m = gen4rom.narc_members(gen4rom.Rom(version.SOURCE_DUMP).read(TRAINER_CASE))
+        pearl_case.m = gen4rom.narc_members(gen4rom.Rom(os.path.join(ROOT, 'roms', 'pearl.nds') if version.PLATINUM else version.SOURCE_DUMP).read(TRAINER_CASE))   # (Platinum: Pearl's card art until step 6 maps its own)
     return pearl_case.m
 
 
@@ -148,9 +148,7 @@ def pearl_leader(cls):
         pearl_leader.m = gen4rom.narc_members(gen4rom.Rom(version.SOURCE_DUMP).read(P.TRFGRA))
         pearl_leader.n = P.pearl_class_numbers()
     c = pearl_leader.n[cls]
-    w, h, pix = P.dp_decode_ncgr(pearl_leader.m[2 * c])
-    still = bytes(pix[y * w + x] for y in range(80) for x in range(80))
-    _, pal = S.nclr_colors(pearl_leader.m[2 * c + 1])
+    still, pal = P.class_picture(pearl_leader.m, c)
     return still, [S.bgr555_to_rgb(v) for v in pal]
 
 

@@ -295,14 +295,14 @@ P29_0345:
 
 P29_0356:
     pl_msg_sys 21
-    ListMenu_AnchorTopRight 31, 2, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 7, 2, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 2, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 7, 2, 0, 1, PVAR_800C
     ListMenuAdd 28, 65535, 0  // Pearl AddMenuEntryImm 0, 0
     ListMenuAdd 29, 65535, 1  // Pearl AddMenuEntryImm 1, 1
     ListMenuAdd 30, 65535, 2  // Pearl AddMenuEntryImm 2, 2
     ListMenuAdd 31, 65535, 3  // Pearl AddMenuEntryImm 3, 3
     ListMenuAdd 32, 65535, 4  // Pearl AddMenuEntryImm 4, 4
     ListMenuAdd 33, 65535, 5  // Pearl AddMenuEntryImm 5, 5
-    pl_stub ShowMenuMultiColumn  // Pearl 0x048 Unk0048 2: not translated yet
+    ListMenuShow  // ShowMenuMultiColumn 2: one column
     pl_SetVarFromVar PVAR_8008, PVAR_800C
     pl_CompareVarToValue PVAR_8008, 0
     pl_GoToIf 1, P29_03CB

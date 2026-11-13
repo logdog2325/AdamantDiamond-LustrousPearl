@@ -102,7 +102,7 @@ P444_0122:
     pl_GoTo P444_012B
 
 P444_012B:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 75, 65535, 0  // Pearl AddMenuEntryImm 198, 0
     ListMenuAdd 76, 65535, 1  // Pearl AddMenuEntryImm 199, 1
     ListMenuAdd 77, 65535, 2  // Pearl AddMenuEntryImm 200, 2
@@ -196,7 +196,7 @@ P444_01E2:
     pl_GoTo P444_01EE
 
 P444_01EE:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 84, 65535, 0  // Pearl AddMenuEntryImm 203, 0
     ListMenuAdd 85, 65535, 1  // Pearl AddMenuEntryImm 204, 1
     ListMenuAdd 86, 65535, 2  // Pearl AddMenuEntryImm 205, 2
@@ -989,10 +989,13 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1055, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_11
-    FlagGet 1059, 0x8057
+    FlagGet 1068, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_12
-    FlagGet 1060, 0x8057
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_12
+    FlagGet 1070, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_12
     VMJump .LRX_11
@@ -1011,10 +1014,10 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1055, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_13
-    FlagGet 363, 0x8057
+    FlagGet 1059, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_13
-    FlagGet 1066, 0x8057
+    VMJumpIf CMP_EQ, .LRX_14
+    FlagGet 1060, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_14
     VMJump .LRX_13
@@ -1024,22 +1027,19 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_15
-    FlagGet 1056, 0x8057
+    FlagGet 902, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_15
-    FlagGet 1057, 0x8057
+    FlagGet 1054, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_15
-    FlagGet 1058, 0x8057
+    FlagGet 1055, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_15
-    FlagGet 1059, 0x8057
+    FlagGet 363, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_15
-    FlagGet 1060, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_15
-    FlagGet 1061, 0x8057
+    FlagGet 1066, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_16
     VMJump .LRX_15
@@ -1049,13 +1049,13 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_17
-    FlagGet 1056, 0x8057
+    FlagGet 1068, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_17
-    FlagGet 1057, 0x8057
+    FlagGet 1069, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_17
-    FlagGet 1058, 0x8057
+    FlagGet 1070, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_17
     FlagGet 1059, 0x8057
@@ -1064,7 +1064,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1060, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_17
-    FlagGet 1062, 0x8057
+    FlagGet 1071, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_18
     VMJump .LRX_17
@@ -1089,7 +1089,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1060, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_19
-    FlagGet 1063, 0x8057
+    FlagGet 1061, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_20
     VMJump .LRX_19
@@ -1099,6 +1099,23 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_21
+#if PEARLB2_GAME_VERSION == 10
+    FlagGet 1068, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_21
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_21
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_21
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_21
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_21
+#elif PEARLB2_GAME_VERSION == 11
     FlagGet 1056, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_21
@@ -1114,7 +1131,8 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1060, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_21
-    FlagGet 1064, 0x8057
+#endif
+    FlagGet 1062, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_22
     VMJump .LRX_21
@@ -1124,6 +1142,23 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_23
+#if PEARLB2_GAME_VERSION == 10
+    FlagGet 1068, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_23
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_23
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_23
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_23
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_23
+#elif PEARLB2_GAME_VERSION == 11
     FlagGet 1056, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_23
@@ -1139,20 +1174,107 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1060, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_23
-    FlagGet 1065, 0x8057
+#endif
+    FlagGet 1063, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_24
     VMJump .LRX_23
 .LRX_24:
     WorkAdd 0x8051, 1
 .LRX_23:
+    FlagGet 2400, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+#if PEARLB2_GAME_VERSION == 10
+    FlagGet 1068, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+#elif PEARLB2_GAME_VERSION == 11
+    FlagGet 1056, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+    FlagGet 1057, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+    FlagGet 1058, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_25
+#endif
+    FlagGet 1064, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_26
+    VMJump .LRX_25
+.LRX_26:
+    WorkAdd 0x8051, 1
+.LRX_25:
+    FlagGet 2400, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+#if PEARLB2_GAME_VERSION == 10
+    FlagGet 1068, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+#elif PEARLB2_GAME_VERSION == 11
+    FlagGet 1056, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+    FlagGet 1057, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+    FlagGet 1058, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_27
+#endif
+    FlagGet 1065, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_28
+    VMJump .LRX_27
+.LRX_28:
+    WorkAdd 0x8051, 1
+.LRX_27:
     WorkCmpConst 0x8051, 0
-    VMJumpIf CMP_NE, .LRX_25some
+    VMJumpIf CMP_NE, .LRX_29some
     pl_msg_talk 139
     pl_WaitButton
     pl_CloseMessage
     VMJump .LRX_2menu
-.LRX_25some:
+.LRX_29some:
     pl_msg_talk 140
     pl_WaitButton
     pl_CloseMessage
@@ -1160,66 +1282,19 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     ListMenu_AnchorTopRight 31, 10, 0, 1, 0x8050
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_26
-    FlagGet 902, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_27
-    FlagGet 1054, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_27
-    FlagGet 1055, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_27
-    VMJump .LRX_26
-.LRX_27:
-    ListMenuAdd 142, 65535, 0
-.LRX_26:
-    FlagGet 2400, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_28
-    FlagGet 902, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_28
-    FlagGet 1054, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_28
-    FlagGet 1055, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_28
-    FlagGet 1056, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_29
-    FlagGet 1057, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_29
-    FlagGet 1058, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_29
-    VMJump .LRX_28
-.LRX_29:
-    ListMenuAdd 143, 65535, 1
-.LRX_28:
-    FlagGet 2400, 0x8057
-    WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_30
     FlagGet 902, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_30
-    FlagGet 1054, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_30
-    FlagGet 1055, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_30
-    FlagGet 1059, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_31
-    FlagGet 1060, 0x8057
+    FlagGet 1054, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_31
+    FlagGet 1055, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_31
     VMJump .LRX_30
 .LRX_31:
-    ListMenuAdd 144, 65535, 2
+    ListMenuAdd 142, 65535, 0
 .LRX_30:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1233,101 +1308,98 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1055, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_32
-    FlagGet 363, 0x8057
+    FlagGet 1056, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_32
-    FlagGet 1066, 0x8057
+    VMJumpIf CMP_EQ, .LRX_33
+    FlagGet 1057, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_33
+    FlagGet 1058, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_33
     VMJump .LRX_32
 .LRX_33:
-    ListMenuAdd 145, 65535, 3
+    ListMenuAdd 143, 65535, 1
 .LRX_32:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_34
-    FlagGet 1056, 0x8057
+    FlagGet 902, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_34
-    FlagGet 1057, 0x8057
+    FlagGet 1054, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_34
-    FlagGet 1058, 0x8057
+    FlagGet 1055, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_34
-    FlagGet 1059, 0x8057
+    FlagGet 1068, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_34
-    FlagGet 1060, 0x8057
+    VMJumpIf CMP_EQ, .LRX_35
+    FlagGet 1069, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_34
-    FlagGet 1061, 0x8057
+    VMJumpIf CMP_EQ, .LRX_35
+    FlagGet 1070, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_35
     VMJump .LRX_34
 .LRX_35:
-    ListMenuAdd 146, 65535, 4
+    ListMenuAdd 144, 65535, 2
 .LRX_34:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_36
-    FlagGet 1056, 0x8057
+    FlagGet 902, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_36
-    FlagGet 1057, 0x8057
+    FlagGet 1054, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_36
-    FlagGet 1058, 0x8057
+    FlagGet 1055, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_36
     FlagGet 1059, 0x8057
     WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_36
+    VMJumpIf CMP_EQ, .LRX_37
     FlagGet 1060, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_36
-    FlagGet 1062, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_37
     VMJump .LRX_36
 .LRX_37:
-    ListMenuAdd 147, 65535, 5
+    ListMenuAdd 145, 65535, 3
 .LRX_36:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_38
-    FlagGet 1056, 0x8057
+    FlagGet 902, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_38
-    FlagGet 1057, 0x8057
+    FlagGet 1054, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_38
-    FlagGet 1058, 0x8057
+    FlagGet 1055, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_38
-    FlagGet 1059, 0x8057
+    FlagGet 363, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_38
-    FlagGet 1060, 0x8057
-    WorkCmpConst 0x8057, 0
-    VMJumpIf CMP_EQ, .LRX_38
-    FlagGet 1063, 0x8057
+    FlagGet 1066, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_39
     VMJump .LRX_38
 .LRX_39:
-    ListMenuAdd 148, 65535, 6
+    ListMenuAdd 146, 65535, 4
 .LRX_38:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_40
-    FlagGet 1056, 0x8057
+    FlagGet 1068, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_40
-    FlagGet 1057, 0x8057
+    FlagGet 1069, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_40
-    FlagGet 1058, 0x8057
+    FlagGet 1070, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_40
     FlagGet 1059, 0x8057
@@ -1336,12 +1408,12 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1060, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_40
-    FlagGet 1064, 0x8057
+    FlagGet 1071, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_41
     VMJump .LRX_40
 .LRX_41:
-    ListMenuAdd 149, 65535, 7
+    ListMenuAdd 147, 65535, 5
 .LRX_40:
     FlagGet 2400, 0x8057
     WorkCmpConst 0x8057, 0
@@ -1361,103 +1433,285 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     FlagGet 1060, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_42
-    FlagGet 1065, 0x8057
+    FlagGet 1061, 0x8057
     WorkCmpConst 0x8057, 0
     VMJumpIf CMP_EQ, .LRX_43
     VMJump .LRX_42
 .LRX_43:
-    ListMenuAdd 150, 65535, 8
+    ListMenuAdd 148, 65535, 6
 .LRX_42:
+    FlagGet 2400, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+#if PEARLB2_GAME_VERSION == 10
+    FlagGet 1068, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+#elif PEARLB2_GAME_VERSION == 11
+    FlagGet 1056, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+    FlagGet 1057, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+    FlagGet 1058, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_44
+#endif
+    FlagGet 1062, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_45
+    VMJump .LRX_44
+.LRX_45:
+    ListMenuAdd 149, 65535, 7
+.LRX_44:
+    FlagGet 2400, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+#if PEARLB2_GAME_VERSION == 10
+    FlagGet 1068, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+#elif PEARLB2_GAME_VERSION == 11
+    FlagGet 1056, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+    FlagGet 1057, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+    FlagGet 1058, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_46
+#endif
+    FlagGet 1063, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_47
+    VMJump .LRX_46
+.LRX_47:
+    ListMenuAdd 150, 65535, 8
+.LRX_46:
+    FlagGet 2400, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+#if PEARLB2_GAME_VERSION == 10
+    FlagGet 1068, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+#elif PEARLB2_GAME_VERSION == 11
+    FlagGet 1056, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+    FlagGet 1057, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+    FlagGet 1058, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_48
+#endif
+    FlagGet 1064, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_49
+    VMJump .LRX_48
+.LRX_49:
+    ListMenuAdd 151, 65535, 9
+.LRX_48:
+    FlagGet 2400, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+#if PEARLB2_GAME_VERSION == 10
+    FlagGet 1068, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+    FlagGet 1069, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+    FlagGet 1070, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+#elif PEARLB2_GAME_VERSION == 11
+    FlagGet 1056, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+    FlagGet 1057, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+    FlagGet 1058, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+    FlagGet 1059, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+    FlagGet 1060, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_50
+#endif
+    FlagGet 1065, 0x8057
+    WorkCmpConst 0x8057, 0
+    VMJumpIf CMP_EQ, .LRX_51
+    VMJump .LRX_50
+.LRX_51:
+    ListMenuAdd 152, 65535, 10
+.LRX_50:
     ListMenuAdd 137, 65535, 255
     ListMenuShow
     pl_CloseMessage
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_NE, .LRX_45
-    WorkSetConst 0x8052, 120
-    VMJump .LRX_44buy
-.LRX_45:
-    WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_NE, .LRX_46
-    WorkSetConst 0x8052, 121
-    VMJump .LRX_44buy
-.LRX_46:
-    WorkCmpConst 0x8050, 2
-    VMJumpIf CMP_NE, .LRX_47
-    WorkSetConst 0x8052, 122
-    VMJump .LRX_44buy
-.LRX_47:
-    WorkCmpConst 0x8050, 3
-    VMJumpIf CMP_NE, .LRX_48
-    WorkSetConst 0x8052, 123
-    VMJump .LRX_44buy
-.LRX_48:
-    WorkCmpConst 0x8050, 4
-    VMJumpIf CMP_NE, .LRX_49
-    WorkSetConst 0x8052, 124
-    VMJump .LRX_44buy
-.LRX_49:
-    WorkCmpConst 0x8050, 5
-    VMJumpIf CMP_NE, .LRX_50
-    WorkSetConst 0x8052, 125
-    VMJump .LRX_44buy
-.LRX_50:
-    WorkCmpConst 0x8050, 6
-    VMJumpIf CMP_NE, .LRX_51
-    WorkSetConst 0x8052, 126
-    VMJump .LRX_44buy
-.LRX_51:
-    WorkCmpConst 0x8050, 7
-    VMJumpIf CMP_NE, .LRX_52
-    WorkSetConst 0x8052, 127
-    VMJump .LRX_44buy
-.LRX_52:
-    WorkCmpConst 0x8050, 8
     VMJumpIf CMP_NE, .LRX_53
-    WorkSetConst 0x8052, 128
-    VMJump .LRX_44buy
+    WorkSetConst 0x8052, 120
+    VMJump .LRX_52buy
 .LRX_53:
+    WorkCmpConst 0x8050, 1
+    VMJumpIf CMP_NE, .LRX_54
+    WorkSetConst 0x8052, 121
+    VMJump .LRX_52buy
+.LRX_54:
+    WorkCmpConst 0x8050, 2
+    VMJumpIf CMP_NE, .LRX_55
+    WorkSetConst 0x8052, 131
+    VMJump .LRX_52buy
+.LRX_55:
+    WorkCmpConst 0x8050, 3
+    VMJumpIf CMP_NE, .LRX_56
+    WorkSetConst 0x8052, 122
+    VMJump .LRX_52buy
+.LRX_56:
+    WorkCmpConst 0x8050, 4
+    VMJumpIf CMP_NE, .LRX_57
+    WorkSetConst 0x8052, 123
+    VMJump .LRX_52buy
+.LRX_57:
+    WorkCmpConst 0x8050, 5
+    VMJumpIf CMP_NE, .LRX_58
+    WorkSetConst 0x8052, 132
+    VMJump .LRX_52buy
+.LRX_58:
+    WorkCmpConst 0x8050, 6
+    VMJumpIf CMP_NE, .LRX_59
+    WorkSetConst 0x8052, 124
+    VMJump .LRX_52buy
+.LRX_59:
+    WorkCmpConst 0x8050, 7
+    VMJumpIf CMP_NE, .LRX_60
+    WorkSetConst 0x8052, 125
+    VMJump .LRX_52buy
+.LRX_60:
+    WorkCmpConst 0x8050, 8
+    VMJumpIf CMP_NE, .LRX_61
+    WorkSetConst 0x8052, 126
+    VMJump .LRX_52buy
+.LRX_61:
+    WorkCmpConst 0x8050, 9
+    VMJumpIf CMP_NE, .LRX_62
+    WorkSetConst 0x8052, 127
+    VMJump .LRX_52buy
+.LRX_62:
+    WorkCmpConst 0x8050, 10
+    VMJumpIf CMP_NE, .LRX_63
+    WorkSetConst 0x8052, 128
+    VMJump .LRX_52buy
+.LRX_63:
     VMJump .LRX_2menu
-.LRX_44buy:
+.LRX_52buy:
     ItemCheckAmount 0x8052, 1, 0x8053
     WorkCmpConst 0x8053, 1
-    VMJumpIf CMP_NE, .LRX_54none
+    VMJumpIf CMP_NE, .LRX_64none
     WordSetItemName 0, 0x8052
-    pl_msg_talk 151
+    pl_msg_talk 153
     pl_WaitButton
     pl_CloseMessage
     VMJump .LRX_2menu
-.LRX_54none:
+.LRX_64none:
     ItemCheckAmount 129, 3, 0x8053
     ItemCheckAmount 130, 1, 0x8054
     WorkCmpConst 0x8053, 1
-    VMJumpIf CMP_EQ, .LRX_58ask
+    VMJumpIf CMP_EQ, .LRX_68ask
     WorkCmpConst 0x8054, 1
-    VMJumpIf CMP_EQ, .LRX_56paidL
-    pl_msg_talk 152
+    VMJumpIf CMP_EQ, .LRX_66paidL
+    pl_msg_talk 154
     pl_WaitButton
     pl_CloseMessage
     VMJump .LRX_2menu
-.LRX_58ask:
+.LRX_68ask:
     WorkCmpConst 0x8054, 1
-    VMJumpIf CMP_NE, .LRX_55paidS
-    pl_msg_talk 153
+    VMJumpIf CMP_NE, .LRX_65paidS
+    pl_msg_talk 155
     ListMenu_AnchorTopRight 31, 10, 0, 1, 0x8050
-    ListMenuAdd 154, 65535, 0
-    ListMenuAdd 155, 65535, 1
+    ListMenuAdd 156, 65535, 0
+    ListMenuAdd 157, 65535, 1
     ListMenuShow
     pl_CloseMessage
     WorkCmpConst 0x8050, 0
-    VMJumpIf CMP_EQ, .LRX_55paidS
+    VMJumpIf CMP_EQ, .LRX_65paidS
     WorkCmpConst 0x8050, 1
-    VMJumpIf CMP_EQ, .LRX_56paidL
+    VMJumpIf CMP_EQ, .LRX_66paidL
     VMJump .LRX_2menu
-.LRX_55paidS:
+.LRX_65paidS:
     ItemSub 129, 3, 0x8053
-    VMJump .LRX_57pay
-.LRX_56paidL:
+    VMJump .LRX_67pay
+.LRX_66paidL:
     ItemSub 130, 1, 0x8053
-.LRX_57pay:
-    pl_msg_talk 156
+.LRX_67pay:
+    pl_msg_talk 158
     pl_WaitButton
     pl_CloseMessage
     VMStackPush 0x8000
@@ -1469,7 +1723,7 @@ RamanasExtra_clerk:               // the slate clerk (data/ramanas_park.json "cl
     VMStackPop 0x8000
     VMJump .LRX_2menu
 .LRX_6enter:
-    pl_msg_talk 157
+    pl_msg_talk 159
     pl_WaitButton
     pl_CloseMessage
     ActorCmdExec PL_PLAYER, RamanasMov_toGap
@@ -1494,12 +1748,12 @@ RamanasExtra_return:              // the gate after a Ramanas visit (frame table
     WorkCmpConst 0x8050, 7
     VMJumpIf CMP_NE, .LRX_notdoor
     WorkCmpConst 0x8051, 7
-    VMJumpIf CMP_EQ, .LRX_59atdoor
+    VMJumpIf CMP_EQ, .LRX_69atdoor
 .LRX_notdoor:
     ActorSetGPos 7, 7, 0, 11, 1
     pl_ReleaseAll
     VMHalt
-.LRX_59atdoor:
+.LRX_69atdoor:
     ActorCmdExec PL_PLAYER, RamanasMov_out
     ActorCmdWait
     ActorCmdExec 7, RamanasMov_back

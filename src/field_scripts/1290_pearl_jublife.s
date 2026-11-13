@@ -1971,7 +1971,7 @@ T372_1_0073:
     pl_GoTo T372_1_008C
 
 T372_1_008C:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_8004
     ListMenuAdd 99, 65535, 1  // Pearl AddMenuEntryImm 11, 1
     ListMenuAdd 100, 65535, 3  // Pearl AddMenuEntryImm 13, 3
     ListMenuAdd 101, 65535, 4  // Pearl AddMenuEntryImm 14, 4
@@ -1979,7 +1979,7 @@ T372_1_008C:
     pl_GoTo T372_1_00C2
 
 T372_1_00A8:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_8004
     ListMenuAdd 99, 65535, 1  // Pearl AddMenuEntryImm 11, 1
     ListMenuAdd 102, 65535, 2  // Pearl AddMenuEntryImm 12, 2
     ListMenuAdd 100, 65535, 3  // Pearl AddMenuEntryImm 13, 3
@@ -2079,7 +2079,7 @@ T372_1_0256:
 
 T372_1_0261:
     pl_msg_talk 107  // Pearl bank 329 line 3
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_8004
     pl_stub DoGroupConnectionAction  // Pearl 0x21D UnionGroup 0, 0, 32780: not translated yet
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T372_1_02A2

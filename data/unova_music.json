@@ -1,5 +1,5 @@
 {
- "_doc": "Rowan's music question, UNOVA answer (options bit 13 = 0; patches/music_choice.py, src/code/music_choice.c): each Pearl zone song -> the Black 2 song its zones play instead, picked by what the zones are (town, city, route, cave, building), in the way HoennB2's Unova option keeps a Black 2 song per zone kind. A list = Black 2's four season versions (spring, summer, autumn, winter), as Black 2's own zone headers hold them; the DS clock's season picks one. Pearl's night versions (_N) follow their day song. Every name is a Black 2 song that Black 2's own zones play (pokebw2 generated/sound.txt; checked against its zone headers by music_choice.py). 'story': the songs Pearl's scripts start themselves (sinnoh_music EVENT_SONGS) -> Black 2's, played instead with UNOVA (b2tools/pearl_story.py's own stand-ins for a build without Pearl's music); a story song with no entry here or in 'songs' stays Pearl's. 2026-10-18: a first proposal for the user to change freely.",
+ "_doc": "Rowan's music question, UNOVA answer (options bit 13 = 0; patches/music_choice.py, src/code/music_choice.c): each Pearl zone song -> the Black 2 song its zones play instead, picked by what the zones are (town, city, route, cave, building), in the way HoennB2's Unova option keeps a Black 2 song per zone kind. A list = Black 2's four season versions (spring, summer, autumn, winter), as Black 2's own zone headers hold them; the DS clock's season picks one. Pearl's night versions (_N) follow their day song. Every name is a Black 2 song that Black 2's own zones play (pokebw2 generated/sound.txt; checked against its zone headers by music_choice.py). 'story': the songs Pearl's scripts start themselves (sinnoh_music EVENT_SONGS) -> Black 2's, played instead with UNOVA (b2tools/pearl_story.py's own stand-ins for a build without Pearl's music); a story song with no entry here or in 'songs' stays Pearl's. 2026-10-18: a first proposal for the user to change freely. Platinum (2026-11-07, plat-music): its GTS and Global Terminal song SEQ_PL_WIFITOWER takes the GTS row's song; its other new songs have no row, so they stay Platinum's with UNOVA too: Looker's theme, the Villa's songs and Spear Pillar's cutscene (story songs), the Distortion World's SEQ_PL_D_GIRATINA (step 7) and the Frontier's BF_* (step 8: SEQ_BF_TOWWER's row is the Battle Subway).",
  "songs": {
   "SEQ_TOWN01_D": "SEQ_BGM_SW_C_12",
   "SEQ_TOWN02_D": "SEQ_BGM_SW_T_06",
@@ -95,6 +95,7 @@
   "SEQ_BLD_GAME": "SEQ_BGM_REZO_RIZO",
   "SEQ_BLD_CON": "SEQ_BGM_MSL_FIELD",
   "SEQ_BLD_BLD_GTC": "SEQ_BGM_GEAR_STATION",
+  "SEQ_PL_WIFITOWER": "SEQ_BGM_GEAR_STATION",
   "SEQ_BF_TOWWER": "SEQ_BGM_BATTLE_SUBWAY",
   "SEQ_SILENCE_FIELD": "SEQ_BGM_SILENCE_FIELD",
   "SEQ_SILENCE_DUNGEON": "SEQ_BGM_SILENCE_DUNGEON"

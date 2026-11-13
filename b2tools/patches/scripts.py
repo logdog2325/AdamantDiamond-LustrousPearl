@@ -35,7 +35,8 @@ def assemble(src):
         o, b = os.path.join(t, 'x.o'), os.path.join(t, 'x.bin')
         subprocess.run([f'{LLVM}/clang', '--target=armv5te-none-eabi', '-x', 'assembler-with-cpp', '-c', *defines(),
                         '-I', f'{DECOMP}/include', '-I', f'{DECOMP}/build/include/generated',
-                        '-I', f'{DECOMP}/lib/nitro/include', '-I', os.path.join(ROOT, 'src', 'include'),
+                        '-I', f'{DECOMP}/lib/nitro/include', *(['-I', os.path.join(ROOT, 'src', 'include', 'platinum')] if version.PLATINUM else []),
+                        '-I', os.path.join(ROOT, 'src', 'include'),
                         '-I', SRC, '-o', o, os.path.abspath(src)], check=True, cwd=DECOMP)
         # an unknown name would silently assemble as 0: refuse it
         undef = subprocess.run([f'{LLVM}/llvm-nm', '--undefined-only', o], capture_output=True, text=True,
@@ -53,7 +54,8 @@ def check_local_works():
     script source or include may name one."""
     import re
     bad = []
-    for path in glob.glob(os.path.join(SRC, '*.s')) + glob.glob(os.path.join(ROOT, 'src', 'include', '*')):
+    for path in [p for p in version.sources(SRC, '.s') + glob.glob(os.path.join(ROOT, 'src', 'include', '*'))
+                 + glob.glob(os.path.join(ROOT, 'src', 'include', version.VERSION, '*')) if os.path.isfile(p)]:
         for n, line in enumerate(open(path, errors='replace'), 1):
             code = line.split('//')[0]
             for m in re.finditer(r'0x80([0-9A-Fa-f]{2})\b|PVAR_80([0-9A-F]{2})\b', code):

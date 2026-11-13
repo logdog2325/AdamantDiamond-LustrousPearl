@@ -4,6 +4,13 @@
 #include "pearl.h"
 #include "pearl_story.inc"
 
+// (postdex) the other version's fossil joins the daily fossil balls after the Champion (version.POSTGAME_OTHER)
+#if PEARLB2_GAME_VERSION == 11
+#define UG_OTHER_FOSSIL 105       // pearl: diamond's Skull Fossil
+#elif PEARLB2_GAME_VERSION == 10
+#define UG_OTHER_FOSSIL 104       // diamond: pearl's Armor Fossil
+#endif
+
     ScriptEntry UG_GoUp
     ScriptEntry UG_Name_0
     ScriptEntry UG_Name_1
@@ -402,7 +409,11 @@ UG_Shard_3:                         // Stargleam Cavern: daily item 130 at (28, 
     pl_End
 
 UG_Fossil_0:                        // Rocky Cave: a daily fossil at (13, 10)
+#ifdef UG_OTHER_FOSSIL
+    pl_GetRandom PVAR_800C, 6
+#else
     pl_GetRandom PVAR_800C, 5
+#endif
     pl_SetVarFromValue PVAR_8008, 99
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 5, UG_Fossil_0_1
@@ -420,12 +431,22 @@ UG_Fossil_0_3:
     pl_GoToIf 5, UG_Fossil_0_4
     pl_SetVarFromValue PVAR_8008, 103
 UG_Fossil_0_4:
+#ifdef UG_OTHER_FOSSIL
+    pl_CompareVarToValue PVAR_800C, 5
+    pl_GoToIf 5, UG_Fossil_0_5
+    pl_SetVarFromValue PVAR_8008, UG_OTHER_FOSSIL
+UG_Fossil_0_5:
+#endif
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
 
 UG_Fossil_1:                        // Sandsear Cave: a daily fossil at (23, 16)
+#ifdef UG_OTHER_FOSSIL
+    pl_GetRandom PVAR_800C, 6
+#else
     pl_GetRandom PVAR_800C, 5
+#endif
     pl_SetVarFromValue PVAR_8008, 99
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 5, UG_Fossil_1_1
@@ -443,6 +464,12 @@ UG_Fossil_1_3:
     pl_GoToIf 5, UG_Fossil_1_4
     pl_SetVarFromValue PVAR_8008, 103
 UG_Fossil_1_4:
+#ifdef UG_OTHER_FOSSIL
+    pl_CompareVarToValue PVAR_800C, 5
+    pl_GoToIf 5, UG_Fossil_1_5
+    pl_SetVarFromValue PVAR_8008, UG_OTHER_FOSSIL
+UG_Fossil_1_5:
+#endif
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End

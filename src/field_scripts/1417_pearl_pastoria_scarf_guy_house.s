@@ -157,7 +157,7 @@ P130_01DB:
 P130_021C:
     pl_CheckFlag PFLAG_0140
     pl_GoToIf 1, P130_0244
-    pl_stub GetPartyMonContestStat  // Pearl 0x281 GetPartyMonContestCondition 32768, 0, 32780: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8000, 0x13  // GetPartyMonContestStat 0
     pl_CompareVarToValue PVAR_800C, 200
     pl_GoToIf 0, P130_0244
     pl_SetVarFromValue PVAR_800C, 1
@@ -170,7 +170,7 @@ P130_0244:
 P130_024C:
     pl_CheckFlag PFLAG_0141
     pl_GoToIf 1, P130_0274
-    pl_stub GetPartyMonContestStat  // Pearl 0x281 GetPartyMonContestCondition 32768, 1, 32780: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8000, 0x14  // GetPartyMonContestStat 1
     pl_CompareVarToValue PVAR_800C, 200
     pl_GoToIf 0, P130_0274
     pl_SetVarFromValue PVAR_800C, 1
@@ -183,7 +183,7 @@ P130_0274:
 P130_027C:
     pl_CheckFlag PFLAG_0142
     pl_GoToIf 1, P130_02A4
-    pl_stub GetPartyMonContestStat  // Pearl 0x281 GetPartyMonContestCondition 32768, 2, 32780: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8000, 0x15  // GetPartyMonContestStat 2
     pl_CompareVarToValue PVAR_800C, 200
     pl_GoToIf 0, P130_02A4
     pl_SetVarFromValue PVAR_800C, 1
@@ -196,7 +196,7 @@ P130_02A4:
 P130_02AC:
     pl_CheckFlag PFLAG_0143
     pl_GoToIf 1, P130_02D4
-    pl_stub GetPartyMonContestStat  // Pearl 0x281 GetPartyMonContestCondition 32768, 3, 32780: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8000, 0x16  // GetPartyMonContestStat 3
     pl_CompareVarToValue PVAR_800C, 200
     pl_GoToIf 0, P130_02D4
     pl_SetVarFromValue PVAR_800C, 1
@@ -209,7 +209,7 @@ P130_02D4:
 P130_02DC:
     pl_CheckFlag PFLAG_0144
     pl_GoToIf 1, P130_0304
-    pl_stub GetPartyMonContestStat  // Pearl 0x281 GetPartyMonContestCondition 32768, 4, 32780: not translated yet
+    pl_GetPartyMonParam PVAR_800C, PVAR_8000, 0x17  // GetPartyMonContestStat 4
     pl_CompareVarToValue PVAR_800C, 200
     pl_GoToIf 0, P130_0304
     pl_SetVarFromValue PVAR_800C, 1

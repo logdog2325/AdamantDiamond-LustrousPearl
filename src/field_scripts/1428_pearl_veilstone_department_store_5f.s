@@ -98,7 +98,7 @@ P141_00C0:
     pl_GoTo P141_00D5
 
 P141_00D5:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8000  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8000
+    ListMenu_AnchorTopRight 31, 5, 0, 1, PVAR_8000  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_8000
     ListMenuAdd 11, 65535, 0  // Pearl AddMenuEntryImm 219, 0
     ListMenuAdd 12, 65535, 1  // Pearl AddMenuEntryImm 220, 1
     ListMenuAdd 13, 65535, 2  // Pearl AddMenuEntryImm 221, 2

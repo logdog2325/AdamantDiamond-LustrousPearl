@@ -531,8 +531,8 @@ T1042_4_0107:
     pl_WaitFadeScreen
     pl_CloseMessage
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32772: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_4_021F
@@ -540,7 +540,7 @@ T1042_4_0107:
     pl_GoTo T1042_4_0214
 
 T1042_4_0165:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
     ListMenuAdd 27, 65535, 1  // Pearl AddListMenuEntry 16, 1
     ListMenuAdd 28, 65535, 2  // Pearl AddListMenuEntry 17, 2
     ListMenuAdd 29, 65535, 3  // Pearl AddListMenuEntry 18, 3

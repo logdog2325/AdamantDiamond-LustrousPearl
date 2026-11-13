@@ -26,12 +26,13 @@ import collections, json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 os.environ.setdefault('MAP_FIXES', 'none')
 import pearl_chunk  # noqa: E402
 from gen4_land import bdhc_dp_heights  # noqa: E402
 
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 STEP = 20                                   # both games: a step of 20 units or more is a wall
 SAME = 6                                    # Pearl's level vs the converted height: the same level within this
 SURFABLE = {0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x19, 0x22, 0x2a, 0x50, 0x51, 0x52, 0x53, 0x73, 0x78, 0x7c}

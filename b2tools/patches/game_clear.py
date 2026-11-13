@@ -18,12 +18,20 @@ Link key screen.
   (a/2/1/5: photo p's files 0x15 + 12 p + 3 gender: NCLR, NCGR 8bpp 768 tiles, NSCR; the last picture files 10-12 with
   a sprite over it, files 6-9, cleared). Without credits.json Black 2's photos stay.
 List it after sinnoh_names (the text) and the other ITCM users.
+Platinum (2026-11-07, plat-music): its own staff credits, 237 lines in its order (pearl_credits._LAYOUT), and the photos
+from data/platinum/credits/ once its shots are taken (DATA; Pearl's until then).
+Platinum (2026-11-02, plat-rooms): its Hall of Fame is Pearl's room with Platinum's retouched floor, the same warp (8, 15)
+and people, and its scene walks the player the same 8 + 2 tiles north to the machine (pokeplatinum
+scripts_pokemon_league_hall_of_fame.s), then ends with ClearGame as Pearl's does, so the same table: HOF_TILE is checked
+against the version's warp (table_blob), and the room file's ending is pearl_story's pl_ClearGame (FadeOutBlackQ,
+FadeWait, CallGameClear, FinishAllEvents, ActorsUnpauseAll: Black 2's own way, notes/NEXT_REGION_BRIEF.md).
 """
 import json, os, struct, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import itcm, resident, narcio  # noqa: E402
 
@@ -34,11 +42,13 @@ END_ARC = 215
 PIC_FIRST, PICS = 0x15, 12
 FINAL = 10                             # files 10/11/12: the last picture
 SPRITE_NCGR = 7                        # the sprite over it (ClAct files 6-9)
-DATA = os.path.join(ROOT, 'data', 'credits')
+# The photos: data/credits/ (Pearl's and Diamond's), or a version's own folder when it has one (data/platinum/credits/:
+# credits_photos.py writes it from that version's shots; until then Platinum shows Pearl's photos, notes/STORY.md)
+DATA = os.path.dirname(version.data_path(os.path.join('credits', 'credits.json')))
 
 
 def _zones():
-    w = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    w = json.load(open(version.data_path('sinnoh_world.json')))
     return {v['name']: v['b2_zone'] for v in list(w['zones'].values()) + list(w['rooms']['zones'].values())}
 
 
@@ -46,6 +56,8 @@ def table_blob(base):
     import pearl_story
     pd = pearl_story.PearlData()
     zone = pd.by_name[pearl_story.GAME_CLEAR_ZONE]
+    warp = pd.events(zone)['warp_events'][0]          # (the scene walks 10 tiles north of the way in: Pearl's and Platinum's)
+    assert (warp['x'], warp['z'] - 10) == HOF_TILE, f'the Hall of Fame\'s warp is at {(warp["x"], warp["z"])}: HOF_TILE'
     before, after = pd.game_clear_ids(zone['id'])
     b2 = pd.b2_zone[zone['id']]
     x, z = HOF_TILE
@@ -128,7 +140,7 @@ def apply(files):
     e = narcio.load(files, END_ARC)
     sizes = [len(x) for x in e]
     e[1] = pearl_credits.list_bytes(files)
-    msg = f'game_clear: credits list for Pearl\'s staff ({len(e[1]) // 16} commands)'
+    msg = f'game_clear: credits list for {version.NAME}\'s staff ({len(e[1]) // 16} commands)'
     spec = os.path.join(DATA, 'credits.json')
     if os.path.exists(spec):
         cfg = json.load(open(spec))

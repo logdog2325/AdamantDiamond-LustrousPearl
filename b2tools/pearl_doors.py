@@ -38,6 +38,7 @@ import json, math, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 
 # Pearl's door models (pokediamond arm9/overlays/05/asm/ov05_021DA5B8.s ov05_021F650C, in that order; pokeplatinum
 # names): door01, brown_wooden_door (t1_door1, Twinleaf), green_wooden_door (t2_door1), iron_door (t2_door2),
@@ -66,7 +67,7 @@ def pearl():
     """Pearl's build models, animation list and animations (the dump, read once)."""
     if not _PEARL:
         from gen4rom import Rom, narc_members
-        rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+        rom = Rom(version.WORLD_DUMP)
         _PEARL['build'] = narc_members(rom.read('fielddata/build_model/build_model.narc'))
         _PEARL['list'] = narc_members(rom.read('arc/bm_anime_list.narc'))
         _PEARL['anime'] = narc_members(rom.read('arc/bm_anime.narc'))
@@ -216,9 +217,11 @@ def check(render=False, shots=None):
         mid = pz['matrix']
         props = W.door_props(mid)
         warps = W.pl.warps(pid)[0]
-        ev = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'events', f"{pz['events']:03d}.json")))['warp_events']
+        ev = json.load(open(os.path.join(version.WORLD_WORK, 'events', f"{pz['events']:03d}.json")))['warp_events']
         models = set(W.area_models(zone, room))
-        for k, w in enumerate(warps):
+        # (the warps after the event file's own are arrival points and Turnback Cave's copies of its doors:
+        # sinnoh_events.entrance_arrivals, turnback.extra_warps; they stand on the tiles of warps above)
+        for k, w in enumerate(warps[:len(ev)]):
             if w['x'] >= 0x7FF0: continue                                  # (to a room not installed: never fires)
             pw = ev[k]
             t = W.pl.tile(W.pl.matrix(mid), pw['x'], pw['z'])

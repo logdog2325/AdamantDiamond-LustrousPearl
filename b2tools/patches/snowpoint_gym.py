@@ -16,6 +16,7 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import itcm, narcio  # noqa: E402
 
@@ -29,7 +30,7 @@ AXES = {0x49: 1, 0x4A: 2}       # Pearl's one-way tiles: 1 up and down, 2 left a
 
 
 def _world():
-    w = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    w = json.load(open(version.data_path('sinnoh_world.json')))
     b2 = {v['name']: v['b2_zone'] for v in list(w['zones'].values()) + list(w['rooms']['zones'].values())}
     return b2
 
@@ -55,12 +56,12 @@ def _snowball_code():
 def zones():
     """[(Black 2 zone, [(x, z, axes)])] of gimmick 61, from Pearl's zones and their chunk's tile behaviours."""
     b2 = _world()
-    pz = {z['name']: z for z in json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))}
+    pz = {z['name']: z for z in json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))}
     out = []
     for name in GYMS:
-        m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f"{pz[name]['matrix']:03d}.json")))
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{pz[name]['matrix']:03d}.json")))
         assert m['width'] == 1 and m['height'] == 1, f'{name}: one chunk expected'
-        land = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f"{m['maps'][0][0]:03d}.json")))
+        land = json.load(open(os.path.join(version.WORLD_WORK, 'land', f"{m['maps'][0][0]:03d}.json")))
         blocks = [(x, z, AXES[b]) for z, row in enumerate(land['behaviour']) for x, b in enumerate(row) if b in AXES]
         out.append((b2[name], blocks))
     return out

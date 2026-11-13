@@ -122,7 +122,7 @@ P358_005E:
     pl_CallIf 1, P358_00C5
     pl_CompareVarToValue PVAR_40D8, 255
     pl_CallIf 1, P358_00C5
-    pl_SetVarFromValue PVAR_4000, 0  // Pearl 0x1E0: none here
+    pl_TowerTrophyDue PVAR_4000  // Pearl 0x1E0: a trophy due (the attendant shows)
     pl_CompareVarToValue PVAR_4000, 0
     pl_GoToIf 5, P358_00B3
     pl_SetFlag PFLAG_0207
@@ -150,7 +150,7 @@ P358_S23:
 P358_00C9:
     pl_CompareVarToValue PVAR_40D8, 1
     pl_GoToIf 5, P358_010E
-    pl_SetVarFromValue PVAR_4000, 0  // Pearl 0x1E0: none here
+    pl_TowerTrophyDue PVAR_4000  // Pearl 0x1E0: a trophy due (the attendant shows)
     pl_CompareVarToValue PVAR_4000, 0
     pl_GoToIf 5, P358_0110
     pl_CompareVarToValue PVAR_4000, 1
@@ -239,7 +239,7 @@ P358_S6:
 P358_0221:
     pl_LockAll
     pl_msg_sys 19
-    BSubwayCmd_Tool 7, 0, 0, PVAR_800C  // Pearl tower function 14
+    pl_TowerDisqualify PVAR_800C  // Pearl tower function 14: the saved challenge ends, its latest streak 0
     pl_CompareVarToValue PVAR_800C, 4
     pl_GoToIf 1, P358_01EE
 
@@ -259,7 +259,7 @@ P358_0246:
     pl_End
 
 P358_0258:
-    ListMenu_AnchorTopRight 31, 11, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 31, 11, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 11, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 31, 11, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 117, 65535, 0  // Pearl AddMenuEntryImm 141, 0
     ListMenuAdd 118, 65535, 1  // Pearl AddMenuEntryImm 142, 1
@@ -268,7 +268,7 @@ P358_0258:
     pl_Return
 
 P358_0273:
-    ListMenu_AnchorTopRight 31, 9, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 31, 9, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 9, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 31, 9, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 117, 65535, 0  // Pearl AddMenuEntryImm 141, 0
     ListMenuAdd 120, 65535, 1  // Pearl AddMenuEntryImm 151, 1
@@ -278,7 +278,7 @@ P358_0273:
     pl_Return
 
 P358_0292:
-    ListMenu_AnchorTopRight 31, 7, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 31, 7, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 7, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 31, 7, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 117, 65535, 0  // Pearl AddMenuEntryImm 141, 0
     ListMenuAdd 120, 65535, 1  // Pearl AddMenuEntryImm 151, 1
@@ -392,7 +392,7 @@ P358_041F:
 
 P358_042A:
     pl_msg_talk 4
-    ListMenu_AnchorTopRight 31, 11, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 31, 11, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 11, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 31, 11, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 122, 65535, 0  // Pearl AddMenuEntryImm 6, 0
     ListMenuAdd 123, 65535, 1  // Pearl AddMenuEntryImm 7, 1
@@ -682,7 +682,7 @@ P358_0928:
 P358_093B:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 27
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 125, 65535, 0  // Pearl AddMenuEntryImm 13, 0
     ListMenuAdd 126, 65535, 1  // Pearl AddMenuEntryImm 14, 1
@@ -701,7 +701,7 @@ P358_097F:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_093B
     pl_CloseMessage
-    pl_stub StartBattleClient  // Pearl 0x0F2 Unk00F2 16, 0, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleClient 16, 0, 0: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_09C1
     pl_CompareVarToValue PVAR_800C, 3
@@ -721,7 +721,7 @@ P358_09D3:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_093B
     pl_CloseMessage
-    pl_stub StartBattleServer  // Pearl 0x0F3 Unk00F3 16, 0, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleServer 16, 0, 0: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P358_0A15
     pl_CompareVarToValue PVAR_800C, 3
@@ -851,7 +851,7 @@ P358_0C0A:
     pl_Return
 
 P358_0C15:
-    pl_SetVarFromValue PVAR_800C, 0  // Pearl 0x1DF: none here
+    pl_TowerTrophy PVAR_800C  // Pearl 0x1DF: the trophy for the longest streak, given once each
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_023B
     pl_msg_sys 116
@@ -935,7 +935,7 @@ P358_0D6C:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 14
     pl_Call P358_02C1
-    pl_SetVarFromValue PVAR_800C, 0  // Pearl 0x1DF: none here
+    pl_TowerTrophy PVAR_800C  // Pearl 0x1DF: the trophy for the longest streak, given once each
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_023B
     pl_msg_sys 116
@@ -1025,7 +1025,7 @@ P358_0EEC:
     pl_LockAll
     pl_FacePlayer
     pl_SetVarFromValue PVAR_4001, 0
-    pl_SetVarFromValue PVAR_4002, 0  // Pearl 0x1DF: none here
+    pl_TowerTrophy PVAR_4002  // Pearl 0x1DF: the trophy for the longest streak, given once each
 
 P358_0EFE:
     pl_SetVarFromVar PVAR_8008, PVAR_4002
@@ -1081,12 +1081,12 @@ P358_0FAC:
 P358_0FAE:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
-    pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
-    pl_WaitFadeScreen
-    BSubwayCmd_Tool 111, 0, 0, 0  // OpenBattleTowerRecordsApp: Black 2's records screen
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
-    pl_WaitFadeScreen
+// Pearl 0x0BC FadeScreen 6, 1, 0, 0: dropped (data/pearl_script_patches.json: Black 2's records screen fades by itself (the four record machines' subroutine; plat-tower 2026-11-08); the three results machines show a message on the field (plat-records))
+// Pearl 0x0BD WaitFadeScreen : dropped (data/pearl_script_patches.json: (its wait))
+    pl_TowerResults PVAR_8000, PVAR_8001, 128  // OpenBattleTowerRecordsApp: the player's results as a message (Black 2's leaders screen for the rankings)
+// Pearl 0x0A1 ReturnToField : dropped (data/pearl_script_patches.json: Black 2's records screen reopens the field itself (a second FieldOpen loads overlay 35 again: An error has occurred); the results message never leaves the field)
+// Pearl 0x0BC FadeScreen 6, 1, 1, 0: dropped (data/pearl_script_patches.json: (the fade back))
+// Pearl 0x0BD WaitFadeScreen : dropped (data/pearl_script_patches.json: (its wait))
     pl_ReleaseAll
     pl_Return
 
@@ -1113,7 +1113,7 @@ P358_1000:
 
 P358_S13:
 P358_1014:
-    pl_stub 1E4  // Pearl 0x1E4 Unk01E4 32780: not translated yet
+    BSubwayCmd_Tool 110, 0, 0, PVAR_800C  // Gen 4 0x1E4: any Wi-Fi leaders downloaded (Black 2's Wi-Fi Subway leaders)
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P358_1039
     pl_SetVarFromValue PVAR_8000, 1
@@ -1344,7 +1344,7 @@ PearlProxy_10151:                  // Pearl global script 10151 (run by this zon
     VMHalt
 
 PearlClosed_0:                  // a closed place (data/pearl_closed_facilities.json): object 2
-    pl_closed_facility 157, 255
+    pl_closed_facility 168, 255
     VMHalt
 
 // ---- Pearl global script 205:7 (a subroutine here)
@@ -1361,7 +1361,7 @@ C205_7_0480:
     pl_GoToIf 1, C205_7_04D4
 // OpenSaveInfo: no save details window here
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 128  // Pearl bank 199 line 13
+    pl_msg_sys 139  // Pearl bank 199 line 13
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, C205_7_055E
@@ -1376,27 +1376,27 @@ C205_7_0480:
 
 C205_7_04D4:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 129  // Pearl bank 199 line 20
+    pl_msg_sys 140  // Pearl bank 199 line 20
     pl_WaitABPress
     pl_SetVarFromValue PVAR_800C, 0
     pl_Return
 
 C205_7_04E1:
-    pl_msg_sys 130  // Pearl bank 199 line 14
+    pl_msg_sys 141  // Pearl bank 199 line 14
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, C205_7_055E
 
 C205_7_04F5:
-    pl_msg_sys 131  // Pearl bank 199 line 21
+    pl_msg_sys 142  // Pearl bank 199 line 21
     pl_GoTo C205_7_051B
 
 C205_7_04FE:
-    pl_msg_sys 130  // Pearl bank 199 line 14
+    pl_msg_sys 141  // Pearl bank 199 line 14
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, C205_7_055E
-    pl_msg_sys 132  // Pearl bank 199 line 15
+    pl_msg_sys 143  // Pearl bank 199 line 15
     pl_GoTo C205_7_051B
 
 C205_7_051B:
@@ -1416,7 +1416,7 @@ C205_7_053B:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, C205_7_0568
     pl_BufferPlayerName 0
-    pl_msg_sys 133  // Pearl bank 199 line 16
+    pl_msg_sys 144  // Pearl bank 199 line 16
     pl_PlaySE SEQ_SE_SAVE  // Pearl SEQ_SE_DP_SAVE
     pl_WaitSE SEQ_SE_SAVE  // Pearl SEQ_SE_DP_SAVE
     VMSleep 30  // WaitABPressTime
@@ -1429,7 +1429,7 @@ C205_7_055E:
     pl_Return
 
 C205_7_0568:
-    pl_msg_sys 134  // Pearl bank 199 line 18
+    pl_msg_sys 145  // Pearl bank 199 line 18
     pl_WaitABPress
 // CloseSaveInfo: no save details window here
     pl_Return
@@ -1439,7 +1439,7 @@ C205_47_S47:
 C205_47_0893:
     pl_Call C205_47_08A0
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 135  // Pearl bank 199 line 128
+    pl_msg_sys 146  // Pearl bank 199 line 128
     pl_ReturnCommonScript
     VMReturn  // End: the sub-script ends
 
@@ -1448,7 +1448,7 @@ C205_47_08A0:
     pl_SendGoodToPC PVAR_8004, PVAR_800C
     pl_GetDecorationNameWithArticle 0, PVAR_8004
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_sys 136  // Pearl bank 199 line 108
+    pl_msg_sys 147  // Pearl bank 199 line 108
     pl_BufferUndergroundGoodsName 0, PVAR_8004
     pl_WaitFanfare
     pl_Return
@@ -1491,7 +1491,7 @@ T1042_2_00D2:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_2_0214
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 137  // Pearl bank 562 line 0
+    pl_msg_talk 148  // Pearl bank 562 line 0
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_2_0107
@@ -1506,8 +1506,8 @@ T1042_2_0107:
     pl_WaitFadeScreen
     pl_CloseMessage
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32772: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_2_021F
@@ -1515,24 +1515,24 @@ T1042_2_0107:
     pl_GoTo T1042_2_0214
 
 T1042_2_0165:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
-    ListMenuAdd 138, 65535, 1  // Pearl AddListMenuEntry 16, 1
-    ListMenuAdd 139, 65535, 2  // Pearl AddListMenuEntry 17, 2
-    ListMenuAdd 140, 65535, 3  // Pearl AddListMenuEntry 18, 3
-    ListMenuAdd 141, 65535, 4  // Pearl AddListMenuEntry 19, 4
-    ListMenuAdd 142, 65535, 5  // Pearl AddListMenuEntry 20, 5
-    ListMenuAdd 143, 65535, 6  // Pearl AddListMenuEntry 21, 6
-    ListMenuAdd 144, 65535, 7  // Pearl AddListMenuEntry 22, 7
-    ListMenuAdd 145, 65535, 8  // Pearl AddListMenuEntry 23, 8
-    ListMenuAdd 146, 65535, 9  // Pearl AddListMenuEntry 24, 9
-    ListMenuAdd 147, 65535, 10  // Pearl AddListMenuEntry 25, 10
-    ListMenuAdd 148, 65535, 11  // Pearl AddListMenuEntry 26, 11
-    ListMenuAdd 149, 65535, 12  // Pearl AddListMenuEntry 27, 12
-    ListMenuAdd 150, 65535, 13  // Pearl AddListMenuEntry 28, 13
-    ListMenuAdd 151, 65535, 14  // Pearl AddListMenuEntry 29, 14
-    ListMenuAdd 152, 65535, 15  // Pearl AddListMenuEntry 30, 15
-    ListMenuAdd 153, 65535, 16  // Pearl AddListMenuEntry 31, 16
-    ListMenuAdd 154, 65535, 17  // Pearl AddListMenuEntry 32, 17
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
+    ListMenuAdd 149, 65535, 1  // Pearl AddListMenuEntry 16, 1
+    ListMenuAdd 150, 65535, 2  // Pearl AddListMenuEntry 17, 2
+    ListMenuAdd 151, 65535, 3  // Pearl AddListMenuEntry 18, 3
+    ListMenuAdd 152, 65535, 4  // Pearl AddListMenuEntry 19, 4
+    ListMenuAdd 153, 65535, 5  // Pearl AddListMenuEntry 20, 5
+    ListMenuAdd 154, 65535, 6  // Pearl AddListMenuEntry 21, 6
+    ListMenuAdd 155, 65535, 7  // Pearl AddListMenuEntry 22, 7
+    ListMenuAdd 156, 65535, 8  // Pearl AddListMenuEntry 23, 8
+    ListMenuAdd 157, 65535, 9  // Pearl AddListMenuEntry 24, 9
+    ListMenuAdd 158, 65535, 10  // Pearl AddListMenuEntry 25, 10
+    ListMenuAdd 159, 65535, 11  // Pearl AddListMenuEntry 26, 11
+    ListMenuAdd 160, 65535, 12  // Pearl AddListMenuEntry 27, 12
+    ListMenuAdd 161, 65535, 13  // Pearl AddListMenuEntry 28, 13
+    ListMenuAdd 162, 65535, 14  // Pearl AddListMenuEntry 29, 14
+    ListMenuAdd 163, 65535, 15  // Pearl AddListMenuEntry 30, 15
+    ListMenuAdd 164, 65535, 16  // Pearl AddListMenuEntry 31, 16
+    ListMenuAdd 165, 65535, 17  // Pearl AddListMenuEntry 32, 17
     ListMenuShow
     pl_CompareVarToValue PVAR_8004, 65534
     pl_GoToIf 1, T1042_2_021F
@@ -1541,13 +1541,13 @@ T1042_2_0165:
 
 T1042_2_0214:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 155  // Pearl bank 562 line 2
+    pl_msg_talk 166  // Pearl bank 562 line 2
     pl_WaitButton
     pl_GoTo T1042_2_022A
 
 T1042_2_021F:
     MsgWinCloseAll  // another speaker: close the first window
-    pl_msg_talk 156  // Pearl bank 562 line 1
+    pl_msg_talk 167  // Pearl bank 562 line 1
     pl_WaitButton
     pl_GoTo T1042_2_022A
 

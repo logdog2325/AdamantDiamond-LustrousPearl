@@ -58,6 +58,10 @@ CLASSES = [
     'PKMN_TRAINER_BUCK', 'PKMN_TRAINER_MIRA', 'PKMN_TRAINER_LUCAS', 'PKMN_TRAINER_DAWN', 'TOWER_TYCOON',
 ]
 assert len(CLASSES) == 46 and FIRST_SPRITE + len(CLASSES) <= 256      # TrClassResource.sprite is a u8
+# Platinum's Frontier Brains (Black 2 has its own MAID), after Pearl's so that no id moves
+if version.PLATINUM:
+    CLASSES += ['HALL_MATRON', 'FACTORY_HEAD', 'ARCADE_STAR', 'CASTLE_VALET']
+    assert FIRST_SPRITE + len(CLASSES) <= 256
 
 
 def sprite_id(name):
@@ -72,7 +76,12 @@ def sprite_ids():
 def pearl_class_numbers():
     """{class name without TRAINER_CLASS_: number} from pokediamond."""
     text = open(DIAMOND_CLASSES, encoding='utf-8').read()
-    return {m.group(1): int(m.group(2)) for m in re.finditer(r'#define\s+TRAINER_CLASS_(\w+)\s+(\d+)', text)}
+    out = {m.group(1): int(m.group(2)) for m in re.finditer(r'#define\s+TRAINER_CLASS_(\w+)\s+(\d+)', text)}
+    if version.PLATINUM:                # its 98-104
+        for i, l in enumerate(open(os.path.join(ROOT, 'external', 'pokeplatinum', 'generated', 'trainer_classes.txt'))):
+            if i >= 98:
+                out[l.strip()[len('TRAINER_CLASS_'):]] = i
+    return out
 
 
 # ---------------------------------------------------------------------------------------------------- Pearl's pictures
@@ -92,22 +101,52 @@ def dp_decode_ncgr(ncgr):
     return w, h, bytes(sprites.unpack4(d, w * h))
 
 
+def platinum_picture(members, c):
+    """Class c's front in Platinum's layout (5 files: tiles, palette, cells, animation, scan; pokeplatinum SpriteSystem_SetTrainerClassGraphics
+    Index): frame 0, the cell its first animation starts on, as 80 x 80 indices and 16 colours. Its scan file holds only 6.6 % of the pixels,
+    so the picture comes from the tiles through the cell (checked with b2tools/pearl_trainer_pics.py check against res/trainers/classes/*/
+    front.png). The Frontier Brains and others that animate stay on this frame for now (the user, 2026-11-02)."""
+    import mcss, struct as st
+    tiles, pal, ncer, nanr = members[5 * c:5 * c + 4]
+    size, off = st.unpack_from('<II', tiles, 0x28)
+    pix = sprites.unpack4(tiles[0x18 + off:0x18 + off + size], size * 2)
+    idx = mcss.parse_anim(nanr)[0]['frames'][0][1]['idx']
+    n, attr, celloff, cmap, vt = st.unpack_from('<HHIII', ncer, 0x18)
+    unit = 64 << cmap
+    src = 2 * st.unpack_from('<I', ncer, 0x18 + vt + st.unpack_from('<I', ncer, 0x18 + vt + 4)[0] + 8 * idx)[0] if vt else 0
+    cb = 0x18 + celloff; csz = 16 if attr & 1 else 8; ob = cb + n * csz
+    no, _, oo = st.unpack_from('<HHI', ncer, cb + csz * idx)
+    out = bytearray(6400)
+    for j in range(no):
+        a0, a1, a2 = st.unpack_from('<HHH', ncer, ob + oo + 6 * j)
+        y = (a0 & 0xff) - (256 if a0 & 0x80 else 0); x = (a1 & 0x1ff) - (512 if a1 & 0x100 else 0)
+        w, h = sprites.OBJ_SIZES[(a0 >> 14, a1 >> 14)]
+        t = src + (a2 & 0x3ff) * unit
+        for i in range(w * h):
+            px, py = x + i // 64 % (w // 8) * 8 + i % 64 % 8 + 40, y + i // 64 // (w // 8) * 8 + i % 64 // 8 + 40
+            if pix[t + i] and 0 <= px < 80 and 0 <= py < 80:
+                out[py * 80 + px] = pix[t + i]
+    return bytes(out), sprites.nclr_colors_any(pal)[1][:16]
+
+
+def class_picture(members, c):
+    """(80x80 indices, 16 BGR555 colours) of class number c from the dump's trfgra.narc members."""
+    if version.PLATINUM:
+        return platinum_picture(members, c)
+    w, h, pix = dp_decode_ncgr(members[2 * c])
+    assert (w, h) == (160, 80), (c, w, h)
+    assert not any(pix[y * w + x] for y in range(h) for x in range(80, 160)), f'{c}: second frame not empty'
+    _, pal = sprites.nclr_colors(members[2 * c + 1])
+    return bytes(pix[y * w + x] for y in range(80) for x in range(80)), pal
+
+
 def pearl_pictures(dump=None):
     """{class name: (80x80 indices bytes, 16 BGR555 colours)} for CLASSES, from the dump's trfgra.narc."""
     rom = Rom(dump or version.SOURCE_DUMP)
     members = narc_members(rom.read(TRFGRA))
     numbers = pearl_class_numbers()
-    assert len(members) == 2 * len(numbers), (len(members), len(numbers))
-    out = {}
-    for name in CLASSES:
-        c = numbers[name]
-        w, h, pix = dp_decode_ncgr(members[2 * c])
-        assert (w, h) == (160, 80), (name, w, h)
-        assert not any(pix[y * w + x] for y in range(h) for x in range(80, 160)), f'{name}: second frame not empty'
-        still = bytes(pix[y * w + x] for y in range(80) for x in range(80))
-        _, pal = sprites.nclr_colors(members[2 * c + 1])
-        out[name] = (still, pal)
-    return out
+    assert len(members) == (5 if version.PLATINUM else 2) * len(numbers), (len(members), len(numbers))
+    return {name: class_picture(members, numbers[name]) for name in CLASSES}
 
 
 # ---------------------------------------------------------------------------------------------------- folders

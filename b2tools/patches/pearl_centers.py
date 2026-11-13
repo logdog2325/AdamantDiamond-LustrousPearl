@@ -23,6 +23,7 @@ import json, os, struct, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import narcio, zoneheaders  # noqa: E402
 from zones import parse_entities, build_entities  # noqa: E402
@@ -79,9 +80,9 @@ def script_file_number(pearl_zone):
 
 
 def apply(files):
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     rooms = world['rooms']
-    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
     b2 = {int(k): v['b2_zone'] for k, v in rooms['zones'].items()}
     (shared_pid, aliases), = [(int(k), v) for k, v in rooms['shared'].items()]
     shared = b2[shared_pid]
@@ -93,7 +94,7 @@ def apply(files):
         e = headers[zone]['entities']
         ents[e] = with_map_scripts(ents[e], GLOBAL_PC_TOWN)
     # the shared 2F: attendants + the way down
-    ev = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'events', f"{zones[shared_pid]['events']:03d}.json")))
+    ev = json.load(open(os.path.join(version.WORLD_WORK, 'events', f"{zones[shared_pid]['events']:03d}.json")))
     e = headers[shared]['entities']
     ent, _ = parse_entities(ents[e])
     order = ['Counter_UnionLeft', 'Counter_UnionRoom', 'Counter_WiFi']

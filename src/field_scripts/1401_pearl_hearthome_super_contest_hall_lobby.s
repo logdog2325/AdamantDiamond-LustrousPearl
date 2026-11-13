@@ -200,8 +200,8 @@ P114_01DA:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub 0A8  // Pearl 0x0A8 ShowContestPokemon 0, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (0A8: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -216,8 +216,8 @@ P114_0217:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub 0A8  // Pearl 0x0A8 ShowContestPokemon 1, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (0A8: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -232,8 +232,8 @@ P114_0254:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub 0A8  // Pearl 0x0A8 ShowContestPokemon 2, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (0A8: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -248,8 +248,8 @@ P114_0291:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub 0A8  // Pearl 0x0A8 ShowContestPokemon 3, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (0A8: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -264,8 +264,8 @@ P114_02CE:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub 0A8  // Pearl 0x0A8 ShowContestPokemon 4, 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (0A8: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_ReleaseAll
     pl_End
@@ -1068,7 +1068,7 @@ T206_7_0250:
     pl_msg_talk 42  // Pearl bank 203 line 12
 
 T206_7_0253:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 43, 65535, 0  // Pearl AddMenuEntryImm 8, 0
     ListMenuAdd 44, 65535, 1  // Pearl AddMenuEntryImm 9, 1
     ListMenuAdd 45, 65535, 2  // Pearl AddMenuEntryImm 10, 2
@@ -1122,7 +1122,7 @@ T206_7_030E:
     pl_msg_talk 48  // Pearl bank 203 line 5
 
 T206_7_0311:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 49, 65535, 0  // Pearl AddMenuEntryImm 96, 0
     ListMenuAdd 50, 65535, 1  // Pearl AddMenuEntryImm 97, 1
     ListMenuAdd 51, 65535, 2  // Pearl AddMenuEntryImm 98, 2
@@ -1152,7 +1152,7 @@ T206_7_037E:
     pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_7_0381:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 56, 65535, 0  // Pearl AddMenuEntryImm 36, 0
     ListMenuAdd 57, 65535, 1  // Pearl AddMenuEntryImm 37, 1
     ListMenuAdd 58, 65535, 2  // Pearl AddMenuEntryImm 38, 2
@@ -1188,7 +1188,7 @@ T206_7_0402:
 
 T206_7_040D:
     pl_msg_talk 65  // Pearl bank 203 line 27
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 66, 65535, 0  // Pearl AddMenuEntryImm 105, 0
     ListMenuAdd 67, 65535, 1  // Pearl AddMenuEntryImm 106, 1
     ListMenuAdd 68, 65535, 2  // Pearl AddMenuEntryImm 107, 2
@@ -1225,7 +1225,7 @@ T206_7_049A:
 T206_7_04A8:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 71  // Pearl bank 203 line 28
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 72, 65535, 0  // Pearl AddMenuEntryImm 110, 0
     ListMenuAdd 73, 65535, 1  // Pearl AddMenuEntryImm 111, 1
     ListMenuAdd 74, 65535, 2  // Pearl AddMenuEntryImm 112, 2
@@ -1318,7 +1318,7 @@ T206_7_0610:
 T206_7_0625:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 81  // Pearl bank 203 line 219
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 82, 65535, 0  // Pearl AddMenuEntryImm 13, 0
     ListMenuAdd 83, 65535, 1  // Pearl AddMenuEntryImm 14, 1
@@ -1337,7 +1337,7 @@ T206_7_0669:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_7_0625
     pl_CloseMessage
-    pl_stub StartBattleClient  // Pearl 0x0F2 Unk00F2 8, 32773, 32772, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleClient 8, 32773, 32772: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_7_06AB
     pl_CompareVarToValue PVAR_800C, 3
@@ -1356,7 +1356,7 @@ T206_7_06BB:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_7_0625
     pl_CloseMessage
-    pl_stub StartBattleServer  // Pearl 0x0F3 Unk00F3 8, 32773, 32772, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleServer 8, 32773, 32772: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_7_06FD
     pl_CompareVarToValue PVAR_800C, 3
@@ -1594,7 +1594,7 @@ T206_8_0250:
     pl_msg_talk 42  // Pearl bank 203 line 12
 
 T206_8_0253:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 43, 65535, 0  // Pearl AddMenuEntryImm 8, 0
     ListMenuAdd 44, 65535, 1  // Pearl AddMenuEntryImm 9, 1
     ListMenuAdd 45, 65535, 2  // Pearl AddMenuEntryImm 10, 2
@@ -1648,7 +1648,7 @@ T206_8_030E:
     pl_msg_talk 48  // Pearl bank 203 line 5
 
 T206_8_0311:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 49, 65535, 0  // Pearl AddMenuEntryImm 96, 0
     ListMenuAdd 50, 65535, 1  // Pearl AddMenuEntryImm 97, 1
     ListMenuAdd 51, 65535, 2  // Pearl AddMenuEntryImm 98, 2
@@ -1678,7 +1678,7 @@ T206_8_037E:
     pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_8_0381:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 56, 65535, 0  // Pearl AddMenuEntryImm 36, 0
     ListMenuAdd 57, 65535, 1  // Pearl AddMenuEntryImm 37, 1
     ListMenuAdd 58, 65535, 2  // Pearl AddMenuEntryImm 38, 2
@@ -1714,7 +1714,7 @@ T206_8_0402:
 
 T206_8_040D:
     pl_msg_talk 65  // Pearl bank 203 line 27
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 66, 65535, 0  // Pearl AddMenuEntryImm 105, 0
     ListMenuAdd 67, 65535, 1  // Pearl AddMenuEntryImm 106, 1
     ListMenuAdd 68, 65535, 2  // Pearl AddMenuEntryImm 107, 2
@@ -1751,7 +1751,7 @@ T206_8_049A:
 T206_8_04A8:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 71  // Pearl bank 203 line 28
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 72, 65535, 0  // Pearl AddMenuEntryImm 110, 0
     ListMenuAdd 73, 65535, 1  // Pearl AddMenuEntryImm 111, 1
     ListMenuAdd 74, 65535, 2  // Pearl AddMenuEntryImm 112, 2
@@ -1844,7 +1844,7 @@ T206_8_0610:
 T206_8_0625:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 81  // Pearl bank 203 line 219
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 82, 65535, 0  // Pearl AddMenuEntryImm 13, 0
     ListMenuAdd 83, 65535, 1  // Pearl AddMenuEntryImm 14, 1
@@ -1863,7 +1863,7 @@ T206_8_0669:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_8_0625
     pl_CloseMessage
-    pl_stub StartBattleClient  // Pearl 0x0F2 Unk00F2 8, 32773, 32772, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleClient 8, 32773, 32772: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_8_06AB
     pl_CompareVarToValue PVAR_800C, 3
@@ -1882,7 +1882,7 @@ T206_8_06BB:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_8_0625
     pl_CloseMessage
-    pl_stub StartBattleServer  // Pearl 0x0F3 Unk00F3 8, 32773, 32772, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleServer 8, 32773, 32772: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T206_8_06FD
     pl_CompareVarToValue PVAR_800C, 3
@@ -2255,7 +2255,7 @@ T206_9_0E74:
 
 T206_9_0E93:
     pl_msg_talk 88  // Pearl bank 203 line 112
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 89, 65535, 0  // Pearl AddMenuEntryImm 113, 0
     ListMenuAdd 90, 65535, 1  // Pearl AddMenuEntryImm 114, 1
     ListMenuAdd 91, 65535, 2  // Pearl AddMenuEntryImm 115, 2
@@ -2270,7 +2270,7 @@ T206_9_0E93:
     pl_GoTo T206_9_138E
 
 T206_9_0EE1:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 92, 65535, 0  // Pearl AddMenuEntryImm 155, 0
     ListMenuAdd 93, 65535, 1  // Pearl AddMenuEntryImm 156, 1
     ListMenuAdd 94, 65535, 2  // Pearl AddMenuEntryImm 157, 2
@@ -2313,7 +2313,7 @@ T206_9_1027:
 
 T206_9_103A:
     pl_msg_talk 97  // Pearl bank 203 line 160
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 98, 65535, 0  // Pearl AddMenuEntryImm 161, 0
     ListMenuAdd 99, 65535, 1  // Pearl AddMenuEntryImm 162, 1
     ListMenuAdd 100, 65535, 2  // Pearl AddMenuEntryImm 163, 2
@@ -2389,7 +2389,7 @@ T206_9_1169:
     pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_9_116C:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 107, 65535, 0  // Pearl AddMenuEntryImm 121, 0
     ListMenuAdd 108, 65535, 1  // Pearl AddMenuEntryImm 118, 1
     ListMenuAdd 109, 65535, 2  // Pearl AddMenuEntryImm 119, 2
@@ -2411,7 +2411,7 @@ T206_9_11CC:
     pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_9_11CF:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 112, 65535, 0  // Pearl AddMenuEntryImm 125, 0
     ListMenuAdd 113, 65535, 1  // Pearl AddMenuEntryImm 126, 1
     ListMenuAdd 114, 65535, 2  // Pearl AddMenuEntryImm 127, 2
@@ -2445,7 +2445,7 @@ T206_9_1247:
     pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_9_124A:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 119, 65535, 0  // Pearl AddMenuEntryImm 135, 0
     ListMenuAdd 120, 65535, 1  // Pearl AddMenuEntryImm 136, 1
     ListMenuAdd 121, 65535, 2  // Pearl AddMenuEntryImm 137, 2
@@ -2486,7 +2486,7 @@ T206_9_12DE:
     pl_msg_talk 55  // Pearl bank 203 line 117
 
 T206_9_12E1:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 128, 65535, 0  // Pearl AddMenuEntryImm 145, 0
     ListMenuAdd 129, 65535, 1  // Pearl AddMenuEntryImm 146, 1
     ListMenuAdd 130, 65535, 2  // Pearl AddMenuEntryImm 147, 2
@@ -2621,8 +2621,8 @@ T1042_7_0107:
     pl_WaitFadeScreen
     pl_CloseMessage
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32772: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_7_021F
@@ -2630,7 +2630,7 @@ T1042_7_0107:
     pl_GoTo T1042_7_0214
 
 T1042_7_0165:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
     ListMenuAdd 139, 65535, 1  // Pearl AddListMenuEntry 16, 1
     ListMenuAdd 140, 65535, 2  // Pearl AddListMenuEntry 17, 2
     ListMenuAdd 141, 65535, 3  // Pearl AddListMenuEntry 18, 3

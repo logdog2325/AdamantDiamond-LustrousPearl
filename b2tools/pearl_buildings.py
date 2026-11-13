@@ -15,6 +15,7 @@ import os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 import nsbtx  # noqa: E402
 from b2files import gf_container_build  # noqa: E402
 
@@ -47,7 +48,7 @@ def btx0_of(bmd):
 def _placeholder():
     """A small texture set for packs whose models bring none: Twinleaf's door model's (Pearl build model 67)."""
     from gen4rom import Rom, narc_members
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    rom = Rom(version.WORLD_DUMP)
     return btx0_of(narc_members(rom.read('fielddata/build_model/build_model.narc'))[67])
 
 

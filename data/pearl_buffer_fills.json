@@ -1,0 +1,4 @@
+{
+ "_doc": "Word buffers a Pearl line reads that its own script never fills (pearl_story.py BUFFER_FILLS; Platinum's are in data/platinum/pearl_buffer_fills.json). Gen 4 keeps one word set for all of the field's scripts, so a line could use a name an earlier script put there; Black 2 makes a new word set for every script run, and the name would be empty. {zone: {line of the zone's bank: {buffer: 'rival' | 'player' | 'item:N'}}}: h_message fills it right before the line. MAP_CANALAVE 1 (1.0.1, v101-story; Platinum's row): the rival's line on the bridge ('{rival}: Yeah, yeah, you're just a bit better than me...'). His battle script fills the name; talking to him afterwards (script 3) shows the same line with no name in Pearl's 1.0.",
+ "MAP_CANALAVE": {"1": {"0": "rival"}}
+}

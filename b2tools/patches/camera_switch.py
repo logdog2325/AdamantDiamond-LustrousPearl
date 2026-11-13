@@ -20,6 +20,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 sys.path.insert(0, os.path.dirname(HERE))
 import narcio, zoneheaders, maplook, pearl_mesh  # noqa: E402
 from b2files import gf_container  # noqa: E402
@@ -49,9 +50,9 @@ def room_south(files, rooms):
 def apply(files):
     fixes = maplook.fixes()
     mode = 'Pearl' if 'camera' in fixes else 'tilted Black 2' if 'tilt' in fixes else 'Black 2'
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     rooms = world['rooms']
-    pzones = {z['id']: z for z in json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))}
+    pzones = {z['id']: z for z in json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))}
     vanilla, _ = zoneheaders.load(sinnoh_rooms.VANILLA)
     headers, entries = zoneheaders.load(files)
 

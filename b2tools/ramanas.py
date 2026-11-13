@@ -32,12 +32,13 @@ import functools, json, os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version as build  # noqa: E402
 
 DATA = os.path.join(ROOT, 'data', 'ramanas_park.json')
 DECOMP = os.path.join(ROOT, 'external', 'pokebw2')
 SRC_SCRIPTS = os.path.join(ROOT, 'src', 'field_scripts')
 SRC_TEXT = os.path.join(ROOT, 'src', 'text', 'script')
-REGISTRY = os.path.join(ROOT, 'data', 'pearl_story_ids.json')
+REGISTRY = build.data_path('pearl_story_ids.json')
 
 # script-local works (ov012 ScriptWork 0x8000-0x8061, cleared when a script starts; pearl_story uses 0x8020-0x8046)
 T = [0x8050 + i for i in range(8)]
@@ -58,9 +59,16 @@ def load():
 
 
 def version(d=None):
-    """The rooms' version of this build: only the build version picks it, nothing in the data."""
-    import version as build
-    return build.BDSP
+    """The rooms' version of this build: only the build version picks it, nothing in the data (version.RAMANAS_ROOMS: 'sp',
+    'bd', 'both', or, postdex 2026-11-09, 'sp+bd' / 'bd+sp': all 11 rooms, each keeping its own version's requirement)."""
+    return build.RAMANAS_ROOMS
+
+
+MERGED = ('sp+bd', 'bd+sp')            # (postdex) all 11 rooms: the first column is the build's own
+
+
+def all_rooms(ver):
+    return ver == 'both' or ver in MERGED
 
 
 _CONSTS = {}
@@ -115,12 +123,21 @@ def pearl_var(name):
 
 
 def in_version(room, ver):
-    return room['version'] in ('both', ver)
+    return all_rooms(ver) or room['version'] in ('both', ver)        # (Platinum's column 'both': all 11 rooms)
 
 
 def requires(room, ver):
     r = room['requires']
+    if isinstance(r, dict) and ver in MERGED:          # (postdex) a room of one version keeps that version's rule; a shared
+        own = ver.split('+')[0]                         # room the build's own (a 1.0 save's open rooms stay open)
+        return r.get(room['version'] if room['version'] != 'both' else own, [])
     return r.get(ver, []) if isinstance(r, dict) else r
+
+
+def entrance(room, ver):
+    """A room's doorway: in Platinum the Johto and Rainbow Rooms need their own (entrance_both), because the Kanto and Squall Rooms
+    keep the two they share with them in the other versions."""
+    return room.get('entrance_both', room['entrance']) if all_rooms(ver) else room['entrance']
 
 
 def rooms(ver=None):
@@ -143,7 +160,7 @@ def rooms(ver=None):
         out.append(dict(id=room['id'], name=room['name'], zone=room['zone'], look=room['look'], pick=room['pick'],
                         slate=room['slate']['item'], slate_name=room['slate']['name'],
                         requires=requires(room, ver), requires_flags=room['requires_flags'],
-                        entrance=room['entrance'], complete_items=[const('items', i) for i in
+                        entrance=entrance(room, ver), complete_items=[const('items', i) for i in
                                                                     room.get('complete_items', [])],
                         mons=mons))
     ids = {r['id'] for r in out}
@@ -234,15 +251,35 @@ def room_complete_code(c, room, label_not_done):
         c.jump_if_flag(flag_of(m), 0, label_not_done)
 
 
-def room_open_code(c, room, by_id, open_flag, label_closed):
+def room_open_code(c, room, by_id, open_flag, label_closed, split=None):
     """Jump to label_closed unless the room is open: the park open (open_flag), each required room complete, each
-    required flag set."""
+    required flag set. split (postdex): {PEARLB2_GAME_VERSION: the room's requirement in that version} when the versions
+    sharing this generated file (Pearl's src/, also Diamond's) require different rooms: one #if branch each."""
     c.jump_if_flag(open_flag, 0, label_closed)
-    for q in room['requires']:
-        for m in by_id[q]['mons']:
-            c.jump_if_flag(flag_of(m), 0, label_closed)
+    branches = sorted(split.items()) if split and len({tuple(v) for v in split.values()}) > 1 else [(None, room['requires'])]
+    for k, (game, reqs) in enumerate(branches):
+        if game is not None:
+            c(f'#{"if" if k == 0 else "elif"} PEARLB2_GAME_VERSION == {game}')
+        for q in reqs:
+            for m in by_id[q]['mons']:
+                c.jump_if_flag(flag_of(m), 0, label_closed)
+    if branches[0][0] is not None:
+        c('#endif')
     for f in room['requires_flags']:
         c.jump_if_flag(pearl_flag(f), 0, label_closed)
+
+
+def shared_requirements(rs):
+    """(postdex) {room id: {PEARLB2_GAME_VERSION: requires}} of the versions that share Pearl's generated src/ files (a
+    Diamond build takes Pearl's gate file), when they have the same rooms; {} otherwise (Platinum has its own files)."""
+    if build.PLATINUM:
+        return {}
+    modes = {build.GAME_VERSION_BY[v]: build.RAMANAS_ROOMS_BY[v] for v in ('pearl', 'diamond')}
+    per = {g: {r['id']: r['requires'] for r in rooms(m)} for g, m in modes.items()}
+    ids = [r['id'] for r in rs]
+    if any(sorted(p) != sorted(ids) for p in per.values()):
+        return {}
+    return {i: {g: per[g][i] for g in per} for i in ids}
 
 
 def wild_flags(m):
@@ -392,7 +429,8 @@ def write():
     a Diamond build takes in their place: patches/scripts.py, patches/pearl_text.py)."""
     d = load()
     problems = []
-    for ver, sub in (('sp', ''), ('bd', 'diamond')):
+    for ver, sub in (('both', 'platinum'),) if build.PLATINUM else ((build.RAMANAS_ROOMS_BY['pearl'], ''),
+                                                                    (build.RAMANAS_ROOMS_BY['diamond'], 'diamond')):
         src, text, bad = write_rooms(ver)
         problems += bad
         for folder, num, ext, body in ((SRC_SCRIPTS, d['files']['script'], '.s', src),
@@ -417,14 +455,29 @@ def zone_extras(zone_name):
         return ['clerk', 'return']
     if zone_name == d['pal_park']:
         return ['attendant']
-    return []
+    import postgame_legend                     # (postdex) Spear Pillar's other legendary, through the same hooks
+    return postgame_legend.zone_extras(zone_name)
+
+
+def zone_inits(zone_name, ids):
+    """(postdex) Extra entries that run as zone inits after Pearl's (pearl_events.map_script_table)."""
+    import postgame_legend
+    return postgame_legend.zone_inits(zone_name, ids)
+
+
+def extra_triggers(zone_name, ids):
+    """(postdex) Step triggers of a Pearl zone after Pearl's own (pearl_events.entities): [{script, x, z, w, h, work,
+    value}]."""
+    import postgame_legend
+    return postgame_legend.extra_triggers(zone_name, ids)
 
 
 def extra_people(zone_name, ids):
     """New people of a Pearl zone: [{pearl-like object}] with 'script' = the extra entry's id (ids: {extra: id})."""
     d = load()
     if zone_name != d['gate']:
-        return []
+        import postgame_legend
+        return postgame_legend.extra_people(zone_name, ids)
     cl = d['clerk']
     return [dict(id=100, graphics_id=cl['pearl_gfx'], movement_type=0, trainer_type=0, hidden_flag=0,
                  script=ids['clerk'], initial_dir=cl['dir'], data=[0, 0, 0], movement_range_x=0, movement_range_z=0,
@@ -483,9 +536,11 @@ def extra_code(job, pd, zone, ids):
                 '    pl_CloseMessage', '    pl_ReleaseAll', '    VMHalt']
         return out
     if name != d['gate']:
-        return out
+        import postgame_legend
+        return out + postgame_legend.extra_code(job, pd, zone, ids)
     rs = rooms()
     by_id = {r['id']: r for r in rs}
+    split = shared_requirements(rs)                 # (postdex) Pearl's and Diamond's rules in the one gate file
     mv = gate_movements(pd)
     park = pd.by_name[d['pal_park']]
     park_b2 = pd.b2_zone[park['id']]
@@ -517,7 +572,7 @@ def extra_code(job, pd, zone, ids):
     c(f'    WorkSetConst {t1}, 0')                # t1 = slates offered
     for i, r in enumerate(rs):
         skip = c.label()
-        room_open_code(c, r, by_id, open_flag, skip)
+        room_open_code(c, r, by_id, open_flag, skip, split.get(r['id']))
         unfinished = c.label()
         room_complete_code(c, r, unfinished)
         c(f'    VMJump {skip}')
@@ -532,7 +587,7 @@ def extra_code(job, pd, zone, ids):
       f'    pl_msg_talk {L("clerk_which")}', f'    ListMenu_AnchorTopRight {LIST_X}, {LIST_Y_TALK}, 0, 1, {t0}')
     for i, r in enumerate(rs):
         skip = c.label()
-        room_open_code(c, r, by_id, open_flag, skip)
+        room_open_code(c, r, by_id, open_flag, skip, split.get(r['id']))
         unfinished = c.label()
         room_complete_code(c, r, unfinished)
         c(f'    VMJump {skip}')
@@ -619,7 +674,7 @@ SOLID = 0x01 | 0x81 << 16                    # pearl_chunk.SOLID (class, flags),
 
 def _build_models():
     from gen4rom import Rom, narc_members
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    rom = Rom(build.WORLD_DUMP)
     return narc_members(rom.read('fielddata/build_model/build_model.narc'))
 
 
@@ -652,7 +707,7 @@ def park_matrix():
     import pearl_story
     pd = pearl_story.PearlData()
     z = pd.by_name[d['pal_park']]
-    return json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f'{z["matrix"]:03d}.json'))), z
+    return json.load(open(os.path.join(build.WORLD_WORK, 'matrices', f'{z["matrix"]:03d}.json'))), z
 
 
 @functools.lru_cache(maxsize=None)
@@ -748,7 +803,7 @@ def res_ids():
 def chunk(c, terrain, place, rep):
     """A converted Pal Park chunk (terrain, placements) with the doorways: their models placed as pearl_signs places
     the sign models (the front face on the door tile's south edge, on the height of the tile in front), their body's
-    tiles solid."""
+    tiles solid. A door tile whose front tile is in another chunk takes that tile's ground as its own (the walk in)."""
     import struct
     m, _ = park_matrix()
     t = bytearray(terrain)
@@ -763,7 +818,24 @@ def chunk(c, terrain, place, rep):
             lx, lz = tx % 32, tz % 32
             struct.pack_into('<I', t, 4 + 8 * (lz * 32 + lx) + 4, SOLID)
             rep.get('walkable', {}).pop((lx, lz), None)
-        y = rep['heights'].get((dx % 32, (dz + 1) % 32), 0)
+        if (dz + 1) // 32 == cz:
+            y = rep['heights'].get((dx % 32, (dz + 1) % 32), 0)
+        else:   # (postdex, 2026-11-09) the tile in front is in the chunk below (front_in_next_chunk: the Rainbow Room's
+            # doorway): its ground from that chunk's BDHC, the same heights the conversion gives (rep holds this chunk's
+            # only; its row 0 is the cliff top, so the doorway stood on the cliff above the tile the player walks from)
+            import pearl_chunk
+            below = m['maps'][(dz + 1) // 32][cx]
+            levels = pearl_chunk.bdhc_levels(below, dx % 32, (dz + 1) % 32)
+            y = levels[0][0] if levels else rep['heights'].get((dx % 32, dz % 32), 0)
+            if levels:   # (plat-rel, 2026-11-11) the door tile's plane too: the bump warp walks the player onto it
+                # before the fade, at this chunk's height there (the Rainbow Room's: 405's cliff top, 48, over the front
+                # tile's 16 in 407), so the player stood on the doorway's lintel for 33 frames
+                slopes, offsets = pearl_chunk.tables()
+                lx, lz = dx % 32, dz % 32
+                a, b, got = pearl_chunk.plane_record(slopes, offsets, float(levels[0][0]), list(levels[0][1]),
+                                                     lx * 16 - 256 + 8, lz * 16 - 256 + 8)
+                struct.pack_into('<HH', t, 4 + 8 * (lz * 32 + lx), a, b)
+                rep['heights'][(lx, lz)] = round(got)
         x, z = ox - cx * 512 - 256, oz - cz * 512 - 256
         out.append(struct.pack('<iiiH', round(x * 4096), round(y * 4096), round(-z * 4096), 0)
                    + struct.pack('>H', res[mid]))
@@ -774,13 +846,13 @@ def chunk(c, terrain, place, rep):
 def models(area):
     """[(resId, Pearl build model)] the doorways add to a room area's building pack: Pal Park's area only."""
     d = load()
-    w = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    w = json.load(open(build.data_path('sinnoh_world.json')))
     import pearl_story
     pd = pearl_story.PearlData()
     if w['rooms']['areas'].get(str(pd.by_name[d['pal_park']]['area'])) != area:
         return []
-    build = _build_models()
-    return [(res, door_opening(build[mid], mid)) for mid, res in sorted(res_ids().items())]
+    bms = _build_models()
+    return [(res, door_opening(bms[mid], mid)) for mid, res in sorted(res_ids().items())]
 
 
 # ------------------------------------------------------------------------------------------------------- checks
@@ -796,7 +868,7 @@ def check_entrances(ver=None):
         for cx, c in enumerate(row):
             if c == 0xffff:
                 continue
-            L = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.json')))
+            L = json.load(open(os.path.join(build.WORLD_WORK, 'land', f'{c:03d}.json')))
             for y in range(32):
                 for x in range(32):
                     C[(cx * 32 + x, cz * 32 + y)] = L['collision'][y][x] & 1
@@ -822,7 +894,7 @@ def check_entrances(ver=None):
                 problems.append(f'{name}: its doorway overlaps {used[t]}\'s at {t}')
             used[t] = name
         f = (dx, dz + 1)
-        if f[1] // 32 != dz // 32:
+        if f[1] // 32 != dz // 32 and not r['entrance'].get('front_in_next_chunk'):
             problems.append(f'{name}: the tile in front of its door {f} is in the next chunk (the model takes its height '
                             f'from the door\'s own chunk)')
         if f not in seen:
@@ -836,7 +908,7 @@ def check():
     d = load()
     problems = []
     ver = version(d)
-    for v in ('sp', 'bd'):
+    for v in ('both',) if build.PLATINUM else (build.RAMANAS_ROOMS_BY['pearl'], build.RAMANAS_ROOMS_BY['diamond']):
         rs = rooms(v)
         zones = [r['zone'] for r in rs]
         assert len(set(zones)) == len(zones), f'{v}: two rooms share a zone'
@@ -865,7 +937,7 @@ def check():
     for r in rs:
         for m in r['mons']:
             assert len(m['moves']) == 4
-    for v in ('sp', 'bd'):
+    for v in ('both',) if build.PLATINUM else (build.RAMANAS_ROOMS_BY['pearl'], build.RAMANAS_ROOMS_BY['diamond']):
         problems += [f'{v}: {p}' for p in check_entrances(v)]
     return problems
 

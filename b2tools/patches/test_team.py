@@ -21,7 +21,7 @@ import glob, os, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.dirname(HERE))
-import narcio  # noqa: E402
+import narcio, version  # noqa: E402
 import scripts  # noqa: E402
 
 TWINLEAF = 1670
@@ -32,7 +32,8 @@ LEAD_MOVE = 399                 # Dark Pulse
 
 
 def apply(files):
-    src = open(glob.glob(os.path.join(scripts.SRC, f'{TWINLEAF}_pearl_*.s'))[0]).read()
+    # (version.sources: a Platinum build's own Twinleaf file when it has one, 2026-11-07)
+    src = open(next(p for p in version.sources(scripts.SRC, '.s') if os.path.basename(p).startswith(f'{TWINLEAF}_pearl_'))).read()
     inc = open(os.path.join(scripts.SRC, 'pearl', 'newgame.inc')).read()
     give = ('    // TEST ONLY (patches/test_team.py)\n'
             + ''.join(f'    PokePartyAdd 0x8001, {s}, 0, {LEVEL}  // {n}\n' for s, n in PARTY)

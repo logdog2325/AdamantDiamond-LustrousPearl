@@ -20,11 +20,12 @@ from collections import deque, Counter
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 sys.path.insert(0, os.path.join(HERE, 'patches'))
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import ug_data  # noqa: E402
 
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 WATER_B = {0x10, 0x15, 0x13}
 _lands = {}
 
@@ -178,8 +179,9 @@ def odds(h, stage, water, version):
     tot = sum(w for _, w in rare)
     for s, w in rare:
         if pr: out[s] += pr * w / tot
-    el = [(e['species'], e['weight']) for e in p['entries'] if e[version] and e[version] <= stage
-          and e['where'] & (2 if water else 1)]
+    post = ug_data.postgame_column() if version != 'both' else None      # (postdex) the other column at stage 6
+    el = [(e['species'], e['weight']) for e in p['entries'] if ug_data.entry_stage(e, version, post)
+          and ug_data.entry_stage(e, version, post) <= stage and e['where'] & (2 if water else 1)]
     tot = sum(w for _, w in el)
     for s, w in el:
         out[s] += (1 - pr) * w / tot if tot else 0

@@ -1,0 +1,13 @@
+{
+ "_doc": "Platinum's own deliberate changes of its words, keyed by the bank's slot (Pearl's bank number) and Platinum's line, each pair [old, new] in .gmm spelling (b2tools/gen4_text.py bank() applies them after Pearl's data/pearl_text_edits.json, in a Platinum build only). They carry the user's decisions of Pearl's edits to the lines Platinum rewrote, so Pearl's edits find no line there (gen4_text.UNMATCHED_EDITS). Every line still fits: b2tools/text_check.py.",
+ "_tms": "The user, 2026-10-26 (notes/TMS.md): a line calling a TM a Hidden Machine says Technical Machine; Defog is TM119 here and Rock Smash Black 2's TM94. Platinum moved Defog from the Great Marsh to the Solaceon Ruins (Pearl's Great Marsh and Pastoria lines are gone), so its new Defog lines get the change: the ruins' hiker (231: 0, 1, 2), the Solaceon Center's Trainer (521: 2), Solaceon's Seal boy (519: 2); and the Oreburgh Gate man's gift line (240: 0), which Platinum rewrote. A line broken again where the longer word would not fit.",
+ "231": {"0": [["I’d heard the Hidden Machine Defog was\\nsomewhere in these ruins.", "I’d heard the Technical Machine\\nDefog was somewhere in these ruins."]],
+         "1": [["I’d heard the Hidden Machine Defog was\\nsomewhere in these ruins.", "I’d heard the Technical Machine\\nDefog was somewhere in these ruins."]],
+         "2": [["That is the Hidden Machine Defog!", "That is the Technical Machine Defog!"]]},
+ "521": {"2": [["The Hidden Machine Defog can be found\\nin the Solaceon Ruins.", "The Technical Machine Defog can be\\nfound in the Solaceon Ruins."]]},
+ "519": {"2": [["I even found a Hidden Machine.", "I even found a Technical Machine."]]},
+ "240": {"0": [["So, let me make a gift of this Hidden\\nMachine to you!", "So, let me make a gift of this\\nTechnical Machine to you!"]]},
+ "_national_dex": "The National Pokédex at Champion (2026-10-26, the lead for the user; pearl_story NATIONAL_DEX_AT_CHAMPION, on in Platinum's Rowan's lab too): Dawn's and Lucas's line that says every Sinnoh Pokémon was seen comes after the Hall of Fame whatever the count, so it says 'so many kinds', as Pearl's edit of the same line; Platinum changed the line's end, so Pearl's edit finds no line (bank 496: 2, 16). Platinum's Rowan line 30 makes no such claim and stays.",
+ "496": {"2": [["You’ve seen every kind", "You’ve seen so many kinds"]],
+         "16": [["You’ve seen every kind", "You’ve seen so many kinds"]]}
+}

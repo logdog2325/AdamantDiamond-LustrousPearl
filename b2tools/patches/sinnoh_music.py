@@ -16,12 +16,19 @@ Rowan's questions). Runs after sinnoh_world and sinnoh_rooms.
   (2026-10-18, hwtest/music_mem.py): Twinleaf's SEQ_TOWN01_D (217 KB with whole instruments) left 58 KB free. With
   pearl_music's key-level trimming (only the samples of the notes a song plays) all 77 songs are 6.5 MB instead of
   12.6 MB and the biggest, SEQ_ROAD_F_D/N (Routes 210, 211 East, 214, 215), is 161 KB instead of 291 KB.
+- Platinum (2026-11-07, plat-music; notes/MUSIC.md "Platinum"): the version's own archive (version.ARCHIVE['sound']) and zones,
+  so every song is Platinum's bytes and every zone plays Platinum's theme: the GTS and the Global Terminal SEQ_PL_WIFITOWER,
+  Sendoff Spring and the Spring Path SEQ_ROAD_F (Pearl: SEQ_D_03), the Distortion World SEQ_PL_D_GIRATINA, the Frontier's
+  BF_* (steps 7 and 8 build those places). The songs its scripts start (version.STORY_SONGS: Looker's theme, the Villa's
+  piano, audio system and music box, Spear Pillar's cutscene, the Poké Radar's song) go in with EVENT_SONGS, and its
+  fanfares (version.STORY_FANFARES: the Battle Hall's SEQ_PL_POINTGET3) with Black 2's ME player.
 """
 import json, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import zoneheaders, pearl_music, itcm  # noqa: E402
 from sdat import SDAT  # noqa: E402
 
@@ -32,7 +39,10 @@ SEQ_DUMMY = 1000
 EVENT_SONGS = ('SEQ_THE_RIV', 'SEQ_THE_BOY', 'SEQ_THE_GIRL', 'SEQ_TSURETEKE', 'SEQ_THE_EVENT01', 'SEQ_THE_EVENT02',
                'SEQ_THE_EVENT03', 'SEQ_SILENCE_DUNGEON', 'SEQ_OPENING2', 'SEQ_FUE', 'SEQ_D_SAFARI', 'SEQ_D_RYAYHY',
                # Super Contests (patches/contests.py: the screen's own, not a script's)
-               'SEQ_CO_DRESS', 'SEQ_CO_KASHI', 'SEQ_CO_TAKUMA', 'SEQ_CO_KEKKA', 'SEQ_CO_FANFA')
+               'SEQ_CO_DRESS', 'SEQ_CO_KASHI', 'SEQ_CO_TAKUMA', 'SEQ_CO_KEKKA', 'SEQ_CO_FANFA') + version.STORY_SONGS
+# Fanfares the version's scripts play by id (version.STORY_FANFARES): installed with Black 2's ME player and priorities, as
+# the jingles below, so MEPlay and MEWait take them. Pearl and Diamond have none.
+FANFARE_PLAYER = 'SEQ_ME_ITEM'
 
 
 # Pearl's jingles (DECISIONS 2026-10-25; Rowan's question answered Sinnoh: Music_Redirect, src/code/music_choice.c): Black 2's
@@ -62,8 +72,8 @@ def apply(files):
     path = os.path.join(files, 'swan_sound_data.sdat')
     B = SDAT(open(path, 'rb').read())
     P = pearl_music.pearl_sdat()
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
     b2_of = {int(k): v['b2_zone'] for k, v in world['zones'].items()}
     b2_of.update({int(k): v['b2_zone'] for k, v in world['rooms']['zones'].items()})
     headers, entries = zoneheaders.load(files)
@@ -77,7 +87,9 @@ def apply(files):
     pairs = {(d, n) for d, n in pairs if d is not None and n is not None and d != n}
     events = {P.index('seq', n) for n in EVENT_SONGS}
     jingles = {P.index('seq', n) for n in JINGLES.values()}
-    wanted = sorted({s for pid in b2_of for s in [song(pid)] if s is not None} | {n for _, n in pairs} | events | jingles)
+    fanfares = {P.index('seq', n) for n in version.STORY_FANFARES}
+    wanted = sorted({s for pid in b2_of for s in [song(pid)] if s is not None} | {n for _, n in pairs} | events | jingles
+                    | fanfares)
     sound = b2_sound_ids()
     free_seq = [i for i in range(4, len(B.info['seq'])) if B.info['seq'][i] is None]
     free_bank = [i for i in range(len(B.info['bank'])) if B.info['bank'][i] is None]
@@ -91,8 +103,9 @@ def apply(files):
         f_seq, f_bank, f_wave = next_file, next_file + 1, next_file + 2
         next_file += 3
         new_files += [seq, bank, swar]
-        if s in jingles:     # plays where Black 2's ME does: its player and priorities
-            me = B.info['seq'][sound[next(b for b, p in JINGLES.items() if P.index('seq', p) == s)]]
+        if s in jingles or s in fanfares:     # plays where Black 2's ME does: its player and priorities
+            me = B.info['seq'][sound[FANFARE_PLAYER if s in fanfares else
+                                     next(b for b, p in JINGLES.items() if P.index('seq', p) == s)]]
             ents[('seq', sid)] = SDAT.seq_entry(f_seq, bid, volume=info['volume'], channel_prio=me['channel_prio'],
                                                 player_prio=me['player_prio'], player=me['player'])
         else:
@@ -125,7 +138,7 @@ def apply(files):
     os.makedirs(os.path.join(ROOT, 'work', 'world'), exist_ok=True)
     night = sorted({(b2_seq[d], b2_seq[n]) for d, n in pairs})
     assert len({d for d, _ in night}) == len(night), 'a day theme with two night themes'
-    event_ids = {n: b2_seq[P.index('seq', n)] for n in EVENT_SONGS}
+    event_ids = {n: b2_seq[P.index('seq', n)] for n in EVENT_SONGS + version.STORY_FANFARES}
     os.environ['PEARL_MUSIC_EVENTS'] = json.dumps(event_ids)
     json.dump({'songs': {P.name('seq', s): {'b2_seq': b2_seq[s], 'bytes': sizes[P.name('seq', s)]} for s in wanted},
                'zones': mapping, 'night_pairs': night, 'events': event_ids,

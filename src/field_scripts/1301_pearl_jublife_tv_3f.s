@@ -62,8 +62,8 @@ P13_006D:
     pl_WaitFadeScreen
     pl_CloseMessage
     pl_stub ChooseTwoCustomMessageWords  // Pearl 0x244 Unk0244 0, 32780, 32768, 32769: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseTwoCustomMessageWords: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P13_012C
@@ -72,8 +72,8 @@ P13_006D:
     pl_WaitFadeScreen
     pl_CloseMessage
     pl_stub ChooseTwoCustomMessageWords  // Pearl 0x244 Unk0244 0, 32780, 32770, 32771: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseTwoCustomMessageWords: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P13_012C

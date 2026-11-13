@@ -138,7 +138,7 @@ T207_2_0108:
 
 T207_2_012C:
     pl_msg_talk 82  // Pearl bank 207 line 1
-    ListMenu_AnchorTopRight 31, 1, 1, 0, PVAR_800C  // Pearl InitGlobalTextListMenu 1, 1, 1, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 1, 1, PVAR_800C  // Pearl InitGlobalTextListMenu 1, 1, 1, 1, PVAR_800C
     ListMenuAdd 83, 65535, 250  // Pearl AddListMenuEntry 163, 250
     ListMenuAdd 84, 65535, 0  // Pearl AddListMenuEntry 6, 0
     ListMenuAdd 85, 65535, 1  // Pearl AddListMenuEntry 7, 1
@@ -248,7 +248,7 @@ T207_2_0305:
     pl_CallIf 1, T207_2_037A
     pl_CompareVarToValue PVAR_8004, 4
     pl_CallIf 1, T207_2_037F
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 96, 65535, 0  // Pearl AddMenuEntryImm 13, 0
     ListMenuAdd 97, 65535, 1  // Pearl AddMenuEntryImm 14, 1
@@ -278,7 +278,7 @@ T207_2_0384:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T207_2_0305
     pl_CloseMessage
-    pl_stub StartBattleClient  // Pearl 0x0F2 Unk00F2 32772, 32773, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleClient 32772, 32773, 0: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T207_2_03D3
     pl_CompareVarToValue PVAR_800C, 3
@@ -314,7 +314,7 @@ T207_2_03F7:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T207_2_0305
     pl_CloseMessage
-    pl_stub StartBattleServer  // Pearl 0x0F3 Unk00F3 32772, 32773, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleServer 32772, 32773, 0: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T207_2_0446
     pl_CompareVarToValue PVAR_800C, 3
@@ -448,7 +448,7 @@ T207_4_0544:
 T207_4_0565:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 105  // Pearl bank 207 line 57
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 106, 65535, 0  // Pearl AddMenuEntryImm 41, 0
     ListMenuAdd 107, 65535, 1  // Pearl AddMenuEntryImm 42, 1
     ListMenuAdd 89, 65535, 2  // Pearl AddMenuEntryImm 10, 2
@@ -550,7 +550,7 @@ T207_12_069D:
 
 T207_12_06B4:
     pl_msg_talk 111  // Pearl bank 207 line 103
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 106, 65535, 0  // Pearl AddMenuEntryImm 41, 0
     ListMenuAdd 107, 65535, 1  // Pearl AddMenuEntryImm 42, 1
     ListMenuAdd 89, 65535, 2  // Pearl AddMenuEntryImm 10, 2
@@ -573,8 +573,8 @@ T207_12_070D:
     pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
     pl_WaitFadeScreen
     pl_stub StartSignatureApp  // Pearl 0x12B ShowSignatureScreen : not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (StartSignatureApp: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_GoTo T207_12_0733
 

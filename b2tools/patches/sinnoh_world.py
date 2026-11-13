@@ -22,6 +22,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import narcio, zoneheaders  # noqa: E402
 import pearl_chunk, pearl_buildings, pearl_model_fix  # noqa: E402
 import pearl_signs, b2_look  # noqa: E402
@@ -40,9 +41,9 @@ NO_PRELOAD = 24
 
 
 def apply(files):
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    matrix = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', '000.json')))
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    matrix = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', '000.json')))
+    rom = Rom(version.WORLD_DUMP)
     build = narc_members(rom.read('fielddata/build_model/build_model.narc'))
     texsets = narc_members(rom.read('fielddata/areadata/area_map_tex/map_tex_set.narc'))
     res_of = {int(k): v for k, v in world['building_res'].items()}
@@ -65,12 +66,13 @@ def apply(files):
         data, rep = pearl_chunk.convert(c, slopes, offsets, pearl_chunk.neighbours(matrix, x, z),
                                         pearl_chunk.ENTRANCES)   # bump warps outdoors (stairs: their solid flight)
         magic, layers, part = pearl_chunk.terrains(data)    # ('GC': two layers, bridges with a way under them)
-        props = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.json')))['props']
+        props = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{c:03d}.json')))['props']
         props = b2_look.placed_props(c, props)              # (lake water planes moved into the chunk model)
         place, bad = pearl_buildings.placements(props, res_of)
         problems += [f'chunk {c}: {b}' for b in bad]
         signed = [pearl_signs.chunk(c, t, place, rep) for t in layers]   # Pearl's signs: sign models, solid
-        chunks.append(pearl_chunk.rebuild(magic, part['model'], [t for t, _ in signed], signed[0][1]))
+        chunks += [b''] * (b2 + 1 - len(chunks))         # (Platinum's new overworld chunk has a number after the rooms'; sinnoh_rooms keeps it)
+        chunks[b2] = pearl_chunk.rebuild(magic, part['model'], [t for t, _ in signed], signed[0][1])
         walk[c] = rep['walkable']
         heights[c] = {f'{x},{z}': y for (x, z), y in rep['heights'].items()}
         if rep['heights_low']: low[c] = {f'{x},{z}': y for (x, z), y in rep['heights_low'].items()}

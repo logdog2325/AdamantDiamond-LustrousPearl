@@ -159,7 +159,9 @@ with the game's compiler and the three hooks keep their files' sizes). Not built
 - The Kanto and Hoenn fossils (Pearl digs them up after the National Dex; here the National Pokédex comes at Champion,
   user 2026-10-26): two daily balls from Champion, in the two Oreburgh Mine rooms (Rocky Cave (13, 10), Sandsear Cave
   (23, 16)), each a Root, Claw, Helix, Dome Fossil or Old Amber at random when picked up (the lead 2026-10-26; flags
-  PFLAG_UG_FOSSIL_0..1, the daily range).
+  PFLAG_UG_FOSSIL_0..1, the daily range). (2026-11-09, postdex: notes/POSTGAME_DEX.md) In Pearl and Diamond also the
+  other version's fossil (Skull / Armor), one in six; and each Hideaway's list takes the other version's column at
+  stage 6 (Champion: ug_data.postgame_column).
 
 ## 8. The Underground Man (Chapter 3's zone, generated)
 (2026-11-01: his missions go on past the first with the Secret Base, decorating and Flags: notes/SECRET_BASES.md. What follows is the first mission.)

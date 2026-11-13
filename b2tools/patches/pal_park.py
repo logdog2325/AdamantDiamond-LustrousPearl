@@ -16,6 +16,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 from gen4rom import Rom, narc_members  # noqa: E402
 
 ART_ARC = 271
@@ -33,7 +34,7 @@ DECOMP = os.path.join(ROOT, 'external', 'pokebw2')
 
 
 def pearl():
-    return Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    return Rom(version.WORLD_DUMP)
 
 
 def text_tools():
@@ -45,14 +46,15 @@ def text_tools():
 def text_source():
     import gen4_text, version
     lines = {}
-    for i, line, error in gen4_text.convert_bank(TEXT_BANK, os.path.join(ROOT, 'roms', 'pearl.nds')):
+    for i, line, error in gen4_text.convert_bank(TEXT_BANK, version.WORLD_DUMP):
         assert error is None and line is not None, f'Pearl bank {TEXT_BANK} line {i}: {error}'
         lines[i] = line
     # The bank holds a line per game (Diamond's and Pearl's, notes/DIAMOND.md H2-H4). migrate_app.c shows Pearl's numbers
     # in every build; a Diamond build puts Diamond's words there, so the screen's code has no version in it.
     for pearl_line, diamond_line in VERSION_LINES.items():
-        assert 'Pearl' in lines[pearl_line] and 'Diamond' in lines[diamond_line], (pearl_line, diamond_line)
-        if version.DIAMOND:
+        # (Platinum's bank has Platinum's words where Pearl's has Diamond's, same lines)
+        assert 'Pearl' in lines[pearl_line] and ('Platinum' if version.PLATINUM else 'Diamond') in lines[diamond_line], (pearl_line, diamond_line)
+        if version.DIAMOND or version.PLATINUM:
             lines[pearl_line] = lines[diamond_line]
     rows = [f'PearlMigrate_{i:02d} = {version.game_names(lines[i])}\n' for i in sorted(lines)]   # the game's new name
     assert len(rows) == TEXT_LINES, f'Pearl\'s bank {TEXT_BANK}: {len(rows)} lines, not {TEXT_LINES}'
@@ -63,6 +65,8 @@ def text_source():
 def art_members():
     import title_art
     members = narc_members(pearl().read(PEARL_ART))
+    if version.PLATINUM:            # (Platinum inserts 4 members at 36: the other 42 are Pearl's, byte for byte, in Pearl's order)
+        members = members[:36] + members[40:]
     assert len(members) == ART_MEMBERS, f'{PEARL_ART}: {len(members)} members, not {ART_MEMBERS}'
     return [title_art.lz10_decompress(m) if m[:1] == b'\x10' else m for m in members]
 

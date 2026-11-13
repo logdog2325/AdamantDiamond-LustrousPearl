@@ -17,9 +17,13 @@ apply (files):
 apply_code (code):
 - gPearlB2Poketch (the decomp's include/pearlb2/poketch.h PearlB2PoketchConfig) in the resident section's pool
   (b2tools/resident.py): the sounds' sequence ids, the event work Pearl's Pokétch scene sets (old saves), the art's
-  archive, the text's file, the Calculator's dex limits.
-- Pearl's Sinnoh dex (poketool/shinzukan, 152 entries) into the Calculator's overlay at gPearlB2SinnohDex. Without this
-  patch the bottom screen is Black 2's C-Gear-off screen and the scripts' Pokétch commands only keep the save.
+  archive, the text's file, the Calculator's dex limits. Without this patch the bottom screen is Black 2's C-Gear-off
+  screen and the scripts' Pokétch commands only keep the save.
+- The Calculator's Sinnoh numbers (2026-11-07, plat-fixes): the version's count, from its poketool/shinzukan (Pearl's and
+  Diamond's 151, Platinum's 210), in the config; the species of a number is read by the C from the game's regional dex
+  table (a/0/1/6 file 709), which patches/sinnoh_dex.py writes from the same shinzukan, so no table is in the
+  Calculator's overlay. A decomp from before that (one with gPearlB2SinnohDex, 152 entries in the overlay) still gets
+  the table filled there, up to 151.
 
 Not here yet: Pearl's 15 Pokétch sounds (imported like Pearl's music: their ids stay 0, silent, until then).
 """
@@ -28,6 +32,7 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 from gen4rom import Rom  # noqa: E402
 
 NARC_ARC = 270                          # a/2/7/0
@@ -40,7 +45,7 @@ PEARL_GIVEN_VAR = '0x4077'              # Pearl's VAR_JUBILIFE_CITY_STATE: 2 rig
 PEARL_GIVEN_VALUE = 2
 NATIONAL_DEX_MAX = 649                  # decision 2026-10-26: the Calculator's cries up to 649 with the National Dex
 PEARL_SINNOH_DEX = 'poketool/shinzukan.narc'
-SINNOH_DEX_COUNT, SINNOH_DEX_ENTRIES = 151, 152  # Pearl's Sinnoh numbers 1-151; its table has an entry 0 too
+SINNOH_DEX_ENTRIES = 152                # the older decomp's gPearlB2SinnohDex (Pearl's 151 numbers and an entry 0)
 TEXT_ARC = 2                            # a/0/0/2, Black 2's system text (ARCID_SYSTEM_MESSAGE)
 TEXT_BANKS = (405, 407, 408, 410)       # Pearl's Pokétch banks, in the decomp's POKETCH_TEXT_* order
 TEXT_LINES = 20
@@ -48,7 +53,7 @@ DECOMP = os.path.join(ROOT, 'external', 'pokebw2')
 
 
 def apply(files):
-    narc = Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read(PEARL_NARC)
+    narc = Rom(version.WORLD_DUMP).read(PEARL_NARC)
     count = struct.unpack_from('<H', narc, 0x10 + 8)[0] if narc[0x10:0x14] == b'BTAF' else None
     assert narc[:4] == b'NARC' and count == NARC_MEMBERS, f'{PEARL_NARC}: {count} members, not {NARC_MEMBERS}'
     path = os.path.join(files, NARC_PATH)
@@ -73,7 +78,7 @@ def text_source():
     import gen4_text
     rows = []
     for bank in TEXT_BANKS:
-        for i, line, error in gen4_text.convert_bank(bank, os.path.join(ROOT, 'roms', 'pearl.nds')):
+        for i, line, error in gen4_text.convert_bank(bank, version.WORLD_DUMP):
             assert error is None and line is not None, f'Pearl bank {bank} line {i}: {error}'
             rows.append(f'PearlPoketch_{bank}_{i:02d} = {line}\n')
     assert len(rows) == TEXT_LINES, f'Pearl\'s Pokétch banks {TEXT_BANKS}: {len(rows)} lines, not {TEXT_LINES}'
@@ -131,39 +136,50 @@ def narc_member(narc, index):
 
 
 def sinnoh_dex():
-    """Pearl's Sinnoh dex: [n] = the species of Sinnoh number n (SinnohDexNoToSpecies), as Pearl has it."""
-    data = narc_member(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read(PEARL_SINNOH_DEX), 0)
-    assert len(data) == 2 * SINNOH_DEX_ENTRIES, f'{PEARL_SINNOH_DEX}: {len(data)} bytes'
-    table = struct.unpack(f'<{SINNOH_DEX_ENTRIES}H', data)
-    assert table[1] == 387 and all(0 < sp <= 493 for sp in table), f'{PEARL_SINNOH_DEX}: not Pearl\'s Sinnoh dex'
+    """The version's Sinnoh dex: [n] = the species of Sinnoh number n (SinnohDexNoToSpecies; Platinum's
+    Pokemon_NationalDexNumber), with its entry 0, as the dump has it: Pearl's 152 entries, Platinum's 211."""
+    data = narc_member(Rom(version.WORLD_DUMP).read(PEARL_SINNOH_DEX), 0)
+    table = struct.unpack(f'<{len(data) // 2}H', data)
+    sys.path.insert(0, HERE)
+    import sinnoh_dex as sd                         # (its SINNOH_COUNT: 151, Platinum's 210)
+    assert len(table) == sd.SINNOH_COUNT + 1 and table[1] == 387 and all(0 < sp <= 493 for sp in table), \
+        f'{PEARL_SINNOH_DEX}: {len(table)} entries, not the {version.NAME} Sinnoh dex of patches/sinnoh_dex.py'
     return data
 
 
+def sinnoh_dex_count():
+    """The Calculator's Sinnoh numbers, 1 to this (the config's regionalDexCount)."""
+    return len(sinnoh_dex()) // 2 - 1
+
+
 def fill_sinnoh_dex(code):
-    """Pearl's Sinnoh dex at the Calculator's gPearlB2SinnohDex, in its overlay's file (the apps share one address, so
-    by the Calculator's own overlay)."""
+    """An older decomp (gPearlB2SinnohDex: 152 entries in the Calculator's overlay): the version's Sinnoh dex there, up
+    to 151 (the apps share one address, so by the Calculator's own overlay). The decomp since 2026-11-07 reads the
+    regional dex table instead (module docstring): nothing to fill."""
     import decomp
     n = FIRST_OVERLAY + 1 + 1                       # the Calculator: app 1
     addr, start = decomp.symbol('gPearlB2SinnohDex', code), decomp.symbol(f'OV{n}_TEXT_START', code)
-    assert addr is not None and start is not None, 'the decomp has no gPearlB2SinnohDex or no Calculator overlay'
+    assert start is not None, 'the decomp has no Calculator overlay'
+    if addr is None:
+        return f'the Calculator reads the regional dex table (Sinnoh 1-{sinnoh_dex_count()})'
     path = os.path.join(code, f'arm9_ov{n:03d}.bin')
     blob = bytearray(open(path, 'rb').read())
-    data, at = sinnoh_dex(), addr - start
+    data, at = sinnoh_dex()[:2 * SINNOH_DEX_ENTRIES], addr - start
     assert struct.unpack_from('<H', blob, at)[0] == 0xFFFF, f'gPearlB2SinnohDex in overlay {n}: not the empty table'
     blob[at:at + len(data)] = data
     if os.path.islink(path):
         os.unlink(path)
     open(path + '.tmp', 'wb').write(blob)
     os.replace(path + '.tmp', path)
-    return f'gPearlB2SinnohDex in overlay {n}'
+    return f'gPearlB2SinnohDex in overlay {n} (an older decomp: Sinnoh 1-{SINNOH_DEX_ENTRIES - 1})'
 
 
 def config_blob(base, text_file):
-    ids = json.load(open(os.path.join(ROOT, 'data', 'pearl_story_ids.json')))
+    ids = json.load(open(version.data_path('pearl_story_ids.json')))
     given_work = int(ids['vars'][PEARL_GIVEN_VAR]['b2'], 16)
     se = [0] * SE_COUNT                             # Pearl's sounds: not imported yet (silent)
     blob = struct.pack(f'<{SE_COUNT}H7H', *se, given_work, PEARL_GIVEN_VALUE, NARC_ARC, TEXT_ARC, text_file,
-                       SINNOH_DEX_COUNT, NATIONAL_DEX_MAX)
+                       sinnoh_dex_count(), NATIONAL_DEX_MAX)
     assert len(blob) == 44                          # PearlB2PoketchConfig
     return blob, given_work
 

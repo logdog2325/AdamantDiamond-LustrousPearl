@@ -221,7 +221,7 @@ P269_0198:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
-    pl_msg_talk 10
+    pl_msg_talk_low 10
     MoneyWinDisp 31, 1  // Pearl ShowMoney 20, 2 (Black 2's place)
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
@@ -243,7 +243,7 @@ P269_0198:
     pl_End
 
 P269_0204:
-    pl_msg_talk 14
+    pl_msg_talk_low 14
     pl_WaitButton
     MoneyWinClose
     pl_CloseMessage
@@ -251,7 +251,7 @@ P269_0204:
     pl_End
 
 P269_0211:
-    pl_msg_talk 12
+    pl_msg_talk_low 12
     pl_WaitButton
     MoneyWinClose
     pl_CloseMessage
@@ -259,7 +259,7 @@ P269_0211:
     pl_End
 
 P269_021E:
-    pl_msg_talk 13
+    pl_msg_talk_low 13
     pl_WaitButton
     MoneyWinClose
     pl_CloseMessage

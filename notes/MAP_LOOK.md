@@ -893,6 +893,14 @@ bigger margin can't fix that without showing people through what is in front of 
   GetObjectProjectionMatrixOffset; fieldmap.c's size unchanged (only call targets differ). Shadows and footprints stay
   Black 2's. Grass quads stand 2 units north of the walker and must keep covering the legs, so they get the same lean
   and 7 units more margin: ahead of the walker by 2-5 units over the whole screen (computed, not filmed).
+- **Reflections keep Black 2's depth (2026-11-12, decomp 4f3acc4961).** Black 2's reflection (fldeff_reflect.c) is the
+  actor's picture flipped upside down (flipT), 12 units south and 33 under its water, in the people's scene. Stood upright
+  it came nearer than the shore: on Victory Road B1F a copy of the player showed on the dry ledge at the water's edge, and
+  on the dry ground for about 10 frames of the jump off Surf (and a surfer looked doubled, which the rule for the surfer
+  in PearlB2_ReflectionHidden had answered). DrawUpright now skips flipped pictures: they keep Black 2's matrix, and
+  the land in front hides them as on the routes. The converted water's opaque floor 4 units under its surface
+  (terrain/water.py) hides them too, so rooms show no walkers' reflections, as the routes never have (a decision for the
+  user: notes/DECISIONS.md 2026-11-12). Seen on screen: Victory Road B1F at the water's edge, the surf south, the jump off.
 - **The switch: data/people_depth.json** (patches/people_depth.py makes the table, gPearlB2PeopleDepth; NULL or slope 0 =
   Black 2's drawing): slope by Pearl map type, overworld, single Pearl zones by name; margin_16ths; furniture_fix;
   solid_tiles. Diamond shares it. **New in the build's list: people_depth.** Taking it out: leave the patch out and set
@@ -960,3 +968,312 @@ its hub at build time, the player at the door then uncovered (35 % -> 0 %; work/
 a windmill a blade or the tower still crosses the view, in any pose: that is this camera with a 130-unit-tall model nearby. Only
 Pearl's far camera or the blades turning would change that.
 
+
+## Platinum's ground (2026-11-02; Platinum step 3, overworld ground and texture sets)
+Platinum's overworld against Pearl's, by Pearl's land numbers (work/platinum/land against work/pearl/land, matrix 0):
+- 142 of the 176 overworld land slots have another terrain model; 41 also changed tiles. More than 30 tiles: Twinleaf 0,
+  Route 212 South 90 and 91, Acuity Lakefront 100, 102, 103, Route 229 134, Route 230 138, Fight Area 132 and 133, Survival
+  Area 166, Resort Area 142, and Stark Mountain's outside 172 (step 4). Small: Jubilife 17 (26 tiles), Acuity Lakefront 101
+  (16), the League 113 (6), Route 227 170 (5) and 171, Sunyshore 96, Floaroma 32, Pastoria 81 and 82, Eterna 44, Veilstone
+  78, Route 228 139 (1 to 4 each). New slot 578: a filler chunk in place of Pearl's 176 in 50 cells of the Battle Zone's
+  mountains (palms in place of round trees).
+- What the "retouched" models are (each polygon matched by position, then compared): 99,833 polygons the same; 9,241 the
+  same shape with another texture (cliff faces criffp -> Platinum's regional criffp2 to criffp5, criffp_a13, Celestic's
+  c07_criffp; shore rock seaside3 -> seaside3_2; tree01 -> tree04_2 in the south); 8,944 added and 7,531 removed (the
+  places above, the snow patches, the Battle Zone's palms); 1,374 with other vertex colours or normals, 716 with other
+  texture coordinates. Platinum's texture sets also redraw many textures under the same names (set 6: 39 textures' pixels,
+  46 palettes): Jubilife's roads, fences and plaza in grey, greener tall grass, darker rocks, trees shaded in two tones.
+- Snow: Twinleaf, Routes 201 and 202, Verity Lakefront and Lake Verity have Platinum's snow patches (s_snow, s_snow02-04,
+  s_sonwp), 1 unit over the grass, and Twinleaf's 44 snow tiles have their own behaviour, 0xa9 SNOW_WITH_SHADOWS
+  (footprints and a snow step in Platinum). They are Platinum's own art: kept, in every season (see "For the user").
+- The Battle Zone's trees are palms (tree3_01, tree3_02, conttree3_2) where Pearl has round ones (tree2_01, conttree2_*).
+- The Fight Area's north end is the Battle Frontier's gate, with two pools (bf_lake, sea tiles, flat light blue).
+
+**The proof's seams: the cause.** pearl_model_fix.separate keeps layers 2.25 apart. Its decal rule looks at one pair of
+polygons, decides which of the two lies wholly over the other, and moves that one's whole piece (same material, same
+plane, joined at corners). Platinum's snow polygons are bigger than the grass tiles under them, so a grass tile lies wholly
+under a snow polygon and the rule took the grass for the decal: the whole lawn (123 polygons, 95,000 units^2) went 1.25
+down, then by its pairs the path 1.5 and the path's edges 2.25. Pieces moved by different amounts part along the edges they
+share: thin lines of the clear colour (black outdoors since 2026-11-01) along every lawn and path edge, and moved ground gets
+no under-floor. The white patches are the snow itself. In the Survival Area a second case: Platinum's grass pieces overlap
+in slivers (one texture in one plane, drawn twice), and the rule lifted a 2,800 units^2 piece 4.5 units: black lines round
+the rock ring west of the Center. Offline, `world_look.py` reproduces the proof's frame (work/agents/plat-world/shots/
+t_twinleaf_autumn_before_after.png: the proof's base code on top).
+
+**The fix (version.GROUND_STAYS, Platinum only).** A big ground piece (4 tiles or more) moves only against a bigger one,
+whichever polygon lies over the other: against a smaller piece, ground or not, the smaller one moves; one ground texture drawn
+twice in one plane stays as it is; of two level ground pieces the smaller one is on top. Now in Twinleaf only the snow moves
+(up, 2.25 or 4.5 over the grass); its ground stays where Platinum drew it. Pearl and Diamond keep the older rule: with the
+switch on, 148 of their 526 chunks would come out differently (the under-floor's second try, below, in most; the layers in 19:
+ground that sinks or rises a little, Route 212 North's grass 0.2, Route 215's lawns 1.25, a sea 1.25 that b2_look replaces
+anyway, cave and room floors, Canalave Gym's floor), and their 1.0 output must not change. (1.0.1 turns it on for them:
+"1.0.1: the map rows for Pearl and Diamond" at the end.)
+- The under-floor (same switch): where its copy 4 units down comes within 2.25 of a surface that lies between it and the
+  ground (a backing layer), a second try 8 down. Platinum's Twinleaf path lies 3 units under its lawn edges with a sand quad
+  under it, which had crowded the edges' copies out: unbacked edges there 1,372 units -> 316 (Pearl's own Twinleaf 308). The
+  extra copies fight only with other hidden layers (chunks 88 and 89: the same 6 and 3 visible fighting pairs either way).
+- Heights: the snow patches were taken for ground, 1 unit over Platinum's BDHC; pearl_chunk.SKIP_MATERIALS leaves them out.
+  Behaviour 0xa9 is Black 2's snow (class 0x0e, flag 8: snow footprints, no slowing; ov012 field_actor_tool.c).
+- **Winter only (the user, 2026-11-03):** the snow patches (s_snow, s_snow02, s_snow04, s_sonwp) and the snow on Platinum's
+  trees there (tree04_2 = tree01 with 150 of its 4,096 texels white) show only in winter. sinnoh_reskin.reskin_sets clears the
+  patches' texels in the spring, summer and autumn sets (nsbtx.clear) and gives tree04_2 tree01's texels there
+  (nsbtx.copy_texels); overworld and outdoor rooms (Lake Verity, area 62) both go through it. Their 0xa9 tiles read as
+  plain ground, which is what Pearl has under all 44 in Twinleaf and 20 at Lake Verity, so summer grass leaves no
+  footprints and gives no snow battle background. Seasons off is spring all year, so they never show. Offline: Twinleaf in four seasons
+  (summer's trees match Pearl's own), the sets' texels checked per season, season_grass_check 0, version_check ok.
+- **Check: `pearl_seams_check.py --holes`** (new): every chunk's opaque polygons (trees and water left out) seen along the
+  build's camera (59 degrees, from the south), Pearl's raw model against the installed one, 2 px a unit: a pixel the raw
+  model covers and the installed one leaves open is a seam the fixes made. The proof's code: Twinleaf 216 units^2, the Survival
+  Area 16.5; now 0 and 0. The whole overworld: Platinum 528.5 units^2 (chunk count not recorded), Pearl's own 583.8 in 24 (cliff
+  and slope pieces the layers rule moves, a few chunk edges; Route 211 West's cliff by the water, 47 in both, the largest: a
+  thin black line). Platinum-only and small: Route 204 North 31 (23 units^2, a dotted line on a cliff corner where Platinum's
+  criffp2 meets criffp), 63, 89, 133 (the gate's steep faces). Rooms (step 4): Platinum 3,232.8 units^2 in 47 chunks, Pearl
+  564.0 in 12. The largest: Veilstone Store B1F 587 (1,288, a new room), Veilstone Dept. Store 1F 248 (317), the Battle Castle
+  594 (187), the Cycling Road gatehouse 283 (152), the Lost Tower 285-287 (140 each), Eterna's Route 206 gatehouse 220 (102),
+  the caverns 520, 529, 538 (48.5 each), the Distortion World's floors (step 7); 13 of the 47 are on translated nodes (below),
+  where the fixes judge the wrong place (`--holes --rooms` lists them).
+
+**Material names (the land reader).** Platinum names some new materials by its exporter's default: 'file1Material' for the
+palm tree3_01, 'file3Material' tree3_02, 'file4Material' the palm rows, 'a' for a shadow h_kage in Pastoria; in rooms the
+Eterna Gym's 'fgds', 'qq', 's', 'ss' (trees and their shadow), the Frontier's 'lambert46-48' (bf_tree*), chairs' and
+counters' shadows. Pearl always puts the texture's name in the material's, and the tools tell trees, shadows and snow from
+the ground by the material's name: the palms' crowns were ground, 30-54 units over the walkable tiles under them (walls on
+Route 229 and in the Fight Area), and they weren't tree cards for the layers fix. gen4_land.named_materials gives such a
+material its texture's name in front ('tree3_01_file1Ma'), the dictionary written anew: 41 materials in 24 of Platinum's land
+files; Pearl's land files come out byte for byte as before.
+
+**Heights the reader missed.** gen4_land.read_bdhc_dp took a Platinum BDHC of exactly 32 points for Pearl's layout (its first
+count, 0x20, is Pearl's header size) and returned nothing: Sendoff Spring 444, Route 214 152, rooms 385, 436, 468, 477 (found
+by the events piece). It now falls back to Platinum's layout when Pearl's gives nothing; every other file reads as before.
+
+**Gatehouses 2 units lower (the events piece's finding): Platinum's own floor.** Platinum rebuilt the gatehouses of slots 219
+(the Route 208, 209, 213, 215 and 218 gatehouses), 220 (Eterna's Route 206 gate), 283 (the Cycling Road's) and its new 591 and
+596 (the Battle Park's and Route 212's / 225's) with new textures (set 49: floor03, phouse_03, gate_exit1, ...): Pearl's carpet
+strip, raised to 0, is gone and the floor is flat at -2 (Pearl's own floor level beside the carpet). Both games' BDHC say 0.
+The converter puts people on the floor the model draws, as on Pearl's own -2 floor, so they stand 2 lower than in Pearl. Where
+Platinum kept the floor, heights are Pearl's tile for tile: 218 (Amity Square's two gates, ROUTE_206_ETERNA_GATEHOUSE), 419,
+420; 418 (Oreburgh Gate 1F) differs on 6 tiles where Platinum changed the model. (In Platinum's own game its people stand 2
+units over the new floor.)
+
+**Heights at the BDHC (2026-11-07, plat-heights; version.GROUND_AT_BDHC, Platinum only).** The converter took a tile's
+highest upward-facing surface as its ground. In the Veilstone Gym that was the ceiling rails ('sen', 'lambert20', 74-77
+units), over 122 walkable tiles whose floor is drawn at -2 (BDHC 0): the player would have walked on the rails.
+Platinum's walker stands on its BDHC (pokeplatinum terrain_collision_manager.c GetHeight), so now the drawn surface is
+the ground only where it lies within 4 units (pearl_chunk.GROUND_MATCH) of a BDHC plate there. Elsewhere
+(pearl_chunk.bdhc_ground):
+- over every plate (something overhead): the drawn surface nearest the highest plate that has one, else the plate. The
+  Veilstone Gym's floor under the rails is -2 again, like the rest of its floor. Also the caves' new light shafts at
+  their exits ('dun_light', 17 over the floor, 2 to 4 tiles in each of 30 cave chunks), the Pokémon Centers' screens and
+  desks, the League lobby's walls, the Game Corner's sign, the E4 rooms' door frames, the Battle Tower's and the Battle
+  Frontier's overhangs, the Survival Area house's stair, Floaroma's and Hearthome's arches, Route 212 North's fence, the
+  Fight Area gate's roof.
+- under every plate (the walking level not drawn): the plate. The lakes' water is a prop (l_lake) over the lake bed, so
+  surfers stood 16 units under it; the lake caverns' walk-on pools are drawn 32 under the floor (they were walls); Amity
+  Square's ponds, Sendoff Spring's water, Route 224's sea. Not in the Gyms (pearl_chunk.gym_chunks): there the floors
+  over the model are their gimmicks' (Pastoria's water, Canalave's floors, Sunyshore's walkways, the Eterna clock).
+- no plate on the tile: the nearest tiles' plates (Gen 4 keeps the height the walker came with). Fantina's tile in the
+  Leader room has none, under the back wall drawn at 62: she stood on the wall. A walkable tile with no drawn surface
+  and no plate takes the plane of a neighbour that is on a plate (the top of the Contest Hall's stairs was a 32-unit
+  wall at 0).
+- solid tiles a person stands on too (the Battle Tower's attendants, berry plants); other solid tiles keep the drawn
+  surface. Not in the Underground: Gen 4 reads no heights there.
+stairs_of and people_tiles (the people fix's feet) take the same rule. The layers fix is not involved: the heights read
+the raw model (apicula, which applies the translated nodes), never the fixed one.
+**Check: `b2tools/heights_check.py`** (new). It converts every chunk as the build does, walks every zone map with Gen
+4's rules from its warps and people (the 20-unit step on the BDHC, ledges, Rock Climb, Surf), and compares each place
+someone stands with the converted layer nearest that level (5 units: the match plus the plane's error). Platinum before:
+3,727 places in 101 chunks (549 too high, 3,178 too low); after: 0. What is left is explained (stairs, mats, bridges,
+beds, bump warps, the Gyms' moving floors, one person standing in a wall). The rule changes 9,725 tiles in 219 of
+Platinum's 602 chunks (14 of them solid tiles people stand on); most are where nobody walks (the Contest Hall's seats,
+the mountains). Pearl's and Diamond's 1.0 maps had the rule off; 1.0.1 turns it on (heights_check 0 for both;
+notes/V1_0_1.md). Also: pearl_chunk.surface asks only the triangles whose box holds the point (an index per list), and
+plane_record's lookups are cached: the same output (every Pearl chunk compared with the old code), 4-10 times faster.
+
+**Seasons.** A texture that shares a seasonal texture's palette must be seasonal too, or the palette keeps its summer colours:
+Platinum's tree04_2 shares tree01's palette, so the round trees of Pearl areas 6, 7, 8 and 15 (Twinleaf to Jubilife, Oreburgh,
+Eterna and Floaroma, Canalave) and of Floaroma Meadow and the lakes stayed green in autumn and winter; the Battle Zone's palms, not listed, took the ground's colour (grey in winter).
+data/texture_map.json has Platinum's seasonal textures now: tree04_2 as tree01, tree3_01 and tree3_02 as tree2_01,
+conttree3_2 as conttree2_b (Pearl's sets never name them: Pearl and Diamond unchanged). `PEARL_VERSION=platinum python3
+b2tools/season_grass_check.py`: 16 grass textures left in Platinum's colours (areas 6, 7, 8, 15, rooms 8 and 62) -> 0.
+
+**Water.** The Fight Area's pools (bf_lake) take Black 2's pond water (b2_look.PEARL_WATER); their shore bf_lakep.1 stays
+Platinum's, as Pearl's shores do.
+
+**The 74 texture sets** (Pearl 58): every one used is Platinum's own. Platinum's models name Platinum's textures (criffp2,
+s_snow, tree04_2, the palms, c1_lamp01, l02_base, bf_*, ...), which Pearl's sets lack (they would draw white), and the user's
+rule is Platinum's art pixel for pixel. The look the user chose is not in the sets but in the layers over them, as for Pearl:
+Black 2's grass and water (b2_look), the seasons' recolour (sinnoh_reskin), the Gen 4 trees and buildings (Platinum's).
+| Sets | Used by | Decision |
+|---|---|---|
+| 6-15, 17-19 (13) | the overworld's areas (14: the north, winter all year) | Platinum's, re-skinned for the seasons; none byte-identical to Pearl's (Platinum added its new cliffs, snow and snowy tree to each and redrew 29-47 textures) |
+| 8, 12, 14 | also outdoor rooms (lakes, Eterna Forest, Mt. Coronet's sides) | the same |
+| 2, 5, 20-39, 41-43, 45-62, 64-73 (53) | rooms and caves only | Platinum's (step 4's pieces); 16 are byte-identical to Pearl's |
+| 0, 1, 3, 4, 16, 40, 44, 63 (8) | no installed area | not installed; 5 byte-identical to Pearl's |
+None stays Pearl's: where a set is identical it makes no difference, and everywhere else Pearl's would miss textures.
+
+**Buildings.** The overworld's chunks place 36 models that differ from Pearl's: 28 retouched (houses, Centers' signs, Pastoria's
+and Sunyshore's houses, the Fight Area's t6_h01) and 8 new (538 c09_s02, 544 t7_s02, 556 c11_o01, 557 t6_s01, 584 d16_o01,
+585 d16_o02, 586 t7_s03, 587 d32_s06). All have resource ids and are in their areas' packs (data/platinum/sinnoh_world.json);
+every building slot keeps Pearl's model name, so the fixes keyed by name (l_lake 311, the windmills, the solid pots) still
+find theirs.
+
+**Left as they are.**
+- Acuity Lakefront has two new Rock Climb walls (chunk 102: (22, 14-17) N/S; chunk 103: (4-7, 8) E/W): walls by collision,
+  climbed by the events' data (the events piece writes Platinum's own data/platinum/pearl_rock_climb.json).
+- 0x2d FORBIDS_EXPLORATION_KIT (Eterna 44 (19, 29), Veilstone 78 (13, 17)): plain floor, as before.
+- Platinum's Twinleaf path lies 3 units under its lawn edges with a backing quad under it (13 against 16): the under-floor
+  copy would come within 2.25 of that quad, so it is left out there (unbacked edges 1,372 units against Pearl's 308; a crack
+  there shows the quad's sand or nothing). The T-junction splits of chunk 0 are given back in both games (over 1,000
+  polygons).
+- The Fight Area's gate to the Battle Frontier (chunk 133): its roof overhangs the two tiles in front of its door warps,
+  (14, 8) and (15, 8), 60 units over Platinum's BDHC, so they converted as a wall and the door couldn't be reached. Since
+  2026-11-07 they stand on the BDHC (GROUND_AT_BDHC, "Heights at the BDHC" above). The door leads to the Frontier (step 8).
+- Node translations: 43 of Platinum's land files draw shapes on translated nodes (Pearl: 2, chunks 410 and 417). On the
+  overworld only chunk 71 (Route 215: one grass polygon 3 units down); the rest are rooms (gatehouses 218, 220, 283, Hearthome
+  Gym rooms 478-502, ...). The heights (apicula) apply them; pearl_mesh, the fixes and the renders don't (as for Pearl's two):
+  the layers fix and the under-floor judge those shapes where they aren't. For step 4's pieces.
+- Hole spots the fixes open in Pearl too (cliff and slope pieces moved by the layers rule, chunk edges): the same list in
+  both versions, give or take a few chunks (below).
+
+**For the user.** (1) Platinum's snow patches show all year with seasons on, as in Platinum (its game has no seasons): on
+Black 2's summer grass in summer. They could follow the seasons instead (only in autumn and winter, or only in winter).
+(2) The ground rule and the under-floor's second try would help Pearl and Diamond too (the same kind of steps, Route 211 West's
+line). 1.0.1 turns them on (the brief of 2026-11-07): see the end of this file.
+
+**Tools.** `b2tools/world_look.py` (new): a place as the build installs it, from the player's camera, any season
+(`sheet OUT CHUNK TX,TZ 13`: summer and winter; `top CHUNK SEASON OUT`: the chunk from above); run from an older tree (copy it
+into its b2tools) for "before". Pictures of the 8 places, before (the proof's code) over after, summer and winter:
+work/agents/plat-world/shots/*_before_after.png; four seasons: twinleaf_4seasons_after.png, survival_area_4seasons_after.png.
+Its renderer drops polygons that reach behind the camera, so the screen's bottom row can show black specks: not the game.
+
+**For the combined ROM (melonDS)**: the plat-world report's checklist (each place, where to stand, what to look at).
+
+## Platinum's rooms and caves (2026-11-07; Platinum step 4, the plat-caves piece)
+The fixes on shapes drawn on translated nodes (`version.NODE_SHIFT`) and six more layer rules for Platinum's rooms
+(`GROUND_STAYS`, with plat-rooms' `SELF_PAIRS_STAY`): notes/PLATINUM_CAVES.md, with the holes before and after for every
+room and overworld chunk. Pictures and checks now always draw a shape where the DS does (`pearl_rooms_view`, `room_look.py`,
+`pearl_seams_check`). `b2tools/room_look.py` renders a room or cave as the build installs it, in any season.
+
+## A texture with two palettes (2026-11-07; the plat-fixes piece)
+sinnoh_reskin rebuilds the autumn and winter sets from the materials' (texture, palette) pairs, and it kept one palette a
+texture: the first chunk's. Platinum draws some textures with a second palette in some chunks: criffp and wcliff with
+criff on most routes, with criffp and wcriff on Routes 225-230 and Stark Mountain; conttree_t and _b with conttree in
+Floaroma Meadow and at Lake Verity. Those palettes were missing, so the rocks and paths drew pink with white specks and
+green fringes in autumn and winter (the lead's shots: work/agents/plat-caves/shots/stark_ext_14_*.png). With
+`version.EVERY_PALETTE` (Platinum) every palette a chunk names goes into the set, with the season's recolour as any other
+palette (nsbtx.merge adds a palette alone for it). Stark Mountain now looks as Pearl's does: its rocks, path and lava the
+same all year, its grass patch the season's. Pearl's and Diamond's seasonal sets lack no palette and keep the released
+way (byte for byte the same, checked for the overworld and the outdoor rooms). Check: `PEARL_VERSION=platinum python3 b2tools/platinum_fixes_check.py palettes`.
+
+## 1.0.1: the map rows for Pearl and Diamond (2026-11-07, v101-world)
+`GROUND_AT_BDHC` and `GROUND_STAYS` are on for Pearl and Diamond; `SELF_PAIRS_STAY` and `NODE_SHIFT` stay Platinum's (the
+first changes none of their chunks, the second fixes no hole). The numbers, the renders and the checklist: notes/V1_0_1.md
+"The ground fix" and "1.0.1 checklist".
+- **The holes check has a blind spot.** `pearl_seams_check --holes` draws each chunk from due south, in a parallel view, at
+  59 degrees for every chunk (the rooms' camera is 53.2). A gap between two faces that the real camera sees from the side
+  can be covered there by the face behind it. The Contest Hall lobby (240) scores 18 -> 0, yet `room_look.py` shows its
+  back wall's two seams solid black where 1.0 has them dotted (plat-caves' sliver rule: with `EDGE_SLIVER` off they are
+  dotted again). Valor Lakefront's new corner line (157) scores 0 too. Judge a layer rule by renders as well, from a few
+  camera spots.
+- **Platinum has the same lines**: its lobby is Pearl's model with the same rules (work/agents/v101-world/shots/
+  contest_lobby_240_wall_seams.png, "Platinum now"), and its chunk 63 has the same corner (plat-caves: 5.8 -> 6.8).
+- **Chunk 63's cause**, for whoever fixes the rule: the decal rule (pearl_model_fix.separate) moves a whole piece when one of
+  its polygons lies under a polygon of another piece. `GROUND_STAYS` stops that only for big ground pieces (4 tiles or
+  more of ground). On Route 210 North a 993-unit^2 cliff piece went back 1.32 as the decal of a 172-unit^2 shadow, once
+  the sliver rule had left their sliver pair alone. Extending the guard to any bigger piece would change Platinum's
+  output, so 1.0.1 doesn't. (Done later, for all three versions: the next section.)
+
+## 1.0.1: the seams seen from the side (2026-11-07, v101-seams; all three versions)
+1.0.1's ground fix (`GROUND_STAYS` with plat-caves' rules) made three places worse than 1.0 in Pearl and Diamond, and
+Platinum had the same: Route 210 North's cliff corner (chunk 63), the Contest Hall lobby's back wall (240) and Valor
+Lakefront's cliff corner (157). The holes check scored the first low and missed the other two.
+
+**The check now sees from the build's own camera: `pearl_seams_check.py --holes --views`.** The old view looks along one
+ray (59 degrees, due south) in a parallel view. The layers fix moves a piece along Black 2's view direction (`VIEW`, 53.2
+degrees), so seen along that ray a moved piece stays where it was, and the gap it opens at its edge shows only from the
+side. The DS camera is a perspective one that follows the player: a place can come to any part of the screen, where the
+rays come in up to 25.8 degrees left and right and 20 up and down. So now:
+- every chunk is seen along nine rays (the screen's corners, the middles of its sides, its middle) at the pitch the build
+  gives its zones (maplook 'tilt': 59.06 on the overworld, each room its own Pearl camera's, 50.1 in most buildings);
+- with the DS's back-face culling (every Pearl land material draws its front side only);
+- a hole counts only where the camera can show it along that ray: the camera's target (the player's feet) must be within
+  4 tiles of a tile the player can stand on (Pearl's collision of the chunk and its neighbours; `seen()`). Without this
+  the screen's bottom rays saw the lobby's back wall from behind the wall, and Valor Lakefront's corner from inside the
+  forest;
+- a hole counts on the tile it is on; a chunk scores its worst ray; `--json=OUT` keeps every tile and ray;
+  `--compare OLD.json NEW.json [--places]` lists the chunks worse or better by more than 1 unit^2 (4 pixels of the check,
+  about one DS pixel) in the worst ray or in any one ray, and with `--places` the tiles.
+The old view is unchanged; its numbers are the ones above this section. The runs: work/agents/v101-seams/tools/
+(holes_run.py runs the check in any tree with a cache keyed by the models' bytes; run_all.sh in parts of under 10
+minutes; place.sh renders a place in 1.0, main before and after).
+
+**Three guards (`version.SEAM_GUARDS`, on for all three versions; pearl_model_fix's DECAL_PIECES, SLIVER_TREES and
+SLOPES_HELD, under `GROUND_STAYS`).**
+- **The decal rule** moves the piece of the polygon that lies wholly over or under the other. Now a bigger piece that
+  faces the camera never goes as the decal of a smaller one; the smaller one moves (`GROUND_STAYS` did this for big ground
+  pieces only). The lobby's back wall (1,804 units^2) went back 1.81 under the 512 units^2 band over each door: the two
+  solid lines. Route 210 North's cliff (993) went back 1.32 under a 172 units^2 shadow: the corner's line. Side faces (the
+  camera sees them edge-on) keep the old rule: flipped there, it also cleared Route 211 West's last short piece, but
+  Veilstone Dept. Store's shelves kept more layers too close (`pearl_seams_check`'s fighting pairs: 1F 39 -> 55, 3F 4 -> 7,
+  4F 4 -> 10), a flicker risk.
+- **The sliver rule** (an overlap less than a unit wide along an edge stays) holds for a tree against anything that isn't
+  a tree too. At Valor Lakefront a neighbour chunk's tree card overlapped the cliff's foot strip in a sliver 0.5 units wide
+  (2.2 units^2), and the whole strip (993 units^2) went 3.8 back: 1.0's long line along the foot, and with the slope-follow
+  rule 1.0.1's corner line.
+- **A small polygon held by the floor.** When a piece moves a unit or more (`LIFT`), a small polygon that would follow one
+  of its corners (`FOLLOW_SMALL`) stays where an unmoved polygon of the moved piece's plane holds that corner by an edge:
+  the floor beside a lifted mat holds the wall's foot. Found by the new check: Turnback Cave's Giratina room (chunk 449),
+  where the entrance mat went up 2.25 and the wall's foot beside it twisted after it (two short black marks by the
+  entrance; 1.0 had none; a speck of a pixel or two is left). Smaller moves follow as before; they keep small gaps closed
+  (Platinum's Route 212 South, chunk 88). A wider guard (slopes never following a decal lifted off the floor) cleared the
+  entrance completely but opened Sendoff Spring's shore (chunks 443 and 444), so it was left out.
+
+**Results** (the new check over every chunk; worst rays summed, units^2; the runs' JSON in work/agents/v101-seams/runs/):
+| | 1.0 (5c90f60) | main before (5fc0d88) | after | old check: 1.0, main, after |
+|---|---|---|---|---|
+| Pearl, 526 chunks | 11,041.8 | 1,421.0 | 1,021.2 | 1,147.2, 272.2, 282.5 |
+| Diamond, 526 chunks | 11,041.8 | | 1,021.2 | 1,147.2, -, 282.5 |
+| Platinum, 602 chunks | | 2,824.5 | 2,425.2 | 559.5, 572.8 |
+- Pearl after against main: 8 chunks better (Route 204 North 31, Route 210 North 63, Route 212 North 87, Route 214 154,
+  Valor Lakefront 157, Route 227 171, the lobby 240, Oreburgh Gate B1F 420), none worse, no tile worse; 10 chunks' models
+  change. Against 1.0: 51 better; 5 still have one ray worse, as main has them (`FOLLOW` 0.9's slopes): Route 219 8,
+  Veilstone 80, Snowpoint 105, Route 225 163 (behind trees), Turnback Cave 449 (a speck): notes/V1_0_1.md.
+- Diamond: Pearl's numbers chunk for chunk (its own Spear Pillar slots: 0 before and after).
+- Platinum after against main: 8 better, none worse by its worst ray; one tile, Route 211 West's lower bridge corner,
+  1.75 units^2 more in the middle ray (the chunk 103 -> 7.5). 12 chunks' models change.
+- The old check rises by the lobby's 18 units^2 (Pearl, Diamond and Platinum): the panel over each door now moves
+  forward, and from 59 degrees (the old view; the lobby's camera is 50.1, and the panels are seen from 46 degrees or less
+  from any tile the player can stand on) its lower edge shows the doorway's black. No line in the renders.
+- Close layers (`pearl_seams_check`'s fighting pairs, under 2 units apart: a flicker risk) on the changed chunks: Pearl
+  199 -> 197, Platinum 286 -> 214. Four Pearl chunks get one pair more (a tree card left in a sliver over a cliff), and
+  Platinum's Route 225 164 six (17 -> 23: a shadow chip moved instead of the palms behind it, now near the cliff and the
+  bridge).
+
+**Renders** (`world_look.py`, `room_look.py`; each picture is 1.0 | main before (5fc0d88) | after, summer, from a tile the
+player can stand on; work/agents/v101-seams/shots/, made by tools/place.sh): the_three_places.png (the three, after
+clean); r210n_63_*.png; contest_lobby_240_*.png (three spots); valor_lakefront_157_*.png (from the path east of the
+corner, and from the forest as v101-world looked); turnback_giratina_449_*.png; and the most changed chunks: the
+Underground 563, Route 227 171, Galactic HQ B2F 504, Route 211 West 47, Route 212 North 86 (two long lines in 1.0), Route
+224 118, Route 214 154, Route 205 North 43, Old Chateau 2F room 3 494, Sendoff Spring 443, Oreburgh Mine B1F 313,
+Snowpoint 105, Route 209 75, the League 114; and the five with a ray worse than 1.0: r8_8_24_15.png, c80_22_27.png,
+snowpoint_105_27_18.png, route225_163_*.png. Platinum's: platinum_*.png (main | after). Looked at, each: after is clean or
+as main, except the specks named above. Two things in every version, 1.0 too (not this piece's): a black line across the
+water at Route 224's south edge and the League (118, 114, at a chunk border), and the void past the League's west edge
+when the camera stands at (31, 30) of chunk 114.
+
+`room_look.py` now draws a room at the pitch the build gives its zone (it drew every room at the template's 53.2).
+
+## The filler's altitudes (2026-11-09; Celestic Town's south edge drew black)
+Seen in 1.0.1's test (v101-fold): standing at Celestic's south edge (456-457, 539-540), the top screen's bottom 17-38
+rows were black. Cause: Pearl's matrices give every cell an altitude and Pearl draws the cell's model that many
+half-tiles up (pokeplatinum land_data.c LandDataManager_CalculateRenderingPosition: y = altitude * 8). Only filler
+cells (no zone; Pearl's chunks 173-178) use it: 299 of matrix 0 at 1 to 26 (8 to 208 units) and the Great Marsh's 14
+tree cells (matrix 240) at 2. Black 2 draws every chunk at y 0 (ov012 field_g3d_map.c), and the converter ignored the
+altitudes, so every raised filler cell sat low. South of Celestic (cell (14, 17)) chunk 175 is a flat cliff-top plane,
+16 above the town's ground (112) at altitude 16; at 0 the camera looked over the cliff past it onto no chunk.
+The open sea (174, flat) is at altitude 1 in 98 cells: 8, the routes' own sea level; at 0 it lay a step below.
+Fix: b2tools/filler_heights.py, run by pearl_paths after the paths' chunks: one copy of a chunk per altitude it is
+shown at, its model moved up (19 copies, 313 cells); the Spring Path's closed cover (Pearl's code draws it at altitude
+2) is raised in pearl_paths. On screen (work/agents/filler/shots): Celestic's south edge shows the cliff top, no black;
+Eterna's north edge, Route 216's snowfield, Sunyshore's sea to the north and the Spring Path's cover beside Route 214
+look whole. In 1.0.1 (the user, 2026-11-09: "Fold into 1.0.1").

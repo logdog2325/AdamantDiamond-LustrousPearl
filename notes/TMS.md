@@ -206,7 +206,7 @@ its test (TM pocket, "No. 96-104", ABLE/NOT ABLE, teaching). Apply to Pearl's TM
 "HMs are supposed to just work when you have the corresponding badge; you don't need to teach a Pokémon." Always on, no
 Rowan question. Pearl's badges (pokediamond arm9/src/field_move.c FieldMove_Check*; Platinum swaps Surf and Defog): Rock
 Smash Coal (0), Cut Forest (1), Fly Cobble (2), Defog Fen (3), Surf Relic (4), Strength Mine (5), Rock Climb Icicle (6),
-Waterfall Beacon (7). Flash is a TM in Pearl, with no badge: unchanged. The HM item itself isn't needed either (Pearl's
+Waterfall Beacon (7). Flash is a TM in Pearl, with no badge: unchanged. A Platinum build takes Platinum's two (2026-11-07, plat-ch4): patches/platinum_field_moves.py writes Surf = Fen (3) and Defog = Relic (4) into the built code (sFieldMoveBadges, PearlB2_SurfCallCheck, PearlB2_DefogOffer, PearlB2_DefogCheck); Pearl's and Diamond's code is unchanged. The HM item itself isn't needed either (Pearl's
 story gives each HM by the time its badge counts, and every gate works by its badge). HoennB2's patches/hm_free.py (Hoenn
 badges, byte patches, its own copy of the global scripts) is not used: one rule in C, the decomp's
 src/pearlb2/resident/field_moves.c:

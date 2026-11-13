@@ -49,21 +49,21 @@ P44_0054:
     pl_GetPartyMonSpecies PVAR_8002, PVAR_8001
     pl_CompareVarToValue PVAR_8001, 0
     pl_GoToIf 1, P44_011A
-    pl_stub GetPartyMonMoveCount  // Pearl 0x1C8 CountPartyMonMoves 32780, 32770: not translated yet
+    PokePartyGetMoveCount PVAR_800C, PVAR_8002  // GetPartyMonMoveCount
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P44_0125
     pl_msg_talk 6
     pl_CloseMessage
-    pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
+// FadeScreen 6, 1, 0, 0x0: Black 2's party select fades itself
     pl_WaitFadeScreen
-    pl_stub SelectPartyMonMove  // Pearl 0x1C6 Unk01C6 32770: not translated yet
-    pl_stub GetSelectedPartyMonMove  // Pearl 0x1C7 Unk01C7 32769: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+    pl_SelectPartyMonMove PVAR_8002  // SelectPartyMonMove: Black 2's move list (CallPokeMoveReplace)
+    pl_GetSelectedPartyMonMove PVAR_8001
+// RestoreOverworld: Black 2's party select reopened the field itself
+// FadeScreen 6, 1, 1, 0x0: Black 2's party select fades itself
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_8001, 255
     pl_GoToIf 1, P44_0049
-    pl_stub BufferPartyMoveName  // Pearl 0x1CB GetPokemonMoveName 0, 32770, 32769: not translated yet
+    pl_BufferPartyMoveName 0, PVAR_8002, PVAR_8001
     pl_msg_talk 7
     pl_ShowYesNoMenu PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
@@ -73,7 +73,7 @@ P44_0054:
     pl_End
 
 P44_0105:
-    pl_stub ClearPartyMonMoveSlot  // Pearl 0x1C9 ForgetPartyMonMove 32770, 32769: not translated yet
+    PokePartyLearnMove PVAR_8002, PVAR_8001, 0  // ClearPartyMonMoveSlot: the move forgotten
     pl_msg_talk 8
     pl_PlayFanfare SEQ_ME_WASURE  // Pearl SEQ_WASURE
     pl_WaitFanfare

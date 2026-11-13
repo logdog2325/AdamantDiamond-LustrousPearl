@@ -39,13 +39,14 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import narcio, zoneheaders, b2files, pearl_chunk, pearl_buildings, itcm, resident  # noqa: E402
 import ug_data  # noqa: E402
 from zones import parse_entities, build_entities  # noqa: E402
 
 VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 STATE = os.path.join(ROOT, 'work', 'world', 'underground.json')
 EMPTY = struct.pack('<I', 4) + bytes(4) + bytes(4)        # Black 2's empty entity file (sinnoh_events.EMPTY)
 OFF_MAP, INERT = 0xFFF8, 0xFFFF
@@ -127,7 +128,8 @@ def grotto_file(h, index, data):
     ids = ug_data.species_ids()
     lo, hi = data['grotto_levels']
     version = ug_data.bdsp()
-    rares = [r['species'] for r in sorted(h['pokemon']['rare'], key=lambda r: -r[version]) if r[version]]
+    weight = lambda r: ug_data.rare_weight(r, version)
+    rares = [r['species'] for r in sorted(h['pokemon']['rare'], key=lambda r: -weight(r)) if weight(r)]
     starters = [ids[s] for s in h['grotto']['starters']]
     slot15 = starters or rares
     slot4 = rares
@@ -168,7 +170,7 @@ def apply(files):
                    check=True)
     from sinnoh_events import Planner
     data = ug_data.data()
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     rooms = world['rooms']
     tz = data['zones']['tunnels']
     tun = rooms['zones'].get(str(TUNNELS_PEARL_ZONE))

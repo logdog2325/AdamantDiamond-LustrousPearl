@@ -57,3 +57,23 @@ Needs: copy HoennB2's title_art.py / title_scene.c pieces (read-only source), a 
   2's lines naming Pokémon Black/White (Version) 2 (ability_handlers_2: Memory Link and Key exchange; 0092: Poké Transfer;
   title_8: Xtransceiver, transfer; 0355 and questionnaire_answers: surveys; castelia_city_13): real carts or Black 2 features;
   the copyright screen after the credits (a/2/0/5, Black 2's art and years) and "Developed by GAME FREAK inc.".
+
+## Pokémon Griseous Platinum (draft, 2026-11-07, plat-music; the user hasn't chosen it yet)
+- Top: draft C of `title_lustrous.py` in grey and gold: the dark plaque with pale letters and a pale gold rim, a string of gold
+  beads, and the Griseous Orb itself: Platinum's own item icon from the dump, pixel for pixel (itemtool/itemdata/item_icon.narc
+  699, palette 700; the first draft had the Adamant Orb's blue gem there). The crystal strip is a pale warm silver (200 degrees
+  on Black 2's blue, saturation 0.2; the first draft's 40 degrees made it lavender). `python3 title_lustrous.py use C platinum`
+  writes data/title/platinum/ (352 of 512 tiles, a/0/2/6 5,056 bytes under Black 2's).
+- Bottom: Giratina's Origin Forme from Platinum's own title (titledemo 1, its texture scroll 0). It is a skinned model (27
+  joints, 876 polygons) drawn in its bind pose, which is its joint animation's first frame (giratina.nsbca, titledemo 2, the
+  pose Platinum's own title holds while it waits). Its centre is (0, 98, 85), 449 x 234 x 315 units, the crowned head at z 234
+  facing +z. Palkia's camera (170, 20, 40) sat inside it: the proof ROM showed a close-up of one wing. The camera now is
+  (108, 172, 345) looking at (35, 122, 72): from the front, 15 degrees to its left and 10 above, the whole outline with the head
+  at the left and the six wings fanned out behind it, filling the bottom screen's height as Palkia and Dialga do.
+- Chosen from offline renders: `PEARL_VERSION=platinum python3 b2tools/title_render.py OUT.png [--cam "x y
+  z"] [--look "x y z"]` draws both screens at 256x384 (Black 2's title frustum, 30 degrees up and down, 4:3; Black 2's title
+  lights; the model's joints, its own textures with their alpha, its texture scroll at the brightest frame; back faces culled
+  by each material). It reproduces Lustrous Pearl's and Adamant Diamond's DeSmuME shots (docs/screenshots) and the proof
+  ROM's Giratina close-up. Alternatives rendered: the head at the right (-108, 172, 345) -> (-35, 122, 72); straight from the
+  front, as Platinum's own title (0, 185, 332) -> (0, 117, 80). Not seen in game yet. **The user chose straight from the front (2026-11-07)**: the camera is now (0, 185, 332) -> (0, 117, 80).
+- Giratina's cry on Start: species 487, form 0 (Platinum's title asks for form 1, but Black 2 keeps one cry for both forms).

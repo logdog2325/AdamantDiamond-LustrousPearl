@@ -33,11 +33,12 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import narcio, zoneheaders, pearl_chunk  # noqa: E402
 from zones import build_entities  # noqa: E402
 
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+PEARL = version.WORLD_WORK
 EMPTY = struct.pack('<I', 4) + bytes(4) + bytes(4)     # Black 2's empty entity file (a/1/2/6 entry 3)
 DIRS = [(0, 1, 2), (0, -1, 1), (-1, 0, 3), (1, 0, 4)]  # (dx, dz, dir to walk in from that neighbour): S, N, W, E
 # walkable Pearl warp tiles: the direction they are left in (Black 2 dir code)
@@ -96,17 +97,22 @@ class Planner:
     b2tools/warp_check.py and scene_check.py read the same records offline)."""
 
     def __init__(self):
-        self.world = world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+        self.world = world = json.load(open(version.data_path('sinnoh_world.json')))
         self.zones = json.load(open(os.path.join(PEARL, 'zones.json')))
         self.b2_of = {int(k): v['b2_zone'] for k, v in world['zones'].items()}
         self.b2_of.update({int(k): v['b2_zone'] for k, v in world['rooms']['zones'].items()})
         self.shared = {int(a): int(k) for k, aliases in world['rooms'].get('shared', {}).items() for a in aliases}
         self.shared_rooms = {int(k) for k in world['rooms'].get('shared', {})}
-        self.heights = {}
+        self.heights, self.low = {}, {}
         self.stairs_fallback = []                    # stairs whose approach side is closed (reported)
         for name in ('heights_overworld.json', 'heights_rooms.json'):
             for c, hs in json.load(open(os.path.join(ROOT, 'work', 'world', name))).items():
                 self.heights[int(c)] = {tuple(map(int, k.split(','))): y for k, y in hs.items()}
+        # (the level under a bridge: sinnoh_world's heights_overworld_low, the ground where the deck is the top level)
+        low = os.path.join(ROOT, 'work', 'world', 'heights_overworld_low.json')
+        if os.path.exists(low):
+            for c, hs in json.load(open(low)).items():
+                self.low[int(c)] = {tuple(map(int, k.split(','))): y for k, y in hs.items()}
         self.lands, self.mats = {}, {}
         self._arrivals = {}
 
@@ -126,6 +132,18 @@ class Planner:
         L = self.land(c)
         solid = L['collision'][z % 32][x % 32] or int((x % 32, z % 32) in pearl_chunk.bed_solid(c))   # (beds)
         return L['behaviour'][z % 32][x % 32], solid, self.heights.get(c, {}).get((x % 32, z % 32))
+
+    def ground_under_bridge(self, m, wx, wz, ax, az, y):
+        """The walker's height for a bump warp at (wx, wz) entered from (ax, az): the approach tile's ground (its low
+        level) when a bridge passes over it and the warp tile has a level there too, else y (its top level). Wayward
+        Cave's entrance under the Cycling Road (2026-11-09, a player's report on Diamond 1.0: walking in only bumped):
+        the tile below it is the deck (137) over the ground (16); the warp took 137, so a player on the ground, 121
+        below, never matched it (Black 2 fires within 2: ov012 CheckWarpPositionMatch)."""
+        c = m['maps'][az // 32][ax // 32]
+        low = self.low.get(c, {}).get((ax % 32, az % 32))
+        if low is None: return y
+        levels = pearl_chunk.bdhc_levels(m['maps'][wz // 32][wx // 32], wx % 32, wz % 32) or []
+        return low if any(abs(lv - low) <= 4 for lv, _ in levels) else y
 
     def entrance_arrivals(self, pid):
         """{Pearl warp index: Black 2 warp index of its arrival point} of an overworld zone's entrance mats. Pearl
@@ -183,7 +201,10 @@ class Planner:
             for dx, dz, f in DIRS:
                 n = tile(m, w['x'] + dx, w['z'] + dz)
                 if n and not n[1]:
-                    facing, ny = f, n[2]; break
+                    facing, ny = f, n[2]
+                    if bump and zones[pid]['matrix'] == 0:
+                        ny = self.ground_under_bridge(m, w['x'], w['z'], w['x'] + dx, w['z'] + dz, ny)
+                    break
             if y is None or bump: y = ny if ny is not None else (y or 0)     # bump: the walker's height
             wx = w['x']
             if wtype == 2 and STAIRS_ON_FLIGHT:              # the warp on the flight beyond Pearl's stairs tile

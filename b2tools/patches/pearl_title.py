@@ -35,8 +35,17 @@ SCENE_SETUP, RESOURCES = 0x021A14B0, 0x021A1620          # sSceneSetup {resource
 # from 13 degrees off its side, whole outline, head at the left (from an offline render with Black 2's frustum, which
 # reproduces the DeSmuME shot of Palkia's; never seen in game yet).
 VERSION_TITLE = {'pearl': dict(art='', model=5, anim=18, species=484, camera='170 20 40', look='0 20 0'),
-                 'diamond': dict(art='diamond', model=6, anim=19, species=483, camera='291 103 -13', look='-1 103 -80')
+                 'diamond': dict(art='diamond', model=6, anim=19, species=483, camera='291 103 -13', look='-1 103 -80'),
+                 # Giratina Origin (titledemo 1, its texture scroll 0: pokeplatinum res/graphics/title_screen giratina.nsbmd,
+                 # .nsbta). A skinned model (27 joints) drawn in its bind pose, which is its joint animation's first frame (the
+                 # pose Platinum's own title holds). Its centre is (0, 98, 85), 449 x 234 x 315 units, the head at z 234 facing
+                 # +z: Palkia's camera was inside it. From the front, 15 degrees to its left and 10 above, the whole outline:
+                 # the crowned head at the left, the six wings fanned out behind it to the right (2026-11-07, plat-music: an
+                 # offline render with Black 2's frustum, b2tools/title_render.py, which reproduces
+                 # Lustrous Pearl's and Adamant Diamond's DeSmuME shots; the title is still a draft, the user's to choose)
+                 'platinum': dict(art='platinum', model=1, anim=0, species=487, camera='0 185 332', look='0 117 80'),  # the user: from the front (2026-11-07)
                  }[version.VERSION]
+LEGEND = {483: 'Dialga', 484: 'Palkia', 487: 'Giratina'}[VERSION_TITLE['species']]   # the log's words
 CAMERA_POS, CAMERA_TARGET = 0x021A148C, 0x021A1498         # sCameraPosition, sCameraTarget (ov162 rodata)
 # Palkia from its side, head at the right, filling the screen's height (as Pearl's own title, compared with a
 # DeSmuME shot of the user's dump); model units, overridable for tuning: PEARL_TITLE_CAM / PEARL_TITLE_LOOK="x y z"
@@ -111,7 +120,7 @@ def apply(files):
     narcio.save(files, ARC_DEMO3D, demo)
     os.makedirs(os.path.join(ROOT, 'work', 'world'), exist_ok=True)
     open(os.path.join(ROOT, 'work', 'world', NEW_FILES), 'w').write(f'{ids[0]} {ids[1]}\n')
-    return f'pearl_title: logo {top_tiles}/512 tiles; Palkia model + animation = a/1/5/8 {ids[0]}, {ids[1]}'
+    return f'pearl_title: logo {top_tiles}/512 tiles; {LEGEND} model + animation = a/1/5/8 {ids[0]}, {ids[1]}'
 
 
 def apply_code(code):
@@ -136,5 +145,5 @@ def apply_code(code):
         if os.path.islink(path): os.unlink(path)
         open(path + '.tmp', 'wb').write(data); os.replace(path + '.tmp', path)
         done.append(f'{name}: {len(edits)} edits')
-    return ('; '.join(done) + ' (Palkia outline, no Kyurem, no 29 s swap, no blur, Palkia\'s cry, no opening movie); '
+    return ('; '.join(done) + f' ({LEGEND} outline, no Kyurem, no 29 s swap, no blur, {LEGEND}\'s cry, no opening movie); '
             + rom_identity.install(code) + '; ' + rom_identity.stamp_met_game(code))

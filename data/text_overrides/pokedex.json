@@ -1,5 +1,5 @@
 {
- "_doc": "Pearl's Pokédex text (b2tools/patches/sinnoh_pokedex.py --text, from the user's dump through b2tools/gen4_text.py): the list header SINNOH POKÉDEX, the search and HABITAT list lines, and Pearl's entries (bank 616) for species 1-493 where Black 2's differ (315; 178 equal), the alternate forms Pearl has (Unown, Castform, Deoxys, Burmy, Wormadam, Shellos, Gastrodon, Cherrim) the same entry. Categories, heights and weights equal Pearl's for all 493 (checked), so Black 2's lines stay.",
+ "_doc": "Pearl's Pokédex text (b2tools/patches/sinnoh_pokedex.py --text, from the user's dump through b2tools/gen4_text.py): the list header SINNOH POKÉDEX, the search and HABITAT list lines, and Pearl's entries (bank 616) for species 1-493 where Black 2's differ (315; 178 equal), every alternate form the same entry as its species (Pearl has one a species; 1.0.1 adds Rotom's, Giratina's, Shaymin's and Arceus's forms). Categories, heights and weights equal Pearl's for all 493 (checked), so Black 2's lines stay. Checked against the dump by b2tools/platinum_dex_check.py --text.",
  "game_start_3": {
   "GameStart3_Text_UnovaPokedex": "SINNOH POKÉDEX",
   "GameStart3_Text_Unova": "SINNOH"
@@ -1638,7 +1638,24 @@
  },
  "res/pokemon/rotom/data.json": {
   "pokedex": {
-   "entry": "Its body is composed of plasma. It\nis known to infiltrate electronic\ndevices and wreak havoc."
+   "entry": "Its body is composed of plasma. It\nis known to infiltrate electronic\ndevices and wreak havoc.",
+   "forms": [
+    {
+     "entry": "Its body is composed of plasma. It\nis known to infiltrate electronic\ndevices and wreak havoc."
+    },
+    {
+     "entry": "Its body is composed of plasma. It\nis known to infiltrate electronic\ndevices and wreak havoc."
+    },
+    {
+     "entry": "Its body is composed of plasma. It\nis known to infiltrate electronic\ndevices and wreak havoc."
+    },
+    {
+     "entry": "Its body is composed of plasma. It\nis known to infiltrate electronic\ndevices and wreak havoc."
+    },
+    {
+     "entry": "Its body is composed of plasma. It\nis known to infiltrate electronic\ndevices and wreak havoc."
+    }
+   ]
   }
  },
  "res/pokemon/uxie/data.json": {
@@ -1678,7 +1695,12 @@
  },
  "res/pokemon/giratina/data.json": {
   "pokedex": {
-   "entry": "A Pokémon that is said to live in a\nworld on the reverse side of ours.\nIt appears in an ancient cemetery."
+   "entry": "A Pokémon that is said to live in a\nworld on the reverse side of ours.\nIt appears in an ancient cemetery.",
+   "forms": [
+    {
+     "entry": "A Pokémon that is said to live in a\nworld on the reverse side of ours.\nIt appears in an ancient cemetery."
+    }
+   ]
   }
  },
  "res/pokemon/cresselia/data.json": {
@@ -1703,12 +1725,67 @@
  },
  "res/pokemon/shaymin/data.json": {
   "pokedex": {
-   "entry": "It can dissolve toxins in the air\nto instantly transform ruined land\ninto a lush field of flowers."
+   "entry": "It can dissolve toxins in the air\nto instantly transform ruined land\ninto a lush field of flowers.",
+   "forms": [
+    {
+     "entry": "It can dissolve toxins in the air\nto instantly transform ruined land\ninto a lush field of flowers."
+    }
+   ]
   }
  },
  "res/pokemon/arceus/data.json": {
   "pokedex": {
-   "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+   "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed.",
+   "forms": [
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    },
+    {
+     "entry": "It is told in mythology that this\nPokémon was born before the\nuniverse even existed."
+    }
+   ]
   }
  }
 }

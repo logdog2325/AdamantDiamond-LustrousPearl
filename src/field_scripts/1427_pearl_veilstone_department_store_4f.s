@@ -24,7 +24,7 @@ P140_001A:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, P140_005B
     pl_msg_talk 0
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 1  // Pearl AddMenuEntryImm 229, 1
     ListMenuAdd 11, 65535, 0  // Pearl AddMenuEntryImm 228, 0
     ListMenuShow
@@ -35,7 +35,7 @@ P140_001A:
 P140_005B:
     pl_BufferPlayerName 0
     pl_msg_talk 1
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 0  // Pearl AddMenuEntryImm 229, 0
     ListMenuAdd 11, 65535, 1  // Pearl AddMenuEntryImm 228, 1
     ListMenuShow

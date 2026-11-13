@@ -45,23 +45,23 @@ P174_0033:
 
 P174_0060:
     pl_CloseMessage
-    pl_fade_out_black  // FadeScreen 6, 1, 0, 0x0
+// FadeScreen 6, 1, 0, 0x0: Black 2's party select fades itself
     pl_WaitFadeScreen
-    pl_stub OpenPartyMenuForTrade  // Pearl 0x2A5 OpenTradeScreen : not translated yet
-    pl_stub GetSelectedPartySlot  // Pearl 0x193 GetSelectedPartySlot 32780: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+    pl_ChoosePokemonMenu  // OpenPartyMenuForTrade: Black 2's party select (CallPokeSelect)
+    pl_GetSelectedPartySlot PVAR_800C  // the slot, 255 when cancelled (as Platinum)
+// RestoreOverworld: Black 2's party select reopened the field itself
+// FadeScreen 6, 1, 1, 0x0: Black 2's party select fades itself
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_800C, 255
     pl_GoToIf 1, P174_00D1
-    pl_stub InitNPCTrade  // Pearl 0x226 NPCTradeInit 2: not translated yet
+// InitNPCTrade 2: Gaspar (species 93) for species 308 (the commands below name it)
     pl_SetVarFromVar PVAR_8004, PVAR_800C
     pl_GetPartyMonSpecies PVAR_8004, PVAR_8005
-    pl_stub GetNPCTradeRequestedSpecies  // Pearl 0x228 NPCTradeGetRequestedSpecies 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 308  // GetNPCTradeRequestedSpecies: trade 2 wants species 308
     pl_CompareVarToVar PVAR_8005, PVAR_800C
     pl_GoToIf 5, P174_00C4
-    pl_stub StartNPCTrade  // Pearl 0x229 NPCTradeExecute 32772: not translated yet
-    pl_stub FinishNPCTrade  // Pearl 0x22A NPCTradeEnd : not translated yet
+    pl_StartNPCTrade 2, PVAR_8004  // Gaspar (species 93) for species 308: Black 2's trade event and demo
+// FinishNPCTrade: nothing to free (the trade event frees its own)
     pl_SetFlag PFLAG_00F4
     pl_msg_talk 3
     pl_WaitButton
@@ -70,7 +70,7 @@ P174_0060:
     pl_End
 
 P174_00C4:
-    pl_stub FinishNPCTrade  // Pearl 0x22A NPCTradeEnd : not translated yet
+// FinishNPCTrade: nothing to free (the trade event frees its own)
     pl_msg_talk 4
     pl_WaitButton
     pl_CloseMessage

@@ -99,6 +99,7 @@ RESERVE = {
     60: 16 << 10,     # a/0/6/0 light tables (Pearl: indoor light)
     109: 64 << 10,    # a/1/0/9 camera boundaries (Pearl: one per room and cave)
 }
+RESERVE.update(version.RESERVE_MORE)    # a version's larger reserves (Platinum's scripts and script text)
 
 def pad_archives(files, fresh=True):
     import struct
@@ -225,6 +226,8 @@ def main(args):
             print(f'patch {name}:', mod.apply(files) or 'ok')
         if hasattr(mod, 'apply_code'):
             print(f'patch {name} (code):', mod.apply_code(os.path.join(OUT, 'code')) or 'ok')
+    if os.environ.get('PEARL_PATCHES_ONLY'):        # (stepping through a list by hand: no checks or ROM yet)
+        return None
     step('check chunks, pad archives')
     check_chunks(files)
     if pad:

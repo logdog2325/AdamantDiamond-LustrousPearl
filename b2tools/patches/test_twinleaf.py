@@ -11,6 +11,7 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import narcio, nsbtx  # noqa: E402
 import pearl_chunk, pearl_buildings  # noqa: E402
 from b2files import gf_container, gf_container_build, arc_path  # noqa: E402
@@ -22,13 +23,13 @@ AREAS = (210, 211, 212, 213)
 
 
 def apply(files):
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
-    matrix = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', '000.json')))
+    rom = Rom(version.WORLD_DUMP)
+    matrix = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', '000.json')))
     build = narc_members(rom.read('fielddata/build_model/build_model.narc'))
     slopes, offsets = pearl_chunk.tables()
     pearl_ids = {}
     for x, z in CELLS.values():
-        for p in json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f"{matrix['maps'][z][x]:03d}.json")))['props']:
+        for p in json.load(open(os.path.join(version.WORLD_WORK, 'land', f"{matrix['maps'][z][x]:03d}.json")))['props']:
             pearl_ids.setdefault(p['model'], len(pearl_ids) + 1)          # resId 1.. (0x15 is Black 2's default)
     pack, texset = pearl_buildings.build_pack([(r, build[m]) for m, r in pearl_ids.items()])
     packs, btex = narcio.load(files, 225), narcio.load(files, 174)
@@ -46,7 +47,7 @@ def apply(files):
         c = matrix['maps'][z][x]
         data, rep = pearl_chunk.convert(c, slopes, offsets, pearl_chunk.neighbours(matrix, x, z))
         magic, secs = gf_container(data)
-        props = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'land', f'{c:03d}.json')))['props']
+        props = json.load(open(os.path.join(version.WORLD_WORK, 'land', f'{c:03d}.json')))['props']
         place, problems = pearl_buildings.placements(props, pearl_ids)
         chunks[b2] = gf_container_build(magic, [secs[0], secs[1], place])
         models.append(secs[0])

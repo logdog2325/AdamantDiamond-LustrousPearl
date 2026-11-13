@@ -3,7 +3,7 @@
 
 # Pal Park's rooms: Adamant Diamond
 
-The game calls this place Pal Park, on Route 221. Beyond it are the rooms where you meet legendary Pokémon from far away: nine rooms, each with a pedestal.
+The game calls this place Pal Park, on Route 221. Beyond it are the rooms where you meet legendary Pokémon from far away: 11 rooms, each with a pedestal. Both versions have all of them, but some open differently in each: see a room's **Opens**.
 
 ## How it works
 
@@ -31,6 +31,18 @@ Mysterious Shards can't be dug up in this game. They come from [the Hideaways](u
 | Regirock (hidden ability) | 70 | Stone Edge, Superpower, Lock-On, Zap Cannon |  |
 | Regice (hidden ability) | 70 | Blizzard, Superpower, Lock-On, Zap Cannon |  |
 | Registeel (hidden ability) | 70 | Heavy Slam, Superpower, Lock-On, Zap Cannon |  |
+
+### Kanto Room
+
+- **Slate:** Kanto Slate.
+- **Opens:** catch Regirock, Regice and Registeel.
+- **Who appears:** one at random among those not caught yet.
+
+| Pokémon | Level | Moves | Then |
+|---|---|---|---|
+| Articuno (hidden ability) | 70 | Hurricane, Mind Reader, Blizzard, Sheer Cold |  |
+| Zapdos (hidden ability) | 70 | Thunder, Detect, Charge, Zap Cannon |  |
+| Moltres (hidden ability) | 70 | Hurricane, Endure, Overheat, Sky Attack |  |
 
 ### Johto Room
 
@@ -75,6 +87,15 @@ With both caught you also get the Soul Dew.
 |---|---|---|---|
 | Ho-Oh (hidden ability) | 70 | Extrasensory, Recover, Sacred Fire, Sunny Day |  |
 
+### Squall Room
+
+- **Slate:** Squall Slate.
+- **Opens:** catch Articuno, Zapdos and Moltres, and Latias and Latios.
+
+| Pokémon | Level | Moves | Then |
+|---|---|---|---|
+| Lugia (hidden ability) | 70 | Extrasensory, Recover, Aeroblast, Rain Dance |  |
+
 ### Oceanic Room
 
 - **Slate:** Oceanic Slate.
@@ -113,4 +134,4 @@ With both caught you also get the Soul Dew.
 
 ## Bringing Pokémon from a Game Boy Advance game
 
-**In the build, but unconfirmed in 1.0: it hasn't been tested.** On a system with a Game Boy Advance slot, with a Ruby, Sapphire, Emerald, FireRed or LeafGreen cartridge in it, the gate's receptionist should offer to bring six Pokémon over and catch them in the park. The Pokémon leave that game for good. Without such a cartridge, the receptionist says the show needs one, and the rooms work as above.
+**In the build, but still unconfirmed in 1.0.1: it hasn't been tested.** On a system with a Game Boy Advance slot, with a Ruby, Sapphire, Emerald, FireRed or LeafGreen cartridge in it, the gate's receptionist should offer to bring six Pokémon over and catch them in the park. The Pokémon leave that game for good. Without such a cartridge, the receptionist says the show needs one, and the rooms work as above.

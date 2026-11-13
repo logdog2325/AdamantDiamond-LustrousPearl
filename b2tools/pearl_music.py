@@ -22,6 +22,7 @@ import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 import sseq  # noqa: E402
 from sdat import SDAT, parse_sbnk, build_sbnk, parse_swar, build_swar  # noqa: E402
 from gen4rom import Rom  # noqa: E402
@@ -31,7 +32,7 @@ PCM_TYPES = {1}                   # note definitions that play a wave (2 PSG squ
 
 
 def pearl_sdat():
-    return SDAT(Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read('data/sound/sound_data.sdat'))
+    return SDAT(Rom(version.WORLD_DUMP).read(version.ARCHIVE['sound']))
 
 
 def programs(seq_bytes):
@@ -109,7 +110,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         ids = [S.index('seq', n) for n in sys.argv[1:]]
     else:
-        zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+        zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
         ids = sorted({z[k] for z in zones for k in ('music_day', 'music_night')
                       if z[k] < len(S.info['seq']) and S.info['seq'][z[k]]})
     over = []

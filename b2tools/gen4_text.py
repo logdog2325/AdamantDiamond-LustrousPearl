@@ -1,4 +1,5 @@
-"""Pokémon Pearl (Gen 4) message files: decode msgdata/msg.narc members and convert their text to Black 2's script text.
+"""Pokémon Pearl and Platinum (Gen 4) message files: decode msgdata/msg.narc (Platinum: msgdata/pl_msg.narc) members and convert
+their text to Black 2's script text.
 
     python3 gen4_text.py BANK [ROM]          print a bank in pokediamond's .gmm spelling, one message per line
     python3 gen4_text.py --b2 BANK [ROM]     print a bank as Black 2 res/text/script lines (to_b2)
@@ -40,8 +41,9 @@ import xml.etree.ElementTree as ET
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 DIAMOND = os.path.join(ROOT, 'external', 'pokediamond')
-DEFAULT_ROM = os.path.join(ROOT, 'roms', 'pearl.nds')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import version  # noqa: E402
+DEFAULT_ROM = version.WORLD_DUMP
 
 EOS, CTRL, COMPRESSED = 0xFFFF, 0xFFFE, 0xF100
 LF, PAGE_CLEAR, PAGE_SCROLL = 0xE000, 0x25BC, 0x25BD     # \n, \r, \f in the .gmm
@@ -132,6 +134,8 @@ def tokens(codes):
 
 
 def cmd_gmm(cmd, params):
+    if cmd >> 8 == 1 and len(params) == 2 and not params[1]:        # Platinum's STRVAR_1 carries a second parameter, always 0 here: Pearl's spelling
+        params = params[:1]
     if (cmd >> 8) in STRVAR_HIGH:
         s = f'STRVAR_{cmd >> 8:X} {cmd & 0xFF}' + (',' if params else '')
     elif cmd in CMDS:
@@ -153,11 +157,19 @@ def to_gmm(codes):
     return pre + ''.join(out)
 
 
+def msg_archive(rom):
+    """The dump's own message archive: Platinum also carries Diamond and Pearl's msg.narc, unused (pokeplatinum reads pl_msg)."""
+    return 'msgdata/pl_msg.narc' if 'msgdata/pl_msg.narc' in rom.files else 'msgdata/msg.narc'
+
+
 def read_bank(n, rom_path=DEFAULT_ROM, _cache={}):
-    """Bank n of the ROM's msgdata/msg.narc as raw code lists."""
+    """Bank n of the ROM's message archive as raw code lists."""
     if rom_path not in _cache:
         from gen4rom import Rom, narc_members
-        _cache[rom_path] = narc_members(Rom(rom_path).read('msgdata/msg.narc'))
+        _rom = Rom(rom_path)
+        _members = narc_members(_rom.read(msg_archive(_rom)))
+        # (the tools name banks by Pearl's numbers, version.slotted: a Platinum dump's banks by slot)
+        _cache[rom_path] = version.slotted('banks', _members) if 'msgdata/pl_msg.narc' in _rom.files else _members
     return decrypt_bank(_cache[rom_path][n])
 
 
@@ -219,6 +231,7 @@ CHAR_TO_B2 = {
     '㊚': '⑭',   # ㊚ (Gen 4 00EE) -> ⑭, B2's inline male sign (Nidoran⑭)
     '㊛': '⑮',   # ㊛ (Gen 4 00EF) -> ⑮
     ' ': ' ',        # Gen 4 01E2 (not in script text)
+    '！': '!',        # (Platinum: the Union Room's Japanese greeting; Black 2's font has the letters, not the wide !)
 }
 # punctuation='b2': Black 2's own script text writes ' (8578x vs ’ 7x), “ then a straight " (776 “ / 778 " / 1 ”),
 # and ⑭ ⑮ for gender signs (♂ ♀ never). Font 0 has ’ “ ” ♂ ♀ too, with the same advances (’ and ' both 5 px,
@@ -402,15 +415,19 @@ _STRVAR = re.compile(r'\{STRVAR_1 (\d+), (\d+)(?:, \d+)*\}')
 
 
 TEXT_EDITS = os.path.join(ROOT, 'data', 'pearl_text_edits.json')
+# Platinum's own (2026-11-02, the dialogue step): the same decisions on Platinum's lines where Platinum changed the line
+# Pearl's edit was on (so Pearl's edit finds no line: UNMATCHED_EDITS), by Platinum's line numbers; each with its reason
+PLATINUM_EDITS = os.path.join(ROOT, 'data', 'platinum', 'pearl_text_edits.json')
+UNMATCHED_EDITS = []            # Platinum: Pearl's edits whose line it changed (its worklist lists them)
 
 
-def text_edits():
+def text_edits(path=TEXT_EDITS):
     """{bank: {line: [(old, new), ...]}}: the project's few deliberate changes of Pearl's words (data/
     pearl_text_edits.json, each with its reason there)."""
-    if not os.path.exists(TEXT_EDITS):
+    if not os.path.exists(path):
         return {}
     import json
-    d = json.load(open(TEXT_EDITS, encoding='utf-8'))
+    d = json.load(open(path, encoding='utf-8'))
     return {int(b): {int(l): [tuple(p) for p in pairs] for l, pairs in lines.items()}
             for b, lines in d.items() if not b.startswith('_')}
 
@@ -420,10 +437,25 @@ def bank(n):
     data/pearl_text_edits.json applied (each edit's old words must be in its line: a changed dump stops here)."""
     if n not in _BANKS:
         msgs = bank_text(n)
-        for line, pairs in text_edits().get(n, {}).items():
+        edits = text_edits().get(n, {})
+        if version.PLATINUM and edits:      # Pearl's edits by the line's words: Platinum's banks can have other line numbers (Pearl's fixes stay)
+            pearl = bank_text(n, os.path.join(ROOT, 'roms', 'pearl.nds'))
+            found = {}
+            for line, pairs in edits.items():
+                if pearl[line] in msgs:
+                    found[msgs.index(pearl[line])] = pairs
+                else:
+                    UNMATCHED_EDITS.append((n, line))
+            edits = found
+        for line, pairs in edits.items():
             for old, new in pairs:
                 assert old in msgs[line], f'pearl_text_edits.json: bank {n} line {line} has no {old!r}'
                 msgs[line] = msgs[line].replace(old, new, 1)
+        if version.PLATINUM:
+            for line, pairs in text_edits(PLATINUM_EDITS).get(n, {}).items():
+                for old, new in pairs:
+                    assert old in msgs[line], f'platinum/pearl_text_edits.json: bank {n} line {line} has no {old!r}'
+                    msgs[line] = msgs[line].replace(old, new, 1)
         _BANKS[n] = msgs
     return _BANKS[n]
 
@@ -433,10 +465,24 @@ def buffers(text):
     return {int(m.group(2)) for m in _STRVAR.finditer(text)}
 
 
+# A message that ends in a line break (\n last: 9 of Platinum's zone lines, 6 of Pearl's) shows a third, empty row in
+# Black 2's 2-row windows; none of Black 2's own 36,000 script lines ends so. Platinum's lines lose it (b2tools/
+# text_check.py counts the rows). A version row: Pearl's and Diamond's text stays byte for byte as released.
+TRIM_LAST_NEWLINE = version.PLATINUM
+
+
 def b2_line(text, variant=None):
     """A Pearl message (.gmm spelling) as a Black 2 script text line. variant ('boy' | 'girl', buffers): those
     buffers hold the counterpart's name, written out (Black 2's gendered-message copies). Never raises: a code Black 2
     lacks is dropped (a placeholder of a Pearl-only kind keeps its buffer as {0100:i}) and listed in UNCONVERTED."""
+    out = _b2_line(text, variant)
+    if TRIM_LAST_NEWLINE and out.strip():
+        while out.endswith('\\n'):
+            out = out[:-2]
+    return out
+
+
+def _b2_line(text, variant=None):
     if variant:
         g, bufs = variant
         text = _STRVAR.sub(lambda m: COUNTERPART[g] if int(m.group(2)) in bufs else m.group(0), text)
@@ -475,8 +521,48 @@ def b2_line(text, variant=None):
     raise ValueError(f'b2_line: cannot convert {text!r}')
 
 # -------------------------------------------------------------------------------------------------------------- main
+def platinum_banks():
+    """{bank number: file name} of Platinum's text, by pokeplatinum's generated list and res/text/*.json."""
+    path = os.path.join(ROOT, 'external', 'pokeplatinum', 'generated', 'text_banks.txt')
+    return {i: l.strip()[len('TEXT_BANK_'):].lower() for i, l in enumerate(open(path)) if l.strip()}
+
+
+def verify_platinum(rom_path):
+    """Every bank of Platinum's dump, decoded, against pokeplatinum's res/text/NAME.json, with the same message count."""
+    import json
+    from gen4rom import Rom, narc_members
+    members = narc_members(Rom(rom_path).read('msgdata/pl_msg.narc'))   # (its own numbers: this compares with its decomp)
+    names = platinum_banks()
+    same = diff = 0
+    diffs = []
+    res = os.path.join(ROOT, 'external', 'pokeplatinum', 'res', 'text')
+    for n, m in enumerate(members):
+        path = os.path.join(res, names.get(n, '') + '.json')
+        if not os.path.exists(path):        # (banks the decomp generates from other data: move names, species, Pokédex, ...)
+            continue
+        rows = json.load(open(path, encoding='utf-8'))['messages']
+        strvar = lambda t: re.sub(r'(\{STRVAR_1 \d+, \d+), 0\}', r'\1}', t)
+        # (pokeplatinum spells 06xx {STRVAR_6 xx, ...}, pokediamond's charmap {UNK_06xx ...}; a blank row is the original's filler)
+        rom = [re.sub(r'\{UNK_06(\w\w) ', lambda g: f'{{STRVAR_6 {int(g.group(1), 16)}, ', to_gmm(c)) for c in decrypt_bank(m)]
+        if len(rom) != len(rows):
+            diffs.append((n, None, f'{len(rom)} messages in the ROM, {len(rows)} in {names[n]}.json', ''))
+            continue
+        for i, (a, r) in enumerate(zip(rom, rows)):
+            t = r.get('en_US', '')
+            t = ''.join(t) if isinstance(t, list) else t
+            t = t.replace('\n', '\\n').replace('\r', '\\r').replace('\f', '\\f')
+            if a == strvar(t) or not a.strip() and not t.strip():
+                same += 1
+            else:
+                diff += 1
+                diffs.append((n, i, a, t))
+    return same, diff, diffs
+
+
 def verify(rom_path=DEFAULT_ROM, out=sys.stdout):
     from gen4rom import Rom, narc_members
+    if version.PLATINUM:
+        return verify_platinum(rom_path)
     members = narc_members(Rom(rom_path).read('msgdata/msg.narc'))
     same = diff = 0
     diffs = []

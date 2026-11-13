@@ -19,5 +19,7 @@
          "35": [["This youngster has filled every page\\nof the Sinnoh", "This youngster has filled page after\\npage of the Sinnoh"]],
          "44": [["for completing the Sinnoh Pokédex.", "for your work on the Sinnoh Pokédex."]]},
  "496": {"2": [["You’ve seen every kind", "You’ve seen so many kinds"]],
-         "16": [["You’ve seen every kind", "You’ve seen so many kinds"]]}
+         "16": [["You’ve seen every kind", "You’ve seen so many kinds"]]},
+ "_coins": "2026-11-08, the lead (the user away): the Game Corner stays closed, so the coin clerk sells no Coins; her Coin-Case-full line says why (pearl_story h_can_add_coins).",
+ "139": {"5": [["Oh?\\nYour Coin Case is full.", "Oh, I’m sorry. The slots are\\nclosed, so I can’t sell Coins."]]}
 }

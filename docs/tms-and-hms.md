@@ -73,7 +73,7 @@ In the order of the original games' numbers.
 | TM41 | TM41 | Torment | Item ball, Victory Road 1F |
 | TM42 | TM42 | Facade | Gift, Survival Area South House |
 | TM43 | TM102 | Secret Power | Item ball, Amity Square |
-| TM44 | TM44 | Rest | - |
+| TM44 | TM44 | Rest | Sold, Veilstone Department Store 3F |
 | TM45 | TM45 | Attract | 32 BP, Battle Park Exchange; Item ball, Amity Square; Item ball, Dazzling Cave (Underground) |
 | TM46 | TM46 | Thief | Item ball, Eterna City |
 | TM47 | TM103 | Steel Wing | Item ball, Route 209 |
@@ -87,24 +87,24 @@ In the order of the original games' numbers.
 | TM55 | TM107 | Brine | Gift, Pastoria Gym |
 | TM56 | TM56 | Fling | Gift, Route 222 |
 | TM57 | TM57 | Charge Beam | Gift, Sunyshore Gym |
-| TM58 | TM108 | Endure | - |
-| TM59 | TM109 | Dragon Pulse | Item ball, Stargleam Cavern (Underground); Item ball, Victory Road B1F |
+| TM58 | TM108 | Endure | Sold, Veilstone Department Store 3F |
+| TM59 | TM109 | Dragon Pulse | 80 BP, Battle Park Exchange; Item ball, Stargleam Cavern (Underground); Item ball, Victory Road B1F |
 | TM60 | TM110 | Drain Punch | Gift, Veilstone Gym |
 | TM61 | TM61 | Will-O-Wisp | 32 BP, Battle Park Exchange |
 | TM62 | TM111 | Silver Wind | Item ball, Grassland Cave (Underground); Item ball, Route 212 South |
 | TM63 | TM63 | Embargo | Gift, Veilstone City |
-| TM64 | TM64 | Explosion | - |
+| TM64 | TM64 | Explosion | Gift, Veilstone Game Corner (the clerk at the front, if you have a Coin Case) |
 | TM65 | TM65 | Shadow Claw | Gift, Hearthome Gym |
 | TM66 | TM66 | Payback | Gift, Route 215 |
 | TM67 | TM112 | Recycle | Gift, Eterna Condominiums 2F |
-| TM68 | TM68 | Giga Impact | - |
+| TM68 | TM68 | Giga Impact | Sold, Veilstone Department Store 3F |
 | TM69 | TM69 | Rock Polish | Item ball, Mt. Coronet North 1F Room 1 |
 | TM70 | TM70 | Flash | Item ball, Oreburgh Gate B1F; Sold, Veilstone Department Store 3F |
 | TM71 | TM71 | Stone Edge | 80 BP, Battle Park Exchange; Item ball, Typhlo Cavern (Underground); Item ball, Victory Road 2F |
 | TM72 | TM113 | Avalanche | Gift, Snowpoint Gym |
 | TM73 | TM73 | Thunder Wave | 32 BP, Battle Park Exchange |
-| TM74 | TM74 | Gyro Ball | - |
-| TM75 | TM75 | Swords Dance | - |
+| TM74 | TM74 | Gyro Ball | Sold, Veilstone Department Store 3F |
+| TM75 | TM75 | Swords Dance | Sold, Veilstone Department Store 3F |
 | TM76 | TM114 | Stealth Rock | Gift, Oreburgh Gym |
 | TM77 | TM77 | Psych Up | Gift, Route 211 East |
 | TM78 | TM115 | Captivate | Gift, Route 204 North |
@@ -131,7 +131,7 @@ In the order of the original games' numbers.
 | HM07 | HM05 | Waterfall | Gift, Sunyshore City |
 | HM08 | TM120 | Rock Climb | Item ball, Route 217 |
 
-A dash: there's no way to get this one in 1.0: TM44 Rest, TM108 Endure, TM64 Explosion, TM68 Giga Impact, TM74 Gyro Ball, TM75 Swords Dance. They were Game Corner prizes or the Game Corner's gift, and the Game Corner is closed.
+The Veilstone Game Corner stays closed. Its prize TMs are sold at the Veilstone Department Store, 3F, and its coin clerk gives TM64 at the front. Its other prizes, Silk Scarf, Wide Lens, Zoom Lens and Metronome, are sold at 2F, at the X-item counter.
 
 ## Black 2's TMs you can also find
 
@@ -140,7 +140,6 @@ Moves that aren't TMs in the original games.
 | TM | Move | How to get it |
 |---|---|---|
 | TM55 | Scald | Item ball, Volcanic Cave (Underground) |
-| TM59 | Incinerate | 80 BP, Battle Park Exchange |
 
 ## The new TMs
 

@@ -1,7 +1,10 @@
-"""Gen 4 (Diamond/Pearl) field script disassembler: Pearl's scr_seq_release.narc, from the dump to readable text.
+"""Gen 4 (Diamond/Pearl/Platinum) field script disassembler: scr_seq_release.narc (Platinum's scr_seq.narc), from the dump to
+readable text.
 
-    python3 gen4_script.py [ROM] [OUT_DIR]       defaults: roms/pearl.nds, work/pearl/scripts
+    python3 gen4_script.py [ROM] [OUT_DIR]       defaults: the version's world dump, work/<world>/scripts (Pearl and Diamond:
+                                                 roms/pearl.nds, work/pearl; PEARL_VERSION=platinum: roms/platinum.nds, work/platinum)
     python3 gen4_script.py --table               rebuild data/gen4_script_cmds.json from the decomps and print a summary
+                                                 (PEARL_VERSION=platinum: data/gen4_script_cmds_platinum.json)
 
 Opcode table (data/gen4_script_cmds.json, cached; rebuilt when missing or with --table):
   pokediamond's gScriptCmdTable (arm9/asm/unk_02038C78.s, 721 entries) names each opcode's handler. The argument
@@ -16,6 +19,11 @@ Opcode table (data/gen4_script_cmds.json, cached; rebuilt when missing or with -
     'pokeplatinum'     asm/macros/scrcmd.inc, by matching handler, only where pokediamond gives no layout.
   Argument types: u8, u16, u32, var (u16 var-or-value), rel (s32 offset to code), mov (s32 offset to movement data).
   Flow: end, jump, call, cjump (conditional jump), ccall (conditional call), return, or none.
+
+Platinum's table (2026-11-02, platinum_table() below): 840 commands. Below 0x2C3 Platinum numbers commands as pokediamond does, and
+each row is Pearl's, its argument sizes checked against Platinum's macro. Pearl's last 14 commands moved to the table's end
+(PEARL_MOVED: they keep Pearl's name, so pearl_story's handlers still apply). The rest are new, 'new': true: their arguments are
+read from Platinum's C handlers (the same rule as 'pokediamond-c'), named as Platinum names them, and checked on all 1,124 files.
 
 Script file layout (checked on all 1,051 files): u32 offsets (relative to the end of each u32) to the entry points,
 ended by u16 0xFD13; then code; movement lists (u16 command, u16 count pairs ended by u16 0xFE) referenced by
@@ -34,10 +42,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 from gen4rom import Rom, narc_members  # noqa: E402
+import version  # noqa: E402
 
 DIAMOND = os.path.join(ROOT, 'external', 'pokediamond')
 PLATINUM = os.path.join(ROOT, 'external', 'pokeplatinum')
-TABLE_JSON = os.path.join(HERE, 'data', 'gen4_script_cmds.json')
+TABLE_JSON = os.path.join(HERE, 'data', version.SCRIPT_TABLE)
 SIZES = {'u8': 1, 'u16': 2, 'var': 2, 'u32': 4, 'rel': 4, 'mov': 4}
 
 # Handlers whose argument count depends on an argument (reads inside a switch / if of the handler), written out case by
@@ -277,9 +286,149 @@ def build_table():
     return table
 
 
+# ---------------------------------------------------------------- Platinum's table
+
+# Pearl's commands Platinum moved (Pearl's number: Platinum's name). 0x2C3 ScopeMode has no Platinum command (Unused_2C3 is its slot).
+PEARL_MOVED = {0x2C4: 'BufferItemNameWithArticle', 0x2C5: 'BufferItemNamePlural', 0x2C6: 'BufferUndergroundGoodsNameWithArticle',
+               0x2C7: 'BufferUndergroundTrapNameWithArticle', 0x2C8: 'BufferUndergroundItemNameWithArticle',
+               0x2C9: 'BufferSpeciesNameWithArticle', 0x2CA: 'BufferPlayerCounterpartStarterSpeciesNameWithArticle',
+               0x2CB: 'BufferAccessoryNameWithArticle', 0x2CC: 'BufferTrainerClassNameWithArticle',
+               0x2CD: 'BufferBallSealNamePlural', 0x2CE: 'CapitalizeFirstLetter', 0x2CF: 'SetMenuXOriginSide', 0x2D0: 'SetMenuYOriginSide'}
+PL_READERS = {'ScriptContext_ReadByte': 'u8', 'ScriptContext_ReadHalfWord': 'u16', 'ScriptContext_ReadWord': 'u32',
+              'ScriptContext_GetVar': 'var', 'ScriptContext_GetVarPointer': 'var'}
+# Handlers whose reads depend on an argument (the same format as MANUAL), written out from Platinum's source.
+PL_MANUAL = {}
+# Pearl's commands whose arguments changed in a way the C reader can't follow: GivePoffin reads its six fields in a loop, through vars.
+PL_ARGS = {'ScrCmd_GivePoffin': ['var'] * 7}
+
+
+def platinum_order():
+    """[(constant, handler)] of Platinum's commands, by number."""
+    return re.findall(r'^ScriptCommand\((\w+),\s*(\w+)\)',           # (one constant is spelled ScrCmd_GET...: \w+, not SCRCMD_)
+                      open(os.path.join(PLATINUM, 'include/data/scripts/scrcmd.h'), encoding='utf-8').read(), re.M)
+
+
+def platinum_macro_sizes():
+    """{constant: [argument sizes in bytes] or None when a macro has conditional bytes}, from asm/macros/scrcmd.inc."""
+    inc = open(os.path.join(PLATINUM, 'asm/macros/scrcmd.inc'), encoding='utf-8').read()
+    out = {}
+    size = {'byte': 1, 'short': 2, 'hword': 2, 'long': 4, 'word': 4}
+    for m in re.finditer(r'\.macro\s+\w+[^\n]*\n(.*?)\.endm', inc, re.S):
+        lines = [l.strip() for l in m.group(1).splitlines() if l.strip()]
+        if not lines or not re.match(r'\.short\s+SCRCMD_\w+$', lines[0]):
+            continue
+        sizes = []
+        for l in lines[1:]:
+            t = re.match(r'\.(byte|short|long|hword|word)\b', l)
+            if not t:
+                sizes = None
+                break
+            sizes.append(size[t.group(1)])
+        out.setdefault(lines[0].split()[1], sizes)
+    return out
+
+
+def platinum_c_functions():
+    """{name: (parameter name of the ScriptContext or None, body)} over Platinum's C files that read script arguments."""
+    funcs = {}
+    for dirpath, _, names in os.walk(os.path.join(PLATINUM, 'src')):
+        if 'overlay104' in dirpath:         # the Frontier's own script language, not field scripts
+            continue
+        for fn in names:
+            if not fn.endswith('.c'):
+                continue
+            s = open(os.path.join(dirpath, fn), encoding='utf-8', errors='replace').read()
+            if 'ScriptContext' not in s:
+                continue
+            s = strip_c_comments(s)
+            for m in re.finditer(r'^[A-Za-z_][\w \t\*]*?\b(\w+)\s*\(([^;{)]*)\)\s*\{', s, re.M):
+                name, params = m.group(1), m.group(2)
+                if name in ('if', 'while', 'for', 'switch'):
+                    continue
+                i, depth = m.end() - 1, 0
+                for j in range(i, len(s)):
+                    if s[j] == '{':
+                        depth += 1
+                    elif s[j] == '}':
+                        depth -= 1
+                        if depth == 0:
+                            break
+                pm = re.search(r'ScriptContext\s*\*\s*(\w+)', params)
+                funcs.setdefault(name, (pm.group(1) if pm else None, s[i + 1:j]))
+    return funcs
+
+
+def platinum_c_layout(funcs, name, depth=0):
+    """(args, conditional?) of one of Platinum's handlers, in reading order, following helpers that take the context."""
+    ctx, body = funcs[name]
+    if ctx is None:
+        return [], False
+    args, cond = [], False
+    for m in re.finditer(r'(?P<r>' + '|'.join(PL_READERS) + r')\s*\(\s*' + re.escape(ctx) + r'\s*\)|(?P<call>\b\w+)\s*\(\s*' + re.escape(ctx) + r'\s*[,)]', body):
+        before = body[:m.start()]
+        stmt = re.split(r'[;{}]', before)[-1]
+        nested = before.count('{') - before.count('}') > 0 or re.search(r'\b(if|while|for)\b|\?', stmt) or re.search(r'\breturn\b', before)
+        if m.group('r'):
+            cond = cond or bool(nested)
+            args.append(PL_READERS[m.group('r')])
+        elif m.group('call') in funcs and m.group('call') != name and depth < 4 and m.group('call') not in PL_READERS:
+            sub, subcond = platinum_c_layout(funcs, m.group('call'), depth + 1)
+            cond = cond or subcond or bool(sub and nested)
+            args += sub
+    return args, cond
+
+
+def platinum_table():
+    """Platinum's 840 commands (see the top of this file). Returns (table, problems): problems are rows whose sizes the decomp's
+    C and macro disagree on; the data decides those (see main's check)."""
+    pearl = json.load(open(os.path.join(HERE, 'data', 'gen4_script_cmds.json')))
+    order, macros, funcs = platinum_order(), platinum_macro_sizes(), platinum_c_functions()
+    moved = {('ScrCmd_' + name): op for op, name in PEARL_MOVED.items()}
+    table, problems = [], []
+    for op, (const, h) in enumerate(order):
+        c_args, cond = platinum_c_layout(funcs, h) if h in funcs else (None, False)
+        macro = macros.get(const)
+        if op < 0x2C3 or h in moved:
+            e = dict(pearl[op if op < 0x2C3 else moved[h]], op=op, handler=h, source='pearl')
+            if op >= 0x2C3:
+                e['pearl_op'] = moved[h]
+            if h in PL_ARGS:
+                e['args'], e['source'] = PL_ARGS[h], 'pokeplatinum-c'
+            types = [t for t in e['args']]
+            want = [SIZES[t] for t in types]
+            if macro is not None and 'switch' not in e and not e.get('conditional_reads') and macro != want:
+                if c_args is not None and [SIZES[t] for t in c_args] == macro:
+                    e['args'], e['source'] = c_args, 'pokeplatinum-c'
+                    e.pop('conditional_reads', None)
+                    problems.append(f'{op:#x} {h}: Pearl {types} -> Platinum {c_args}')
+                else:
+                    problems.append(f'{op:#x} {h}: Pearl {types}, macro {macro}, C {c_args}: Pearl kept')
+            table.append(e)
+            continue
+        e = {'op': op, 'name': h[7:] if h.startswith('ScrCmd_') else h, 'handler': h, 'flow': None, 'new': True}
+        if h in PL_MANUAL:
+            fixed, sel, cases, default = PL_MANUAL[h]
+            e.update(args=fixed, source='manual')
+            if sel is not None:
+                e['switch'] = {'arg': sel, 'cases': {str(k): v for k, v in cases.items()}, 'default': default}
+        elif c_args is not None:
+            e.update(args=c_args, source='pokeplatinum-c')
+            if cond:
+                e['conditional_reads'] = True
+            if macro is not None and [SIZES[t] for t in c_args] != macro:
+                problems.append(f'{op:#x} {h}: C {c_args}, macro {macro}')
+        elif macro is not None:
+            e.update(args=[{1: 'u8', 2: 'u16', 4: 'u32'}[n] for n in macro], source='pokeplatinum-macro')
+        else:
+            e.update(args=None, source='unknown')
+            problems.append(f'{op:#x} {h}: no layout')
+        table.append(e)
+    return table, problems
+
+
 def load_table(rebuild=False):
     if rebuild or not os.path.exists(TABLE_JSON):
-        table = build_table()
+        table = platinum_table()[0] if version.PLATINUM else build_table()
         os.makedirs(os.path.dirname(TABLE_JSON), exist_ok=True)
         with open(TABLE_JSON, 'w') as f:
             f.write('[\n' + ',\n'.join(json.dumps(e) for e in table) + '\n]\n')
@@ -611,14 +760,16 @@ def main(argv):
         t = load_table(True)
         from collections import Counter
         print(Counter(e['source'] for e in t), Counter(e['flow'] for e in t))
+        if version.PLATINUM:
+            print('\n'.join(platinum_table()[1]))
         return 0
-    rom_path = argv[0] if argv else os.path.join(ROOT, 'roms', 'pearl.nds')
-    out_dir = argv[1] if len(argv) > 1 else os.path.join(ROOT, 'work', 'pearl', 'scripts')
+    rom_path = argv[0] if argv else version.WORLD_DUMP
+    out_dir = argv[1] if len(argv) > 1 else os.path.join(version.WORLD_WORK, 'scripts')
     table = load_table()
-    files = narc_members(Rom(rom_path).read('fielddata/script/scr_seq_release.narc'))
+    files = version.slotted('scripts', narc_members(Rom(rom_path).read(version.ARCHIVE['scripts'])))
     zones_path = os.path.join(os.path.dirname(out_dir), 'zones.json')
     if not os.path.exists(zones_path):
-        zones_path = os.path.join(ROOT, 'work', 'pearl', 'zones.json')
+        zones_path = os.path.join(version.WORLD_WORK, 'zones.json')
     zones = json.load(open(zones_path))
     level = {z['level_scripts'] for z in zones}
     scripts = {z['scripts'] for z in zones}

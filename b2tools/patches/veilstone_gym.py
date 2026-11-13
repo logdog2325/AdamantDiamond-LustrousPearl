@@ -17,6 +17,7 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 sys.path.insert(0, HERE)
 import itcm, resident, narcio  # noqa: E402
 import pearl_veilstone_gym as gym  # noqa: E402
@@ -32,7 +33,7 @@ SOUND = 'SEQ_SE_FLD_148'
 
 
 def zone():
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))['rooms']['zones']
+    world = json.load(open(version.data_path('sinnoh_world.json')))['rooms']['zones']
     return next(v['b2_zone'] for v in world.values() if v['name'] == gym.GYM_ZONE)
 
 
@@ -41,6 +42,8 @@ def first_file():
 
 
 def apply(files):
+    if gym.GYM_KIND != 'panels':
+        return f'veilstone_gym: {version.VERSION} has its own Gym ({gym.GYM_KIND}): not built yet, nothing'
     rows = narcio.load(files, GIMMICK_TABLE_ARC)
     table = [struct.unpack_from('<II', rows[0], o) for o in range(0, len(rows[0]), 8)]
     z = zone()
@@ -94,6 +97,8 @@ def blob(base, first=None, sound=None):
 
 
 def apply_code(code):
+    if gym.GYM_KIND != 'panels':
+        return f'veilstone_gym: {version.VERSION} has its own Gym ({gym.GYM_KIND}): no panel table'
     import decomp
     slot = decomp.symbol('gPearlB2VeilstoneGym', code)
     if slot is None:

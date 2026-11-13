@@ -27,6 +27,9 @@ Pearl's town map [the user's dump; pokediamond overlay 66, pokeplatinum src/appl
     of bank 556, hidden-place flag).
   - the Pokédex's area places: application/zukanlist/zkn_data/zukan_enc_pearl.narc files 0-3: 21 "dungeons" (cell,
     Mt. Coronet flag; file 1 their map header) and 50 "fields" (cell rectangle + mask; file 3 their map header).
+    Platinum's zukan_enc_platinum has the same 21 and 50 (its own cells and headers). From file 4 on, each species'
+    lists of those places by category (area_list; area_records gives each place's record): sinnoh_pokedex reads the
+    "special" lists of Platinum (honey trees, the Great Marsh, Feebas) for the AREA page (its AREA_SPECIAL row).
 
 This patch:
   - art: Pearl's picture rows 0-167 (both layers composed, Pearl's own pixels and colours: extended palette 0 indices
@@ -153,15 +156,19 @@ def _overlay(n):
     raise KeyError(n)
 
 
+# Where the dumps keep them (overlay, its fly table; arm9's spawn table). Platinum's were found by Pearl's first rows (Twinleaf, 411).
+FLY_OVERLAY, FLY_TABLE, SPAWN_TABLE = (80, 0x021D31D8, 0x020E97B4) if version.PLATINUM else (66, 0x021D990C, 0x020F2224)
+
+
 def fly_table():
     """Pearl's 20 town-map fly places (overlay 66 0x021d990c): dicts header, index, shape, colour, special, x, y."""
-    ram, b = _overlay(66)
-    o = 0x021D990C - ram
+    ram, b = _overlay(FLY_OVERLAY)
+    o = FLY_TABLE - ram
     out = []
     for i in range(20):
         h, idx, shape, col, special, x, y = struct.unpack_from('<IIBBHII', b, o + 20 * i)
         out.append(dict(header=h, index=idx, shape=shape, colour=col, special=special, x=x, y=y))
-    assert out[0]['header'] == 411 and out[7]['header'] == 3, 'not overlay 66\'s fly table'
+    assert out[0]['header'] == 411 and out[7]['header'] == 3, f'not overlay {FLY_OVERLAY}\'s fly table'
     return out
 
 
@@ -169,7 +176,7 @@ def spawn_table():
     """{fly-table index: (fly map header, x, z)} (arm9 0x020f2224, 20 x 16 bytes)."""
     d = _rom().data
     off, _, ram, size = struct.unpack_from('<IIII', d, 0x20)
-    o = off + 0x020F2224 - ram
+    o = off + SPAWN_TABLE - ram
     out = {}
     for i in range(20):
         bh, bx, bz, fh, fx, fz, warp, unlock, idx, _ = struct.unpack_from('<6H4B', d, o + 16 * i)
@@ -192,8 +199,7 @@ def blocks():
 def area_places():
     """Pearl's Pokédex area places (zukan_enc_pearl.narc files 0-3): (dungeons [(x, z, coronet, header)],
     fields [(x, z, w, h, cells, header)]), index 0 (a blank) dropped."""
-    m = _narc('application/zukanlist/zkn_data/zukan_enc_pearl.narc' if not version.DIAMOND
-              else 'application/zukanlist/zkn_data/zukan_enc_diamond.narc')
+    m = _narc(version.ARCHIVE['pokedex_area'])
     d0, d1, d2, d3 = m[:4]
     dh = struct.unpack(f'<{len(d1) // 4}I', d1)
     fh = struct.unpack(f'<{len(d3) // 4}I', d3)
@@ -205,6 +211,37 @@ def area_places():
         cells = [(x + k // h, z + k % h) for k in range(w * h) if mask[k]]   # (column-major, pokedex_enc_data.c)
         fields.append((x, z, w, h, cells, fh[i]))
     return dungeons, fields
+
+
+AREA_SPECIES = 495                        # zukan_enc: 4 + 495 x category + species (pokeplatinum PEFI_*: MAX_SPECIES)
+AREA_SPECIAL = (3, 8)                     # its categories 3 and 8: the dungeons' and fields' "special" lists without the
+#   National Pokédex (honey trees, the Great Marsh's daily Pokémon, Feebas's tiles); 4 and 9 are the same with it
+
+
+_AREA = []
+
+
+def area_list(species, category):
+    """The version's own Pokédex area list (zukan_enc member 4 + 495 x category + species): its place numbers (1-based
+    indexes of area_places' dungeons for categories 0-4, of its fields for 5-9)."""
+    if not _AREA:
+        _AREA.append(_narc(version.ARCHIVE['pokedex_area']))
+    d = _AREA[0][4 + AREA_SPECIES * category + species]
+    return [v for v in struct.unpack(f'<{len(d) // 4}I', d) if v]
+
+
+def area_records(locs):
+    """{('dungeon' | 'field', place number): record index} of locations(): a dungeon's main record, a field's own
+    record or, for a town's field, the town's."""
+    dungeons, fields = area_places()
+    out = {}
+    for i, l in enumerate(locs):
+        if l['kind'] in ('dungeon', 'field') and l['main']:
+            out.setdefault((l['kind'], l['area_index']), i)
+    for k, f in enumerate(fields):
+        if ('field', k + 1) not in out:
+            out[('field', k + 1)] = next(i for i, l in enumerate(locs) if l['kind'] == 'town' and l['pearl'] == f[5])
+    return out
 
 
 # ---------------------------------------------------------------------------------------------------- the art
@@ -363,7 +400,7 @@ def _nitro(d, sections):
 # ---------------------------------------------------------------------------------------------------- the places
 
 def _world():
-    w = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    w = json.load(open(version.data_path('sinnoh_world.json')))
     pz = json.load(open(os.path.join(PEARL, 'zones.json')))
     b2 = {int(k): v['b2_zone'] for k, v in w['zones'].items()}
     b2.update({int(k): v['b2_zone'] for k, v in w['rooms']['zones'].items()})
@@ -415,7 +452,7 @@ def _centre(cells):
     return (round(sum(p[0] for p in pts) / len(pts)), round(sum(p[1] for p in pts) / len(pts)))
 
 
-EXTRA = [('MAP_VERITY_LAKEFRONT', None), ('MAP_BATTLE_PARK', [(20, 12)])]   # outdoor places with no area data
+EXTRA = [('MAP_VERITY_LAKEFRONT', None), ('MAP_BATTLE_FRONTIER' if version.PLATINUM else 'MAP_BATTLE_PARK', [(20, 12)])]   # (Platinum: its Frontier stands there)   # outdoor places with no area data
 CORONET_WEST = [(11, 19), (11, 20), (11, 21), (11, 22)]                    # Mt. Coronet's second run (Pearl's blocks)
 CORONET_MAIN = [(12, z) for z in range(12, 20)]
 
@@ -551,7 +588,7 @@ def record(l, hl, desc_line):
 # ---------------------------------------------------------------------------------------------------- tables
 
 LOST_TOWER = 'MAP_ROUTE_209_LOST_TOWER'
-PLACE_OF_SECTION = {80: 'BATTLE_PARK'}            # Battle Tower rooms (no warp out to the Battle Park in the data)
+PLACE_OF_SECTION = {80: 'BATTLE_FRONTIER' if version.PLATINUM else 'BATTLE_PARK'}            # Battle Tower rooms (no warp out to the Battle Park in the data)
 
 
 def zone_table(headers, locs):

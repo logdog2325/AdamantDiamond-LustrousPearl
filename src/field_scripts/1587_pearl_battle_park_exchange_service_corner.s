@@ -101,7 +101,7 @@ P356_0123:
 P356_0131:
     pl_SetVarFromValue PVAR_8008, 0
     pl_SetVarFromValue PVAR_8009, 0
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextListMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextListMenu 1, 1, 0, 1, PVAR_800C
 
 P356_0145:
     pl_TowerExchange PVAR_4000, PVAR_8008, PVAR_8000, PVAR_8001

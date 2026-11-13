@@ -133,6 +133,8 @@ Black 2 zones stay as they are.
 | 661-662 | Ramanas Park, Diamond version only | Brilliant Diamond's Johto and Rainbow Rooms, for the planned Diamond version of PearlB2 (`DIAMOND_ONLY`: a Pearl build refuses them) |
 | 663-664 | Turnback Cave (2) | (the lead, 2026-10-26: Pearl's maze needs 12 zones) 663 Random Room 17, 664 Random Room 14 (no wild Pokémon in Pearl) |
 | 665- | the next feature | ask the lead |
+| 685-718 | Platinum's new maps (Platinum only) | 685 + its map id - 559 (allocate_sinnoh PLATINUM_BLOCK) |
+| 719-726 | Platinum's Battle Frontier picture rooms (Platinum only) | pseudo map ids 593-600 by the same rule: the Factory's, Hall's, Castle's and Arcade's corridor and battle room (allocate_sinnoh FRONTIER_ROOMS_BLOCK, b2tools/frontier_rooms.py, patches/platinum_frontier_rooms.py; plat-frontier-rooms 2026-11-07) |
 
 **Reserved Black 2 areas** (`RESERVED_AREAS`): the Underground reuses Black 2's own rooms with their areas, 388
 (Reversal Mountain 8-13's interior area) and 198-201 (the Moor of Icirrus' seasonal group). Their zones are Sinnoh

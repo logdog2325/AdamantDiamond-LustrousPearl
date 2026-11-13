@@ -371,6 +371,10 @@ Calculator, so the Pokétch's code region is about 14.7 + 5.9 + 12 (the memory) 
   (Pearl's poketool/shinzukan, 152 entries, its entry 0 Arceus as Pearl has it) is build data: the patch reads it
   from Pearl's dump and writes it into the Calculator's overlay at `gPearlB2SinnohDex` (so no ITCM; a Diamond build
   gives its own); the 151 and 649 are in gPearlB2Poketch, which is now 44 bytes (the table pointer is gone).
+  Since 2026-11-07 (plat-fixes) the C reads no table of its own: a Sinnoh number's species is the one the game's
+  regional dex table numbers so (a/0/1/6 file 709, PML_PersonalLoadRegionalDexTable, which patches/sinnoh_dex.py writes
+  from the version's shinzukan), up to the config's count: Pearl's and Diamond's 151, Platinum's 210. The Calculator's
+  overlay lost its 304-byte table, so the Pokétch memory and Pal Park's overlay after it sit 192 bytes lower.
 - **The port layer, additions**: Pearl's window calls (the Pokémon List's HP bars, the Memo Pad's and Roulette's
   boards); NitroSDK's 32-bit divider inlines and the 64-bit remainder (Black 2's nitro/cp.h has only the 64-bit
   ones); Pearl's timer 3 = NitroSDK's tick (Black 2 starts it in machine_use.c) with Pearl's clock constant

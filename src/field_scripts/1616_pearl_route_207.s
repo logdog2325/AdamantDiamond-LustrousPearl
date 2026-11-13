@@ -1243,7 +1243,7 @@ T378_1_03B4:
     pl_CheckBerriesInBag PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T378_1_0413
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 84, 65535, 0  // Pearl AddMenuEntryImm 2, 0
     ListMenuAdd 85, 65535, 1  // Pearl AddMenuEntryImm 3, 1
     ListMenuAdd 86, 65535, 2  // Pearl AddMenuEntryImm 4, 2

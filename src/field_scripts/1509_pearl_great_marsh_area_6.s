@@ -364,7 +364,7 @@ C462_9_056A:
     pl_LockAll
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_sys 14  // Pearl bank 485 line 3
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 15, 65535, 0  // Pearl AddMenuEntryImm 186, 0
     ListMenuAdd 16, 65535, 1  // Pearl AddMenuEntryImm 187, 1
     ListMenuAdd 17, 65535, 2  // Pearl AddMenuEntryImm 188, 2

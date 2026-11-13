@@ -164,6 +164,35 @@ Contests_Choose:
     pl_msg_sys CCL_RightThisWayPlease1
     pl_CloseMessage
     VMCall Contests_RunStage
+#if PEARLB2_GAME_VERSION != 12
+    // (v101-story, 1.0.1) Pearl's results screen (pokediamond unk_02080C38.s, sub_0205EE08): a won Master Rank contest sets
+    // that type's FLAG_CONTEST_MASTER_* (Cool 0x968, Beauty 0x969, Cute 0x96A, Smart 0x96B, Tough 0x96C), which Hearthome's
+    // man reads for his five cups. Platinum's flags are its own (its build keeps this file as it was)
+    WorkCmpConst W_RES, 0
+    VMJumpIf CMP_NE, .Lmaster_done
+    WorkCmpConst W_RANK, 3
+    VMJumpIf CMP_NE, .Lmaster_done
+    WorkCmpConst W_TYPE, 0
+    VMJumpIf CMP_NE, .Lmaster_1
+    FlagSet PFLAG_0968
+.Lmaster_1:
+    WorkCmpConst W_TYPE, 1
+    VMJumpIf CMP_NE, .Lmaster_2
+    FlagSet PFLAG_0969
+.Lmaster_2:
+    WorkCmpConst W_TYPE, 2
+    VMJumpIf CMP_NE, .Lmaster_3
+    FlagSet PFLAG_096A
+.Lmaster_3:
+    WorkCmpConst W_TYPE, 3
+    VMJumpIf CMP_NE, .Lmaster_4
+    FlagSet PFLAG_096B
+.Lmaster_4:
+    WorkCmpConst W_TYPE, 4
+    VMJumpIf CMP_NE, .Lmaster_done
+    FlagSet PFLAG_096C
+.Lmaster_done:
+#endif
     // Pearl's GetFirstTimeVictoryAccessory, the prize of the first win of this rank and type
     WorkCmpConst W_RES, 0
     VMJumpIf CMP_NE, .Lthanks

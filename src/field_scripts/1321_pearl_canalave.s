@@ -204,6 +204,7 @@ P34_02F1:
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P34_0322
     pl_BufferRivalName 0
+    pl_BufferRivalName 0  // a buffer Gen 4 filled earlier (BUFFER_FILLS)
     pl_msg_sys 1
     pl_CloseMessage
     pl_ApplyMovement 11, P34_0334
@@ -224,6 +225,7 @@ P34_033C:
     pl_PlaySE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_LockAll
     pl_FacePlayer
+    pl_BufferRivalName 0  // a buffer Gen 4 filled earlier (BUFFER_FILLS)
     pl_msg_talk 1
     pl_WaitButton
     pl_CloseMessage
@@ -516,7 +518,7 @@ P34_06A9:
     pl_CompareVarToValue PVAR_4106, 2
     pl_GoToIf 1, P34_08A0
     pl_msg_talk 24
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 41, 65535, 0  // Pearl AddMenuEntryImm 213, 0
     pl_CheckFlag PFLAG_0133
     pl_CallIf 1, P34_0731

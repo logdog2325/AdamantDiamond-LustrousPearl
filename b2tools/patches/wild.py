@@ -30,7 +30,7 @@ sys.path.insert(0, HERE)
 
 import version  # noqa: E402
 
-HONEY_MEMBERS = {'pearl': (5, 6, 7), 'diamond': (2, 3, 4)}[version.VERSION]   # ov05_021FC644 in each dump (notes/DIAMOND.md 1.4)
+HONEY_MEMBERS = {'pearl': (5, 6, 7), 'diamond': (2, 3, 4), 'platinum': (2, 3, 4)}[version.VERSION]   # ov05_021FC644 in each dump (notes/DIAMOND.md 1.4)
 FEEBAS_SPECIES, FEEBAS_TILES = 0, 1
 MARSH_NATIONAL, MARSH_LOCAL = 9, 10
 HONEY_MAPS = (0x15B, 0x15D, 0x15E, 0x161, 0x162, 0x164, 0x16A, 0x16B, 0x16E, 0x16F, 0x173, 0x175, 0x17C, 0x17E,
@@ -45,7 +45,8 @@ STATE = {}
 BERRIES = 64
 PATCHES = 118
 FIRST_BERRY_ITEM = 149
-INIT_OVERLAY, INIT_OFFSET = 52, 0x218
+INIT_TABLE = {'pearl': (52, 0x218), 'diamond': (52, 0x218), 'platinum': (57, 0x220)}   # the new game's Berry patches (same 118 rows in all three)
+INIT_OVERLAY, INIT_OFFSET = INIT_TABLE[version.VERSION]
 TEMPLATE_CODE = 208                              # a one-frame 32 x 32 billboard (Rowan's briefcase: its record only)
 SPROUT_MMODEL = 95
 # Pearl's Berries' mmodel files: seed01 96-98, then from 171 on three a Berry (checked by name, below)
@@ -56,11 +57,11 @@ RING_ROWS = 10                                   # Pearl's 16 x 16 ring, flatten
 
 def encdata_ex():
     import gen4rom
-    return gen4rom.narc_members(gen4rom.Rom(os.path.join(ROOT, 'roms', 'pearl.nds')).read('arc/encdata_ex.narc'))
+    return gen4rom.narc_members(gen4rom.Rom(version.WORLD_DUMP).read('arc/encdata_ex.narc'))
 
 
 def _zones():
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     out = {int(k): v['b2_zone'] for k, v in world['zones'].items()}
     by_name = {}
     for k, v in world['rooms']['zones'].items():
@@ -113,7 +114,7 @@ def table():
 
 def _rom():
     import gen4rom
-    return gen4rom.Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    return gen4rom.Rom(version.WORLD_DUMP)
 
 
 def new_game_patches(rom):
@@ -225,9 +226,34 @@ def berry_table(rom, first_sheet):
     return blob
 
 
+POSTGAME_GROUPS = {'grass': 0, 'surf': 1}                 # resident/wild.c POSTGAME_GRASS, POSTGAME_SURF
+
+
+def postgame_blob():
+    """The decomp's PearlB2PostGame (resident/wild.c) from data/postgame_dex.json (b2tools/postgame_dex.py): the version's
+    other-version slots (version.POSTGAME_OTHER) and the Poké Radar's four (version.POSTGAME_RADAR), each u16 zone, u8 group,
+    u8 slot, u16 own species, u16 other species | form << 11, after u16 flag (the game clear), u16 count."""
+    import sinnoh_encounters as enc
+    d = json.load(open(os.path.join(ROOT, 'data', 'postgame_dex.json')))[version.VERSION]
+    assert d['other'] == version.POSTGAME_OTHER, f'postgame_dex.json: {version.VERSION}\'s other is {d["other"]}'
+    radar = {'SPECIES_' + s for s in version.POSTGAME_RADAR}
+    assert {r[4] for r in d['radar']} == radar, f'postgame_dex.json: radar {sorted({r[4] for r in d["radar"]})}'
+    zones, by_name = _zones()
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    by_name.update({v['name']: v['b2_zone'] for v in world['zones'].values()})
+    rows = (d['exclusives'] if version.POSTGAME_OTHER else []) + d['radar']
+    blob = struct.pack('<HH', GAME_CLEAR_FLAG, len(rows))
+    for zone, group, slot, own, other, form in rows:
+        blob += struct.pack('<HBBHH', by_name[zone], POSTGAME_GROUPS[group], slot, enc.species_id(own),
+                            enc.species_id(other) | form << 11)
+    return blob, (f'post-game slots: {len(rows)} ({len(rows) - len(d["radar"])} of {version.POSTGAME_OTHER or "no other version"}, '
+                  f'{len(d["radar"])} Radar)')
+
+
 def apply(files):
     import narcio, sprites
     STATE['blob'], STATE['summary'] = table()
+    STATE['postgame'], STATE['postgame_summary'] = postgame_blob()
     rom = _rom()
     table_ = sprites.ow_table(files)
     sheet, _ = sprites.ow_sheet_of(files, TEMPLATE_CODE, table_)
@@ -257,6 +283,20 @@ def apply_code(code):
         base, end, _ = resident.install(code, lambda b: (blob, {}))
         resident.write(code, slot, struct.pack('<I', base))
     out = f'wild: table {len(blob)} B at {base:#x} (gPearlB2Wild {slot:#x}); {STATE["summary"]}'
+    # (postdex) the post-game's slots
+    slot = decomp.symbol('gPearlB2PostGame', code)
+    if slot is None:
+        out += '; no gPearlB2PostGame in this decomp: no post-game slots'
+    else:
+        blob = STATE['postgame']
+        old = struct.unpack('<I', resident.read(code, slot, 4))[0]
+        if old:
+            resident.write(code, old, blob)
+            base = old
+        else:
+            base, end, _ = resident.install(code, lambda b: (blob, {}))
+            resident.write(code, slot, struct.pack('<I', base))
+        out += f'; {STATE["postgame_summary"]}, {len(blob)} B at {base:#x}'
     slot = decomp.symbol('gPearlB2Berry', code)
     if slot is None:
         return out + '; no gPearlB2Berry in this decomp: no berry patches'
@@ -273,4 +313,6 @@ def apply_code(code):
 
 if __name__ == '__main__':
     blob, summary = table()
+    print(len(blob), summary)
+    blob, summary = postgame_blob()
     print(len(blob), summary)

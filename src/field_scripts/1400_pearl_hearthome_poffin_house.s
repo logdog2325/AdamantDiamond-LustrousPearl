@@ -196,7 +196,7 @@ T391_1_0008:
 
 T391_1_001B:
     pl_msg_talk 4  // Pearl bank 381 line 1
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitLocalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 5, 65535, 0  // Pearl AddMenuEntryImm 9, 0
     ListMenuAdd 6, 65535, 1  // Pearl AddMenuEntryImm 10, 1
     ListMenuAdd 7, 65535, 2  // Pearl AddMenuEntryImm 11, 2
@@ -288,7 +288,7 @@ T391_1_0121:
 T391_1_0173:
     MsgWinCloseAll  // another speaker: close the first window
     pl_msg_talk 14  // Pearl bank 381 line 13
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 30, 1, 0, 1, PVAR_800C
     pl_stub Unk02CF  // Pearl 0x2CF Unk02CF 1: not translated yet
     ListMenuAdd 15, 65535, 0  // Pearl AddMenuEntryImm 13, 0
     ListMenuAdd 16, 65535, 1  // Pearl AddMenuEntryImm 14, 1
@@ -307,7 +307,7 @@ T391_1_01B7:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T391_1_0173
     pl_CloseMessage
-    pl_stub StartBattleClient  // Pearl 0x0F2 Unk00F2 6, 0, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleClient 6, 0, 0: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T391_1_01F9
     pl_CompareVarToValue PVAR_800C, 3
@@ -328,7 +328,7 @@ T391_1_020D:
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T391_1_0173
     pl_CloseMessage
-    pl_stub StartBattleServer  // Pearl 0x0F3 Unk00F3 6, 0, 0, 32780: not translated yet
+    pl_SetVarFromValue PVAR_800C, 1  // Platinum StartBattleServer 6, 0, 0: the wireless link is closed (COMM_CLUB_RET_CANCEL: nobody there)
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, T391_1_024F
     pl_CompareVarToValue PVAR_800C, 3
@@ -381,8 +381,8 @@ T1042_11_0107:
     pl_WaitFadeScreen
     pl_CloseMessage
     pl_stub ChooseCustomMessageWord  // Pearl 0x243 Unk0243 0, 32780, 32772: not translated yet
-    pl_ReturnToField
-    pl_fade_in_after_starter  // FadeScreen 6, 1, 1, 0x0 (the starter screen ends white in Black 2)
+// ReturnToField: the field stayed open (ChooseCustomMessageWord: no Black 2 screen ran)
+    pl_fade_in_black  // FadeScreen 6, 1, 1, 0x0
     pl_WaitFadeScreen
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, T1042_11_021F
@@ -390,7 +390,7 @@ T1042_11_0107:
     pl_GoTo T1042_11_0214
 
 T1042_11_0165:
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_8004  // Pearl InitLocalTextListMenu 1, 1, 0, 1, PVAR_8004
     ListMenuAdd 20, 65535, 1  // Pearl AddListMenuEntry 16, 1
     ListMenuAdd 21, 65535, 2  // Pearl AddListMenuEntry 17, 2
     ListMenuAdd 22, 65535, 3  // Pearl AddListMenuEntry 18, 3

@@ -45,6 +45,7 @@ import json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 
 ENTRANCE, PILLAR, GIRATINA = 268, 269, 270                  # Pearl map ids
 # Pearl's room table (pokediamond UNK_020F3538, pokeplatinum ScrCmd_InitTurnbackCave pillarRooms): rand % 6 + 6 x
@@ -90,7 +91,7 @@ def maze_rooms():
 
 def check_world(world=None):
     """allocate_sinnoh's zones agree with ZONES (data/sinnoh_world.json)."""
-    world = world or json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = world or json.load(open(version.data_path('sinnoh_world.json')))
     b2 = {int(k): v['b2_zone'] for k, v in world['zones'].items()}
     b2.update({int(k): v['b2_zone'] for k, v in world['rooms']['zones'].items()})
     want = {ENTRANCE: ENTRANCE_ZONE, PILLAR: PILLAR_ZONE, GIRATINA: GIRATINA_ZONE}

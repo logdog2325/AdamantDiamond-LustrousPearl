@@ -29,7 +29,7 @@ P127_001D:
     pl_CheckFlag PFLAG_011C
     pl_GoToIf 1, P127_00B3
     pl_msg_talk 1
-    pl_stub CheckPartyCombeeGenderCount  // Pearl 0x264 CheckBurmyForms 32780: not translated yet
+    pl_CheckBurmyForms PVAR_800C  // a party pass per cloak: 0-3 different Burmy forms
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P127_0092
     pl_CompareVarToValue PVAR_800C, 1

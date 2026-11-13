@@ -40,7 +40,8 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
-PEARL = os.path.join(ROOT, 'work', 'pearl')
+import version  # noqa: E402
+PEARL = version.WORLD_WORK
 VANILLA = os.path.join(ROOT, 'external', 'pokebw2', 'build', 'b2_us', 'files')
 
 SIGN_GFX = {91, 92, 93, 94, 95, 96}
@@ -69,7 +70,7 @@ def census():
     if _census is not None:
         return _census
     zones = _json(PEARL, 'zones.json')
-    world = _json(ROOT, 'data', 'sinnoh_world.json')
+    world = json.load(open(version.data_path('sinnoh_world.json')))    # (Platinum: its own rooms, 685-718 too)
     rooms = world['rooms']
     ow = {int(k) for k in world['zones']}
     installed_mats = {0} | {r['pearl_matrix'] for r in rooms['zones'].values()}

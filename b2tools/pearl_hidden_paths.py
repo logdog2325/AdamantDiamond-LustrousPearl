@@ -27,7 +27,7 @@ ROOT = os.path.abspath(os.path.join(HERE, '..'))
 PATHS = [
     dict(name='seabreak', place=3, event=9, condition=12, mode='reveal',
          cells={(28, 15): 119, (27, 16): 120, (28, 16): 121, (27, 17): 122}),
-    dict(name='spring', place=2, event=7, condition=10, mode='hide',
+    dict(name='spring', place=2, event=7, condition=10, mode='hide', altitude=2,   # (Pearl's: 16 units up, filler_heights)
          cells={(23, 21): 176, (24, 21): 176, (23, 22): 176, (24, 22): 176}),
 ]
 # People who stand where only the revealed map has ground take its height (the converted map under them is the

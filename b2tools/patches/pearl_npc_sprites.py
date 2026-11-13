@@ -74,6 +74,38 @@ here), so nothing else changes look:
   boulders (3D 8195 / 8197) are untouched.
 Pearl's frames sit 1 pixel higher in the box than Black 2's (feet on row 29 / 30): moved down 1, as the player's.
 Each sheet takes the Pearl sprite's 16 colours.
+
+Platinum (2026-11-07, step 6, plat-sprites; the user 2026-11-03: Platinum's new characters use Platinum's own sprites
+from the dump, pixel for pixel). A Platinum build reads data/platinum/sprite_map.json over Pearl's map, and also does
+this:
+- The people Platinum redrew (Platinum's mmodel.narc against Pearl's: members 0-375 are byte for byte Pearl's except the
+  player's sheets, Barry 127, Palmer 148, Buneary 373 and Happiny 374): Barry and Palmer come from Platinum's dump
+  (PLATINUM_REDRAWN), on their Pearl codes; Buneary and Happiny the same way in pearl_amity_sprites. Every other row
+  reads Pearl's dump, whose members are the same pixels (Platinum moved the models after 375, so Pearl's numbers).
+- Platinum's new people and objects (PLATINUM_PEOPLE: Looker, Charon, Croagunk, the four attendants, the game director,
+  Rotom's five appliances), 16 frames each like Pearl's people, on 12-frame 32 x 32 walker codes nothing in Black 2
+  names (b2tools/plat_sprites_check.py --codes lists them: no kept zone, script, table or C). Codes whose record draws
+  them another way (scene node 5, 15 or 20: Black 2's turning and rail figures) get the record of an ordinary walker
+  (WALKER_TEMPLATE, code 317: node 2, controller 3, shadow on), keeping their own sheet. Rotom's appliances are
+  Platinum's red appliance sheets (mmodel 400-404, the ones its Rotom's Room shows; 406-410 are the plain grey ones
+  nothing shows): 16 equal frames, so every frame is the same picture.
+- Platinum's 3D and wide objects (PLATINUM_MODELS), as Black 2 3D-model actors (type 2, scene node 12: drawn at the
+  actor's place, no turning, as Platinum draws them), each with the record of code 0x2007 (MODEL_TEMPLATE, a 1 x 1
+  drawn model: pearl_e4_doors copies it too) and its model appended to a/0/4/8: the book (fldeff 79 'book02', a
+  book lying on a table) and the wall before Rotom's Room (fldeff 149), byte for byte; the Galactic HQ hall's grunt
+  crowds of 4 and 3 (mmodel 441 and 444: billboard models with their 128 x 32 and 64 x 32 pictures, which no Black 2
+  billboard (32, 16 or 64 square) holds; their own billboard command turns them to the camera). Platinum draws the
+  crowd 1 unit per pixel, as its single grunts; Black 2 draws people 28 units per 32 pixels, so as one picture the
+  crowd's grunts would stand a seventh taller and wider than the single grunts among them. crowd_model gives each
+  grunt of the picture (CROWD_GRUNTS: its columns) a quad of its own at Black 2's person scale on its tile: the
+  same picture, texture, node and material, Black 2's people's size. The cave painting's shards (mmodel 442 and 443:
+  two halves of one 64 x 32 picture lying on the floor, one per object, two tiles apart, always shown together) are
+  one model on the left object (both quads, posScale 8 so the right half's x of 48 fits); the right object is Black
+  2's invisible blocker 185, solid and talkable as Platinum's. Codes: 0x2000, 0x2001, 0x2006, 0x2007 and 0x2008, which no kept Black 2
+  zone, script or C places (0x2003-0x2005 are Strength boulders, 0x2002 Pearl's League doors, 0x2009 and 0x200A
+  Black 2's kept zones'). 0x2007 only changes its model file, so pearl_e4_doors' check of its record still holds.
+Pearl's and Diamond's builds do none of this (version_check.py; plat_sprites_check.py --versions compares their
+a/0/4/7 and a/0/4/8 with the base).
 """
 import json, os, struct, sys
 
@@ -117,8 +149,10 @@ ROCK_BOX = (9, 22, 30)                               # code 206's rock: columns 
 # (their lowest rows match Black 2's: Palkia's both 62). Turned up or sideways they show their front, as Pearl's do.
 POKEMON = [('Palkia', 155, 134, 'sppoke5'), ('Uxie', 151, 130, 'sppoke1'), ('Mesprit', 152, 131, 'sppoke2'),
            ('Azelf', 153, 132, 'sppoke3'), ('Dialga', 154, 133, 'sppoke4')]
-# Dialga shows in Adamant Diamond's Spear Pillar only; a Pearl build keeps Black 2's sheet, which it never shows.
-POKEMON_ONLY_IN = {'Dialga': 'diamond'}
+# Dialga shows in Adamant Diamond's Spear Pillar, and (postdex, 2026-11-09) in Lustrous Pearl's after the Hall of Fame as
+# the other version's legendary (b2tools/postgame_legend.py): a Pearl build takes Pearl's own Dialga too (the dump's
+# pixels, as Diamond's; Black 2's sheet before). Platinum keeps its own.
+POKEMON_ONLY_IN = {'Dialga': ('diamond', 'pearl')}
 # Pearl draws the lake trio 24 units above their tile, wherever they are (pokediamond ov05_021F0514.s: graphics ids
 # 0x97-0x99 take the draw table ov05_021F8D1C, whose init ov05_021F1BD0 sets the sprite offset (0, 24, 0);
 # pokeplatinum ov5_021ECB34, MapObject_SetSpritePosOffset): in the Galactic HQ lab they float in the containment
@@ -142,6 +176,42 @@ ZONE_FLOAT_Y = {'MAP_VEILSTONE_GALACTIC_HEADQUARTERS_4F_BACK': 16}
 WALL = ('cave-painting wall', 203, 370, ('t5_o01_c', 't5_o01_c_'))
 DOOR_X = 8
 ARC_PWT = 247                                        # a/2/4/7: the PWT's trainers, u16 x 8 records, object code at +2
+# Platinum: the people Platinum redrew, by graphics id (read from Platinum's dump; same mmodel member as Pearl's)
+PLATINUM_REDRAWN = {148: 'Barry', 169: 'Palmer'}
+# Platinum's new people and objects: (who, graphics id, Platinum mmodel file, texture name), 16 frames each
+PLATINUM_PEOPLE = [('Looker', 213, 376, 'icpo'), ('Charon', 214, 377, 'gkanbu4'), ('Croagunk', 229, 392, 'gureggru'),
+                   ('Frontier attendant (singles)', 231, 394, 'bfsm'), ('Frontier attendant (multis)', 232, 395, 'bfsw1'),
+                   ('Frontier attendant (booths)', 233, 396, 'bfsw2'), ('Wi-Fi Plaza attendant', 235, 398, 'wifisf'),
+                   ("Rotom's microwave oven", 237, 400, 'rotomf'), ("Rotom's fan", 238, 401, 'rotoms'),
+                   ("Rotom's refrigerator", 239, 402, 'rotomi'), ("Rotom's washing machine", 240, 403, 'rotomw'),
+                   ("Rotom's lawn mower", 241, 404, 'rotomg'), ('game director', 242, 405, 'director'),
+                   # (plat-frontier-rooms) the Frontier Brains: the Frontier's scenes set their look by graphics id
+                   ('Thorton', 215, 378, 'brains1'), ('Argenta', 216, 379, 'brains2'), ('Darach', 217, 380, 'brains3'),
+                   ('Dahlia', 218, 381, 'brains4'), ('Caitlin', 219, 382, 'princess')]   # (the Castle's corridor)
+WALKER_TEMPLATE = 317                                # an ordinary 12-frame walker record (node 2, controller 3, shadow)
+WALKER_NODES = {2, 5, 15, 20}                        # 12-frame records that become one (5, 15, 20: their record changes)
+WALK12 = [d * 4 + k for d in range(4) for k in (0, 1, 3)]
+# Platinum's 3D and wide objects: (what, graphics id, Platinum narc, member(s), texture name)
+FLDEFF = 'data/mmodel/fldeff.narc'
+PLATINUM_MODELS = [('Galactic grunts (4)', 248, MMODEL, 441, 'gset1'), ('Galactic grunts (3)', 249, MMODEL, 444, 'gset2'),
+                   ("the cave painting's shards", 250, MMODEL, (442, 443), 't5_o02_c'),
+                   ('book', 183, FLDEFF, 79, 'book02'), ("the wall before Rotom's Room", 262, FLDEFF, 149, 'm_dun26_38')]
+MODEL_TEMPLATE = 0x2007                              # OBJ_CODE_MODEL_TR_GRASS: a 1 x 1 model record Black 2 draws
+MODEL_RECORD = (2, 12, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 0, 0)   # its bytes 2-15 (type .. offsets: sprites.ow_table)
+FREE_MODELS = {0x2000, 0x2001, 0x2006, 0x2007, 0x2008}   # model codes no kept Black 2 zone, script or C places
+SHARDS_POS_SCALE = 8                                 # the shards' combined model: x -16 .. 48 is -2 .. 6 at 8
+SHARDS_DX = 32                                       # the right shard's object, 2 tiles east of the left one's
+# The Galactic crowds (crowd_model): each grunt's (tile east of the object, first and last column of the picture). The
+# pictures are copies of the grunts' own back view (mmodel 103 / 104, frame 1) at 16-pixel steps, the left pair 1 pixel
+# right of where Platinum places a person, touching at one column (b2tools/plat_sprites_check.py checks it): that
+# column goes to the grunt drawn in it (gset1's column 16 is the same in both, its column 63 shows the man's 5 of 6
+# pixels; gset2's column 16 is the woman's).
+CROWD_GRUNTS = {248: [(-3, 0, 16), (-2, 17, 32), (0, 47, 62), (1, 63, 79)], 249: [(1, 0, 15), (2, 16, 32), (4, 47, 63)]}
+# Black 2 draws a person's 32 x 32 frame as a camera-facing quad 28 units wide and tall, its bottom 1.58 units under the
+# feet at the field camera's 52.6 degree pitch (fieldmap.c Field_CalcActorYOffset: cos(pitch) * 4 - 4; measured in
+# HoennB2, b2tools/pearl_rooms_view.py), and its frames sit 1 row lower than Platinum's (SHIFT_DOWN)
+PERSON_SCALE = 28 / 32
+PERSON_BOTTOM = -1.58 - SHIFT_DOWN * PERSON_SCALE
 LAYOUT = {1: [0], 12: [d * 4 + k for d in range(4) for k in (0, 1, 3)],
           7: [0, 1, 4, 5, 8, 9, 11],
           # Hugh's sheet: the 12 walking frames, then 5 poses only Black 2's own story uses -> Pearl's standing frames
@@ -246,6 +316,223 @@ def pearl_snowball(bmd, tex):
     return bytes(out), pal
 
 
+def sprite_map():
+    """{graphics id (str): row}: data/pearl_sprite_map.json, with Platinum's own rows over it in a Platinum build."""
+    import version
+    smap = json.load(open(os.path.join(ROOT, 'data', 'pearl_sprite_map.json'), encoding='utf-8'))
+    if version.PLATINUM:
+        smap.update({k: v for k, v in json.load(open(os.path.join(ROOT, 'data', 'platinum', 'sprite_map.json'),
+                                                     encoding='utf-8')).items() if k != '_doc'})
+    return smap
+
+
+def bmd_blocks(b):
+    """{block magic: block bytes} of a BMD0 (MDL0, TEX0), and its header's version."""
+    assert b[:4] == b'BMD0', b[:4]
+    n = struct.unpack_from('<H', b, 0xE)[0]
+    out = {}
+    for k in range(n):
+        o = struct.unpack_from('<I', b, 0x10 + 4 * k)[0]
+        out[b[o:o + 4].decode()] = b[o:o + struct.unpack_from('<I', b, o + 4)[0]]
+    return out, struct.unpack_from('<H', b, 6)[0]
+
+
+def bmd_join(blocks, ver):
+    """A BMD0 of the blocks (bytes, in order), each at a 4-aligned offset."""
+    at = 0x10 + 4 * len(blocks)
+    offs, body = [], b''
+    for blk in blocks:
+        body += bytes(-(at + len(body)) % 4)
+        offs.append(at + len(body))
+        body += blk
+    size = at + len(body)
+    return b'BMD0' + struct.pack('<HHIHH', 0xFEFF, ver, size, 0x10, len(blocks)) + struct.pack(f'<{len(blocks)}I', *offs) + body
+
+
+def model_texture(bmd):
+    """(name, w, h, 4 bpp indices, 16 BGR555 colours, colour 0 clear) of a BMD0's one texture."""
+    blocks, _ = bmd_blocks(bmd)
+    t = blocks['TEX0']
+    (name, ent), = sprites._dict(t, struct.unpack_from('<H', t, 0xE)[0])
+    p = struct.unpack_from('<I', ent, 0)[0]
+    fmt, w, h, clear = p >> 26 & 7, 8 << (p >> 20 & 7), 8 << (p >> 23 & 7), p >> 29 & 1
+    assert fmt == 3, (name, fmt)
+    off = struct.unpack_from('<I', t, 0x14)[0] + ((p & 0xffff) << 3)
+    paldict, paldata = struct.unpack_from('<II', t, 0x34)
+    (_, pent), = sprites._dict(t, paldict)
+    po = paldata + (struct.unpack_from('<H', pent, 0)[0] << 3)
+    n = min(16, (len(t) - po) // 2)                  # (a model's palette can hold fewer than 16 colours)
+    pal = list(struct.unpack_from(f'<{n}H', t, po)) + [0] * (16 - n)
+    return name, w, h, sprites.unpack4(t[off:off + w * h // 2], w * h), pal, clear
+
+
+def node_srt(model):
+    """(translation, scale) of a one-node model (pearl_mesh.Model), in map units; no rotation."""
+    import pearl_mesh
+    d, base = model.data, model.m + 0x40
+    (at, _), = pearl_mesh._ndict(d, base)
+    p = base + struct.unpack_from('<I', d, at)[0]
+    flag = struct.unpack_from('<H', d, p)[0]
+    assert flag & 2 and not flag & 8, f'node flags {flag:#x}: a rotation'
+    q, tr, sc = p + 4, (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)
+    if not flag & 1:
+        tr = tuple(v / 4096 for v in struct.unpack_from('<3i', d, q)); q += 12
+    if not flag & 4:
+        sc = tuple(v / 4096 for v in struct.unpack_from('<3i', d, q))
+    return tr, sc
+
+
+def one_block_model(mdl0, ver):
+    import pearl_mesh
+    return pearl_mesh.Model(bmd_join([mdl0], ver))
+
+
+def shards_model(mm, left, right):
+    """Platinum's two cave-painting shard models (each one quad on the floor with half of the same picture) as one model
+    for the left object: the right quad SHARDS_DX east, at posScale SHARDS_POS_SCALE, the left model's node and material,
+    the picture's TEX0 (the two are byte for byte the same)."""
+    import pearl_mesh
+    (bl, ver), (br, _) = bmd_blocks(mm[left]), bmd_blocks(mm[right])
+    assert bl['TEX0'] == br['TEX0'], 'the two shards have different pictures'
+    ml, mr = one_block_model(bl['MDL0'], ver), one_block_model(br['MDL0'], ver)
+    (tl, sl), (tr, sr) = node_srt(ml), node_srt(mr)
+    assert tl == tr and sl == (1.0, 1.0, 1.0), (tl, sl, tr, sr)
+    assert len(ml.shapes) == len(mr.shapes) == 1 and len(ml.materials) == len(mr.materials) == 1
+    ma, mb = ml.data[ml.mat_at[0]:ml.mat_at[0] + 44], mr.data[mr.mat_at[0]:mr.mat_at[0] + 44]
+    assert ma == mb, 'the two shards have different materials'
+    (kind, (ql,)), = ml.shapes[0].groups
+    (kind2, (qr,)), = mr.shapes[0].groups
+    assert kind == kind2 == pearl_mesh.QUADS
+    def world(v, ps, s, dx=0):             # map units, without the node's translation (kept by the node)
+        return [v[k] / 4096 * ps * s[k] + (dx if k == 0 else 0) for k in range(3)]
+    quads = [[world(v, ml.pos_scale, sl) + list(v[3:]) for v in ql],
+             [world(v, mr.pos_scale, sr, SHARDS_DX) + list(v[3:]) for v in qr]]
+    # the left model at the new scale: its posScale, invPosScale (NNSG3dResMdlInfo +8, +12)
+    d = bytearray(ml.data)
+    struct.pack_into('<ii', d, ml.m + 28, SHARDS_POS_SCALE << 12, 4096 // SHARDS_POS_SCALE)
+    m = pearl_mesh.Model(bytes(d))
+    assert m.pos_scale == SHARDS_POS_SCALE
+    polys = []
+    for q in quads:
+        poly = []
+        for x, y, z, s, t, n, c in q:
+            raw = [round(c_ / SHARDS_POS_SCALE * 4096) for c_ in (x, y, z)]
+            assert all(-32768 <= r < 32768 for r in raw), raw
+            poly.append(pearl_mesh.Vertex(*raw, s, t, n, c))
+        polys.append(poly)
+    m.shapes[0].groups = [(pearl_mesh.QUADS, polys)]
+    out = bytearray(m.encode())
+    struct.pack_into('<4H', out, m.m + 36, 8, 2, 0, 2)    # numVertex, numPolygon, numTriangle, numQuad
+    blocks, _ = bmd_blocks(bytes(out))
+    return bmd_join([blocks['MDL0'], bl['TEX0']], ver)
+
+
+def crowd_model(bmd, grunts):
+    """Platinum's Galactic crowd (one picture of 3 or 4 grunts on neighbouring tiles; Platinum draws it 1 unit per pixel,
+    as its people) the way Black 2 draws people: each grunt's columns of the picture (grunts: CROWD_GRUNTS) on a quad of
+    its own, PERSON_SCALE units per pixel around its tile's centre, its bottom PERSON_BOTTOM under the feet. Every pixel
+    and the texture stay Platinum's; so do the model's node (its billboard command) and material."""
+    import pearl_mesh
+    blocks, ver = bmd_blocks(bmd)
+    m = one_block_model(blocks['MDL0'], ver)
+    (kind, (q,)), = m.shapes[0].groups
+    xs, us = [v[0] / 4096 * m.pos_scale for v in q], [v[3] / 16 for v in q]
+    x0, u0 = min(xs), us[xs.index(min(xs))]
+    assert max(xs) - x0 == max(us) - min(us) and kind == pearl_mesh.QUADS, 'the crowd\'s quad is not one texel per unit'
+    n, c, ps = q[0][5], q[0][6], m.pos_scale
+    polys = []
+    for k, a, b in grunts:
+        uc = 16 * k - x0 + u0                     # the column at the tile's centre (Platinum: 1 unit per texel)
+        left, right = 16 * k + (a - uc) * PERSON_SCALE, 16 * k + (b + 1 - uc) * PERSON_SCALE
+        bottom, top = PERSON_BOTTOM, PERSON_BOTTOM + 32 * PERSON_SCALE
+        poly = []
+        for x, y, s_, t in [(left, bottom, a, 32), (right, bottom, b + 1, 32), (right, top, b + 1, 0), (left, top, a, 0)]:
+            raw = [round(v / ps * 4096) for v in (x, y, 0)]
+            assert all(-32768 <= r < 32768 for r in raw), raw
+            poly.append(pearl_mesh.Vertex(*raw, round(s_ * 16), round(t * 16), n, c))
+        polys.append(poly)
+    m.shapes[0].groups = [(pearl_mesh.QUADS, polys)]
+    out = bytearray(m.encode())
+    struct.pack_into('<4H', out, m.m + 36, 4 * len(polys), len(polys), 0, len(polys))
+    blk, _ = bmd_blocks(bytes(out))
+    return bmd_join([blk['MDL0'], blocks['TEX0']], ver)
+
+
+def platinum_models():
+    """{graphics id: (what, BMD0 bytes)} of PLATINUM_MODELS, from Platinum's dump."""
+    import version
+    from gen4rom import Rom, narc_members
+    rom = Rom(version.SOURCE_DUMP)
+    narcs = {n: narc_members(rom.read(n)) for n in {m[2] for m in PLATINUM_MODELS}}
+    out = {}
+    for who, gfx, narc, member, tex in PLATINUM_MODELS:
+        bmd = shards_model(narcs[narc], *member) if isinstance(member, tuple) else \
+            crowd_model(narcs[narc][member], CROWD_GRUNTS[gfx]) if gfx in CROWD_GRUNTS else narcs[narc][member]
+        blocks, _ = bmd_blocks(bmd)
+        assert list(blocks) == ['MDL0', 'TEX0'] and model_texture(bmd)[0] == tex, (who, list(blocks))
+        out[gfx] = (who, bmd)
+    return out
+
+
+def platinum_people():
+    """[(who, graphics id, 16 frames (32 x 32 indices) in Platinum's order, 16 BGR555 colours)] of PLATINUM_PEOPLE."""
+    import version
+    from gen4rom import Rom, narc_members
+    mm = narc_members(Rom(version.SOURCE_DUMP).read(MMODEL))
+    out = []
+    for who, gfx, mid, tex in PLATINUM_PEOPLE:
+        fr, _, pal = sprites.btx_decode(mm[mid])
+        fr = sorted(fr, key=lambda f: int(f[0].split('.')[-1]))
+        assert [f[0] for f in fr] == [f'{tex}.{k}' for k in range(1, 17)], (who, [f[0] for f in fr])
+        assert all((f[1], f[2]) == (32, 32) for f in fr), who
+        assert all(max(i // 32 for i, v in enumerate(f[3]) if v) + SHIFT_DOWN < 32 for f in fr), f'{who}: cut off'
+        out.append((who, gfx, [f[3] for f in fr], pal))
+    return out
+
+
+def apply_platinum(files, sheets, table, own_code, pwt):
+    """Platinum's new people (PLATINUM_PEOPLE) on their walker codes, its 3D and wide objects (PLATINUM_MODELS) as model
+    actors; the codes from data/platinum/sprite_map.json (own_code checks each is its graphics id's alone)."""
+    from collections import Counter
+    res1 = Counter(r['res1'] for r in table)
+    rec = narcio.load(files, sprites.ARC_OW_TABLE)
+    t = bytearray(rec[0])
+    def at(code): return 4 + 28 * sprites.obj_record(code)
+    walker = bytes(t[at(WALKER_TEMPLATE) + 2:at(WALKER_TEMPLATE) + 16])
+    assert struct.unpack_from('<14B', walker) == (1, 2, 1, 1, 1, 0, 22, 3, 2, 1, 1, 0, 0, 0), 'code 317 changed'
+    done = []
+    for who, gfx, frames, pal in platinum_people():
+        code = own_code(who, gfx)
+        r = table[code]
+        assert code < 377 and code not in pwt, f'{who}: code {code} is not a free person code'
+        assert res1[r['res1']] == 1, f'{who}: sheet {r["res1"]} of code {code} is shared'
+        mine = bytearray(t[at(code) + 2:at(code) + 16])
+        assert mine[1] in WALKER_NODES, (who, code, mine[1])
+        assert mine[:1] + mine[2:8] + mine[9:] == walker[:1] + walker[2:8] + walker[9:], f'{who}: code {code}\'s record'
+        lay, _, _ = sprites.btx_layout(sheets[r['res1']])
+        assert len(lay) == 12 and all((w, h) == (32, 32) for _, w, h, _ in lay), who
+        sheets[r['res1']] = sprites.btx_encode(sheets[r['res1']], [shift(frames[i], SHIFT_DOWN) for i in WALK12], pal)
+        note = ''
+        if mine[1] != 2:
+            t[at(code) + 2:at(code) + 16] = walker
+            note = f'; record of {WALKER_TEMPLATE} (was scene node {mine[1]})'
+        done.append(f'{who} = code {code} (sheet {r["res1"]}{note})')
+    model = bytes(t[at(MODEL_TEMPLATE) + 2:at(MODEL_TEMPLATE) + 16])
+    assert struct.unpack_from('<14B', model) == MODEL_RECORD, 'code 0x2007 is no longer a 1 x 1 drawn model'
+    for gfx, (who, bmd) in platinum_models().items():
+        code = own_code(who, gfx)
+        assert code in FREE_MODELS, f'{who}: code {code:#x} is not a free model code'
+        assert struct.unpack_from('<HB', t, at(code)) == (code, 2), f'{who}: code {code:#x} is not a model record'
+        index = len(sheets)
+        sheets.append(bmd)
+        t[at(code) + 2:at(code) + 16] = model
+        struct.pack_into('<5H', t, at(code) + 16, index, *(0xFFFF,) * 4)
+        done.append(f'{who} = code {code:#x} (a/0/4/8 file {index}, Platinum\'s model)')
+    rec[0] = bytes(t)
+    narcio.save(files, sprites.ARC_OW_TABLE, rec)
+    return done
+
+
 def pwt_codes(files):
     """Object codes the PWT's trainer table (a/2/4/7) shows."""
     t = narcio.load(files, ARC_PWT)[0]
@@ -281,24 +568,29 @@ def pearl_door(mm):
 def apply(files):
     import version
     from gen4rom import Rom, narc_members
-    smap = json.load(open(os.path.join(ROOT, 'data', 'pearl_sprite_map.json')))
-    mm = narc_members(Rom(version.SOURCE_DUMP).read(MMODEL))
+    smap = sprite_map()
+    mm = narc_members(Rom(people_dump()).read(MMODEL))
+    # Platinum: the people it redrew from its own dump (the same members; PLATINUM_REDRAWN)
+    redrawn = narc_members(Rom(version.SOURCE_DUMP).read(MMODEL)) if version.PLATINUM else None
     sheets = narcio.load(files, sprites.ARC_OW_SHEETS)
     table = sprites.ow_table(files)
     pwt = pwt_codes(files)
     done = []
 
     def own_code(who, gfx):
-        """The code of a Pearl graphics id, checked to be that id's alone (and, for Team Galactic, not the PWT's)."""
+        """The code of a Pearl graphics id, checked to be that id's alone (and, for Team Galactic, not the PWT's). A row
+        marked "same_as" this id shares its code on purpose (Platinum's Distortion World lake trio, ids 264-267: Platinum
+        draws them with the species' own texture), so it shows the same art."""
         code = smap[str(gfx)]['code']
-        users = [k for k, v in smap.items() if isinstance(v, dict) and v.get('code') == code]
+        users = [k for k, v in smap.items() if isinstance(v, dict) and v.get('code') == code
+                 and v.get('same_as') != str(gfx)]
         assert users == [str(gfx)], (who, code, users)
         assert gfx not in GALACTIC | NAMED or code not in pwt, f'{who}: code {code} is in the PWT\'s table (a/2/4/7)'
         return code
 
     for who, gfx, mid, tex in PEOPLE:
         code = own_code(who, gfx)
-        fr, _, pal = sprites.btx_decode(mm[mid])
+        fr, _, pal = sprites.btx_decode((redrawn if redrawn and gfx in PLATINUM_REDRAWN else mm)[mid])
         fr = sorted(fr, key=lambda f: int(f[0].split('.')[-1]) if '.' in f[0] else 0)   # (the bag: one, 'bag')
         assert len(fr) in (1, 16) and all(f[0].rsplit('.', 1)[0] == tex and (f[1], f[2]) == (32, 32) for f in fr), who
         sheet, _ = sprites.ow_sheet_of(files, code, table)
@@ -374,7 +666,7 @@ def apply(files):
     narcio.save(files, sprites.ARC_OW_TABLE, rec)
     done.append(f'{who} = code {code} (1 x 1, the record and sheet {sheet} of code {BOULDER_SHEET}, {len(lay)} frames)')
     for who, gfx, mid, tex in POKEMON:
-        if POKEMON_ONLY_IN.get(who, version.VERSION) != version.VERSION:
+        if version.VERSION not in POKEMON_ONLY_IN.get(who, (version.VERSION,)):
             continue
         code = own_code(who, gfx)
         fr, _, pal = sprites.btx_decode(mm[mid])
@@ -422,5 +714,16 @@ def apply(files):
     rec[0] = bytes(t)
     narcio.save(files, sprites.ARC_OW_TABLE, rec)
     done.append(f'{who} = code {code} (sheet {sheet}, {len(lay)} frames; no shadow or reflection)')
+    if version.PLATINUM:
+        done[:] = [d.replace(' = code', ' (Platinum\'s art) = code', 1) if d.split(' = ')[0] in PLATINUM_REDRAWN.values()
+                   else d for d in done]
+        done += apply_platinum(files, sheets, table, own_code, pwt)
     narcio.save(files, sprites.ARC_OW_SHEETS, sheets)
     return 'pearl_npc_sprites: ' + '; '.join(done)
+
+
+def people_dump():
+    """Platinum moved 59 of Pearl's sheets and changed others: until step 6 maps its own, its people are Pearl's (the base), from Pearl's
+    dump. Diamond's and Pearl's are their own."""
+    import version
+    return os.path.join(ROOT, 'roms', 'pearl.nds') if version.PLATINUM else version.SOURCE_DUMP

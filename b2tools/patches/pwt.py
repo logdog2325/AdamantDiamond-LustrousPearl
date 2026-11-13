@@ -19,6 +19,7 @@ import narcio, zoneheaders
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 sys.path.insert(0, os.path.dirname(HERE))
 from zones import parse_entities, build_entities  # noqa: E402
 
@@ -26,15 +27,22 @@ LOBBY, STADIUM = 192, 193
 ENTITIES_ARC, CAMERA_ARC = 126, 109
 LOBBY_CAM_BOX = [72, 424, 24, 440]
 LOBBY_CAM_ZMAX = 365            # HoennB2: camera 0 shows 82 units south of its target; the floor ends at z 447
+# The zone whose building's east door leads to the PWT, and that building. Platinum has no Battle Park: its Battle
+# Frontier takes the place, and where the PWT's door goes there is decided with the Frontier (notes/PLATINUM.md step 8).
+PARK = {'pearl': ('MAP_BATTLE_PARK', 'MAP_BATTLE_PARK_EXCHANGE_SERVICE_CORNER'),
+        'diamond': ('MAP_BATTLE_PARK', 'MAP_BATTLE_PARK_EXCHANGE_SERVICE_CORNER'),
+        'platinum': None}[version.VERSION]
 
 
 def _park_zones():
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     zones = {e['name']: e['b2_zone'] for e in world['rooms']['zones'].values()}
-    return zones['MAP_BATTLE_PARK'], zones['MAP_BATTLE_PARK_EXCHANGE_SERVICE_CORNER']
+    return zones[PARK[0]], zones[PARK[1]]
 
 
 def apply(files):
+    if PARK is None:
+        return f'pwt: {version.VERSION} has no Battle Park; the PWT\'s door waits for the Frontier: nothing'
     from scripts import assemble
     park, corner = _park_zones()
     headers, hentries = zoneheaders.load(files)

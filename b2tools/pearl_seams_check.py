@@ -2,6 +2,10 @@
 water_seams_check.py, exterior_layers.py / exterior_check.py layer_pairs ported to Pearl's map models).
 
     python3 pearl_seams_check.py [--fixed] [--rooms|--world] [--json=OUT] [CHUNK ...]   per chunk, totals
+    python3 pearl_seams_check.py --holes [--rooms|--world] [CHUNK ...]    the seams the fixes open (holes(), 2026-11-02)
+    python3 pearl_seams_check.py --holes --views [--json=OUT] [CHUNK ...]   the same from the build's own camera: every
+                                          chunk along nine rays of its screen, where the player can stand (2026-11-07)
+    python3 pearl_seams_check.py --compare OLD.json NEW.json              chunks worse or better between two --json runs
 
 The models are Pearl's own (work/pearl/land/NNN.nsbmd, b2tools/pearl_mesh.py), drawn by Black 2: with --fixed they
 go through pearl_chunk.fix_model first (what the build installs). Measured, per chunk (Pearl chunk ids):
@@ -28,10 +32,11 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import pearl_mesh  # noqa: E402
 
-LAND = os.path.join(ROOT, 'work', 'pearl', 'land')
+LAND = os.path.join(version.WORLD_WORK, 'land')
 MIN_GAP = 2.0
 EPS = 0.05
 CHUNK_LIMIT = 110600
@@ -47,25 +52,30 @@ def is_tree(name):
 
 
 class Poly:
-    __slots__ = ('mat', 'alpha', 'pid', 'P', 'UV', 'n', 'd', 'shape', 'index')
+    __slots__ = ('mat', 'alpha', 'pid', 'P', 'UV', 'n', 'd', 'shape', 'index', 'faces')
 
 
 def load(model):
-    """[Poly] of a pearl_mesh.Model in map units."""
+    """[Poly] of a pearl_mesh.Model in map units, each shape where the DS draws it (its node's translation added:
+    pearl_mesh.shape_translations, as pearl_rooms_view and room_look draw them; the fixes judge them there with
+    version.NODE_SHIFT)."""
     out = []
     ps = model.pos_scale / 4096
+    tr = [np.array(t, float) for t in model.shape_translations()]
     for si, s in enumerate(model.shapes):
         if s.material is None: continue
         pa = model.poly_attr(s.material)
         name = model.materials[s.material]
         for k, p in enumerate(s.polys):
             P = np.array([v.pos for v in p], float) * ps
+            P = P + tr[si]
             n = np.cross(P[1] - P[0], P[2] - P[0])
             if len(P) == 4: n = n + np.cross(P[2] - P[0], P[3] - P[0])
             L = np.linalg.norm(n)
             if L < 1e-9: continue
             q = Poly()
             q.mat, q.alpha, q.pid = name, (pa >> 16) & 31, (pa >> 24) & 63
+            q.faces = (pa >> 6) & 3                   # (the sides the DS draws: 1 back, 2 front, 3 both)
             q.P, q.UV, q.n = P, np.array([(v[3] / 16, v[4] / 16) for v in p], float), n / L
             q.d = float(q.n @ P.mean(0)); q.shape = si; q.index = k
             out.append(q)
@@ -78,13 +88,15 @@ def ground(polys):
 
 def top_ground(g, drop=4.0):
     """(ground, under-floor): ground polygons with ground `drop` units above their centre are the under-floor
-    (pearl_model_fix.underfloor), counted as backing only."""
+    (pearl_model_fix.underfloor), counted as backing only; with version.GROUND_STAYS also its second try's drop
+    (pearl_model_fix.UNDER_DEEP)."""
     T, C = tris_xz(g); G = Grid(T, C)
     ctr = np.array([q.P.mean(0) for q in g]) if g else np.zeros((0, 3))
     hs = G.heights(ctr[:, [0, 2]]) if len(ctr) else []
+    drops = (drop, 8.0) if version.GROUND_STAYS else (drop,)
     top, under = [], []
     for q, c, h in zip(g, ctr, hs):
-        (under if np.any(np.abs(h - (c[1] + drop)) < 0.3) else top).append(q)
+        (under if any(np.any(np.abs(h - (c[1] + d)) < 0.3) for d in drops) else top).append(q)
     return top, under
 
 
@@ -384,13 +396,13 @@ def neighbour_polys(chunk_matrix_cell, matrix, models):
 def cells_of(world):
     """{Pearl chunk: (matrix dict, x, z)}: the overworld chunks in matrix 0, the rooms' in their first matrix."""
     out = {}
-    m0 = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', '000.json')))
+    m0 = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', '000.json')))
     for z in range(m0['height']):
         for x in range(m0['width']):
             c = m0['maps'][z][x]
             if c != 0xffff and str(c) in world['chunks']: out.setdefault(c, (m0, x, z))
     for mid in world['rooms']['matrices']:
-        m = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'matrices', f'{int(mid):03d}.json')))
+        m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f'{int(mid):03d}.json')))
         for z in range(m['height']):
             for x in range(m['width']):
                 c = m['maps'][z][x]
@@ -447,7 +459,7 @@ def check(chunk, cell, fixed=False, cache=None):
 def main_depth(args):
     """--depth [CHUNK ...]: per chunk the layer pairs under DEPTH_RATIO (trees / others, their overlap area)."""
     fixed = '--fixed' in args
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     cells = cells_of(world)
     chunks = [int(a) for a in args if a.isdigit()] or (sorted(int(c) for c in world['chunks'])
                                                        + sorted(int(c) for c in world['rooms']['chunks']))
@@ -469,10 +481,314 @@ def main_depth(args):
     print('tree pairs (materials, gap):', worst.most_common(15))
 
 
+# ------------------------------------------------------------------------------------------------ holes (2026-11-02)
+# What the fixes open up: the chunk's opaque polygons (trees left out: their cards move on purpose) seen along the build's
+# camera (Black 2's camera 0 at Pearl's pitch, maplook 'tilt': 59 degrees, from the south), Pearl's raw model against
+# the model the build installs, at HOLE_PX pixels a unit. A pixel the raw model covers and the fixed one leaves open is a
+# hole the fixes made: there the screen shows the clear colour (black outdoors), a seam. Platinum's Twinleaf had 3,000+ px
+# of them (its ground moved in steps under its snow patches) before version.GROUND_STAYS. Polygons from the chunk itself
+# only, in both models.
+HOLE_PX, HOLE_PITCH = 2, 59.0
+
+# ---- the build's own camera (--holes --views; 2026-11-07, v101-seams). The view above looks along one ray, the screen's
+# middle, in a parallel view: a piece the layers fix moves along Black 2's view direction (pearl_model_fix.VIEW) stays put
+# there, and a gap it opens at its edge is seen only from the side. The DS camera is a perspective one that follows the
+# player, so any place can come to any part of the screen, and the rays there come in at other angles: up to 25.8 degrees
+# left and right (camera 0: projMtx[1][1] 2.7539, 4:3) and 20 degrees up and down. The Contest Hall lobby's back-wall seams
+# (chunk 240), Route 210 North's cliff corner (63) and Valor Lakefront's (157) are such gaps. With --views every chunk is
+# seen along the rays of the screen's four corners, the middles of its four sides and its middle (VIEW_SPOTS), at the pitch
+# the build gives the chunk's zones (view_pitches: maplook 'tilt', the default; 59.06 on the overworld, each room its own
+# Pearl camera's), each ray in a parallel view (the screen near that ray), with the DS's back-face culling (every Pearl
+# land material draws its front side only), counting a hole only where the player can stand so that the camera shows it
+# along that ray (seen(), below). A chunk's score is its worst ray; a hole counts on the tile it is on. The old view above
+# stays as it was (its numbers are the ones in the notes before 1.0.1's v101-seams).
+VIEW_COT = 2.75390625                                    # camera 0's projMtx[1][1]
+VIEW_HALF = (math.degrees(math.atan(4 / 3 / VIEW_COT)), math.degrees(math.atan(1 / VIEW_COT)))   # (25.8, 20.0) degrees
+VIEW_SPOTS = ((-1, 1), (0, 1), (1, 1), (-1, 0), (0, 0), (1, 0), (-1, -1), (0, -1), (1, -1))      # (x, y) on the screen
+
+
+def view_dir(pitch, sx=0.0, sy=0.0):
+    """Unit ray from the eye of a camera pitched `pitch` degrees down, looking north, through screen spot (sx, sy) in
+    [-1, 1] (x right, y up)."""
+    p = math.radians(pitch)
+    f = np.array([0.0, -math.sin(p), -math.cos(p)]); u = np.array([0.0, math.cos(p), -math.sin(p)])
+    d = f + sx * math.tan(math.radians(VIEW_HALF[0])) * np.array([1.0, 0.0, 0.0]) + sy * math.tan(math.radians(VIEW_HALF[1])) * u
+    return d / np.linalg.norm(d)
+
+
+_PITCHES = {}
+
+
+def view_pitches(chunk):
+    """The pitches (degrees) the build's cameras look at a chunk with: Pearl's overworld camera on the overworld
+    (maplook.tilt_camera), each room zone's own Pearl camera (maplook.room_camera) where a room matrix holds it."""
+    import maplook
+    deg = lambda t: round(maplook.PEARL_CAMERAS[t][1] / 65536 * 360, 2)
+    if not _PITCHES:
+        world = json.load(open(version.data_path('sinnoh_world.json')))
+        zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
+        m0 = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', '000.json')))
+        for row in m0['maps']:
+            for c in row:
+                if c != 0xffff: _PITCHES.setdefault(c, set()).add(deg(0))
+        for pid, r in world['rooms']['zones'].items():
+            m = json.load(open(os.path.join(version.WORLD_WORK, 'matrices', f"{r['pearl_matrix']:03d}.json")))
+            for row in m['maps']:
+                for c in row:
+                    if c != 0xffff: _PITCHES.setdefault(c, set()).add(deg(zones[int(pid)]['camera']))
+    return tuple(sorted(_PITCHES.get(chunk) or {deg(0)}))
+
+
+def view_box(polys, d, margin=16.0):
+    """(X0, X1, Y0, Y1): the screen rectangle (units) that holds polys seen along ray d, with a margin."""
+    r = np.cross(d, (0.0, 1.0, 0.0)); r /= np.linalg.norm(r); u = np.cross(r, d)
+    P = np.concatenate([q.P for q in polys]) if polys else np.zeros((1, 3))
+    xs, ys = P @ r, P @ u
+    return (float(xs.min()) - margin, float(xs.max()) + margin, float(ys.min()) - margin, float(ys.max()) + margin)
+
+
+def coverage(polys, px=HOLE_PX, pitch=HOLE_PITCH, view=None, box=None, where=False, cull=False):
+    """(covered (H, W) bool, front polygon index (H, W) int, -1 none) of polygons [Poly] seen along the camera: the
+    screen's middle ray at `pitch` from the south, or along the ray `view` (a unit vector from the eye) in the screen
+    rectangle `box` (view_box). where: also each pixel's point on its front polygon (H, W, 3), map units. cull: leave out
+    the sides the DS doesn't draw (every Pearl land material draws its front only: a wall seen from behind is not there)."""
+    d = view_dir(pitch) if view is None else np.asarray(view, float)
+    r = np.cross(d, (0.0, 1.0, 0.0)); r /= np.linalg.norm(r); u = np.cross(r, d)
+    X0, X1, Y0, Y1 = (-300.0, 300.0, -460.0, 460.0) if box is None else box
+    W, H = int((X1 - X0) * px), int((Y1 - Y0) * px)
+    depth = np.full((H, W), -np.inf); idx = np.full((H, W), -1, int)
+    for k, q in enumerate(polys):
+        if cull and not q.faces & (2 if float(q.n @ d) < 0 else 1): continue
+        P = q.P
+        sx = (P @ r - X0) * px
+        sy = (Y1 - P @ u) * px
+        dz = -(P @ d)                                       # toward the eye: bigger is nearer
+        for a, b, cc in ((0, 1, 2), (0, 2, 3)) if len(P) == 4 else ((0, 1, 2),):
+            xs, ys, ds = sx[[a, b, cc]], sy[[a, b, cc]], dz[[a, b, cc]]
+            x0, x1 = max(0, int(math.floor(xs.min()))), min(W - 1, int(math.ceil(xs.max())))
+            y0, y1 = max(0, int(math.floor(ys.min()))), min(H - 1, int(math.ceil(ys.max())))
+            if x0 > x1 or y0 > y1: continue
+            den = (ys[1] - ys[2]) * (xs[0] - xs[2]) + (xs[2] - xs[1]) * (ys[0] - ys[2])
+            if abs(den) < 1e-9: continue
+            gy, gx = np.mgrid[y0:y1 + 1, x0:x1 + 1]
+            gx = gx + 0.5; gy = gy + 0.5
+            l0 = ((ys[1] - ys[2]) * (gx - xs[2]) + (xs[2] - xs[1]) * (gy - ys[2])) / den
+            l1 = ((ys[2] - ys[0]) * (gx - xs[2]) + (xs[0] - xs[2]) * (gy - ys[2])) / den
+            l2 = 1 - l0 - l1
+            inside = (l0 >= -1e-6) & (l1 >= -1e-6) & (l2 >= -1e-6)
+            dd = l0 * ds[0] + l1 * ds[1] + l2 * ds[2]
+            reg_d = depth[y0:y1 + 1, x0:x1 + 1]; reg_i = idx[y0:y1 + 1, x0:x1 + 1]
+            take = inside & (dd > reg_d)
+            reg_d[take] = dd[take]; reg_i[take] = k
+    if where:
+        gy, gx = np.mgrid[0:H, 0:W]
+        pts = ((X0 + (gx + 0.5) / px)[..., None] * r + (Y1 - (gy + 0.5) / px)[..., None] * u
+               - np.where(np.isfinite(depth), depth, 0.0)[..., None] * d)
+        return idx >= 0, idx, pts
+    return idx >= 0, idx
+
+
+def _water(model):
+    """Material names of a model's water, Pearl's (b2_look.PEARL_WATER, by texture) or Black 2's (b2_look's records): left
+    out of the holes measure, as b2_look rebuilds the water in layers of its own (a translucent surface over a base 2.5
+    units under it, which the camera sees a little lower)."""
+    import pearl_render, b2_look
+    return {model.materials[i] for i, t in enumerate(pearl_render.bindings(model))
+            if t[0] in b2_look.PEARL_WATER or model.materials[i] in b2_look.B2_MATERIALS}
+
+
+_FIXED = {}         # (chunk, its neighbours) -> the fixed model's bytes, within one run (neighbours are asked again)
+
+
+def fixed_bytes(chunk, around):
+    import pearl_chunk
+    key = (chunk, tuple(sorted(around.items())))
+    if key not in _FIXED:
+        _FIXED[key] = pearl_chunk.fix_model(chunk, around=around)[0]
+    return _FIXED[key]
+
+
+def holes(chunk, cell, views=None):
+    """(hole area in units^2, {(tile x, tile z): units^2}) the fixes open in the chunk (see above). views: a list of rays
+    [(pitch, unit vector from the eye)] (view_dir): only holes the camera can show along each ray count (seen()); the area
+    is the worst ray's, a tile's the most any ray shows there; holes.last holds every ray's area, holes.unseen every ray's
+    area before the seen() filter."""
+    import pearl_chunk
+    m, x, z = cell
+    raw_m = pearl_chunk.pearl_model(chunk)
+    fixed_m = pearl_mesh.Model(fixed_bytes(chunk, pearl_chunk.neighbours(m, x, z)))
+    keep = lambda q, wet: q.alpha == 31 and not is_tree(q.mat) and q.mat not in wet
+    raw = [q for q in load(raw_m) if keep(q, _water(raw_m))]
+    fixed = [q for q in load(fixed_m) if keep(q, _water(fixed_m))]
+    near = None
+    def neighbours_drawn():
+        out = []
+        for (dx, dz), nc in pearl_chunk.neighbours(m, x, z).items():
+            if not (0 <= z + dz < m['height'] and 0 <= x + dx < m['width']): continue
+            nm = pearl_mesh.Model(fixed_bytes(nc, pearl_chunk.neighbours(m, x + dx, z + dz)))
+            for q in load(nm):
+                if keep(q, _water(nm)):
+                    q.P = q.P + np.array([512.0 * dx, 0.0, 512.0 * dz]); out.append(q)
+        return out
+    best, tiles, every, unseen = 0.0, collections.Counter(), [], []
+    for pitch, d in views or ((None, None),):
+        box = None if d is None else view_box(raw, d)
+        cull = d is not None                    # (--views: as the DS draws; the old view as before)
+        cov_r, idx_r, *at = coverage(raw, view=d, box=box, where=cull, cull=cull)
+        cov_f, _ = coverage(fixed, view=d, box=box, cull=cull)
+        hole = cov_r & ~cov_f
+        if hole.any() and any(np.abs(raw[k].P[:, [0, 2]]).max() > 256 for k in set(idx_r[hole].tolist())):
+            # (a piece that overhangs the chunk's edge: Pearl's models reach 4-8 units into the neighbour, which draws
+            # there too; a pixel the neighbours cover as the build fixes them is no hole: Spear Pillar's dhole, 2026-11-02)
+            if near is None: near = neighbours_drawn()
+            if near:
+                hole &= ~coverage(near, view=d, box=box, cull=cull)[0]
+        out, ys = collections.Counter(), collections.Counter()
+        for k, p in zip(idx_r[hole], at[0][hole] if at else [None] * int(hole.sum())):
+            ctr = raw[k].P.mean(0)
+            if max(abs(ctr[0]), abs(ctr[2])) > 256: continue
+            if p is not None: ctr = np.clip(p, -255.9, 255.9)       # (--views: the tile the hole is on)
+            t = (int((ctr[0] + 256) // 16), int((ctr[2] + 256) // 16))
+            out[t] += 1 / HOLE_PX ** 2; ys[t] += ctr[1]
+        unseen.append(sum(out.values()))
+        if d is not None:
+            out = collections.Counter({t: v for t, v in out.items()
+                                       if seen(chunk, cell, pitch, d, t, ys[t] / (v * HOLE_PX ** 2))})
+        every.append(sum(out.values()))
+        best = max(best, every[-1])
+        for t, v in out.items(): tiles[t] = max(tiles[t], v)
+    holes.last, holes.unseen = every, unseen
+    return best, tiles
+
+
+# ---- where the camera can be (--views). The DS camera follows the player: its target is the player's feet (4 units up) and
+# its eye VIEW_DIST from there at the pitch (world_look's camera). A spot P seen along ray d has the target at
+# T = P - t d - E (E: eye minus target), on the ground there; the hole is seen only when the player can stand near T: a
+# walkable tile (Pearl's collision of the chunk or a neighbour) within VIEW_REACH tiles (half the step between two of the
+# nine rays there).
+# So a back wall's top is never seen along the screen's bottom rays (the target would stand behind the wall), and a hole
+# the camera can't reach is not counted. Conservative otherwise: any walkable tile counts, reached or not, at any level.
+VIEW_DIST, VIEW_REACH = 237.0, 4
+_STAND = {}
+
+
+def _stand(chunk, cell):
+    """{(tile x, tile z) relative to the chunk's own: ground height} of the walkable tiles of the chunk and its 8 neighbours."""
+    m, x, z = cell
+    key = (chunk, id(m), x, z)
+    if key not in _STAND:
+        import pearl_chunk
+        out = {}
+        for dz in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if not (0 <= x + dx < m['width'] and 0 <= z + dz < m['height']): continue
+                c = m['maps'][z + dz][x + dx]
+                if c == 0xffff: continue
+                coll = json.load(open(os.path.join(LAND, f'{land_id(c):03d}.json')))['collision']
+                tris = pearl_chunk.triangles(c)
+                for tz in range(32):
+                    for tx in range(32):
+                        if coll[tz][tx]: continue
+                        sf = pearl_chunk.surface(tris, tx * 16 - 248, tz * 16 - 248)
+                        out[(tx + 32 * dx, tz + 32 * dz)] = sf[0] if sf else 0.0
+        _STAND[key] = out
+    return _STAND[key]
+
+
+def seen(chunk, cell, pitch, d, tile, y):
+    """Whether the camera can show the spot over tile (chunk's own tile coordinates) at height y along ray d."""
+    stand = _stand(chunk, cell)
+    p = math.radians(pitch)
+    E = VIEW_DIST * np.array([0.0, math.sin(p), math.cos(p)])
+    P = np.array([tile[0] * 16 - 248.0, y, tile[1] * 16 - 248.0])
+    g = stand.get(tile, y)
+    for _ in range(3):                                      # (the ground under the target: settle it)
+        t = (P[1] - E[1] - (g + 4.0)) / d[1]
+        if t <= 0: return False
+        T = P - t * d - E
+        at = (int(math.floor((T[0] + 256) / 16)), int(math.floor((T[2] + 256) / 16)))
+        near = [stand[(at[0] + i, at[1] + j)] for i in range(-VIEW_REACH, VIEW_REACH + 1)
+                for j in range(-VIEW_REACH, VIEW_REACH + 1) if (at[0] + i, at[1] + j) in stand]
+        if not near: return False
+        g = min(near, key=lambda h: abs(h - g))
+    return True
+
+
+def main_holes(args):
+    """--holes [--views] [--world|--rooms] [--json=OUT] [CHUNK ...]: per chunk the units^2 of holes the fixes open
+    (holes()), worst tiles; --views: from the build's own camera (VIEW_SPOTS at view_pitches), each chunk's worst ray;
+    --json: every chunk's result (also those under HOLE_REPORT), for --compare."""
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    cells = cells_of(world)
+    chunks = [int(a) for a in args if a.isdigit()]
+    if not chunks:
+        ow = sorted(int(c) for c in world['chunks']); rooms = sorted(int(c) for c in world['rooms']['chunks'])
+        chunks = rooms if '--rooms' in args else ow if '--world' in args else ow + rooms
+    views = '--views' in args
+    total, bad, rows = 0.0, [], {}
+    for c in chunks:
+        rays = [(p, view_dir(p, sx, sy)) for p in view_pitches(c) for sx, sy in VIEW_SPOTS] if views else None
+        area, tiles = holes(c, cells[c], rays)
+        total += area
+        row = dict(chunk=c, holes=round(area, 2), tiles=[[t[0], t[1], round(v, 2)] for t, v in tiles.most_common(6)])
+        if views:
+            row['views'] = [round(v, 2) for v in holes.last]; row['pitches'] = list(view_pitches(c))
+            row['unseen'] = [round(v, 2) for v in holes.unseen]
+        rows[c] = dict(row, tiles=[[t[0], t[1], round(v, 2)] for t, v in tiles.most_common()])
+        if area >= HOLE_REPORT:
+            bad.append(c)
+            print(json.dumps(row), flush=True)
+    print(f"{len(chunks)} chunks: holes the fixes open, seen from {'the build camera (worst ray)' if views else 'the camera'}: "
+          f'{round(total, 1)} units^2; chunks with {HOLE_REPORT}+ units^2: {len(bad)} {bad[:30]}')
+    out = next((a.split('=', 1)[1] for a in args if a.startswith('--json=')), None)
+    if out: json.dump(dict(version=version.VERSION, views=views, chunks=rows), open(out, 'w'))
+    return bad
+
+
+HOLE_REPORT = 2.0           # units^2 (8 pixels at HOLE_PX 2) a chunk may have before it is listed: rounding at edges
+HOLE_WORSE = 1.0            # units^2 (4 pixels) more than before, in a chunk's worst ray or in any one ray: worse (--compare)
+
+
+def main_compare(args):
+    """--compare OLD.json NEW.json [...]: per chunk, the holes of two --holes --json runs (several files of a side are
+    joined with '+': a.json+b.json). Lists the chunks worse (HOLE_WORSE more in the worst ray, or in any one ray) and
+    better, and the tiles that are worse (a tile's holes: the most any ray shows on it; only the 6 worst tiles of a chunk
+    are kept by a run without --json); exit 1 when any chunk is worse (--places: or any tile)."""
+    files = [a for a in args if not a.startswith('--')]
+    def read(spec):
+        rows = {}
+        for f in spec.split('+'):
+            rows.update({int(k): v for k, v in json.load(open(f))['chunks'].items()})
+        return rows
+    old, new = read(files[0]), read(files[1])
+    worse, better, places = [], [], []
+    for c in sorted(set(old) & set(new)):
+        a, b = old[c], new[c]
+        ta, tb = ({(t[0], t[1]): t[2] for t in r['tiles']} for r in (a, b))
+        places += [(c, t, ta.get(t, 0.0), v) for t, v in sorted(tb.items()) if v - ta.get(t, 0.0) > HOLE_WORSE]
+        ray = max((y - x for x, y in zip(a.get('views', [a['holes']]), b.get('views', [b['holes']]))), default=0.0)
+        if b['holes'] - a['holes'] > HOLE_WORSE or ray > HOLE_WORSE:
+            worse.append((c, a['holes'], b['holes'], round(ray, 2), b['tiles'][:3]))
+        elif a['holes'] - b['holes'] > HOLE_WORSE:
+            better.append((c, a['holes'], b['holes']))
+    t_old = sum(old[c]['holes'] for c in set(old) & set(new)); t_new = sum(new[c]['holes'] for c in set(old) & set(new))
+    print(f'{len(set(old) & set(new))} chunks in both; worst rays summed {round(t_old, 1)} -> {round(t_new, 1)} units^2; '
+          f'missing: {sorted(set(old) ^ set(new))[:20]}')
+    print(f'better ({len(better)}): ' + ', '.join(f'{c} {a}->{b}' for c, a, b in better))
+    print(f'worse ({len(worse)}):')
+    for c, a, b, r, t in worse:
+        print(f'  {c}: {a} -> {b} (one ray up to +{r}); tiles {t}')
+    print(f'places (tiles) worse by more than {HOLE_WORSE} units^2 in some ray, chunks better or worse ({len(places)}): '
+          + ', '.join(f'{c} ({t[0]}, {t[1]}) {a}->{v}' for c, t, a, v in places))
+    return 1 if worse or ('--places' in args and places) else 0
+
+
 def main(args):
     if '--depth' in args: return main_depth(args)
+    if '--compare' in args: return main_compare(args)
+    if '--holes' in args: return main_holes(args)
     fixed = '--fixed' in args
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
     cells = cells_of(world)
     chunks = [int(a) for a in args if a.isdigit()]
     if not chunks:
@@ -502,4 +818,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    sys.exit(1 if main(sys.argv[1:]) == 1 else 0)

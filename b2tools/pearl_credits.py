@@ -30,6 +30,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 
+import version  # noqa: E402
 PEARL_BANK = 493
 B2_TEXT = os.path.join(ROOT, 'external', 'pokebw2', 'res', 'text', 'system', 'title_15.txt')
 OVERRIDES = os.path.join(ROOT, 'data', 'text_overrides', 'pearl_credits.json')
@@ -38,11 +39,21 @@ NONE = 0xFFFF
 CMD_LINE, CMD_FADE_IN, CMD_FADE_OUT, CMD_SCROLL_START, CMD_SCROLL_STOP, CMD_END, CMD_YIELD, CMD_LINE_AT, \
     CMD_PICTURE, CMD_LAST_PICTURE = range(10)
 import version  # noqa: E402
-GAME = 0 if version.DIAMOND else 1   # Pearl's bank: line 0 "Pokémon Diamond", line 1 "Pokémon Pearl" (shown with the new names)
-FIN = 215
-FADE_PAGES = [(3, 4), (5, 6, 7, 8), (9, 10)]      # Director; Art Director, Battle Director; Program Leader
-SCROLL_FIRST, SCROLL_LAST = 11, 210               # the scroll: Graphic Leader .. Producers
-EXECUTIVES = (211, 212, 213, 214)                 # after the last photo, on Black 2's executive producers' four lines
+GAME = 0 if version.DIAMOND or version.PLATINUM else 1   # Pearl's bank: line 0 "Pokémon Diamond", line 1 "Pokémon Pearl" (shown with the new
+                                     # names); Platinum's: line 0 "Pokémon Platinum"
+FIN, FIN_TEXT, CREDIT_LINES = (236, 'FIN', 237) if version.PLATINUM else (215, 'Fin', 216)
+# The layout, a version row. Pearl and Diamond (216 lines): the fading pages Director; Art Director, Battle Director;
+# Program Leader; the scroll Graphic Leader .. Producers; the executive producers (a role and three names) after the last
+# photo, on Black 2's four executive producers' lines. Platinum (2026-11-07, plat-music: Platinum's own bank, the same
+# number here, 237 lines, its order): Director; Art Director, Game Design Leader; Graphic Leader; the scroll Programming
+# Leader .. Producers; then its three "Executive Producer" roles, each with its name: six lines on Black 2's four and two
+# more (EXECUTIVE_WAITS: the frames between them, title to name 20 and name to title 30 as Black 2's own; the wait after
+# them gives back the 40 frames, so the roll keeps Black 2's length).
+_LAYOUT = {'pearl': ([(3, 4), (5, 6, 7, 8), (9, 10)], 11, 210, (211, 212, 213, 214), None),
+           'platinum': ([(2, 3), (4, 5, 6, 7), (8, 9)], 10, 229, (230, 231, 232, 233, 234, 235), (20, 30, 20, 30, 20, 30))}
+FADE_PAGES, SCROLL_FIRST, SCROLL_LAST, EXECUTIVES, EXECUTIVE_WAITS = _LAYOUT['platinum' if version.PLATINUM else 'pearl']
+if version.PLATINUM:            # a version's own lines over the shared file (sinnoh_names: data/text_overrides/<version>/)
+    OVERRIDES = os.path.join(ROOT, 'data', 'text_overrides', 'platinum', 'pearl_credits.json')
 LINE_WAIT = 20
 
 
@@ -55,7 +66,7 @@ def pearl_lines():
         kind = 'game' if '{COLOR 1}' in m else 'title' if '{COLOR 2}' in m else 'name'
         text = re.sub(r'\{[^}]*\}', '', m).strip()
         out.append((kind, version.game_names(text), kind == 'title' and m.startswith(' ')))
-    assert len(out) == 216 and out[GAME][:2] == ('game', version.PUBLIC_NAME) and out[FIN][:2] == ('name', 'Fin'), out[:3]
+    assert len(out) == CREDIT_LINES and out[GAME][:2] == ('game', version.PUBLIC_NAME) and out[FIN][:2] == ('name', FIN_TEXT), out[:3]
     return out
 
 
@@ -67,6 +78,12 @@ def overrides():
     labels = b2_labels()
     lines = pearl_lines()
     assert len(labels) >= len(lines)
+    if version.PLATINUM:
+        return {'_doc': 'Platinum\'s staff credits (its own bank, the 237 lines of Pokémon Platinum\'s staff roll) on the first '
+                        '237 lines of Black 2\'s staff roll text (res/text/system/title_15.txt), over the shared '
+                        'data/text_overrides/pearl_credits.json; written by b2tools/pearl_credits.py (do not edit): the roll\'s '
+                        'command list (a/2/1/5 file 1, patches/game_clear.py) shows them by these numbers.',
+                'title_15': {labels[i]: text for i, (_, text, _) in enumerate(lines)}}
     return {'_doc': 'Pearl\'s staff credits (Pearl bank 493) on the first 216 lines of Black 2\'s staff roll text '
                     '(res/text/system/title_15.txt), written by b2tools/pearl_credits.py (do not edit): the roll\'s '
                     'command list (a/2/1/5 file 1, patches/game_clear.py) shows them by these numbers.',
@@ -171,6 +188,8 @@ def list_bytes(files):
     # version lines (Black 2 / White 2): both "Pokémon Pearl"; DEVELOPED BY after it becomes "Fin", GAME FREAK a wait
     # (2026-10-26: the list cut at END left LINE_AT reading past the file: about 15,000 frames of black in game)
     tail = recs[last_i:]
+    if EXECUTIVE_WAITS:                 # (Platinum: more executive lines than Black 2's four; see _LAYOUT)
+        tail = _executive_lines(tail, lines)
     end_at = next(i for i, r in enumerate(tail) if r[2] == CMD_END)
     at = next(i for i, r in enumerate(tail) if r[2] == CMD_LINE_AT)
     named = [i for i, r in enumerate(tail[:end_at]) if r[2] == CMD_LINE and r[0] != NONE]
@@ -188,6 +207,27 @@ def list_bytes(files):
                 r[4] = r[5] = 1 if lines[r[0]][0] in ('title', 'game') else 0
         out.append(struct.pack('<IHBBBBHhh', *r))
     return b''.join(out)
+
+
+def _executive_lines(tail, lines):
+    """Black 2's tail with its four executive producers' lines made len(EXECUTIVES) lines, EXECUTIVE_WAITS frames apart
+    (a role's line as Black 2's title line, a name's as its name lines), and the wait after them shortened by the frames
+    added: the same total."""
+    at = next(i for i, r in enumerate(tail) if r[2] == CMD_LINE_AT)
+    four = [i for i, r in enumerate(tail[:at]) if r[2] == CMD_LINE and r[0] != NONE]
+    assert len(four) == 4 and four == list(range(four[0], four[0] + 4)), four
+    after = four[-1] + 1
+    assert tail[after][2] == CMD_LINE and tail[after][0] == NONE, tail[after]
+    title, name = tail[four[0]], tail[four[1]]
+    new = []
+    for k, w in zip(EXECUTIVES, EXECUTIVE_WAITS):
+        r = list(title if lines[k][0] == 'title' else name)
+        r[1] = w
+        new.append(tuple(r))
+    extra = sum(EXECUTIVE_WAITS) - sum(tail[i][1] for i in four)
+    assert 0 <= extra < tail[after][1], extra
+    rest = list(tail[after]); rest[1] -= extra
+    return tail[:four[0]] + new + [tuple(rest)] + tail[after + 1:]
 
 
 def describe(blob):

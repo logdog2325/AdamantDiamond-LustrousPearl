@@ -13,13 +13,14 @@ import json, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 
 
 def slopes():
     """{Black 2 zone id: slope (1..255)} from data/people_depth.json."""
     cfg = json.load(open(os.path.join(ROOT, 'data', 'people_depth.json')))
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    zones = {z['id']: z for z in json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))}
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = {z['id']: z for z in json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))}
     out = {}
     for pid, r in world['zones'].items():
         out[r['b2_zone']] = cfg['zones'].get(r['name'], cfg['overworld'])

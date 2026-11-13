@@ -7,6 +7,7 @@ the DS's 256x192. Shading goes by whole rows and whole edge pixels.
                                       limits, write mockups (1x, 2x) and the contact sheet OUT/title_drafts.png
     python3 title_lustrous.py use C   draw draft C (the user's pick, 2026-11-01) into data/title/ (Lustrous Pearl) and
                                       data/title/diamond/ (Adamant Diamond), as patches/pearl_title.py reads them
+    python3 title_lustrous.py use C platinum    only Griseous Platinum's first draft, into data/title/platinum/
 
 Limits checked (title_art.pack_top, patches/pearl_title.py): 8 bpp, one 256-colour palette shared with the strip, at
 most 512 tiles for logo + strip together, a/0/2/6 no larger than Black 2's.
@@ -42,8 +43,19 @@ THEMES = {
         text=(252, 254, 255), text_low=(204, 224, 248), sparkle=(255, 255, 255), glow=(130, 180, 240),
         strip={'A': (0, .8, 1.0), 'B': (0, .45, 1.0), 'C': (0, .6, .95)}),
 }
-WORDS = {'pearl': ('LUSTROUS', 'PEARL'), 'diamond': ('ADAMANT', 'DIAMOND')}
-VERSION_NAME = {'pearl': 'Pokémon Lustrous Pearl', 'diamond': 'Pokémon Adamant Diamond'}
+# Griseous Platinum: a first draft in the Griseous Orb's old gold and grey; the title is still the user's to choose (notes/PLATINUM.md).
+# Its orb is the Griseous Orb's own item icon (griseous_orb).
+THEMES['platinum'] = dict(
+    chrome=[(0, (255, 252, 240)), (.22, (232, 222, 190)), (.47, (178, 160, 110)), (.49, (72, 62, 56)),
+            (.70, (112, 100, 88)), (.90, (170, 156, 124)), (1, (226, 214, 180))],
+    gloss_top=(255, 255, 255), gloss_mid=(236, 228, 204), gloss_low=(176, 160, 120), gloss_end=(108, 94, 76),
+    dark=(26, 20, 24), rim=((132, 118, 96), (76, 66, 60)), hi=(255, 255, 255), lo=(70, 58, 50),
+    plaque=[(0, (84, 76, 72)), (.5, (54, 48, 48)), (1, (30, 26, 30))], plaque_rim=(232, 222, 190),
+    text=(255, 252, 244), text_low=(232, 222, 190), sparkle=(255, 255, 255), glow=(214, 190, 120),
+    # the crystal strip a pale warm silver (2026-11-07, plat-music: was a lavender, 40 degrees on Black 2's blue)
+    strip={'A': (200, .25, 1.0), 'B': (200, .12, 1.0), 'C': (200, .2, 1.0)})
+WORDS = {'pearl': ('LUSTROUS', 'PEARL'), 'diamond': ('ADAMANT', 'DIAMOND'), 'platinum': ('GRISEOUS', 'PLATINUM')}
+VERSION_NAME = {'pearl': 'Pokémon Lustrous Pearl', 'diamond': 'Pokémon Adamant Diamond', 'platinum': 'Pokémon Griseous Platinum'}
 
 
 # ---------------------------------------------------------------------------------------------- crisp letters
@@ -51,6 +63,9 @@ def glyph(ch, w, h, t, m0, m1):
     if ch == 'T':
         return [([(0, 0), (w, 0), (w, t), (w / 2 + t / 2, t), (w / 2 + t / 2, h), (w / 2 - t / 2, h), (w / 2 - t / 2, t),
                   (0, t)], 'add', {})]
+    if ch == 'G':           # (Griseous) C's shape with a bar back in from the right at mid-height, in the same square style
+        return [([(0, 0), (w, 0), (w, t), (t, t), (t, h - t), (w - t, h - t), (w - t, m1), (w * 0.55, m1), (w * 0.55, m0), (w, m0),
+                  (w, h), (0, h)], 'add', {})]
     return ta.glyph(ch, w, h, t, m0, m1)
 
 
@@ -246,7 +261,30 @@ def adamant_orb(cv, th, cx, cy, r):
     cv.put(poly([inner[0], inner[1], inner[2], (cx - r * .1, cy - r * .1)]) & on, (150, 188, 232))
 
 
-ORB = {'pearl': lustrous_orb, 'diamond': adamant_orb}
+def griseous_orb(cv, th, cx, cy, r):
+    """The Griseous Orb (2026-11-07, plat-music): Platinum's own item icon from the dump, pixel for pixel
+    (itemtool/itemdata/item_icon.narc 699, palette 700; the same pixels as pokeplatinum res/items/icons griseous_orb), its
+    gold shard centred at (cx, cy), with the plaque's glow and dark ring around it as the other orbs have. r is unused (the
+    icon keeps its own size, 21 x 22)."""
+    from gen4rom import Rom, narc_members
+    m = narc_members(Rom(os.path.join(ROOT, 'roms', 'platinum.nds')).read('itemtool/itemdata/item_icon.narc'))
+    _, tiles = ta.ncgr_tiles(m[699])
+    pal = ta.nclr_colours(m[700])
+    px = np.zeros((32, 32), int)
+    for t in range(16):                            # 32 x 32, 4bpp, 1D: 4 x 4 tiles
+        for y in range(8):
+            px[(t // 4) * 8 + y, (t % 4) * 8:(t % 4) * 8 + 8] = list(tiles[t][y * 8:y * 8 + 8])
+    ys, xs = np.nonzero(px)
+    ox, oy = int(round(cx - (xs.min() + xs.max() + 1) / 2)), int(round(cy - (ys.min() + ys.max() + 1) / 2))
+    on = np.zeros((H, W), bool); col = np.zeros((H, W, 3), 'float32')
+    on[ys + oy, xs + ox] = True
+    col[ys + oy, xs + ox] = [pal[v] for v in px[ys, xs]]
+    cv.put(dilate(on, 2), th['dark'])
+    cv.put(dilate(on, 1) & ~on, th['glow'])
+    cv.put(on, col)
+
+
+ORB = {'pearl': lustrous_orb, 'diamond': adamant_orb, 'platinum': griseous_orb}
 
 
 # ---------------------------------------------------------------------------------------------- the drafts
@@ -254,7 +292,7 @@ def fit(widths, keys, scale):
     return {k: max(4, int(round(widths[k] * scale))) for k in keys}
 
 
-BASE = dict(A=21, D=19, E=18, I=6, L=17, M=24, N=20, O=20, P=19, R=20, S=20, T=18, U=20)
+BASE = dict(A=21, D=19, E=18, G=20, I=6, L=17, M=24, N=20, O=20, P=19, R=20, S=20, T=18, U=20)
 
 
 def draft_a(version):
@@ -464,18 +502,19 @@ def main(out):
     print(os.path.join(out, 'title_drafts.png'), sheet.size)
 
 
-def use(key):
-    for ver, sub in (('pearl', ''), ('diamond', 'diamond')):
+def use(key, only=None):
+    for ver, sub in ((only, only),) if only else (('pearl', ''), ('diamond', 'diamond')):
         logo, strip, pal, _ = compose(ver, key)
         d = os.path.join(ta.DATA, sub)
         ta.save_indexed(os.path.join(d, 'logo.png'), logo, pal)
         ta.save_indexed(os.path.join(d, 'strip.png'), strip, pal)
         print(f'{os.path.relpath(d, ROOT)}: {VERSION_NAME[ver]}, draft {key}: {limits(logo, strip, pal)[0]}/512 tiles')
-    open(os.path.join(ta.DATA, 'CHOSEN'), 'w').write(f'lustrous {key}\n')
+    if not only:
+        open(os.path.join(ta.DATA, 'CHOSEN'), 'w').write(f'lustrous {key}\n')
 
 
 if __name__ == '__main__':
     if sys.argv[1] == 'use':
-        use(sys.argv[2])
+        use(sys.argv[2], *sys.argv[3:])
     else:
         main(sys.argv[1])

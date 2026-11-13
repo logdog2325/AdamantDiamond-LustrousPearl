@@ -11,9 +11,11 @@ import json, os, re, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 
-PEARL_ROM = os.path.join(ROOT, 'roms', 'pearl.nds')
-TABLE_ROM, TABLE_RECORDS = 0x16483c, 240         # ROM offset of the table in Pearl (USA), found by Tristan's record
+PEARL_ROM = version.WORLD_DUMP
+# ROM offset of the table in Pearl (USA), found by Tristan's record; in Platinum (Rev 1) by its first three (pokeplatinum vs_seeker.c)
+TABLE_ROM, TABLE_RECORDS = 0x1796c8 if version.PLATINUM else 0x16483c, 240
 NONE, END = 0xffff, 0
 ITEM = 443
 LEVEL_FLAGS = (0x97F, 0x980, 0x981, 0x982, 0x983)   # Pearl's FLAG_UNLOCKED_VS_SEEKER_LVL_1..5
@@ -35,7 +37,7 @@ def tier_ids(ids):
 
 
 def table():
-    reg = json.load(open(os.path.join(ROOT, 'data', 'pearl_story_ids.json')))
+    reg = json.load(open(version.data_path('pearl_story_ids.json')))
     t, flags = reg['trainers'], reg['flags']
     new = reg['new']
     rows = []
@@ -151,5 +153,5 @@ def sources():
 if __name__ == '__main__':
     if '--sources' in sys.argv:
         open(SCRIPT_SRC, 'w', encoding='utf-8').write(sources())
-    ids = json.load(open(os.path.join(ROOT, 'data', 'pearl_story_ids.json')))['trainers']
+    ids = json.load(open(version.data_path('pearl_story_ids.json')))['trainers']
     print(len(tier_ids(ids)), 'rematch-only Trainers;', table()[1] if '--table' in sys.argv else '')

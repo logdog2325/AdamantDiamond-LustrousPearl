@@ -32,15 +32,22 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
-import itcm, pearl_music  # noqa: E402
+import itcm, pearl_music, version  # noqa: E402
 from sdat import SDAT, DEFAULT  # noqa: E402
 
 DATA = os.path.join(ROOT, 'data', 'battle_music.json')
-REGISTRY = os.path.join(ROOT, 'data', 'pearl_trainer_classes.json')
+REGISTRY = version.data_path('pearl_trainer_classes.json')   # (Platinum: its own copy, with the Brains' classes past 236;
+                                                            # Pearl and Diamond read data/pearl_trainer_classes.json as before)
 SONGS_JSON = os.path.join(ROOT, 'work', 'world', 'battle_music.json')
 DECOMP = os.path.join(ROOT, 'external', 'pokebw2')
 PDIAMOND = os.path.join(ROOT, 'external', 'pokediamond')
-CLASS_COUNT = 236
+CLASS_COUNT = 236 + len(version.NEW_TRAINER_CLASSES)   # Black 2's classes, and a version's past them (plat-frontier-rooms:
+                                                       # Platinum's four Brains, 236-239; the decomp's classCount)
+# Platinum's trainer classes past Pearl's 98 (pokeplatinum generated/trainer_classes.txt, spelled as gen4_trainers and
+# sinnoh_trainers.CLASS_MAP keep them). Only those with a rule of their own join the class table (class_map): the Maid, and
+# the four Brains on their own classes past Black 2's (plat-frontier-rooms: data/platinum/pearl_trainer_classes.json).
+PLATINUM_CLASSES = ('MAID', 'HALL_MATRON', 'FACTORY_HEAD', 'ARCADE_STAR', 'CASTLE_VALET', 'DP_PLAYER_MALE_2',
+                    'DP_PLAYER_FEMALE_2')
 HEADER = '<HHHHIIIIIBBBB'        # PearlB2BattleMusic (battle_music_itcm.c): 32 bytes
 # The songs Black 2 itself plays in these situations (what a Sinnoh song stands in for): eye contact, trainer and wild
 # battles (enceff.c SPECIAL_TRAINER_BGM, EventBattleCall_DecideEnvWild, pearl_trainers' PWT versions), victories
@@ -59,7 +66,12 @@ B2_SITUATION = {
 
 
 def rules():
-    return json.load(open(DATA))
+    """Pearl's rules, with the build version's changes over them key by key (data/battle_music.json "versions":
+    Platinum's Maid, Giratina, Regis and Kanto birds; Pearl and Diamond have none)."""
+    r = json.load(open(DATA))
+    for key, rows in r.get('versions', {}).get(version.VERSION, {}).items():
+        r[key] = {**r[key], **rows}
+    return r
 
 
 def pearl_names(r):
@@ -120,6 +132,15 @@ def apply(files):
             f'{len(B.data)} -> {len(data)} B; biggest {big} {songs[big]["bytes"]} B (budget {pearl_music.BUDGET})')
 
 
+def song_id(name):
+    """The Black 2 sequence id this build's apply gave a song it installed (work/world/battle_music.json), or None. The
+    Frontier's facilities read it for their Brains' songs (patches/platinum_factory.py, platinum_hall.py: after this patch)."""
+    if not os.path.exists(SONGS_JSON):
+        return None
+    song = json.load(open(SONGS_JSON))['songs'].get(name)
+    return song['b2_seq'] if song else None
+
+
 # ---------------------------------------------------------------- the tables
 
 def class_map():
@@ -131,6 +152,9 @@ def class_map():
                 if l.startswith('TRAINER_CLASS')]
     pearl = re.findall(r'#define TRAINER_CLASS_(\w+)\s+\d+',
                        open(os.path.join(PDIAMOND, 'include', 'constants', 'trainer_classes.h')).read())
+    if version.PLATINUM:    # Platinum's new classes (98-104: gen4_trainers) that have a rule of their own: the Maid
+        named = set().union(*(set(v) for k, v in rules().items() if k in ('eye', 'battle', 'victory')))
+        pearl += [c for c in PLATINUM_CLASSES if c in named]
     out = {}
     for pc in pearl:
         if pc in reg:

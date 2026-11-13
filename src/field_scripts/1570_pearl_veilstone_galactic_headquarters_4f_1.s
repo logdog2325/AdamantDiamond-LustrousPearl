@@ -137,7 +137,7 @@ P336_01D5:
 
 P336_01E6:
     pl_msg_sys 10
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 14, 65535, 0  // Pearl AddMenuEntry 267, 0
     ListMenuAdd 15, 65535, 1  // Pearl AddMenuEntry 268, 1
     ListMenuAdd 16, 65535, 2  // Pearl AddMenuEntry 269, 2

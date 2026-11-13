@@ -27,6 +27,16 @@ def table(path):
     return d[TABLE - ram:TABLE - ram + ENTRIES * SIZE]
 
 
+def weights(row, column):
+    """A row's [before the National Pokédex, after it] in a BDSP column ('sp' Pearl's, 'bd' Diamond's, 'both' Platinum's). 'both': the two
+    games' means, so neither version's stones, spheres or fossil is favoured (the user 2026-11-01, notes/PLATINUM.md section 5); a fossil
+    only one game has keeps half its weight there, so the two fossils together come up as often as one does in either game."""
+    w = row['weights']
+    if column == 'both':
+        return [(a + b + 1) // 2 for a, b in zip(w['pearl'], w['diamond'])]
+    return w['pearl' if column == 'sp' else 'diamond']
+
+
 def main():
     import gen4_text
     d, p = (table(os.path.join(ROOT, 'roms', f'{v}.nds')) for v in ('diamond', 'pearl'))

@@ -10,6 +10,7 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 - **Old, Good and Super Rod** each fish their own table. Each rod bites as often as in the original games.
 - **Swarm**: swarms start after the Hall of Fame, with the National Pokédex, when you talk to Dawn's or Lucas's little sibling at their home in Sandgem Town. After that, talk to them to hear today's swarm. On that area's two 20% grass slots the swarm's Pokémon appear, at those slots' levels, until midnight. It changes daily.
 - There is no Poké Radar and no Pokémon appears from a Game Boy Advance game in slot 2, so those lists of the original games aren't here.
+- **After the Hall of Fame**, each slot where the two versions' tables differ brings Adamant Diamond's Pokémon half of the time. Stantler, Smeargle, Swellow and Loudred, which only the Poké Radar found, come the same way in the slots the Radar used. Each area's "after the Hall of Fame" table lists them, with the Pokémon they share the slot with. On the day of an area's swarm, the swarm keeps its two slots.
 
 [Honey trees](#honey-trees), [the Great Marsh's daily Pokémon](#great-marsh-daily-pokémon), [the Trophy Garden](#trophy-garden-daily-pokémon), [Feebas](#feebas) and [the Grand Underground's Hideaways](#grand-underground-hideaways) are at the end. One-time Pokémon are on the [post-game page](postgame-pearl.md).
 
@@ -372,6 +373,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 
 **Swarm:** Nosepass (level 14, 40% in all) when this is the day's swarm.
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Stunky | 14-16 | 12.5% | Geodude |
+
 ## Route 207
 
 **Grass and cave floor**
@@ -384,6 +391,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Zubat | 6 | - | - | 10% |
 
 **Swarm:** Phanpy (level 5, 40% in all) when this is the day's swarm.
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Stantler | 6-7 | 11% | Geodude and Machop |
 
 ## Route 208
 
@@ -442,6 +455,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Zubat | 16 | - | - | 10% |
 
 **Swarm:** Snubbull (level 16, 40% in all) when this is the day's swarm.
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Morning | Day | Night | Shares the slot with |
+|---|---|---|---|---|---|
+| Mime Jr. | 16 | 12.5% | 2.5% | 2.5% | Bonsly |
 
 **Surfing**
 
@@ -523,6 +542,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Bonsly | 18-20 | 25% | 5% | 5% |
 | Chansey | 18-20 | 5% | 5% | 5% |
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Morning | Day | Night | Shares the slot with |
+|---|---|---|---|---|---|
+| Mime Jr. | 18-20 | 12.5% | 2.5% | 2.5% | Bonsly |
+
 ## Route 211 East
 
 **Grass and cave floor**
@@ -562,6 +587,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Kricketune | 17-18 | 20% | 10% | 30% |
 | Staravia | 17-18 | 15% | 25% | 5% |
 | Roselia | 16-17 | 15% | 15% | 15% |
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Smeargle | 16-18 | 11% | Roselia, Budew and Kricketune |
 
 **Surfing**
 
@@ -641,6 +672,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 
 **Swarm:** Absol (level 20, 40% in all) when this is the day's swarm.
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Swellow | 20-22 | 11% | Shellos (East Sea), Wingull and Floatzel |
+
 **Surfing**
 
 | Pokémon | Level | Chance |
@@ -685,6 +722,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Girafarig | 24 | 10% | 10% | 10% |
 
 **Swarm:** Spoink (level 22-23, 40% in all) when this is the day's swarm.
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Stunky | 23-24 | 7.5% | Sudowoodo |
 
 **Surfing**
 
@@ -772,6 +815,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Wingull | 29 | 10% |
 
 **Swarm:** Voltorb (level 28, 40% in all) when this is the day's swarm.
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Mr. Mime | 29-30 | 7.5% | Glameow |
 
 **Surfing**
 
@@ -882,6 +931,13 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 
 **Swarm:** Farfetch'd (level 28, 40% in all) when this is the day's swarm.
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Stunky | 28 | 10% | Gastrodon |
+| Skuntank | 29-30 | 7.5% | Sudowoodo |
+
 **Surfing**
 
 | Pokémon | Level | Chance |
@@ -926,6 +982,13 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Wingull | 41 | 10% | 10% | 10% |
 
 **Swarm:** Skitty (level 40, 40% in all) when this is the day's swarm.
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Gastrodon (East Sea) | 40 | 10% | Glameow |
+| Mr. Mime | 41-42 | 7.5% | Purugly |
 
 **Surfing**
 
@@ -1051,6 +1114,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 
 **Swarm:** Makuhita (level 50-51, 40% in all) when this is the day's swarm.
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Skuntank | 51 | 5% | Roselia |
+
 **Surfing**
 
 | Pokémon | Level | Chance |
@@ -1102,6 +1171,13 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Spheal | 35-45 | 30% |
 | Tentacruel | 40-55 | 5% |
 | Sealeo | 40-55 | 5% |
+
+**Surfing, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Seel | 35-45 | 15% | Spheal |
+| Dewgong | 40-55 | 2.5% | Sealeo |
 
 **Old Rod**
 
@@ -1231,6 +1307,15 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 
 **Swarm:** Pidgey (level 51, 40% in all) when this is the day's swarm.
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Illumise | 50 | 5% | Volbeat |
+| Roselia | 50 | 5% | Purugly |
+| Scyther | 52 | 2.5% | Pinsir |
+| Volbeat | 50 | 2.5% | Illumise |
+
 **Surfing**
 
 | Pokémon | Level | Chance |
@@ -1273,6 +1358,12 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 
 **Swarm:** Corsola (level 50, 40% in all) when this is the day's swarm.
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Beautifly | 51 | 5% | Dustox |
+
 **Surfing**
 
 | Pokémon | Level | Chance |
@@ -1281,6 +1372,13 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Spheal | 35-45 | 30% |
 | Tentacruel | 40-55 | 5% |
 | Sealeo | 40-55 | 5% |
+
+**Surfing, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Seel | 35-45 | 15% | Spheal |
+| Dewgong | 40-55 | 2.5% | Sealeo |
 
 **Old Rod**
 
@@ -1424,6 +1522,14 @@ Every area with wild Pokémon, as this game has them. The tables are Pearl's own
 | Dustox | 12 | 2% | 2% | 2% |
 
 **Swarm:** Slakoth (level 10, 40% in all) when this is the day's swarm.
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Morning | Day | Night | Shares the slot with |
+|---|---|---|---|---|---|
+| Silcoon | 10 | 10% | 10% | 10% | Cascoon |
+| Murkrow | 10-11 | - | - | 10% | Misdreavus |
+| Beautifly | 12 | 1% | 1% | 1% | Dustox |
 
 ## Fuego Ironworks (outside)
 
@@ -1884,6 +1990,12 @@ Two more Pokémon come and go here: the two 5% slots hold the area's daily Poké
 | Zubat | 16-18 | 50% | 50% | 40% |
 | Misdreavus | 17 | - | - | 20% |
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Morning | Day | Night | Shares the slot with |
+|---|---|---|---|---|---|
+| Murkrow | 17 | - | - | 10% | Misdreavus |
+
 ## Lost Tower 2F (Route 209)
 
 **Grass and cave floor**
@@ -1893,6 +2005,12 @@ Two more Pokémon come and go here: the two 5% slots hold the area's daily Poké
 | Gastly | 17-19 | 50% | 50% | 40% |
 | Zubat | 17-19 | 50% | 50% | 40% |
 | Misdreavus | 18 | - | - | 20% |
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Morning | Day | Night | Shares the slot with |
+|---|---|---|---|---|---|
+| Murkrow | 18 | - | - | 10% | Misdreavus |
 
 ## Lost Tower 3F (Route 209)
 
@@ -1905,6 +2023,12 @@ Two more Pokémon come and go here: the two 5% slots hold the area's daily Poké
 | Misdreavus | 19 | - | - | 20% |
 | Golbat | 19 | 1% | 1% | 1% |
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Morning | Day | Night | Shares the slot with |
+|---|---|---|---|---|---|
+| Murkrow | 19 | - | - | 10% | Misdreavus |
+
 ## Lost Tower 4F (Route 209)
 
 **Grass and cave floor**
@@ -1916,6 +2040,12 @@ Two more Pokémon come and go here: the two 5% slots hold the area's daily Poké
 | Misdreavus | 20 | - | - | 20% |
 | Golbat | 20-21 | 5% | 5% | 5% |
 
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Morning | Day | Night | Shares the slot with |
+|---|---|---|---|---|---|
+| Murkrow | 20 | - | - | 10% | Misdreavus |
+
 ## Lost Tower 5F (Route 209)
 
 **Grass and cave floor**
@@ -1926,6 +2056,12 @@ Two more Pokémon come and go here: the two 5% slots hold the area's daily Poké
 | Zubat | 20-21 | 40% | 40% | 30% |
 | Golbat | 21-23 | 10% | 10% | 10% |
 | Misdreavus | 21 | - | - | 20% |
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Morning | Day | Night | Shares the slot with |
+|---|---|---|---|---|---|
+| Murkrow | 21 | - | - | 10% | Misdreavus |
 
 ## Mt. Coronet 4F Room 1
 
@@ -2079,6 +2215,12 @@ Two more Pokémon come and go here: the two 5% slots hold the area's daily Poké
 | Clefairy | 38-39 | 5% | 5% | 5% |
 | Golbat | 39 | - | - | 10% |
 | Noctowl | 39 | - | - | 10% |
+
+**Grass and cave floor, after the Hall of Fame**
+
+| Pokémon | Level | Chance | Shares the slot with |
+|---|---|---|---|
+| Loudred | 39-40 | 11% | Medicham, Machoke, Bronzong and Clefairy |
 
 ## Mt. Coronet South 1F
 
@@ -2948,7 +3090,7 @@ Pokémon walk around in the Hideaways: touch one for a battle. A new set appears
 | 8 | 50-55 |
 | Champion | 58-63 |
 
-On half of your visits one of the Pokémon is the Hideaway's rare one. All kinds are equally common. See [the Underground page](underground.md) for how to get there.
+On half of your visits one of the Pokémon is the Hideaway's rare one. All kinds are equally common. From Champion on, Adamant Diamond's Pokémon of each Hideaway come too (the Champion rows). See [the Underground page](underground.md) for how to get there.
 
 ### Spacious Cave
 
@@ -2961,7 +3103,7 @@ On half of your visits one of the Pokémon is the Hideaway's rare one. All kinds
 | Defog (TM119) obtained | Machoke, Graveler, Aipom, Wingull, Purugly, Munchlax |
 | Icicle Badge | Pelipper, Luxio, Glameow |
 | Waterfall (HM05) obtained | Mantyke |
-| Champion | Weedle, Rattata, Raticate, Sandshrew, Sandslash, Vulpix, Oddish, Gloom, Venonat, Venomoth, Mankey, Primeape, Slowpoke, Magnemite, Farfetch'd, Doduo, Krabby, Voltorb, Lickitung, Rhyhorn, Rhydon, Tauros, Sentret, Furret, Natu, Teddiursa, Houndoom, Tyrogue, Miltank, Poochyena, Mightyena, Zigzagoon, Skitty, Swablu, Corphish, Crawdaunt, Absol, Bagon, Shelgon |
+| Champion | Weedle, Rattata, Raticate, Sandshrew, Sandslash, Vulpix, Oddish, Gloom, Venonat, Venomoth, Mankey, Primeape, Slowpoke, Magnemite, Farfetch'd, Doduo, Krabby, Voltorb, Lickitung, Rhyhorn, Rhydon, Tauros, Sentret, Furret, Natu, Teddiursa, Houndoom, Tyrogue, Miltank, Poochyena, Mightyena, Zigzagoon, Skitty, Swablu, Corphish, Crawdaunt, Absol, Bagon, Shelgon, Murkrow, Stunky, Skuntank, Caterpie, Growlithe |
 
 Rare: Swablu (19%), Rhyhorn (19%), Magnemite (19%), Lickitung (19%), Houndoom (19%), Absol (5%).
 
@@ -2975,7 +3117,7 @@ Rare: Swablu (19%), Rhyhorn (19%), Magnemite (19%), Lickitung (19%), Houndoom (1
 | Strength (HM04) obtained | Golbat, Hoothoot, Bibarel |
 | Defog (TM119) obtained | Machoke, Purugly, Munchlax |
 | Icicle Badge | Luxio, Glameow |
-| Champion | Bulbasaur, Weedle, Rattata, Raticate, Nidoran⑮, Nidorina, Nidoran⑭, Nidorino, Oddish, Gloom, Paras, Venonat, Venomoth, Mankey, Primeape, Poliwag, Poliwhirl, Bellsprout, Weepinbell, Slowpoke, Farfetch'd, Doduo, Pinsir, Tauros, Chikorita, Ledian, Ariados, Mareep, Flaaffy, Hoppip, Skiploom, Sunkern, Pineco, Shuckle, Teddiursa, Tyrogue, Miltank, Treecko, Lotad, Lombre, Nincada, Volbeat, Illumise, Vibrava, Cacnea, Cacturne, Seviper, Tropius, Absol, Turtwig |
+| Champion | Bulbasaur, Weedle, Rattata, Raticate, Nidoran♀, Nidorina, Nidoran♂, Nidorino, Oddish, Gloom, Paras, Venonat, Venomoth, Mankey, Primeape, Poliwag, Poliwhirl, Bellsprout, Weepinbell, Slowpoke, Farfetch'd, Doduo, Pinsir, Tauros, Chikorita, Ledian, Ariados, Mareep, Flaaffy, Hoppip, Skiploom, Sunkern, Pineco, Shuckle, Teddiursa, Tyrogue, Miltank, Treecko, Lotad, Lombre, Nincada, Volbeat, Illumise, Vibrava, Cacnea, Cacturne, Seviper, Tropius, Absol, Turtwig, Murkrow, Silcoon, Stunky, Skuntank, Caterpie, Ekans, Scyther, Seedot, Nuzleaf, Zangoose, Kecleon |
 
 Rare: Pinsir (80%), Absol (20%).
 
@@ -2990,7 +3132,7 @@ Rare: Pinsir (80%), Absol (20%).
 | Defog (TM119) obtained | Wooper, Quagsire, Wingull | Wooper, Quagsire, Wingull |
 | Icicle Badge | Pelipper, Gible | Tentacool, Tentacruel, Pelipper |
 | Waterfall (HM05) obtained | Gabite | Octillery, Whiscash, Mantyke |
-| Champion | Squirtle, Poliwag, Poliwhirl, Slowpoke, Farfetch'd, Tauros, Dratini, Totodile, Ledian, Mudkip, Lotad, Lombre, Surskit, Corphish, Crawdaunt, Piplup | Squirtle, Poliwag, Poliwhirl, Slowpoke, Shellder, Horsea, Staryu, Totodile, Chinchou, Lanturn, Qwilfish, Corsola, Mudkip, Lotad, Lombre, Surskit, Carvanha, Corphish, Crawdaunt, Clamperl, Piplup |
+| Champion | Squirtle, Poliwag, Poliwhirl, Slowpoke, Farfetch'd, Tauros, Dratini, Totodile, Ledian, Mudkip, Lotad, Lombre, Surskit, Corphish, Crawdaunt, Piplup | Squirtle, Poliwag, Poliwhirl, Slowpoke, Shellder, Horsea, Staryu, Totodile, Chinchou, Lanturn, Qwilfish, Corsola, Mudkip, Lotad, Lombre, Surskit, Carvanha, Corphish, Crawdaunt, Clamperl, Piplup, Seel, Dewgong |
 
 Rare: Swablu (30%), Ralts (30%), Lickitung (30%), Togepi (10%).
 
@@ -3003,7 +3145,7 @@ Rare: Swablu (30%), Ralts (30%), Lickitung (30%), Togepi (10%).
 | from the start | Geodude, Onix, Skorupi |
 | Strength (HM04) obtained | Bronzor |
 | Defog (TM119) obtained | Graveler, Hippopotas |
-| Champion | Sandshrew, Sandslash, Cubone, Rhyhorn, Rhydon, Tauros, Sentret, Furret, Shuckle, Phanpy, Zigzagoon, Aron, Lairon, Numel, Camerupt, Trapinch, Vibrava, Cacnea, Cacturne, Baltoy, Beldum |
+| Champion | Sandshrew, Sandslash, Cubone, Rhyhorn, Rhydon, Tauros, Sentret, Furret, Shuckle, Phanpy, Zigzagoon, Aron, Lairon, Numel, Camerupt, Trapinch, Vibrava, Cacnea, Cacturne, Baltoy, Beldum, Gligar, Larvitar, Pupitar |
 
 Rare: Rhyhorn (70%), Teddiursa (30%).
 
@@ -3016,7 +3158,7 @@ Rare: Rhyhorn (70%), Teddiursa (30%).
 | from the start | Geodude, Onix, Skorupi |
 | Strength (HM04) obtained | Ponyta |
 | Defog (TM119) obtained | Graveler |
-| Champion | Charmander, Vulpix, Cyndaquil, Sentret, Furret, Slugma, Magcargo, Magby, Torchic, Numel, Camerupt, Torkoal, Chimchar |
+| Champion | Charmander, Vulpix, Cyndaquil, Sentret, Furret, Slugma, Magcargo, Magby, Torchic, Numel, Camerupt, Torkoal, Chimchar, Growlithe |
 
 Rare: Houndoom (70%), Magby (30%).
 
@@ -3031,7 +3173,7 @@ Rare: Houndoom (70%), Magby (30%).
 | Defog (TM119) obtained | Wooper, Quagsire | Wooper, Quagsire |
 | Icicle Badge | - | Tentacool, Tentacruel |
 | Waterfall (HM05) obtained | - | Whiscash |
-| Champion | Bulbasaur, Weedle, Nidoran⑮, Nidorina, Nidoran⑭, Nidorino, Oddish, Gloom, Paras, Venonat, Venomoth, Bellsprout, Weepinbell, Grimer, Weezing, Tangela, Ledian, Ariados, Pineco, Cacnea, Cacturne, Seviper, Tropius, Tangrowth | Qwilfish |
+| Champion | Bulbasaur, Weedle, Nidoran♀, Nidorina, Nidoran♂, Nidorino, Oddish, Gloom, Paras, Venonat, Venomoth, Bellsprout, Weepinbell, Grimer, Weezing, Tangela, Ledian, Ariados, Pineco, Cacnea, Cacturne, Seviper, Tropius, Tangrowth, Caterpie, Ekans, Zangoose | Qwilfish |
 
 Rare: Swinub (50%), Lickitung (50%).
 
@@ -3045,7 +3187,7 @@ Rare: Swinub (50%), Lickitung (50%).
 | Strength (HM04) obtained | Meditite, Chingling, Bronzor |
 | Defog (TM119) obtained | Kadabra, Girafarig |
 | Icicle Badge | Mr. Mime |
-| Champion | Nidoran⑮, Nidorina, Nidoran⑭, Nidorino, Slowpoke, Grimer, Drowzee, Krabby, Voltorb, Cubone, Ditto, Togepi, Natu, Wobbuffet, Snubbull, Houndoom, Smoochum, Poochyena, Mightyena, Ralts, Kirlia, Sableye, Volbeat, Illumise, Seviper, Lunatone, Baltoy, Banette, Duskull, Dusclops, Absol, Bagon, Shelgon |
+| Champion | Nidoran♀, Nidorina, Nidoran♂, Nidorino, Slowpoke, Grimer, Drowzee, Krabby, Voltorb, Cubone, Ditto, Togepi, Natu, Wobbuffet, Snubbull, Houndoom, Smoochum, Poochyena, Mightyena, Ralts, Kirlia, Sableye, Volbeat, Illumise, Seviper, Lunatone, Baltoy, Banette, Duskull, Dusclops, Absol, Bagon, Shelgon, Elekid, Mawile, Zangoose, Solrock |
 
 Rare: Ralts (25%), Houndoom (25%), Duskull (25%), Smoochum (15%), Togepi (5%), Absol (5%).
 
@@ -3059,7 +3201,7 @@ Rare: Ralts (25%), Houndoom (25%), Duskull (25%), Smoochum (15%), Togepi (5%), A
 | Strength (HM04) obtained | Meditite |
 | Defog (TM119) obtained | Machoke, Munchlax |
 | Icicle Badge | Mr. Mime, Sneasel, Luxio, Snover |
-| Champion | Magnemite, Tauros, Sentret, Furret, Mareep, Flaaffy, Teddiursa, Swinub, Delibird, Tyrogue, Aron, Lairon, Swablu, Snorunt, Glalie, Spheal, Sealeo, Walrein, Beldum |
+| Champion | Magnemite, Tauros, Sentret, Furret, Mareep, Flaaffy, Teddiursa, Swinub, Delibird, Tyrogue, Aron, Lairon, Swablu, Snorunt, Glalie, Spheal, Sealeo, Walrein, Beldum, Seel, Dewgong, Elekid |
 
 Rare: Swinub (19%), Swablu (19%), Magnemite (19%), Teddiursa (14%), Snorunt (14%), Glalie (14%).
 
@@ -3072,7 +3214,7 @@ Rare: Swinub (19%), Swablu (19%), Magnemite (19%), Teddiursa (14%), Snorunt (14%
 | from the start | Buneary | - |
 | Strength (HM04) obtained | Bronzor | - |
 | Icicle Badge | Mr. Mime, Sneasel, Snover | - |
-| Champion | Magnemite, Tauros, Teddiursa, Swinub, Delibird, Smoochum, Poochyena, Mightyena, Aron, Lairon, Swablu, Snorunt, Glalie, Spheal, Sealeo, Walrein, Beldum | Staryu, Chinchou, Lanturn, Spheal, Sealeo, Walrein |
+| Champion | Magnemite, Tauros, Teddiursa, Swinub, Delibird, Smoochum, Poochyena, Mightyena, Aron, Lairon, Swablu, Snorunt, Glalie, Spheal, Sealeo, Walrein, Beldum | Staryu, Chinchou, Lanturn, Spheal, Sealeo, Walrein, Seel, Dewgong |
 
 Rare: Swinub (19%), Swablu (19%), Magnemite (19%), Snorunt (14%), Smoochum (14%), Glalie (14%).
 
@@ -3087,7 +3229,7 @@ Rare: Swinub (19%), Swablu (19%), Magnemite (19%), Snorunt (14%), Smoochum (14%)
 | Defog (TM119) obtained | Wingull, Purugly, Munchlax | Wingull |
 | Icicle Badge | Pelipper, Glameow, Gible | Tentacool, Tentacruel, Pelipper |
 | Waterfall (HM05) obtained | Gabite | Octillery, Whiscash, Mantyke |
-| Champion | Bulbasaur, Squirtle, Weedle, Rattata, Raticate, Nidoran⑮, Nidorina, Nidoran⑭, Nidorino, Oddish, Gloom, Venonat, Venomoth, Poliwag, Poliwhirl, Bellsprout, Weepinbell, Slowpoke, Cubone, Pinsir, Tauros, Chikorita, Totodile, Ledian, Shuckle, Tyrogue, Treecko, Mudkip, Lotad, Lombre, Surskit, Nincada, Lunatone, Corphish, Crawdaunt, Turtwig, Piplup | Squirtle, Poliwag, Poliwhirl, Slowpoke, Shellder, Horsea, Staryu, Totodile, Qwilfish, Corsola, Mudkip, Lotad, Lombre, Surskit, Carvanha, Corphish, Crawdaunt, Clamperl, Piplup |
+| Champion | Bulbasaur, Squirtle, Weedle, Rattata, Raticate, Nidoran♀, Nidorina, Nidoran♂, Nidorino, Oddish, Gloom, Venonat, Venomoth, Poliwag, Poliwhirl, Bellsprout, Weepinbell, Slowpoke, Cubone, Pinsir, Tauros, Chikorita, Totodile, Ledian, Shuckle, Tyrogue, Treecko, Mudkip, Lotad, Lombre, Surskit, Nincada, Lunatone, Corphish, Crawdaunt, Turtwig, Piplup, Murkrow, Silcoon, Stunky, Skuntank, Caterpie, Ekans, Scyther, Seedot, Nuzleaf, Solrock, Kecleon | Squirtle, Poliwag, Poliwhirl, Slowpoke, Shellder, Horsea, Staryu, Totodile, Qwilfish, Corsola, Mudkip, Lotad, Lombre, Surskit, Carvanha, Corphish, Crawdaunt, Clamperl, Piplup |
 
 Rare: Lickitung (70%), Pinsir (30%).
 
@@ -3100,7 +3242,7 @@ Rare: Lickitung (70%), Pinsir (30%).
 | from the start | Onix, Skorupi |
 | Strength (HM04) obtained | Ponyta |
 | Defog (TM119) obtained | Hippopotas |
-| Champion | Charmander, Sandshrew, Sandslash, Vulpix, Rhyhorn, Rhydon, Cyndaquil, Slugma, Magcargo, Houndoom, Magby, Torchic, Numel, Camerupt, Torkoal, Trapinch, Chimchar |
+| Champion | Charmander, Sandshrew, Sandslash, Vulpix, Rhyhorn, Rhydon, Cyndaquil, Slugma, Magcargo, Houndoom, Magby, Torchic, Numel, Camerupt, Torkoal, Trapinch, Chimchar, Growlithe |
 
 Rare: Rhyhorn (40%), Houndoom (40%), Magby (20%).
 
@@ -3115,7 +3257,7 @@ Rare: Rhyhorn (40%), Houndoom (40%), Magby (20%).
 | Defog (TM119) obtained | Wingull, Purugly, Munchlax | Wingull |
 | Icicle Badge | Pelipper, Glameow, Gible | Tentacool, Tentacruel, Pelipper |
 | Waterfall (HM05) obtained | Gabite | Octillery, Whiscash, Mantyke |
-| Champion | Bulbasaur, Squirtle, Weedle, Rattata, Raticate, Nidoran⑮, Nidorina, Nidoran⑭, Nidorino, Oddish, Gloom, Venonat, Venomoth, Poliwag, Poliwhirl, Bellsprout, Weepinbell, Slowpoke, Cubone, Pinsir, Tauros, Chikorita, Totodile, Ledian, Shuckle, Tyrogue, Treecko, Mudkip, Lotad, Lombre, Surskit, Nincada, Lunatone, Corphish, Crawdaunt, Turtwig, Piplup | Squirtle, Poliwag, Poliwhirl, Slowpoke, Shellder, Horsea, Staryu, Totodile, Qwilfish, Corsola, Mudkip, Lotad, Lombre, Surskit, Carvanha, Corphish, Crawdaunt, Clamperl, Piplup |
+| Champion | Bulbasaur, Squirtle, Weedle, Rattata, Raticate, Nidoran♀, Nidorina, Nidoran♂, Nidorino, Oddish, Gloom, Venonat, Venomoth, Poliwag, Poliwhirl, Bellsprout, Weepinbell, Slowpoke, Cubone, Pinsir, Tauros, Chikorita, Totodile, Ledian, Shuckle, Tyrogue, Treecko, Mudkip, Lotad, Lombre, Surskit, Nincada, Lunatone, Corphish, Crawdaunt, Turtwig, Piplup, Murkrow, Silcoon, Stunky, Skuntank, Caterpie, Ekans, Scyther, Seedot, Nuzleaf, Solrock, Kecleon | Squirtle, Poliwag, Poliwhirl, Slowpoke, Shellder, Horsea, Staryu, Totodile, Qwilfish, Corsola, Mudkip, Lotad, Lombre, Surskit, Carvanha, Corphish, Crawdaunt, Clamperl, Piplup |
 
 Rare: Lickitung (70%), Pinsir (30%).
 
@@ -3129,7 +3271,7 @@ Rare: Lickitung (70%), Pinsir (30%).
 | Strength (HM04) obtained | Golbat, Hoothoot, Bibarel |
 | Defog (TM119) obtained | Machoke, Purugly, Munchlax |
 | Icicle Badge | Luxio, Glameow |
-| Champion | Bulbasaur, Weedle, Rattata, Raticate, Nidoran⑮, Nidorina, Nidoran⑭, Nidorino, Oddish, Gloom, Paras, Venonat, Venomoth, Mankey, Primeape, Poliwag, Poliwhirl, Bellsprout, Weepinbell, Slowpoke, Farfetch'd, Doduo, Pinsir, Tauros, Chikorita, Ledian, Ariados, Mareep, Flaaffy, Hoppip, Skiploom, Sunkern, Pineco, Shuckle, Teddiursa, Tyrogue, Miltank, Treecko, Lotad, Lombre, Nincada, Volbeat, Illumise, Vibrava, Cacnea, Cacturne, Seviper, Tropius, Absol, Turtwig |
+| Champion | Bulbasaur, Weedle, Rattata, Raticate, Nidoran♀, Nidorina, Nidoran♂, Nidorino, Oddish, Gloom, Paras, Venonat, Venomoth, Mankey, Primeape, Poliwag, Poliwhirl, Bellsprout, Weepinbell, Slowpoke, Farfetch'd, Doduo, Pinsir, Tauros, Chikorita, Ledian, Ariados, Mareep, Flaaffy, Hoppip, Skiploom, Sunkern, Pineco, Shuckle, Teddiursa, Tyrogue, Miltank, Treecko, Lotad, Lombre, Nincada, Volbeat, Illumise, Vibrava, Cacnea, Cacturne, Seviper, Tropius, Absol, Turtwig, Murkrow, Silcoon, Stunky, Skuntank, Caterpie, Ekans, Scyther, Seedot, Nuzleaf, Zangoose, Kecleon |
 
 Rare: Rhyhorn (70%), Teddiursa (30%).
 
@@ -3142,7 +3284,7 @@ Rare: Rhyhorn (70%), Teddiursa (30%).
 | from the start | Geodude, Onix, Skorupi |
 | Strength (HM04) obtained | Bronzor |
 | Defog (TM119) obtained | Graveler, Hippopotas |
-| Champion | Sandshrew, Sandslash, Cubone, Rhyhorn, Rhydon, Tauros, Sentret, Furret, Shuckle, Phanpy, Zigzagoon, Aron, Lairon, Numel, Camerupt, Trapinch, Vibrava, Cacnea, Cacturne, Baltoy, Beldum |
+| Champion | Sandshrew, Sandslash, Cubone, Rhyhorn, Rhydon, Tauros, Sentret, Furret, Shuckle, Phanpy, Zigzagoon, Aron, Lairon, Numel, Camerupt, Trapinch, Vibrava, Cacnea, Cacturne, Baltoy, Beldum, Gligar, Larvitar, Pupitar |
 
 Rare: Pinsir (80%), Absol (20%).
 
@@ -3156,7 +3298,7 @@ Rare: Pinsir (80%), Absol (20%).
 | Strength (HM04) obtained | Meditite, Chingling, Bronzor |
 | Defog (TM119) obtained | Kadabra, Girafarig |
 | Icicle Badge | Mr. Mime |
-| Champion | Nidoran⑮, Nidorina, Nidoran⑭, Nidorino, Slowpoke, Grimer, Drowzee, Krabby, Voltorb, Cubone, Ditto, Togepi, Natu, Wobbuffet, Snubbull, Houndoom, Smoochum, Poochyena, Mightyena, Ralts, Kirlia, Sableye, Volbeat, Illumise, Seviper, Lunatone, Baltoy, Banette, Duskull, Dusclops, Absol, Bagon, Shelgon |
+| Champion | Nidoran♀, Nidorina, Nidoran♂, Nidorino, Slowpoke, Grimer, Drowzee, Krabby, Voltorb, Cubone, Ditto, Togepi, Natu, Wobbuffet, Snubbull, Houndoom, Smoochum, Poochyena, Mightyena, Ralts, Kirlia, Sableye, Volbeat, Illumise, Seviper, Lunatone, Baltoy, Banette, Duskull, Dusclops, Absol, Bagon, Shelgon, Elekid, Mawile, Zangoose, Solrock |
 
 Rare: Ralts (25%), Houndoom (25%), Duskull (25%), Smoochum (15%), Togepi (5%), Absol (5%).
 
@@ -3169,7 +3311,7 @@ Rare: Ralts (25%), Houndoom (25%), Duskull (25%), Smoochum (15%), Togepi (5%), A
 | from the start | Buneary | - |
 | Strength (HM04) obtained | Bronzor | - |
 | Icicle Badge | Mr. Mime, Sneasel, Snover | - |
-| Champion | Magnemite, Tauros, Teddiursa, Swinub, Delibird, Smoochum, Poochyena, Mightyena, Aron, Lairon, Swablu, Snorunt, Glalie, Spheal, Sealeo, Walrein, Beldum | Staryu, Chinchou, Lanturn, Spheal, Sealeo, Walrein |
+| Champion | Magnemite, Tauros, Teddiursa, Swinub, Delibird, Smoochum, Poochyena, Mightyena, Aron, Lairon, Swablu, Snorunt, Glalie, Spheal, Sealeo, Walrein, Beldum | Staryu, Chinchou, Lanturn, Spheal, Sealeo, Walrein, Seel, Dewgong |
 
 Rare: Swinub (20%), Swablu (20%), Magnemite (20%), Teddiursa (10%), Snorunt (10%), Smoochum (10%), Glalie (10%).
 
@@ -3184,7 +3326,7 @@ Rare: Swinub (20%), Swablu (20%), Magnemite (20%), Teddiursa (10%), Snorunt (10%
 | Defog (TM119) obtained | Wooper, Quagsire | Wooper, Quagsire |
 | Icicle Badge | - | Tentacool, Tentacruel |
 | Waterfall (HM05) obtained | - | Whiscash |
-| Champion | Bulbasaur, Weedle, Nidoran⑮, Nidorina, Nidoran⑭, Nidorino, Oddish, Gloom, Paras, Venonat, Venomoth, Bellsprout, Weepinbell, Grimer, Weezing, Tangela, Ledian, Ariados, Pineco, Cacnea, Cacturne, Seviper, Tropius, Tangrowth | Qwilfish |
+| Champion | Bulbasaur, Weedle, Nidoran♀, Nidorina, Nidoran♂, Nidorino, Oddish, Gloom, Paras, Venonat, Venomoth, Bellsprout, Weepinbell, Grimer, Weezing, Tangela, Ledian, Ariados, Pineco, Cacnea, Cacturne, Seviper, Tropius, Tangrowth, Caterpie, Ekans, Zangoose | Qwilfish |
 
 Rare: Swinub (50%), Lickitung (50%).
 
@@ -3197,7 +3339,7 @@ Rare: Swinub (50%), Lickitung (50%).
 | from the start | Geodude, Onix, Skorupi |
 | Strength (HM04) obtained | Ponyta |
 | Defog (TM119) obtained | Graveler |
-| Champion | Charmander, Vulpix, Cyndaquil, Sentret, Furret, Slugma, Magcargo, Magby, Torchic, Numel, Camerupt, Torkoal, Chimchar |
+| Champion | Charmander, Vulpix, Cyndaquil, Sentret, Furret, Slugma, Magcargo, Magby, Torchic, Numel, Camerupt, Torkoal, Chimchar, Growlithe |
 
 Rare: Rhyhorn (40%), Houndoom (40%), Magby (20%).
 

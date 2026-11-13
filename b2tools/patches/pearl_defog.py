@@ -32,14 +32,16 @@ import json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.dirname(HERE))
+import version  # noqa: E402
 import zoneheaders  # noqa: E402
 
 DECOMP = os.path.join(ROOT, 'external', 'pokebw2')
 PEARL_DEFOG_WEATHER = 14            # pokediamond constants/weather.h WEATHER_DEFOG
 B2_FOG = 9                          # Black 2's mist (include/pearlb2.h PEARLB2_WEATHER_FOG)
 WEATHER_MASK = 0x3F
-SCRIPT_SRC = os.path.join(ROOT, 'src', 'field_scripts', '1243_global_10000.s')
-TEXT_SRC = os.path.join(ROOT, 'src', 'text', 'script', '1236_field_moves.txt')
+# (Platinum: written with its own lines into the generated folders, which the build reads before src/: version.sources)
+SCRIPT_SRC = os.path.join(version.generated_folder(os.path.join(ROOT, 'src', 'field_scripts')), '1243_global_10000.s')
+TEXT_SRC = os.path.join(version.generated_folder(os.path.join(ROOT, 'src', 'text', 'script')), '1236_field_moves.txt')
 DEFOG_LINE_BANK, DEFOG_LINE = 334, 16
 DEFOG_OFFER_LINE = 15              # "A deep fog drapes the area...\nWould you like to use Defog?" (Pearl's unused script 375:6)
 LABEL = 'Global10000_Text_PearlUsedDefog'
@@ -117,6 +119,7 @@ def sources():
               '    SEPlay SEQ_SE_FLD_02    // for SEQ_SE_DP_FBRADE: a Black 2 field-move sound stands in\n'
               f'    FlagSet {DEFOG_FLAG:#x}                    // (map-local: the clear sky stays through battles: '
               'PearlB2_ZoneWeather)\n'
+              + zone_flag_lines() +
               '    FieldSetWeather 0, 0\n'
               '    FinishAllEvents\n'
               '    ActorsUnpauseAll\n'
@@ -190,6 +193,31 @@ def sources():
     return s, '\n'.join(lines) + '\n'
 
 
+# ---- plat-ch5 (2026-11-07): Defog sets a zone's story flag (version.DEFOG_ZONE_FLAGS; Platinum's Lost Tower 5F) ----------
+def zone_flag_lines():
+    """Script_17's lines that set a zone's story flag when Defog is used there (pokeplatinum FieldMoves_UseDefogFromMenu:
+    GetCurrentMapID, CallIfEq MAP_HEADER_ROUTE_209_LOST_TOWER_5F, SetFlag FLAG_USED_DEFOG_IN_ROUTE_209_LOST_TOWER_5F).
+    None for Pearl and Diamond: the script stays as it was."""
+    import re
+    if not version.DEFOG_ZONE_FLAGS:
+        return ''
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = {z['name']: z for z in json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))}
+    h = open(os.path.join(ROOT, 'src', 'include', 'platinum' if version.PLATINUM else '', 'pearl.h')).read()
+    out = '    RTGetZoneID 0x8010\n'
+    for k, (zone, flag) in enumerate(sorted(version.DEFOG_ZONE_FLAGS.items())):
+        z = zones[zone]
+        r = world['zones'].get(str(z['id'])) or world['rooms']['zones'].get(str(z['id']))
+        m = re.search(rf'^#define\s+{flag}\s+(0x[0-9A-Fa-f]+|\d+)', h, re.M)
+        assert r is not None and m, (zone, flag)
+        out += (f'    WorkCmpConst 0x8010, {r["b2_zone"]}            // {zone[4:]}\n'
+                f'    VMJumpIf CMP_NE, L_DefogZoneFlag{k}\n'
+                f'    FlagSet {int(m.group(1), 0)}                    // {flag}\n'
+                f'L_DefogZoneFlag{k}:\n')
+    return out
+# ---- end plat-ch5 -----------------------------------------------------------------------------------------------------
+
+
 def check_sources():
     s, t = sources()
     for path, want in ((SCRIPT_SRC, s), (TEXT_SRC, t)):
@@ -199,8 +227,8 @@ def check_sources():
 
 def fog_zones():
     """{Black 2 zone: Pearl zone name} of the installed zones under Pearl's deep fog."""
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
     out = {}
     for z in zones:
         if z['weather'] != PEARL_DEFOG_WEATHER:
@@ -224,8 +252,8 @@ def apply(files):
 
 # ---- Rock Climb from the party menu (decomp resident/leftovers.c gPearlB2RockClimb): the zones with a climb's sign event
 def rock_climb_zones():
-    world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
-    zones = json.load(open(os.path.join(ROOT, 'work', 'pearl', 'zones.json')))
+    world = json.load(open(version.data_path('sinnoh_world.json')))
+    zones = json.load(open(os.path.join(version.WORLD_WORK, 'zones.json')))
     climbs = json.load(open(os.path.join(ROOT, 'data', 'pearl_rock_climb.json')))
     out = []
     for z in zones:

@@ -30,6 +30,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
+import version  # noqa: E402
 from version import land_id  # noqa: E402  (Spear Pillar: the chunk's file for this version)
 import pearl_mesh, nsbtx  # noqa: E402
 
@@ -265,11 +266,11 @@ def draw_model(scene, model, tex, offset=(0, 0, 0), setup=None, reverse=False):
 
 
 def chunk_model(chunk, fixed=False):
-    land = os.path.join(ROOT, 'work', 'pearl', 'land')
+    land = os.path.join(version.WORLD_WORK, 'land')
     bmd = open(os.path.join(land, f'{land_id(chunk):03d}.nsbmd'), 'rb').read()
     if fixed:
         import pearl_chunk, pearl_seams_check
-        world = json.load(open(os.path.join(ROOT, 'data', 'sinnoh_world.json')))
+        world = json.load(open(version.data_path('sinnoh_world.json')))
         m, x, z = pearl_seams_check.cells_of(world)[chunk]
         bmd = pearl_chunk.fix_model(chunk, bmd, pearl_chunk.neighbours(m, x, z))[0]
     return pearl_mesh.Model(bmd)
@@ -279,9 +280,9 @@ def render(chunk, texset, at=None, light='pearl_indoor', edges='pearl_indoor', s
            fixed=False, flicker=False, cracks=0.0, bg=(0, 0, 0), texbytes=None):
     from gen4rom import Rom, narc_members
     import pearl_buildings
-    land = os.path.join(ROOT, 'work', 'pearl', 'land')
+    land = os.path.join(version.WORLD_WORK, 'land')
     model = chunk_model(chunk, fixed)
-    rom = Rom(os.path.join(ROOT, 'roms', 'pearl.nds'))
+    rom = Rom(version.WORLD_DUMP)
     sets = narc_members(rom.read('fielddata/areadata/area_map_tex/map_tex_set.narc'))
     tex = textures(texbytes if texbytes is not None else sets[texset])     # (texbytes: a built set, a/0/1/4)
     tx, tz = at or (16, 16)

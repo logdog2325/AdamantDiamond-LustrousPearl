@@ -52,7 +52,7 @@ P142_0087:
 P142_0092:
 // ShowCurrentFloor 20, 1, PVAR_40CE: no floor window in Black 2
     pl_msg_talk 0
-    ListMenu_AnchorTopRight 31, 1, 0, 0, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
+    ListMenu_AnchorTopRight 31, 1, 0, 1, PVAR_800C  // Pearl InitGlobalTextMenu 1, 1, 0, 1, PVAR_800C
     ListMenuAdd 10, 65535, 0  // Pearl AddMenuEntryImm 120, 0
     ListMenuAdd 11, 65535, 1  // Pearl AddMenuEntryImm 119, 1
     ListMenuAdd 12, 65535, 2  // Pearl AddMenuEntryImm 118, 2
