@@ -52,6 +52,16 @@ plus Pal Park's rooms, the Underground, Secret Bases, Super Contests, Poffins, t
 the game's own data.
 
 ## Screenshots
+### Griseous Platinum
+| | |
+|---|---|
+| ![Griseous Platinum's title](docs/screenshots/platinum_title.png) | Griseous Platinum, with Giratina |
+| ![Walking on a wall](docs/screenshots/platinum_distortion_world_wall.png) | The Distortion World: walking on a wall, with Cynthia on it too |
+| ![Upside down on the ceiling](docs/screenshots/platinum_distortion_world_ceiling.png) | The Distortion World: upside down on B4F's ceiling, beside its waterfall |
+| ![The Battle Frontier](docs/screenshots/platinum_battle_frontier.png) | The Battle Frontier |
+| ![The Fight Area](docs/screenshots/platinum_fight_area.png) | The Fight Area in autumn, with a following Garchomp |
+
+### Lustrous Pearl and Adamant Diamond
 | | |
 |---|---|
 | ![Lustrous Pearl's title](docs/screenshots/title_pearl_palkia.png) | Lustrous Pearl |
