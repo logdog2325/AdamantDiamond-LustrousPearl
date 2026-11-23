@@ -39,7 +39,7 @@ P127_001D:
     pl_msg_talk 4
     pl_SetVarFromValue PVAR_8004, 215
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P127_00A8
     pl_SetFlag PFLAG_011C

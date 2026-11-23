@@ -1684,6 +1684,145 @@ def h_add(tr, a, vals, name):
     return out
 
 
+# ---- fix102 (2026-11-22, a Discord report: "Barry leaves his house backwards"): Gen 4's look-one-way people turn back
+# once after their first scripted walk. A person added during a scene (AddObject) is not paused by the scene's LockAll, and
+# Gen 4 runs a person's movement type whenever no movement list drives it (pokeplatinum map_object_move.c MapObject_Move).
+# The LOOK_NORTH/SOUTH/WEST/EAST types face their way once, at their first step (unk_0206450C.c sub_02064918, state 0 ->
+# 1), which for an added person comes only after its first movement list: it then turns to its type's way. Twinleaf's
+# "Thud!!": Barry walks out (WALK_FAST_SOUTH), staggers (WALK_ON_SPOT_FAST_NORTH) and turns back to the player (LOOK_SOUTH),
+# seen in Pearl itself frame by frame (work/agents/fix102/pearl_orig). Black 2's face codes (14-17) set the way once, at
+# the actor's creation, so he stayed facing his door. Here the turn is a FACE move right after that WaitMovement.
+LOOK_TYPES = {14: 0, 15: 1, 16: 2, 17: 3}      # Gen 4 MOVEMENT_TYPE_LOOK_NORTH, _SOUTH, _WEST, _EAST -> its direction
+# Commands that take no frame: between AddObject and the person's first list only these (and Buffer*/Get*) may run, or
+# the person's type takes its first step (faces its way) before the list, and nothing turns it after (Barry's mother
+# coming in at home: AddObject, PlayFanfareWait, ... her walk)
+LOOK_SAME_FRAME = {'ApplyMovement', 'AddObject', 'SetFlag', 'ClearFlag', 'SetVarFromValue', 'SetVarFromVar',
+                   'SetObjectEventPos', 'SetObjectEventDir', 'SetObjectEventMovementType', 'SetPosition', 'PlaySE',
+                   'PlayFanfare', 'LockAll', 'CloseMessage'}
+_DIR_SUFFIX = (('_NORTH', 0), ('_SOUTH', 1), ('_WEST', 2), ('_EAST', 3))
+
+
+def move_facing(moves, d=None):
+    """(the way a mover faces after a Pearl movement list [(code, count)] it starts facing d, whether the list hides it)."""
+    locked = hidden = False
+    for c, n in moves:
+        if c == 0xFE:
+            break
+        if c == 0x47:                          # LOCK_DIR / UNLOCK_DIR
+            locked = True
+        elif c == 0x48:
+            locked = False
+        elif c in (0x45, 0x46):                # SET_INVISIBLE / SET_VISIBLE
+            hidden = c == 0x45
+        else:
+            nm = (MOVEMENT.get(c) or {}).get('pearl_name', '')
+            k = next((v for s, v in _DIR_SUFFIX if nm.endswith(s)), None)
+            if k is not None and not locked and nm.startswith(('FACE_', 'WALK_', 'JUMP_', 'RUN_')):
+                d = k
+    return d, hidden
+
+
+def look_snaps(tr):
+    """{address of a WaitMovement in this file: [(object, way)]}: the WaitMovement that ends the first movement list of a
+    person added by AddObject whose movement type is LOOK_<way>, when nothing that takes a frame runs between the two, the
+    person isn't paused (LockObject), and the list leaves them facing another way, still shown, with something else before
+    their next list or RemoveObject: Gen 4 turns them <way> there. Every way on from the AddObject is followed (calls,
+    jumps, both sides of a condition); a WaitMovement other code can also reach (a label with other references, a script
+    entry) gets no turn (counted as an approximation)."""
+    if getattr(tr, '_look_snaps', None) is not None:
+        return tr._look_snaps
+    out = collections.defaultdict(list)
+    tr._look_snaps = out
+    if tr.mode == 'common':
+        return out
+    pd, d = tr.job.pd, tr.d
+    import pearl_events
+    refs = collections.Counter(t for e, op, args in d.insns.values() for ty, t in args if ty == 'rel')
+    entries = {s for _, s, _ in tr.starts}
+    for p, (e, op, args) in d.insns.items():
+        if pd.cmd_name(op) != 'AddObject' or args[0][1] >= 0x4000 or tr.levels(p) == {2}:
+            continue
+        uid = args[0][1]
+        o = tr.job.objects.get(uid)
+        if o is None or pearl_events.object_skipped(o, tr.job.zone) is not None:
+            continue
+        mt = same_block_before(tr, p, 'SetObjectEventMovementType', uid)
+        if mt is None and any(pd.cmd_name(op3) == 'SetObjectEventMovementType' and args3[0][1] == uid
+                              for e3, op3, args3 in d.insns.values()):
+            continue                           # its type is set elsewhere in the file (another block): not known here
+        way = LOOK_TYPES.get(mt[1] if mt else o['movement_type'])
+        if way is None:
+            continue
+        todo, seen = [(e, (), None, False, refs[e] == 0)], set()
+        while todo and len(seen) < 400:        # (address, return stack, its first list, paused, only this path gets here)
+            a, cs, mov, paused, private = todo.pop()
+            for _ in range(80):
+                if a not in d.insns or (a, cs, mov, paused) in seen:
+                    break
+                seen.add((a, cs, mov, paused))
+                e2, op2, args2 = d.insns[a]
+                nm, flow = pd.cmd_name(op2), pd.table[op2]['flow']
+                tgt = next((t for ty, t in args2 if ty == 'rel'), None)
+                if nm == 'RemoveObject' and args2[0][1] == uid:
+                    break
+                if nm in ('LockObject', 'ReleaseObject') and args2[0][1] == uid:
+                    paused = nm == 'LockObject'        # (paused: its type waits for the scene's ReleaseAll)
+                elif mov is None and nm not in LOOK_SAME_FRAME and flow is None and \
+                        not nm.startswith(('Buffer', 'Get', 'Compare', 'Check')):
+                    break                      # a frame passes before its first list: its type has faced it already
+                if nm == 'ApplyMovement' and args2[0][1] == uid and mov is None:
+                    mov = args2[1][1]
+                elif nm == 'WaitMovement' and mov is not None:
+                    end, hidden = move_facing(movement_steps(pd, tr.f, mov))
+                    nxt_a = e2
+                    if d.insns.get(e2) and pd.table[d.insns[e2][1]]['flow'] == 'return' and cs:
+                        nxt_a = cs[-1]
+                    nxt = d.insns.get(nxt_a)
+                    after = (pd.cmd_name(nxt[1]), nxt[2][0][1] if nxt[2] else None) if nxt else (None, None)
+                    if not paused and end is not None and end != way and not hidden and \
+                            after not in (('RemoveObject', uid), ('ApplyMovement', uid)):
+                        if private:
+                            if (uid, way) not in out[a]:
+                                out[a].append((uid, way))
+                        else:
+                            tr.job.approx['a Gen 4 LOOK turn after a first walk in shared code (not placed)'] += 1
+                    break
+                nxt_private = lambda t: private and refs[t] == 1 and t not in entries
+                if flow == 'end':
+                    break
+                if flow == 'return':
+                    if not cs:
+                        break
+                    a, cs = cs[-1], cs[:-1]
+                    continue
+                if flow == 'jump':
+                    a, private = tgt, nxt_private(tgt)
+                    continue
+                if flow == 'call':
+                    a, cs, private = tgt, cs + (e2,), nxt_private(tgt)
+                    continue
+                if flow == 'cjump':
+                    todo.append((tgt, cs, mov, paused, nxt_private(tgt)))
+                elif flow == 'ccall':
+                    todo.append((tgt, cs + (e2,), mov, paused, nxt_private(tgt)))
+                a = e2
+                if refs[a]:                    # a label other code jumps to: not only this path gets here
+                    private = False
+    return out
+
+
+@handler('WaitMovement')
+def h_wait_movement(tr, a, vals, name):
+    out = ['pl_WaitMovement']
+    for uid, way in look_snaps(tr).get(a, []):
+        lbl = f'.L{tr.prefix}look{a:x}_{uid}'
+        out += [f'pl_ApplyMovement {actor(tr, uid)}, {lbl}  // Gen 4: added during the scene, its LOOK '
+                f'type turns it {("north", "south", "west", "east")[way]} after its first walk (fix102)',
+                'pl_WaitMovement', f'VMJump {lbl}_end', '.balign 4, 0', f'{lbl}:', f'    Move {way}, 1', '    MoveEnd',
+                f'{lbl}_end:']
+    return out
+
+
 ITEM_BALL_FILE = 370             # Pearl's item-ball scripts 7000+n (SCRIPT_RANGES): entry n+1 sets the item, then 256
 LAST_TALKED = 0x800D             # Pearl's VAR_LAST_TALKED (Black 2's 0x8011, pearl.h PVAR_800D)
 
@@ -1700,6 +1839,65 @@ def item_ball_item(pd, sid):
             return args[1][1]
         a = end
     raise ValueError(f'item-ball script {sid}: no item')
+
+
+# ---- fix102 (b), 2026-11-22 (a Discord report, Adamant Diamond: TM12 from the Underground, then Route 211's TM12 ball "says
+# the Bag is full"): Black 2's Bag holds one of each TM and HM (Pearl's held 999), so a second copy never fits and its ball
+# or gift stayed for good. A CanFitItem for a free item (an item ball, a hidden item, a gift with nothing paid on the way to
+# it) is pl_CanFitItemFree (pearl_story.inc): a TM or HM the Bag holds counts as fitting, and Pearl's own lines run. Where
+# something is paid first (the shard collector's Shards, the Exchange's BP), Pearl's "no room" answer stays: nothing is lost.
+FREE_ITEM_FILES = (ITEM_BALL_FILE, 374)          # Pearl's item balls (file 370) and hidden items (374: pearl_items)
+PAY_CMDS = ('RemoveItem', 'RemoveMoney', 'RemoveMoney2', 'RemoveBattlePoints', 'SubtractCoinsFromValue',
+            'SubtractCoinsFromVar', 'ScrCmd_RemoveAccessory', 'GiveOrTakeSeal')
+GIVE_SCRIPTS = (2016, 2044)                      # Pearl's common give-item scripts (205:17, 205:45)
+
+
+def free_item_check(tr, a):
+    """Whether the CanFitItem at a guards a free item: in the item-ball or hidden-item routine, or on the way on from it
+    (through jumps and calls, up to the script's end) Pearl's give script or an AddItem runs and nothing is paid, before
+    or after it (the Exchange takes the BP and the Game Corner the coins after giving)."""
+    if tr.f in FREE_ITEM_FILES:
+        return True
+    pd, d = tr.job.pd, tr.d
+    todo, seen, given = [(d.insns[a][0], ())], set(), False
+    while todo:
+        p, cs = todo.pop()
+        while p in d.insns and (p, cs) not in seen and len(seen) < 200:
+            seen.add((p, cs))
+            e, op, args = d.insns[p]
+            nm, flow = pd.cmd_name(op), pd.table[op]['flow']
+            tgt = next((t for ty, t in args if ty == 'rel'), None)
+            if nm in PAY_CMDS or nm.startswith(('Remove', 'Subtract')) and nm not in ('RemoveObject',):
+                return False
+            if (nm == 'CallCommonScript' and args[0][1] in GIVE_SCRIPTS) or nm == 'AddItem':
+                given = True
+            if flow == 'end' or (flow == 'return' and not cs):
+                break
+            if flow == 'return':
+                p, cs = cs[-1], cs[:-1]
+            elif flow == 'jump':
+                p = tgt
+            elif flow == 'call':
+                p, cs = tgt, cs + (e,)
+            else:
+                if flow == 'ccall':
+                    todo.append((tgt, cs + (e,)))
+                elif flow == 'cjump':
+                    todo.append((tgt, cs))
+                p = e
+    return given
+
+
+_h_can_fit_base = HANDLERS['CanFitItem']
+
+
+@handler('CanFitItem')
+def h_can_fit(tr, a, vals, name):
+    out = _h_can_fit_base(tr, a, vals, name)
+    if free_item_check(tr, a):
+        out[0] = out[0].replace('pl_CanFitItem ', 'pl_CanFitItemFree ', 1)      # (the macro's name says it: no comment,
+                                                                                # the item's own note comes after)
+    return out
 
 
 @handler('IsItemTMHM')

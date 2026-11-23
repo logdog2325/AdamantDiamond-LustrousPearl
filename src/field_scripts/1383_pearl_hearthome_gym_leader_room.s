@@ -85,7 +85,7 @@ P96_S2:
 P96_0127:
     pl_SetVarFromValue PVAR_8004, 392  // Pearl item 392 (TM65) = TM65 Shadow Claw
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P96_0165
     VMCall C205_45_S45  // CallCommonScript 2044 (Pearl file 205 script 45)

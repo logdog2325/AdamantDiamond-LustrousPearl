@@ -710,7 +710,7 @@ P444_0928:
     pl_Return
 
 P444_0984:
-    pl_CanFitItem PVAR_8006, 1, PVAR_8007
+    pl_CanFitItemFree PVAR_8006, 1, PVAR_8007
     pl_CompareVarToValue PVAR_8007, 0
     pl_CallIf 5, P444_09A1
     pl_SetVarFromValue PVAR_800C, 10000

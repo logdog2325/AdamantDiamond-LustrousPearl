@@ -2818,7 +2818,7 @@ B_17EE:
     pl_WaitSE SEQ_SE_MESSAGE  // Pearl SEQ_SE_DP_SELECT
     pl_SetVarFromVar PVAR_8004, PVAR_8008
     pl_SetVarFromVar PVAR_8005, PVAR_8009
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, B_1830
     pl_CompareVarToValue PVAR_800C, 0

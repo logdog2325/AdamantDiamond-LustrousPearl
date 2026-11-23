@@ -1,7 +1,7 @@
 # Pokémon Adamant Diamond & Lustrous Pearl
 
 Sinnoh's Diamond, Pearl and Platinum rebuilt inside Pokémon Black 2, in the Gen 5 style: Lustrous Pearl and Adamant
-Diamond (version 1.0.1) and Griseous Platinum (version 1.0). Releases are `.bps` patches only; no ROMs are ever
+Diamond (version 1.0.2) and Griseous Platinum (version 1.0.1). Releases are `.bps` patches only; no ROMs are ever
 included.
 
 ## Playing it
@@ -10,7 +10,7 @@ included.
    computer: a 512 MB game is too much for a phone browser.
 3. Play it in melonDS or on hardware. DeSmuME hides some bugs that melonDS and hardware show.
 
-## Lustrous Pearl and Adamant Diamond: 1.0.1
+## Lustrous Pearl and Adamant Diamond: 1.0.2
 - **Story:** the whole story, from Twinleaf to the Hall of Fame, with Palkia in Lustrous Pearl and Dialga in Adamant
   Diamond, each with its version's wild Pokémon, Orb, title screen and Pokédex entries. Post-game: the National
   Pokédex at Champion, the Battle Zone with the Battle Tower and the PWT, Stark Mountain, Snowpoint Temple, Turnback
@@ -27,19 +27,24 @@ included.
 - **New in 1.0.1:** after the Hall of Fame every Pokémon can be caught in either version. The fossil restorer, the
   in-game trades, the Move Deleter and the ribbon givers work, and the Game Corner's prizes are sold at the Veilstone
   Department Store. Many bugs and map fixes: see [Known issues](docs/known-issues.md#fixed-in-101).
+- **New in 1.0.2:** Barry turns round to you after he bumps into you at his door. A TM you already have no longer
+  leaves its item ball or gift saying the Bag is full. The Grand Underground's Hideaways give 16 of Black 2's TMs that
+  you can't find anywhere else in Sinnoh. See [Known issues](docs/known-issues.md#fixed-in-102).
 - **Not in yet:** digging in the Underground; the Game Corner's slots; Jubilife TV's Loto, Route 222's size contest and
   Vista Lighthouse's binoculars; online features. Pal Park's migration from a GBA game is in the build but unconfirmed.
   The full list is in [Known issues](docs/known-issues.md).
 
-## Griseous Platinum: 1.0
+## Griseous Platinum: 1.0.1
 - **Story:** Platinum's story from Twinleaf to the Hall of Fame, with its changed towns, routes, Gyms and trainers,
   its own Lucas and Dawn, Giratina and the Griseous Orb.
 - **The Distortion World:** walk on its walls and ceilings, ride its moving platforms, solve the boulder puzzle with
   the lake trio, and face Giratina.
 - **Post-game:** the Battle Frontier (the Battle Tower, Factory, Hall, Castle and Arcade) with its Frontier Brains,
   Stark Mountain, the Villa, and Regigigas from the Poké Mart deliveryman.
-- Everything from Lustrous Pearl's 1.0.1 that Platinum has: Super Contests, Secret Bases, the Grand Underground, the
+- Everything from Lustrous Pearl's 1.0.2 that Platinum has: Super Contests, Secret Bases, the Grand Underground, the
   Pokétch, Pal Park's rooms, following Pokémon and seasons.
+- **New in 1.0.1:** the same three fixes as Lustrous Pearl's 1.0.2, and Looker at the Veilstone warehouse door and the
+  Croagunk in Pastoria and on Stark Mountain turn the way they do in Platinum after they walk.
 - **Not as in Platinum:** online features and the Global Terminal's upper floors are closed, and so is the Game
   Corner (its prizes are sold at the Veilstone Department Store). The Frontier has no Vs. Recorder, and its picture
   rooms have no moving floors, lights or particles. The player guide covers Lustrous Pearl and Adamant Diamond only.

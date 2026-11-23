@@ -21,7 +21,7 @@ P126_000A:
     pl_GetRandom PVAR_8004, 17
     pl_AddVar PVAR_8004, 184
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P126_0060
     pl_SetFlag PFLAG_0AA3

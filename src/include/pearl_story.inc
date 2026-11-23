@@ -519,6 +519,20 @@
     .macro pl_CanFitItem item, count, var  // 0x7D
     ItemCheckSpace \item, \count, \var
     .endm
+    // fix102: CanFitItem for a free item (an item ball, a hidden item, a gift nothing is paid for: pearl_story
+    // free_item_check). Black 2's Bag holds one of each TM and HM, Pearl's 999: a TM or HM the Bag already holds counts as
+    // fitting, so the ball or the gift goes as Pearl's do, with Pearl's lines, and the Bag keeps its one (ItemAdd adds
+    // nothing). Without this a second TM's ball said "the Bag is full" for good (the Underground's TM12, then Route 211's).
+    .macro pl_CanFitItemFree item, count, var
+    ItemCheckSpace \item, \count, \var
+    WorkCmpConst \var, 0
+    VMJumpIf CMP_NE, .Lcff\@
+    ItemIsTMHM \item, \var
+    WorkCmpConst \var, 0
+    VMJumpIf CMP_EQ, .Lcff\@
+    ItemCheckAmount \item, 1, \var
+.Lcff\@:
+    .endm
     .macro pl_CheckItem item, count, var   // 0x7E
     ItemCheckAmount \item, \count, \var
     .endm

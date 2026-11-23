@@ -223,3 +223,19 @@ src/pearlb2/resident/field_moves.c:
 - PML_MoveIsHM answers no: HM moves can be forgotten and traded with.
 - The cut-in: Pearl's PlayHMCutIn (Rock Smash, Strength) and UseRockClimb now play Black 2's (pl_PlayHMCutIn). The rock still
   goes without a breaking animation (Black 2 has none).
+
+## A TM the Bag already holds (fix102, 2026-11-22)
+Black 2's Bag holds one of each TM and HM (PML_ItemGetMaxStorageCount), Pearl's 999, and Pearl gives some TMs twice
+(the weather TMs as balls and from the shard collector, balls of TMs the Department Store or the Exchange also sell;
+Platinum's TM27 Return; the Underground's Hideaway TMs until they became Black 2's own: notes/UNDERGROUND.md 13). A second copy's CanFitItem answered
+"no room", so its ball, hidden item or gift stayed for good saying the Bag is full (a Discord report on Adamant Diamond:
+Route 211's TM12 after the Underground's).
+- `pl_CanFitItemFree` (src/include/pearl_story.inc): Black 2's ItemCheckSpace, and when that says no, a TM/HM
+  (ItemIsTMHM) the Bag holds counts as fitting. Pearl's flow then runs as for a first copy: the ball goes (its flag),
+  Pearl's found / received lines and fanfare, and ItemAdd adds nothing.
+- Where (pearl_story.free_item_check): Pearl's item-ball and hidden-item routines (files 370 and 374, pearl_items.py),
+  the Hideaways' ball routine (underground_scripts.py), and every CanFitItem whose way on reaches Pearl's give script
+  (2016, 2044) or an AddItem with nothing paid before or after (RemoveItem, money, coins, BP). Kept as `pl_CanFitItem`:
+  the shard collector, the Battle Point Exchange, the Game Corner prize counter and the other trades, whose "no room"
+  answer keeps the player's Shards, BP or coins. Black 2's shops show a held TM as owned and sell no second one.
+- Every TM's sources and doubles, per version: `PEARL_VERSION=<v> python3 b2tools/tm_sources.py` (--all, --strict).

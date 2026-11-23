@@ -22,23 +22,23 @@ In the tunnels, Use opens DIGGER DRILL / GOODS / GO UP / CLOSE. The Digger Drill
 | Hideaway | Near | Item balls |
 |---|---|---|
 | Spacious Cave | Route 203 | Rare Candy, Rare Candy, PP Max, Shiny Stone |
-| Grassland Cave | Route 206 | TM111 Silver Wind |
-| Fountainspring Cave | Hearthome City | TM12 Taunt, DeepSeaTooth |
-| Rocky Cave | Oreburgh City | Nugget, PP Up, TM37 Sandstorm, TM04 Calm Mind, TM39 Rock Tomb |
+| Grassland Cave | Route 206 | TM76 Struggle Bug |
+| Fountainspring Cave | Hearthome City | TM95 Snarl, DeepSeaTooth |
+| Rocky Cave | Oreburgh City | Nugget, PP Up, TM78 Bulldoze, TM03 Psyshock, TM23 Smack Down |
 | Volcanic Cave | Flower Paradise | TM55 Scald |
-| Swampy Cave | Route 213 | TM96 Focus Punch, TM06 Toxic |
-| Dazzling Cave | Route 210 North | TM45 Attract, TwistedSpoon |
+| Swampy Cave | Route 213 | TM47 Low Sweep, TM09 Venoshock |
+| Dazzling Cave | Route 210 North | TM83 Work Up, TwistedSpoon |
 | Whiteout Cave | Newmoon Island | Dawn Stone, Sharp Beak |
 | Icy Cave | Route 217 | Lucky Egg, DeepSeaScale |
 | Riverbank Cave | Route 205 South | Big Mushroom |
 | Sandsear Cave | Route 229 | Charcoal, Dragon Fang |
-| Still-Water Cavern | Valor Lakefront | TM98 Bullet Seed, Big Mushroom |
-| Sunlit Cavern | Twinleaf Town | TM81 X-Scissor, PP Up |
-| Big Bluff Cavern | Veilstone City | TM101 Shock Wave |
-| Stargleam Cavern | Celestic Town | TM109 Dragon Pulse, Nugget |
-| Glacial Cavern | Snowpoint City | Leftovers, TM80 Rock Slide |
-| Bogsunk Cavern | Sunyshore City | TM99 Giga Drain, Dusk Stone |
-| Typhlo Cavern | Route 228 | TM50 Overheat, TM71 Stone Edge |
+| Still-Water Cavern | Valor Lakefront | TM49 Echoed Voice, Big Mushroom |
+| Sunlit Cavern | Twinleaf Town | TM62 Acrobatics, PP Up |
+| Big Bluff Cavern | Veilstone City | TM72 Volt Switch |
+| Stargleam Cavern | Celestic Town | TM82 Dragon Tail, Nugget |
+| Glacial Cavern | Snowpoint City | Leftovers, TM79 Frost Breath |
+| Bogsunk Cavern | Sunyshore City | TM34 Sludge Wave, Dusk Stone |
+| Typhlo Cavern | Route 228 | TM59 Incinerate, TM43 Flame Charge |
 
 ## Treasures
 

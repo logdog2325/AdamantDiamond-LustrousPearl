@@ -67,7 +67,7 @@ P130_00CC:
 P130_00D7:
     pl_SetVarFromValue PVAR_8004, 260
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P130_00CC
     pl_BufferPartyMonSpecies 0, PVAR_8000
@@ -85,7 +85,7 @@ P130_00D7:
 P130_0118:
     pl_SetVarFromValue PVAR_8004, 261
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P130_00CC
     pl_BufferPartyMonSpecies 0, PVAR_8000
@@ -103,7 +103,7 @@ P130_0118:
 P130_0159:
     pl_SetVarFromValue PVAR_8004, 262
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P130_00CC
     pl_BufferPartyMonSpecies 0, PVAR_8000
@@ -121,7 +121,7 @@ P130_0159:
 P130_019A:
     pl_SetVarFromValue PVAR_8004, 263
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P130_00CC
     pl_BufferPartyMonSpecies 0, PVAR_8000
@@ -139,7 +139,7 @@ P130_019A:
 P130_01DB:
     pl_SetVarFromValue PVAR_8004, 264
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P130_00CC
     pl_BufferPartyMonSpecies 0, PVAR_8000

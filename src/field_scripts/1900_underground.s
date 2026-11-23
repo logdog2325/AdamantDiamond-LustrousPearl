@@ -186,14 +186,14 @@ UG_Item_3:                          // Spacious Cave: item 107 at (15, 19)
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_4:                          // Grassland Cave: item 520 at (33, 48)
-    pl_SetVarFromValue PVAR_8008, 520
+UG_Item_4:                          // Grassland Cave: item 403 at (33, 48)
+    pl_SetVarFromValue PVAR_8008, 403
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_5:                          // Fountainspring Cave: item 339 at (34, 18)
-    pl_SetVarFromValue PVAR_8008, 339
+UG_Item_5:                          // Fountainspring Cave: item 620 at (34, 18)
+    pl_SetVarFromValue PVAR_8008, 620
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
@@ -216,20 +216,20 @@ UG_Item_8:                          // Rocky Cave: item 51 at (17, 12)
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_9:                          // Rocky Cave: item 364 at (7, 12)
-    pl_SetVarFromValue PVAR_8008, 364
+UG_Item_9:                          // Rocky Cave: item 405 at (7, 12)
+    pl_SetVarFromValue PVAR_8008, 405
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_10:                          // Rocky Cave: item 331 at (5, 7)
-    pl_SetVarFromValue PVAR_8008, 331
+UG_Item_10:                          // Rocky Cave: item 330 at (5, 7)
+    pl_SetVarFromValue PVAR_8008, 330
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_11:                          // Rocky Cave: item 366 at (19, 7)
-    pl_SetVarFromValue PVAR_8008, 366
+UG_Item_11:                          // Rocky Cave: item 350 at (19, 7)
+    pl_SetVarFromValue PVAR_8008, 350
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
@@ -240,20 +240,20 @@ UG_Item_12:                          // Volcanic Cave: item 382 at (17, 4)
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_13:                          // Swampy Cave: item 505 at (7, 38)
-    pl_SetVarFromValue PVAR_8008, 505
+UG_Item_13:                          // Swampy Cave: item 374 at (7, 38)
+    pl_SetVarFromValue PVAR_8008, 374
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_14:                          // Swampy Cave: item 333 at (27, 43)
-    pl_SetVarFromValue PVAR_8008, 333
+UG_Item_14:                          // Swampy Cave: item 336 at (27, 43)
+    pl_SetVarFromValue PVAR_8008, 336
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_15:                          // Dazzling Cave: item 372 at (51, 5)
-    pl_SetVarFromValue PVAR_8008, 372
+UG_Item_15:                          // Dazzling Cave: item 410 at (51, 5)
+    pl_SetVarFromValue PVAR_8008, 410
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
@@ -306,8 +306,8 @@ UG_Item_23:                          // Sandsear Cave: item 250 at (8, 16)
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_24:                          // Still-Water Cavern: item 507 at (19, 13)
-    pl_SetVarFromValue PVAR_8008, 507
+UG_Item_24:                          // Still-Water Cavern: item 376 at (19, 13)
+    pl_SetVarFromValue PVAR_8008, 376
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
@@ -318,8 +318,8 @@ UG_Item_25:                          // Still-Water Cavern: item 87 at (3, 4)
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_26:                          // Sunlit Cavern: item 408 at (69, 15)
-    pl_SetVarFromValue PVAR_8008, 408
+UG_Item_26:                          // Sunlit Cavern: item 389 at (69, 15)
+    pl_SetVarFromValue PVAR_8008, 389
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
@@ -330,14 +330,14 @@ UG_Item_27:                          // Sunlit Cavern: item 51 at (86, 65)
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_28:                          // Big Bluff Cavern: item 510 at (14, 77)
-    pl_SetVarFromValue PVAR_8008, 510
+UG_Item_28:                          // Big Bluff Cavern: item 399 at (14, 77)
+    pl_SetVarFromValue PVAR_8008, 399
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_29:                          // Stargleam Cavern: item 518 at (54, 50)
-    pl_SetVarFromValue PVAR_8008, 518
+UG_Item_29:                          // Stargleam Cavern: item 409 at (54, 50)
+    pl_SetVarFromValue PVAR_8008, 409
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
@@ -354,14 +354,14 @@ UG_Item_31:                          // Glacial Cavern: item 234 at (14, 5)
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_32:                          // Glacial Cavern: item 407 at (10, 18)
-    pl_SetVarFromValue PVAR_8008, 407
+UG_Item_32:                          // Glacial Cavern: item 406 at (10, 18)
+    pl_SetVarFromValue PVAR_8008, 406
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_33:                          // Bogsunk Cavern: item 508 at (48, 13)
-    pl_SetVarFromValue PVAR_8008, 508
+UG_Item_33:                          // Bogsunk Cavern: item 361 at (48, 13)
+    pl_SetVarFromValue PVAR_8008, 361
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
@@ -372,14 +372,14 @@ UG_Item_34:                          // Bogsunk Cavern: item 108 at (8, 7)
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_35:                          // Typhlo Cavern: item 377 at (39, 14)
-    pl_SetVarFromValue PVAR_8008, 377
+UG_Item_35:                          // Typhlo Cavern: item 386 at (39, 14)
+    pl_SetVarFromValue PVAR_8008, 386
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
 
-UG_Item_36:                          // Typhlo Cavern: item 398 at (85, 57)
-    pl_SetVarFromValue PVAR_8008, 398
+UG_Item_36:                          // Typhlo Cavern: item 370 at (85, 57)
+    pl_SetVarFromValue PVAR_8008, 370
     pl_SetVarFromValue PVAR_8009, 1
     VMCall UG_ItemBall
     pl_End
@@ -497,7 +497,7 @@ UG_ItemBall:
     pl_WaitSE SEQ_SE_MESSAGE
     pl_SetVarFromVar PVAR_8004, PVAR_8008
     pl_SetVarFromVar PVAR_8005, PVAR_8009
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C  // (fix102: a TM the Bag holds fits, as file 370's)
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, UG_ItemBall_Full
     VMCall UG_Fanfare

@@ -45,7 +45,7 @@ P445_006D:
     pl_BufferItemName 2, PVAR_8004
     pl_msg_talk 1
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P445_0164
     pl_GoTo P445_00C2
@@ -94,7 +94,7 @@ P445_0114:
     pl_BufferItemName 2, PVAR_8004
     pl_msg_talk 3
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P445_0105
     pl_GoTo P445_00C2

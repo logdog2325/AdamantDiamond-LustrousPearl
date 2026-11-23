@@ -19,7 +19,7 @@ P84_0006:
     pl_msg_talk 0
     pl_SetVarFromValue PVAR_8004, 331  // Pearl item 331 (TM04) = TM04 Calm Mind
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P84_0056
     pl_SetFlag PFLAG_0076

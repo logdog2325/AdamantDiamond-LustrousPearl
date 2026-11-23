@@ -46,7 +46,7 @@ P59_0034:
     pl_msg_talk 3
     pl_SetVarFromValue PVAR_8004, 14
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P59_008C
     pl_SetFlag PFLAG_00C1

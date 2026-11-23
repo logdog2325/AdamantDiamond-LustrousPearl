@@ -48,7 +48,7 @@ P1001_0062:
     pl_msg_talk 2
     pl_SetVarFromValue PVAR_8004, 415  // Pearl item 415 (TM88) = TM88 Pluck
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P1001_009F
     pl_SetFlag PFLAG_0083

@@ -157,6 +157,36 @@ FEATURE_MOVED |= {'script:1400_pearl_hearthome_poffin_house', 'script:1401_pearl
                   'script:1479_pearl_pokemon_league_lobby_2f', 'script:1588_pearl_battle_tower_lobby',
                   'script:1592_pearl_battle_tower_arena_multi', 'script:1593_pearl_battle_tower_arena_wifi'}
 # ---- end tower-fix
+# ---- fix102 (2026-11-22, the Discord reports on 1.0.1 / Platinum 1.0): Twinleaf's "Thud!!" turns Barry back to the
+# player after his first walk, as Gen 4's LOOK type does (pearl_story look_snaps); free TM/HM balls, hidden items and
+# gifts go when the Bag already holds that TM (pl_CanFitItemFree: the item-ball and hidden-item routines, the
+# Underground's, and every gift with nothing paid on its way: pearl_story free_item_check)
+FEATURE_MOVED |= {f'script:{n}' for n in (
+    '1240_global_item_balls', '1241_global_hidden_items', '1299_pearl_jublife_tv_1f',
+    '1311_pearl_jublife_condominiums_1f', '1314_pearl_jublife_condominiums_4f', '1316_pearl_jublife_trainer_school',
+    '1323_pearl_canalave_gym', '1330_pearl_canalave_southeast_house', '1335_pearl_oreburgh',
+    '1337_pearl_oreburgh_gym', '1342_pearl_oreburgh_northwest_house_2f', '1343_pearl_oreburgh_northwest_house_3f',
+    '1346_pearl_oreburgh_north_house_2f', '1353_pearl_oreburgh_east_house_2f', '1359_pearl_eterna_gym',
+    '1369_pearl_eterna_condominiums_2f', '1371_pearl_eterna_condominiums_4f', '1372_pearl_eterna_route_206_gatehouse',
+    '1374_pearl_eterna_oak_house', '1383_pearl_hearthome_gym_leader_room', '1388_pearl_hearthome_southeast_house_2f',
+    '1390_pearl_hearthome_pokemon_fan_club', '1407_pearl_pastoria_gym', '1413_pearl_pastoria_southwest_house',
+    '1414_pearl_pastoria_west_house', '1417_pearl_pastoria_scarf_guy_house', '1418_pearl_veilstone',
+    '1419_pearl_veilstone_gym', '1428_pearl_veilstone_department_store_5f', '1441_pearl_sunyshore_gym_room_3',
+    '1456_pearl_snowpoint_gym', '1482_pearl_fight_area_pokemart', '1497_pearl_fuego_ironworks_interior',
+    '1509_pearl_great_marsh_area_6', '1517_pearl_amity_square', '1519_pearl_floaroma_meadow',
+    '1531_pearl_turnback_cave_giratina_room', '1562_pearl_iron_island_house',
+    '1570_pearl_veilstone_galactic_headquarters_4f_1', '1602_pearl_valor_lakefront_grand_lake_east_room',
+    '1605_pearl_route_201', '1609_pearl_route_204_north', '1617_pearl_route_208',
+    '1618_pearl_route_208_berry_master_house', '1621_pearl_route_209_lost_tower_5f', '1622_pearl_route_210_south',
+    '1627_pearl_route_211_east', '1630_pearl_route_212_pokemon_mansion_west_rooms',
+    '1639_pearl_route_213_grand_lake_west_room', '1643_pearl_route_215', '1647_pearl_route_217_south_house',
+    '1648_pearl_route_217_north_house', '1654_pearl_route_221_pal_park_entrance',
+    '1655_pearl_route_221_level_item_house', '1656_pearl_route_222',
+    '1658_pearl_route_222_pokemon_size_contest_house', '1662_pearl_route_225_house', '1669_pearl_route_229',
+    '1670_pearl_twinleaf', '1691_pearl_floaroma_flower_shop', '1693_pearl_floaroma_middle_house',
+    '1701_pearl_solaceon_news_press', '1705_pearl_celestic_pokecenter_1f', '1709_pearl_celestic_shop',
+    '1719_pearl_survival_area_south_house', '1900_underground')}
+# ---- end fix102
 HERE = os.path.dirname(os.path.abspath(__file__))
 ME = os.path.abspath(__file__)
 ROOT = os.path.abspath(os.path.join(HERE, '..'))

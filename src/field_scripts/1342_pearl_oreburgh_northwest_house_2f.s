@@ -45,7 +45,7 @@ P55_0038:
     pl_msg_talk 2
     pl_SetVarFromValue PVAR_8004, 13
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P55_0082
     pl_SetFlag PFLAG_00C0

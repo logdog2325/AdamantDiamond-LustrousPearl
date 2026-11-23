@@ -25,7 +25,7 @@ P215_0010:
     pl_msg_talk 0
     pl_SetVarFromValue PVAR_8004, 82
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P215_0055
     pl_SetFlag PFLAG_0138

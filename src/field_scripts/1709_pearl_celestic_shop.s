@@ -67,7 +67,7 @@ P1018_0093:
     pl_msg_talk 2
     pl_SetVarFromValue PVAR_8004, 297
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P1018_0174
     VMCall C205_45_S45  // CallCommonScript 2044 (Pearl file 205 script 45)
@@ -82,7 +82,7 @@ P1018_00D3:
     pl_msg_talk 2
     pl_SetVarFromValue PVAR_8004, 240
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P1018_0174
     VMCall C205_45_S45  // CallCommonScript 2044 (Pearl file 205 script 45)
@@ -97,7 +97,7 @@ P1018_0113:
     pl_msg_talk 2
     pl_SetVarFromValue PVAR_8004, 267
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P1018_0174
     VMCall C205_45_S45  // CallCommonScript 2044 (Pearl file 205 script 45)

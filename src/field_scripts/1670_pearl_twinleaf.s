@@ -249,6 +249,14 @@ P978_04D0:
     pl_ApplyMovement 2, P978_05A4
     pl_ApplyMovement PL_PLAYER, P978_0588
     pl_WaitMovement
+    pl_ApplyMovement 2, .LP978look4fb_2  // Gen 4: added during the scene, its LOOK type turns it south after its first walk (fix102)
+    pl_WaitMovement
+    VMJump .LP978look4fb_2_end
+    .balign 4, 0
+.LP978look4fb_2:
+        Move 1, 1
+        MoveEnd
+.LP978look4fb_2_end:
     pl_PlaySE SEQ_SE_WALL_HIT  // Pearl SEQ_SE_DP_WALL_HIT2
     pl_msg_sys 0
     pl_WaitTime 30, PVAR_800C

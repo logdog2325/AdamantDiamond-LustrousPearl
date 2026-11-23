@@ -48,7 +48,7 @@ P336_0074:
     pl_msg_sys 2
     pl_SetVarFromValue PVAR_8004, 1
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_CallIf 1, P336_00DB
     MsgWinCloseAll  // another speaker: close the first window

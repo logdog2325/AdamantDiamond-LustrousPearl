@@ -83,7 +83,7 @@ P120_0076:
 P120_0105:
     pl_SetVarFromValue PVAR_8004, 516  // Pearl item 382 (TM55) = TM107 Brine
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P120_0143
     VMCall C205_45_S45  // CallCommonScript 2044 (Pearl file 205 script 45)

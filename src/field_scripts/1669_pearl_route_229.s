@@ -109,7 +109,7 @@ P460_000A:
     pl_msg_talk 0
     pl_SetVarFromValue PVAR_8004, 92
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P460_005A
     VMCall C205_45_S45  // CallCommonScript 2044 (Pearl file 205 script 45)

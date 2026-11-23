@@ -28,7 +28,7 @@ P405_0018:
     pl_GetRandom PVAR_8004, 26
     pl_AddVar PVAR_8004, 149
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P405_006E
     pl_SetFlag PFLAG_0AA0

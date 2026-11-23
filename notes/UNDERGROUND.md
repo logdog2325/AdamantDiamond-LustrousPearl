@@ -84,23 +84,23 @@ with the game's compiler and the three hooks keep their files' sizes). Not built
 | Hideaway | room | hole (tunnel tile, under) | balls |
 |---|---|---|---|
 | Spacious Cave | Mt. Coronet South 1F | (96, 372) Jubilife | Rare Candy x2, PP Max, Shiny Stone |
-| Grassland Cave | Sendoff Spring | (144, 325) Valley Windworks | TM111 Silver Wind (BDSP's TM62 Bug Buzz) |
-| Fountainspring Cave | Oreburgh Gate B1F | (224, 325) Hearthome | TM12 Taunt, Deep Sea Tooth |
-| Rocky Cave | Oreburgh Mine B1F | (159, 372) Oreburgh | Nugget, PP Up, TM37, TM04, TM39; Shard S |
+| Grassland Cave | Sendoff Spring | (144, 325) Valley Windworks | TM76 Struggle Bug (was TM111 Silver Wind, for BDSP's TM62 Bug Buzz) |
+| Fountainspring Cave | Oreburgh Gate B1F | (224, 325) Hearthome | TM95 Snarl (was TM12 Taunt), Deep Sea Tooth |
+| Rocky Cave | Oreburgh Mine B1F | (159, 372) Oreburgh | Nugget, PP Up, TM78 Bulldoze, TM03 Psyshock, TM23 Smack Down (were TM37, TM04, TM39); Shard S |
 | Volcanic Cave | Stark Mountain inside 1 | (447, 116) Stark Mountain | TM55 Scald |
-| Swampy Cave | Ravaged Path | (336, 453) Route 213 | TM96 Focus Punch, TM06 Toxic |
-| Dazzling Cave | **Unova: Chargestone Cave (matrix 24)** | (279, 229) Mt. Coronet | TM45 Attract, Twisted Spoon; Shard S |
+| Swampy Cave | Ravaged Path | (336, 453) Route 213 | TM47 Low Sweep, TM09 Venoshock (were TM96 Focus Punch, TM06 Toxic) |
+| Dazzling Cave | **Unova: Chargestone Cave (matrix 24)** | (279, 229) Mt. Coronet | TM83 Work Up (was TM45 Attract), Twisted Spoon; Shard S |
 | Whiteout Cave | Snowpoint Temple 1F | (80, 84) Fullmoon / Newmoon | Dawn Stone, Sharp Beak |
 | Icy Cave | Snowpoint Temple B2F | (160, 148) Route 217 | Lucky Egg, Deep Sea Scale |
 | Riverbank Cave | Mt. Coronet 4F room 1 | (122, 340) Floaroma | Big Mushroom |
 | Sandsear Cave | Oreburgh Mine B2F | (389, 197) Route 228 | Charcoal, Dragon Fang |
-| Still-Water Cavern | Mt. Coronet B1F | (376, 372) Lake Valor | TM98 Bullet Seed, Big Mushroom |
-| Sunlit Cavern | Eterna Forest | (64, 421) Route 201 | TM81 X-Scissor, PP Up |
-| Big Bluff Cavern | Victory Road 1F | (320, 308) Route 215 | TM101 Shock Wave; Shard S |
-| Stargleam Cavern | **Unova: Chargestone Cave (matrix 23)** | (248, 261) Celestic | TM109 Dragon Pulse, Nugget; Shard L |
-| Glacial Cavern | Snowpoint Temple B4F | (192, 116) Snowpoint | Leftovers, TM80 Rock Slide |
-| Bogsunk Cavern | Victory Road 1F back room 2 | (432, 436) Sunyshore | TM99 Giga Drain, Dusk Stone |
-| Typhlo Cavern | **Unova: Reversal Mountain (matrix 328)** | (415, 165) Route 229 | TM50 Overheat, TM71 Stone Edge |
+| Still-Water Cavern | Mt. Coronet B1F | (376, 372) Lake Valor | TM49 Echoed Voice (was TM98 Bullet Seed), Big Mushroom |
+| Sunlit Cavern | Eterna Forest | (64, 421) Route 201 | TM62 Acrobatics (was TM81 X-Scissor), PP Up |
+| Big Bluff Cavern | Victory Road 1F | (320, 308) Route 215 | TM72 Volt Switch (was TM101 Shock Wave); Shard S |
+| Stargleam Cavern | **Unova: Chargestone Cave (matrix 23)** | (248, 261) Celestic | TM82 Dragon Tail (was TM109 Dragon Pulse), Nugget; Shard L |
+| Glacial Cavern | Snowpoint Temple B4F | (192, 116) Snowpoint | Leftovers, TM79 Frost Breath (was TM80 Rock Slide) |
+| Bogsunk Cavern | Victory Road 1F back room 2 | (432, 436) Sunyshore | TM34 Sludge Wave (was TM99 Giga Drain), Dusk Stone |
+| Typhlo Cavern | **Unova: Reversal Mountain (matrix 328)** | (415, 165) Route 229 | TM59 Incinerate, TM43 Flame Charge (were TM50 Overheat, TM71 Stone Edge) |
 
   Renders for the choice: work/agents/underground/plan/rooms/ (sheet1-3, sheet_multi: Pearl; sheet_b2: Unova).
   Reachable on foot from the exit (underground_check): 95 (Whiteout) to 1,605 tiles (Sunlit). The Unova rooms'
@@ -256,3 +256,52 @@ translated zone), so each run goes down with the Kit first.
   Stargleam's exit sits at its map's south edge, so the screen below it is dark there.
 - Not played (offline checks only): the other 16 Hideaways and Dazzling / Typhlo's looks, water battles, the
   grotto's level, a black-out underground.
+
+## 13. TMs found twice (fix102, 2026-11-22; a Discord report on Adamant Diamond 1.0.1)
+"I got TM 12 in the underground. Then, I saw that we can get TM 12 here too, but it says the bag is full." Black 2's Bag
+holds one of each TM (Pearl's held 999), so a second TM never fit and its ball said the Bag was full for good.
+- **The safety net (done, all three versions):** a free TM/HM source (an item ball, a hidden item, the Hideaways' balls,
+  a gift with nothing paid on its way) whose TM the Bag already holds now goes as usual, with Pearl's own lines, and the
+  Bag keeps its one (pl_CanFitItemFree; notes/TMS.md "A TM the Bag already holds"). Trades and purchases keep Pearl's
+  "no room" answer, so nothing is paid for nothing (the shard collector, the Battle Point Exchange, the Game Corner's
+  prizes; the Department Store shows the TM as owned and sells none).
+- **The Hideaways' TMs (before the choice below):** 17 balls gave TMs (BDSP's Hideaway items, section 4); 16 of them could
+  also be had elsewhere, in all three versions (`PEARL_VERSION=<v> python3 b2tools/tm_sources.py`): TM04 Calm Mind (Eterna Condominiums' gift, the
+  Exchange), TM06 Toxic, TM12 Taunt, TM37 Sandstorm, TM39 Rock Tomb, TM45 Attract, TM50 Overheat, TM71 Stone Edge, TM80
+  Rock Slide, TM81 X-Scissor, TM96 Focus Punch, TM98 Bullet Seed, TM99 Giga Drain, TM101 Shock Wave, TM109 Dragon Pulse,
+  TM111 Silver Wind (each a ball in Sinnoh; some also at the Exchange). Only TM55 Scald came from nowhere else. BDSP
+  moved those TMs to its Underground; ours are still in Pearl's places too.
+- Gen 4's Underground gives no TMs (digging: Spheres, fossils, plates, stones, shards, Heart Scales; data/
+  underground_digging.json), so there is no Gen 4 list to fall back on.
+- **The user's choice (2026-11-22, option 1 of four: Black 2's TMs, other items, no ball, as before):** the 16 balls
+  give Black 2's own TMs that Sinnoh never gives, matched by type; TM55 Scald stays. Same balls, tiles, flags and order
+  (PFLAG_UG_ITEM_nn), so a save that took a ball keeps what it got; only the item each ball gives changed
+  (data/underground.json "move:" names, its "_hideaway_tms"; underground_scripts.py writes file 1900). The Underground is
+  now the only place for these 16, in all three versions (`tm_sources.py --strict`: no Underground TM given elsewhere,
+  every Pearl TM/HM still has a source).
+
+| Hideaway | Was | Now | Type |
+|---|---|---|---|
+| Grassland Cave | TM111 Silver Wind | TM76 Struggle Bug | Bug, the same (also the Unova learners' close move: tm_audit.PROXY) |
+| Fountainspring Cave | TM12 Taunt | TM95 Snarl | Dark, the same |
+| Rocky Cave | TM37 Sandstorm | TM78 Bulldoze | Rock -> Ground: Black 2 has one Rock TM Sinnoh lacks (below); the sand's type |
+| Rocky Cave | TM04 Calm Mind | TM03 Psyshock | Psychic, the same |
+| Rocky Cave | TM39 Rock Tomb | TM23 Smack Down | Rock, the same |
+| Swampy Cave | TM96 Focus Punch | TM47 Low Sweep | Fighting, the same |
+| Swampy Cave | TM06 Toxic | TM09 Venoshock | Poison, the same |
+| Dazzling Cave | TM45 Attract | TM83 Work Up | Normal, the same |
+| Still-Water Cavern | TM98 Bullet Seed | TM49 Echoed Voice | Grass -> Normal: no Grass TM is missing from Sinnoh |
+| Sunlit Cavern | TM81 X-Scissor | TM62 Acrobatics | Bug -> Flying: Struggle Bug is the only Bug one |
+| Big Bluff Cavern | TM101 Shock Wave | TM72 Volt Switch | Electric, the same |
+| Stargleam Cavern | TM109 Dragon Pulse | TM82 Dragon Tail | Dragon, the same |
+| Glacial Cavern | TM80 Rock Slide | TM79 Frost Breath | Rock -> Ice: the Hideaway's own type |
+| Bogsunk Cavern | TM99 Giga Drain | TM34 Sludge Wave | Grass -> Poison: no Grass TM; the bog's sludge |
+| Typhlo Cavern | TM50 Overheat | TM59 Incinerate | Fire, the same |
+| Typhlo Cavern | TM71 Stone Edge | TM43 Flame Charge | Rock -> Fire: the Hideaway's own type |
+
+  Ten keep the type; Black 2 has no Grass TM and one Bug and one Rock TM that Sinnoh lacks, so the other six take the
+  Hideaway's own type or the nearest (the project's picks, within the user's rule). Each new TM is Black 2's own, unchanged:
+  its move in TM_MOVE_LIST, its item data (a/0/2/4, the TM pocket), its machine bit with Black 2's learners (18 to 182 of
+  species 1-493), all checked offline 2026-11-22. Still from nowhere: Hone Claws, Telekinesis, Round, Ally Switch, Sky
+  Drop, Quash, Retaliate, Wild Charge, HM06 Dive. The 16 old TMs come from their Sinnoh places as before (Route 211 West's
+  TM12 and the others: notes/TMS.md, docs/tms-and-hms.md).

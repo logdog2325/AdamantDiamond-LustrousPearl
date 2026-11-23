@@ -32,6 +32,9 @@ Findings (one line each: zone, scene, start, what):
 - copy     a copy of a neighbouring zone's object (script 0xFFFF) installed with a hide flag that is not its original's
 - flag     a RemoveObject that sets another flag than the removed person's own hide flag
 - ontrigger  an arrival that Black 2 puts on a step trigger where Pearl's player stands elsewhere (it does not fire)
+- look     a person added during the scene (AddObject) with a LOOK_<way> movement type ends their first walk facing
+           another way in Black 2: Pearl's type turns them <way> as that walk ends (pearl_story.look_snaps, fix102;
+           Twinleaf's "Thud!!": Barry stayed facing his door)
 Findings checked and left on purpose: ACCEPT below (each with its reason; --all prints them).
 Movement lists come from pearl_story.movement_steps (Pearl's, with data/pearl_path_fixes.json applied).
 """
@@ -482,6 +485,13 @@ class Checker:
                     lines.append(f'[{scene[0]}] (face) person {key[0]} ends beside Pearl\'s player and facing them after '
                                  f'movement {key[1][0]}:{key[1][1]:04X}, not beside / facing the player in Black 2 '
                                  f'({res["b2"].where.get(key, "?")})')
+            for key, way in res['pearl'].snapped.items():
+                got = res['b2'].seen_dirs.get(key)
+                if got is not None and got != way:
+                    nm = ('north', 'south', 'west', 'east')
+                    lines.append(f'[{scene[0]}] (look) person {key[0]}, added in the scene, ends movement '
+                                 f'{key[1][0]}:{key[1][1]:04X} facing {nm[got]} in Black 2; Pearl\'s LOOK type turns '
+                                 f'them {nm[way]} as that walk ends')
             if show_all:
                 for key, msg in res['pearl'].findings:
                     lines.append(f'[{scene[0]}] PEARL {msg}')
@@ -505,6 +515,8 @@ class Sim:
         self.findings = []          # [(key, message)]
         self.facing = {}            # (mover, movement key) -> beside + facing the player at the next line
         self.where = {}
+        self.snapped = {}           # (mover, movement key) -> the way Pearl's LOOK type turns them as that walk ends
+        self.seen_dirs = {}         # (mover, movement key) -> the way they face at the next line
         pos, dirs, vis = {}, {}, {}
         for o in zn.ev['object_events']:
             if (version == 'b2' and pearl_events.object_skipped(o, zn.z)) or o['script'] == pearl_events.COPY_SCRIPT:
@@ -531,7 +543,7 @@ class Sim:
         if a is None:
             return
         st = self.copy(self.base)
-        st.update(stack=[], pending=[], moved=[], cmp=None, steps=0)
+        st.update(stack=[], pending=[], moved=[], cmp=None, steps=0, look={}, mtype={}, observe=[])
         todo, paths, ends = [(a, st)], 0, []
         while todo and paths < PATHS:
             a, st = todo.pop()
@@ -597,6 +609,25 @@ class Sim:
     def op(self, st, name, vals, prog, level):
         pos, dirs, vis = st['pos'], st['dirs'], st['vis']
         b2 = self.version == 'b2'
+        if st['observe'] and name not in ('ApplyMovement', 'WaitMovement'):
+            for uid, key in st['observe']:                  # the way each walker faces once the walking is over
+                if vis.get(uid) and uid in dirs:            # (the first command that is no walk: a line, a sound)
+                    self.seen_dirs[(uid, key)] = dirs.get(uid)
+            st['observe'] = []
+        if st.get('look'):                                  # Pearl: a person added with a LOOK type (look_snaps)
+            look = st['look']
+            if name in ('LockObject', 'ReleaseObject') and self.value(st, vals[0]) in look:
+                u = self.value(st, vals[0])
+                look[u] = (look[u][0], name == 'LockObject', look[u][2])
+            elif name == 'RemoveObject':
+                look.pop(self.value(st, vals[0]), None)
+            elif name == 'ApplyMovement' and self.value(st, vals[0]) in look:
+                u = self.value(st, vals[0])
+                if look[u][2] is None:
+                    look[u] = (look[u][0], look[u][1], vals[1])
+            elif name not in pearl_story.LOOK_SAME_FRAME and not name.startswith(('Buffer', 'Get', 'Compare', 'Check')):
+                for u in [u for u, v in look.items() if v[2] is None]:
+                    del look[u]                             # a frame passes before their first walk: faced already
         if name == 'CompareVarToValue':
             x = self.value(st, vals[0])
             st['cmp'] = None if x is None else (0 if x < vals[1] else 1 if x == vals[1] else 2)
@@ -648,8 +679,16 @@ class Sim:
                 self.facing[(uid, key)] = ok
                 self.where[(uid, key)] = f'person at {(x, z)}, the player at {(px, pz)}'
             st['moved'] = []
+        elif name == 'SetObjectEventMovementType':
+            uid = self.value(st, vals[0])
+            if uid is not None:
+                st['mtype'][uid] = vals[1]
         elif name == 'AddObject':
             uid = self.value(st, vals[0])
+            o = self.zn.objects.get(uid)
+            way = pearl_story.LOOK_TYPES.get(st['mtype'].get(uid, o['movement_type'] if o else None))
+            if not b2 and level != 2 and way is not None:
+                st['look'][uid] = (way, False, None)       # (way, paused, its first walk's key)
             if uid in pos or uid in st['tmpl']:
                 if uid in st['tmpl']:
                     pos[uid] = st['tmpl'][uid]
@@ -747,6 +786,15 @@ class Sim:
                                           f'at {(x, z)} (movement {lbl})')
             pos[uid] = (x, z)
             st['moved'].append((uid, key))
+            st['observe'].append((uid, key))
+            lk = st.get('look', {}).get(uid)
+            if lk is not None and lk[2] == mov:                 # Pearl: its first walk ends, its type faces it
+                del st['look'][uid]
+                end, hidden = pearl_story.move_facing(prog.moves(mov), dirs.get(uid))
+                if not lk[1] and not hidden:
+                    if end != lk[0]:
+                        self.snapped[(uid, key)] = lk[0]
+                    dirs[uid] = lk[0]
         ends = collections.Counter(pos[u] for u in set(movers) if pos.get(u) is not None and vis.get(u))
         for p, n in ends.items():
             if n > 1:

@@ -1699,7 +1699,17 @@ def known_issues_page(names):
     dex = json.load(open(os.path.join(ROOT, 'data', 'text_overrides', 'pokedex.json'), encoding='utf-8'))
     if not all(dex.get(f'res/pokemon/{s}/data.json', {}).get('pokedex', {}).get('forms') for s in ('rotom', 'giratina', 'shaymin', 'arceus')):
         raise SystemExit('gen_docs: Pearl\'s forms no longer take the species\' entry: update known_issues_page')
-    L = [HEADER, '# Known issues in 1.0.1\n', 'Please report bugs: this is a big game, and some parts have been tested only in an emulator.\n',
+    # 1.0.2 (fix102): each line stands only while the generator, the scripts and the data do it
+    need('src/field_scripts/1670_pearl_twinleaf.s', 'its LOOK type turns it south after its first walk', page='known_issues_page')
+    need('src/include/pearl_story.inc', '.macro pl_CanFitItemFree item, count, var', page='known_issues_page')
+    need('src/field_scripts/1240_global_item_balls.s', 'pl_CanFitItemFree PVAR_8004', page='known_issues_page')
+    need('src/field_scripts/1241_global_hidden_items.s', 'pl_CanFitItemFree PVAR_8004', page='known_issues_page')
+    need('data/underground.json', '"move:SNARL"', '"move:STRUGGLE_BUG"', '"move:SCALD"', page='known_issues_page')
+    L = [HEADER, '# Known issues in 1.0.2\n', 'Please report bugs: this is a big game, and some parts have been tested only in an emulator.\n',
+         '## Fixed in 1.0.2\n',
+         '- Barry turns round to you after he bumps into you at his door, as in the original (he kept his back to you).',
+         '- A TM you already have no longer leaves its item ball, hidden item or gift saying the Bag is full: you pick it up or receive it as usual, and keep the one you have.',
+         '- The Grand Underground\'s Hideaways give 16 of Black 2\'s TMs that you can\'t find anywhere else in Sinnoh, instead of TMs that are also on the routes ([the Underground](underground.md), [TMs and HMs](tms-and-hms.md)). A ball you already picked up keeps what it gave.', '',
          '## Fixed in 1.0.1\n',
          '- Menus close with the B button again, as in Pearl: the Trainers\' School blackboard, the shops\' floor lists, elevators and more. The blackboard opens its list of lessons, so you can leave it.',
          '- No more hangs after the Jubilife TV boards, the Move Deleter and other places that opened nothing. The Move Deleter in Canalave City deletes moves.',

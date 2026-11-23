@@ -1623,7 +1623,7 @@ H_0402:
     pl_SetVarFromVar PVAR_8004, PVAR_8000
     pl_SetVarFromVar PVAR_8005, PVAR_8001
     pl_SetVarFromVar PVAR_8006, PVAR_8002
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 1
     pl_GoToIf 1, H_0440
     pl_CompareVarToValue PVAR_800C, 0

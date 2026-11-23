@@ -22,7 +22,7 @@ P999_000E:
     pl_GetRandom PVAR_8004, 5
     pl_AddVar PVAR_8004, 149
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P999_0064
     pl_SetFlag PFLAG_0AAA

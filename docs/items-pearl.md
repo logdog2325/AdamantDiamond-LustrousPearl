@@ -616,22 +616,22 @@ The items and places are the same in both versions but one: the ball at Spear Pi
 Item balls in the Hideaways (one time each):
 
 - Spacious Cave: Rare Candy, Rare Candy, PP Max, Shiny Stone
-- Grassland Cave: TM111 Silver Wind
-- Fountainspring Cave: TM12 Taunt, DeepSeaTooth
-- Rocky Cave: Nugget, PP Up, TM37 Sandstorm, TM04 Calm Mind, TM39 Rock Tomb
+- Grassland Cave: TM76 Struggle Bug
+- Fountainspring Cave: TM95 Snarl, DeepSeaTooth
+- Rocky Cave: Nugget, PP Up, TM78 Bulldoze, TM03 Psyshock, TM23 Smack Down
 - Volcanic Cave: TM55 Scald
-- Swampy Cave: TM96 Focus Punch, TM06 Toxic
-- Dazzling Cave: TM45 Attract, TwistedSpoon
+- Swampy Cave: TM47 Low Sweep, TM09 Venoshock
+- Dazzling Cave: TM83 Work Up, TwistedSpoon
 - Whiteout Cave: Dawn Stone, Sharp Beak
 - Icy Cave: Lucky Egg, DeepSeaScale
 - Riverbank Cave: Big Mushroom
 - Sandsear Cave: Charcoal, Dragon Fang
-- Still-Water Cavern: TM98 Bullet Seed, Big Mushroom
-- Sunlit Cavern: TM81 X-Scissor, PP Up
-- Big Bluff Cavern: TM101 Shock Wave
-- Stargleam Cavern: TM109 Dragon Pulse, Nugget
-- Glacial Cavern: Leftovers, TM80 Rock Slide
-- Bogsunk Cavern: TM99 Giga Drain, Dusk Stone
-- Typhlo Cavern: TM50 Overheat, TM71 Stone Edge
+- Still-Water Cavern: TM49 Echoed Voice, Big Mushroom
+- Sunlit Cavern: TM62 Acrobatics, PP Up
+- Big Bluff Cavern: TM72 Volt Switch
+- Stargleam Cavern: TM82 Dragon Tail, Nugget
+- Glacial Cavern: Leftovers, TM79 Frost Breath
+- Bogsunk Cavern: TM34 Sludge Wave, Dusk Stone
+- Typhlo Cavern: TM59 Incinerate, TM43 Flame Charge
 
 Shards and fossils that come back daily, once you're the Champion, and the Hidden Grottos: [the Underground page](underground.md).

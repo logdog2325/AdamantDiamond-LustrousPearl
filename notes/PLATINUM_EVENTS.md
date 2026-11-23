@@ -3,7 +3,7 @@
 Written by `PEARL_VERSION=platinum python3 b2tools/platinum_events.py`; don't edit. What Platinum changed against Pearl in the installed zones' events, and the offline check of what a Platinum build installs (the tool's docstring says what each check is). The lists for later pieces are in `data/platinum/events_waiting.json`.
 
 - Installed zones: 506; with a script file: 485.
-- Problems: 0. Step 4's rooms: 0. Later steps (7, 8): 17. Notes: 121.
+- Problems: 0. Step 4's rooms: 0. Later steps (7, 8): 17. Notes: 128.
 - Event scripts waiting for the chapter pieces: 21. Sprites waiting for step 6: 0.
 
 ## What Platinum changed
@@ -295,7 +295,14 @@ Their events convert as the rest; these findings are those steps'.
 - fix: (same person) MAP_ETERNA_GALACTIC_BUILDING_4F object 2: gfx 15 at (9, 8) -> gfx 15 at (14, 9), script 4 -> 5: the fix follows it (the same local id)
 - MAP_FIGHT_AREA_ROUTE_225_GATEHOUSE: (land signs) its map gives 2 wall-map, honey-tree or Rock Climb sign events, Pearl's 0: Platinum's own map
 - MAP_FIGHT_AREA_ROUTE_225_GATEHOUSE: (floor height) the same events as Pearl's, on Platinum's converted floor (its ground, plat-world's; y in 1/4096 units): npcs 0: y 0 -> -8192; npcs 1: y 0 -> -8192
+- MAP_HEARTHOME_GYM_FOURTH_QUESTION_ROOM: (floor height) the same events as Pearl's, on Platinum's converted floor (its ground, plat-world's; y in 1/4096 units): signs 0: y 158 -> -2
+- MAP_HEARTHOME_GYM_LEADER_ROOM: (floor height) the same events as Pearl's, on Platinum's converted floor (its ground, plat-world's; y in 1/4096 units): npcs 0: y 12288 -> 0
+- MAP_HEARTHOME_GYM_THIRD_QUESTION_ROOM: (floor height) the same events as Pearl's, on Platinum's converted floor (its ground, plat-world's; y in 1/4096 units): signs 0: y 158 -> -2
+- MAP_HEARTHOME_ROUTE_208_GATEHOUSE: (floor height) the same events as Pearl's, on Platinum's converted floor (its ground, plat-world's; y in 1/4096 units): npcs 1: y 0 -> -8192; npcs 2: y 0 -> -8192
+- MAP_OREBURGH_NORTH_HOUSE_3F: (floor height) the same events as Pearl's, on Platinum's converted floor (its ground, plat-world's; y in 1/4096 units): npcs 0: y 0 -> 65536
 - MAP_ROUTE_213_FOOTSTEP_HOUSE: (floor height) the same events as Pearl's, on Platinum's converted floor (its ground, plat-world's; y in 1/4096 units): npcs 0: y -8192 -> 0
+- MAP_ROUTE_218_JUBLIFE_GATEHOUSE: (floor height) the same events as Pearl's, on Platinum's converted floor (its ground, plat-world's; y in 1/4096 units): npcs 0: y 0 -> -8192; npcs 1: y 0 -> -8192
+- MAP_ROUTE_222_SUNYSHORE_GATEOUSE: (floor height) the same events as Pearl's, on Platinum's converted floor (its ground, plat-world's; y in 1/4096 units): npcs 1: y 0 -> -8192
 - MAP_PASTORIA: (person on a solid tile) object 27 (gfx 128) at (589, 827): solid (moved or added by Platinum; hidden by flag 0x1fb until its scene)
 - MAP_VEILSTONE: (person on a solid tile) object 25 (gfx 128) at (684, 611): solid (moved or added by Platinum; hidden by flag 0x191 until its scene)
 - MAP_VEILSTONE_GALACTIC_HEADQUARTERS_2F: (person on a solid tile) object 6 (gfx 183) at (41, 17): solid (moved or added by Platinum)

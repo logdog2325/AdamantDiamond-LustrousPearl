@@ -52,7 +52,7 @@ P50_000E:
 P50_00B5:
     pl_SetVarFromValue PVAR_8004, 523  // Pearl item 403 (TM76) = TM114 Stealth Rock
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P50_00F3
     VMCall C205_45_S45  // CallCommonScript 2044 (Pearl file 205 script 45)

@@ -30,25 +30,25 @@ In the order of the original games' numbers.
 
 | Original | Here | Move | How to get it |
 |---|---|---|---|
-| TM01 | TM96 | Focus Punch | Item ball, Oreburgh Gate B1F; Item ball, Swampy Cave (Underground) |
+| TM01 | TM96 | Focus Punch | Item ball, Oreburgh Gate B1F |
 | TM02 | TM02 | Dragon Claw | Item ball, Mt. Coronet North 1F Room 1 |
 | TM03 | TM97 | Water Pulse | Item ball, Ravaged Path |
-| TM04 | TM04 | Calm Mind | 48 BP, Battle Park Exchange; Gift, Eterna Condominiums 4F; Item ball, Rocky Cave (Underground) |
+| TM04 | TM04 | Calm Mind | 48 BP, Battle Park Exchange; Gift, Eterna Condominiums 4F |
 | TM05 | TM05 | Roar | Item ball, Route 213 |
-| TM06 | TM06 | Toxic | 32 BP, Battle Park Exchange; Item ball, Route 212 South; Item ball, Swampy Cave (Underground) |
+| TM06 | TM06 | Toxic | 32 BP, Battle Park Exchange; Item ball, Route 212 South |
 | TM07 | TM07 | Hail | For 10 Green Shards, Route 212, the shard collector's house; Item ball, Route 217 |
 | TM08 | TM08 | Bulk Up | 48 BP, Battle Park Exchange |
-| TM09 | TM98 | Bullet Seed | Item ball, Route 204 North; Item ball, Still-Water Cavern (Underground) |
+| TM09 | TM98 | Bullet Seed | Item ball, Route 204 North |
 | TM10 | TM10 | Hidden Power | Gift, Jublife Trainer School |
 | TM11 | TM11 | Sunny Day | For 10 Red Shards, Route 212, the shard collector's house; Item ball, Route 212 North |
-| TM12 | TM12 | Taunt | Item ball, Fountainspring Cave (Underground); Item ball, Route 211 West |
+| TM12 | TM12 | Taunt | Item ball, Route 211 West |
 | TM13 | TM13 | Ice Beam | Item ball, Route 216 |
 | TM14 | TM14 | Blizzard | Item ball, Lake Acuity; Sold, Veilstone Department Store 3F |
 | TM15 | TM15 | Hyper Beam | Sold, Veilstone Department Store 3F |
 | TM16 | TM16 | Light Screen | Sold, Veilstone Department Store 3F |
 | TM17 | TM17 | Protect | Sold, Veilstone Department Store 3F |
 | TM18 | TM18 | Rain Dance | For 10 Blue Shards, Route 212, the shard collector's house; Item ball, Route 223 |
-| TM19 | TM99 | Giga Drain | Item ball, Bogsunk Cavern (Underground); Item ball, Route 209 |
+| TM19 | TM99 | Giga Drain | Item ball, Route 209 |
 | TM20 | TM20 | Safeguard | Sold, Veilstone Department Store 3F |
 | TM21 | TM21 | Frustration | Item ball, Galactic HQ 3F |
 | TM22 | TM22 | SolarBeam | Sold, Veilstone Department Store 3F |
@@ -63,23 +63,23 @@ In the order of the original games' numbers.
 | TM31 | TM31 | Brick Break | 40 BP, Battle Park Exchange; Item ball, Oreburgh Gate B1F |
 | TM32 | TM32 | Double Team | Item ball, Wayward Cave 1F |
 | TM33 | TM33 | Reflect | Sold, Veilstone Department Store 3F |
-| TM34 | TM101 | Shock Wave | Item ball, Big Bluff Cavern (Underground); Item ball, Route 215 |
+| TM34 | TM101 | Shock Wave | Item ball, Route 215 |
 | TM35 | TM35 | Flamethrower | Item ball, Fuego Ironworks (inside) |
 | TM36 | TM36 | Sludge Bomb | 80 BP, Battle Park Exchange; Item ball, Galactic HQ B2F |
-| TM37 | TM37 | Sandstorm | For 10 Yellow Shards, Route 212, the shard collector's house; Item ball, Rocky Cave (Underground); Item ball, Route 228 |
+| TM37 | TM37 | Sandstorm | For 10 Yellow Shards, Route 212, the shard collector's house; Item ball, Route 228 |
 | TM38 | TM38 | Fire Blast | Item ball, Lake Verity; Sold, Veilstone Department Store 3F |
-| TM39 | TM39 | Rock Tomb | Item ball, Ravaged Path; Item ball, Rocky Cave (Underground) |
+| TM39 | TM39 | Rock Tomb | Item ball, Ravaged Path |
 | TM40 | TM40 | Aerial Ace | 40 BP, Battle Park Exchange; Item ball, Route 213 |
 | TM41 | TM41 | Torment | Item ball, Victory Road 1F |
 | TM42 | TM42 | Facade | Gift, Survival Area South House |
 | TM43 | TM102 | Secret Power | Item ball, Amity Square |
 | TM44 | TM44 | Rest | Sold, Veilstone Department Store 3F |
-| TM45 | TM45 | Attract | 32 BP, Battle Park Exchange; Item ball, Amity Square; Item ball, Dazzling Cave (Underground) |
+| TM45 | TM45 | Attract | 32 BP, Battle Park Exchange; Item ball, Amity Square |
 | TM46 | TM46 | Thief | Item ball, Eterna City |
 | TM47 | TM103 | Steel Wing | Item ball, Route 209 |
 | TM48 | TM104 | Skill Swap | Gift, Canalave Southeast House |
 | TM49 | TM105 | Snatch | Item ball, Galactic HQ 1F |
-| TM50 | TM50 | Overheat | Item ball, Stark Mountain, room 2; Item ball, Typhlo Cavern (Underground) |
+| TM50 | TM50 | Overheat | Item ball, Stark Mountain, room 2 |
 | TM51 | TM106 | Roost | Gift, Route 210 South |
 | TM52 | TM52 | Focus Blast | Sold, Veilstone Department Store 3F |
 | TM53 | TM53 | Energy Ball | 64 BP, Battle Park Exchange; Item ball, Route 226 |
@@ -88,10 +88,10 @@ In the order of the original games' numbers.
 | TM56 | TM56 | Fling | Gift, Route 222 |
 | TM57 | TM57 | Charge Beam | Gift, Sunyshore Gym |
 | TM58 | TM108 | Endure | Sold, Veilstone Department Store 3F |
-| TM59 | TM109 | Dragon Pulse | 80 BP, Battle Park Exchange; Item ball, Stargleam Cavern (Underground); Item ball, Victory Road B1F |
+| TM59 | TM109 | Dragon Pulse | 80 BP, Battle Park Exchange; Item ball, Victory Road B1F |
 | TM60 | TM110 | Drain Punch | Gift, Veilstone Gym |
 | TM61 | TM61 | Will-O-Wisp | 32 BP, Battle Park Exchange |
-| TM62 | TM111 | Silver Wind | Item ball, Grassland Cave (Underground); Item ball, Route 212 South |
+| TM62 | TM111 | Silver Wind | Item ball, Route 212 South |
 | TM63 | TM63 | Embargo | Gift, Veilstone City |
 | TM64 | TM64 | Explosion | Gift, Veilstone Game Corner (the clerk at the front, if you have a Coin Case) |
 | TM65 | TM65 | Shadow Claw | Gift, Hearthome Gym |
@@ -100,7 +100,7 @@ In the order of the original games' numbers.
 | TM68 | TM68 | Giga Impact | Sold, Veilstone Department Store 3F |
 | TM69 | TM69 | Rock Polish | Item ball, Mt. Coronet North 1F Room 1 |
 | TM70 | TM70 | Flash | Item ball, Oreburgh Gate B1F; Sold, Veilstone Department Store 3F |
-| TM71 | TM71 | Stone Edge | 80 BP, Battle Park Exchange; Item ball, Typhlo Cavern (Underground); Item ball, Victory Road 2F |
+| TM71 | TM71 | Stone Edge | 80 BP, Battle Park Exchange; Item ball, Victory Road 2F |
 | TM72 | TM113 | Avalanche | Gift, Snowpoint Gym |
 | TM73 | TM73 | Thunder Wave | 32 BP, Battle Park Exchange |
 | TM74 | TM74 | Gyro Ball | Sold, Veilstone Department Store 3F |
@@ -109,8 +109,8 @@ In the order of the original games' numbers.
 | TM77 | TM77 | Psych Up | Gift, Route 211 East |
 | TM78 | TM115 | Captivate | Gift, Route 204 North |
 | TM79 | TM116 | Dark Pulse | Item ball, Victory Road 2F |
-| TM80 | TM80 | Rock Slide | Item ball, Glacial Cavern (Underground); Item ball, Mt. Coronet South 2F |
-| TM81 | TM81 | X-Scissor | 64 BP, Battle Park Exchange; Item ball, Route 221; Item ball, Sunlit Cavern (Underground) |
+| TM80 | TM80 | Rock Slide | Item ball, Mt. Coronet South 2F |
+| TM81 | TM81 | X-Scissor | 64 BP, Battle Park Exchange; Item ball, Route 221 |
 | TM82 | TM117 | Sleep Talk | Item ball, Eterna Forest (outside) |
 | TM83 | TM118 | Natural Gift | Sold, Veilstone Department Store 3F |
 | TM84 | TM84 | Poison Jab | Item ball, Route 212 South |
@@ -139,7 +139,23 @@ Moves that aren't TMs in the original games.
 
 | TM | Move | How to get it |
 |---|---|---|
+| TM03 | Psyshock | Item ball, Rocky Cave (Underground) |
+| TM09 | Venoshock | Item ball, Swampy Cave (Underground) |
+| TM23 | Smack Down | Item ball, Rocky Cave (Underground) |
+| TM34 | Sludge Wave | Item ball, Bogsunk Cavern (Underground) |
+| TM43 | Flame Charge | Item ball, Typhlo Cavern (Underground) |
+| TM47 | Low Sweep | Item ball, Swampy Cave (Underground) |
+| TM49 | Echoed Voice | Item ball, Still-Water Cavern (Underground) |
 | TM55 | Scald | Item ball, Volcanic Cave (Underground) |
+| TM59 | Incinerate | Item ball, Typhlo Cavern (Underground) |
+| TM62 | Acrobatics | Item ball, Sunlit Cavern (Underground) |
+| TM72 | Volt Switch | Item ball, Big Bluff Cavern (Underground) |
+| TM76 | Struggle Bug | Item ball, Grassland Cave (Underground) |
+| TM78 | Bulldoze | Item ball, Rocky Cave (Underground) |
+| TM79 | Frost Breath | Item ball, Glacial Cavern (Underground) |
+| TM82 | Dragon Tail | Item ball, Stargleam Cavern (Underground) |
+| TM83 | Work Up | Item ball, Dazzling Cave (Underground) |
+| TM95 | Snarl | Item ball, Fountainspring Cave (Underground) |
 
 ## The new TMs
 

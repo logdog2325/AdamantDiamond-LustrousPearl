@@ -62,7 +62,7 @@ P24_0063:
     pl_msg_sys 3
     pl_SetVarFromValue PVAR_8004, 217
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P24_00AD
     pl_SetFlag PFLAG_00BF

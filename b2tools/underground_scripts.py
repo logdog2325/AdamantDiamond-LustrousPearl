@@ -135,7 +135,7 @@ def script_file():
             '    pl_WaitSE SEQ_SE_MESSAGE',
             '    pl_SetVarFromVar PVAR_8004, PVAR_8008',
             '    pl_SetVarFromVar PVAR_8005, PVAR_8009',
-            '    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C',
+            '    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C  // (fix102: a TM the Bag holds fits, as file 370\'s)',
             '    pl_CompareVarToValue PVAR_800C, 0',
             '    pl_GoToIf 1, UG_ItemBall_Full',
             '    VMCall UG_Fanfare',

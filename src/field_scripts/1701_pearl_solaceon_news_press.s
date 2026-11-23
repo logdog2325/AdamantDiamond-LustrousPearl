@@ -85,7 +85,7 @@ P1009_00AE:
     pl_CompareVarToValue PVAR_800C, 11
     pl_CallIf 1, P1009_01E1
     pl_SetVarFromValue PVAR_8005, 3
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 5, P1009_01E9
     pl_SetFlag PFLAG_0AB1
@@ -156,7 +156,7 @@ P1009_01E9:
 P1009_0206:
     pl_SetVarFromVar PVAR_8004, PVAR_4117
     pl_SetVarFromValue PVAR_8005, 3
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P1009_0236
     pl_CompareVarToValue PVAR_800C, 0

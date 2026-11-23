@@ -575,7 +575,7 @@ P266_0950:
 P266_0971:
     pl_SetVarFromVar PVAR_8004, PVAR_409F
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P266_09AD
 
@@ -617,7 +617,7 @@ P266_09F5:
 P266_0A10:
     pl_SetVarFromVar PVAR_8004, PVAR_409F
     pl_SetVarFromValue PVAR_8005, 1
-    pl_CanFitItem PVAR_8004, PVAR_8005, PVAR_800C
+    pl_CanFitItemFree PVAR_8004, PVAR_8005, PVAR_800C
     pl_CompareVarToValue PVAR_800C, 0
     pl_GoToIf 1, P266_07E4
     pl_GoTo P266_0992
