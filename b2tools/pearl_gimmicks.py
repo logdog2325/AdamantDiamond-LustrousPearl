@@ -115,11 +115,34 @@ def gym_tables():
     for i in range(24):
         m, ax, ay, az, bx, by, bz, fa, fb, st, _ = struct.unpack_from('<I3B3B2BHH', d, o + 16 * i)
         plats.append(dict(model=m, a=(ax, ay, az), b=(bx, by, bz), floorA=fa, floorB=fb, startB=st))
-    maps = [d[o + 384 + 1024 * k: o + 384 + 1024 * (k + 1)] for k in range(4)]
-    assert all(set(mp) <= {0, 1} for mp in maps), 'Canalave Gym collision maps: not where expected'
+    maps = _gym_maps(d, o, plats)
     # Pearl's own start states (pokediamond UNK_020F7E54, InitCanalaveGym) equal the table's startB
     assert [p['startB'] for p in plats] == [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1]
     return plats, maps
+
+
+def _maps_fit(maps, plats):
+    """The tiles a platform stands on at A and at B are walkable on its floors there (every map: 0 = walk, 1 = wall)."""
+    return all(set(mp) <= {0, 1} for mp in maps) and not any(
+        maps[p['floorA']][p['a'][2] * 32 + p['a'][0]] or maps[p['floorB']][p['b'][2] * 32 + p['b'][0]] for p in plats)
+
+
+def _gym_maps(d, o, plats):
+    """The gym's 4 collision maps (32 x 32 bytes a floor, floor 1 first). Pearl's lie right after the platform table
+    (o + 384). Platinum's binary puts other data between the two (its maps start 1,229 bytes after the table, the same
+    maps as Pearl's): the 4,096 bytes at o + 384 there are 0s and 1s too, but not the maps, and Griseous Platinum 1.0 -
+    1.0.1 walled the player in at the entrance with them (the 2026-11-25 3DS report). So the maps are the one run of
+    4,096 bytes of 0s and 1s near the table on which every platform's two tiles are walkable."""
+    def at(s):
+        return [d[s + 1024 * k: s + 1024 * (k + 1)] for k in range(4)]
+    if _maps_fit(at(o + 384), plats):
+        return at(o + 384)
+    lo = max(0, o - 0x10000)
+    win = d[lo:o + 0x10000]
+    hits = [lo + s for m in re.finditer(rb'[\x00\x01]{4096,}', win) for s in range(m.start(), m.end() - 4095)
+            if _maps_fit(at(lo + s), plats)]
+    assert len(hits) == 1, f'Canalave Gym collision maps: {len(hits)} places fit near the platform table'
+    return at(hits[0])
 
 
 def lift_table():

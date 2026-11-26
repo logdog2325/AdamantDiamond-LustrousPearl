@@ -48,12 +48,16 @@ def active():
 
 
 def zone_extras(zone_name):
-    return ['legend_init', 'legend'] if active() and zone_name == ZONE else []
+    if active() and zone_name == ZONE:
+        return ['legend_init', 'legend']
+    import unova_aide                           # (unova) the aide in Rowan's lab, through the same hooks
+    return unova_aide.zone_extras(zone_name)
 
 
 def extra_people(zone_name, ids):
-    if not zone_extras(zone_name):
-        return []
+    if not (active() and zone_name == ZONE):
+        import unova_aide
+        return unova_aide.extra_people(zone_name, ids)
     import ramanas
     species = version.POSTGAME_LEGEND[0]
     return [dict(id=UID, graphics_id=GFX[species], movement_type=0, trainer_type=0, hidden_flag=0,
@@ -62,14 +66,14 @@ def extra_people(zone_name, ids):
 
 
 def zone_inits(zone_name, ids):
-    return [ids['legend_init']] if zone_extras(zone_name) else []
+    return [ids['legend_init']] if active() and zone_name == ZONE else []
 
 
 def extra_triggers(zone_name, ids):
     """The battle's step trigger (as Pearl's own legendary's after the Hall of Fame: a row the player walks over; a talk
     would reach Pearl's own legendary's object instead while that one stands on the same tile): [{script, x, z, w, h,
     work, value}]."""
-    if not zone_extras(zone_name):
+    if not (active() and zone_name == ZONE):
         return []
     x, z, w, h = TRIGGER
     return [dict(script=ids['legend'], x=x, z=z, w=w, h=h, work=SHOWN_WORK, value=1)]
@@ -93,8 +97,9 @@ def defines(job, bank):
 
 
 def extra_code(job, pd, zone, ids):
-    if not zone_extras(zone['name']):
-        return []
+    if not (active() and zone['name'] == ZONE):
+        import unova_aide
+        return unova_aide.extra_code(job, pd, zone, ids)
     import ramanas
     flag = ramanas.pearl_flag
     hidden, caught, clear, own = flag(HIDDEN), flag(CAUGHT), flag(GAME_CLEAR), flag(OWN_CAUGHT)

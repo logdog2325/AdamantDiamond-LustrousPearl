@@ -3,7 +3,7 @@
 
 # Start-of-game options
 
-After you name your rival, Professor Rowan asks five questions, in this order. Your answers are fixed for the whole game. The Exp. Share itself can be switched off and on in the Bag.
+After you name your rival, Professor Rowan asks six questions, in this order. Your answers are fixed for the whole game, except the last: Rowan's aide in his lab switches the Pokémon from Unova on and off. The Exp. Share itself can be switched off and on in the Bag.
 
 | Question | Answers | What it changes |
 |---|---|---|
@@ -12,5 +12,8 @@ After you name your rival, Professor Rowan asks five questions, in this order. Y
 | The Exp. Share | Yes / No | Yes: it's in your Key Items from the start, switched on, and the Route 206 gate's scientist isn't there. No: a scientist gives it to you at the gate between Route 206 and Eterna City once you've seen 35 Pokémon, as in the original games. Either way it's the modern one: your whole party shares Exp. Points ([levels](levels.md)). |
 | Following Pokémon | Yes / No | Yes: your first Pokémon walks behind you. No: it stays in its Poké Ball. |
 | Seasons | Yes / No | Yes: Black 2's seasons follow the month on your DS clock (spring: January, May, September; summer: February, June, October; autumn: March, July, November; winter: April, August, December). No: spring all year. The wild Pokémon are the same all year either way. |
+| Pokémon from Unova | Yes / No | Yes: Unova's Pokémon live in the wild beside Sinnoh's, the Gym Leaders, the Elite Four and the Champion have Unova Pokémon in their teams, and Veilstone Dept. Store sells the evolution stones they need ([details](pokemon-from-unova.md)). No: only the original game's Pokémon. |
 
-Pressing A through them all answers Yes, Sinnoh, Yes, Yes, Yes.
+Pressing A through them all answers Yes, Sinnoh, Yes, Yes, Yes, Yes.
+
+A game saved before this question existed (1.0.2 or older) starts with the Pokémon from Unova off: talk to the aide on the west side of Professor Rowan's lab in Sandgem Town to switch them on, or off again. The Pokémon you caught stay with you either way.

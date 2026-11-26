@@ -3,7 +3,7 @@
 
 # Important trainers: Pokémon Lustrous Pearl
 
-The teams of the Gym Leaders, the Elite Four, the Champion, your rival and Team Galactic's bosses, as the game has them: levels and moves are the original game's ([levels](levels.md)), and the teams are the same in both versions. A Pokémon the original gives no chosen moves has its last four level-up moves in Pearl.
+The teams of the Gym Leaders, the Elite Four, the Champion, your rival and Team Galactic's bosses, as the game has them: levels and moves are the original game's ([levels](levels.md)), and the teams are the same in both versions. A Pokémon the original gives no chosen moves has its last four level-up moves in Pearl. With [Pokémon from Unova](pokemon-from-unova.md#teams) on, the first battle with each Gym Leader, the Elite Four and the Champion has other teams.
 
 ## Gym Leaders
 

@@ -157,6 +157,12 @@ FEATURE_MOVED |= {'script:1400_pearl_hearthome_poffin_house', 'script:1401_pearl
                   'script:1479_pearl_pokemon_league_lobby_2f', 'script:1588_pearl_battle_tower_lobby',
                   'script:1592_pearl_battle_tower_arena_multi', 'script:1593_pearl_battle_tower_arena_wifi'}
 # ---- end tower-fix
+# ---- unova (2026-11-23, the user: Pokémon from Unova, Rowan's sixth question; notes/UNOVA.md): the aide in Rowan's lab
+# (b2tools/unova_aide.py: his script and lines), Veilstone 2F's vitamins clerk opening the stones' shop with the option
+# (pearl_story.inc pl_PokeMartSpecial), Rowan's question (data/text_overrides/pearl_intro.json)
+FEATURE_MOVED |= {'script:1682_pearl_sandgem_rowans_lab', 'text:1007_pearl_sandgem_rowans_lab',
+                  'script:1425_pearl_veilstone_department_store_2f', 'text_overrides'}
+# ---- end unova
 # ---- fix102 (2026-11-22, the Discord reports on 1.0.1 / Platinum 1.0): Twinleaf's "Thud!!" turns Barry back to the
 # player after his first walk, as Gen 4's LOOK type does (pearl_story look_snaps); free TM/HM balls, hidden items and
 # gifts go when the Bag already holds that TM (pl_CanFitItemFree: the item-ball and hidden-item routines, the

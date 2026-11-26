@@ -708,7 +708,8 @@ def trainers_page(names):
     L = [HEADER, f'# Important trainers: {version.PUBLIC_NAME}\n',
          'The teams of the Gym Leaders, the Elite Four, the Champion, your rival and Team Galactic\'s bosses, as the game has them: '
          'levels and moves are the original game\'s ([levels](levels.md)), and the teams are the same in both versions. '
-         'A Pokémon the original gives no chosen moves has its last four level-up moves in Pearl.\n',
+         'A Pokémon the original gives no chosen moves has its last four level-up moves in Pearl. '
+         'With [Pokémon from Unova](pokemon-from-unova.md#teams) on, the first battle with each Gym Leader, the Elite Four and the Champion has other teams.\n',
          '## Gym Leaders\n', 'In badge order.\n']
     for i, (name, n, badge) in enumerate(LEADERS):
         t = _trainer(n)
@@ -771,11 +772,12 @@ def _questions():
 def options_page():
     need('b2tools/patches/pearl_intro.py', '(MSG_FAIRY_Q, MSG_YES, MSG_NO, CFG_FAIRY_BIT, 1)', '(MSG_MUSIC_Q, MSG_SINNOH, MSG_UNOVA, CFG_MUSIC_BIT, 1)',
          '(MSG_EXP_SHARE_Q, MSG_YES, MSG_NO, FLAG_EXP_SHARE, 1)', '(MSG_FOLLOWER_Q, MSG_YES, MSG_NO, FLAG_FOLLOWER, 1)',
-         '(MSG_SEASONS_Q, MSG_YES, MSG_NO, CFG_SEASONS_BIT, 1)', page='options_page')
+         '(MSG_SEASONS_Q, MSG_YES, MSG_NO, CFG_SEASONS_BIT, 1)', '(MSG_UNOVA_Q, MSG_YES, MSG_NO, FLAG_UNOVA, 1)', page='options_page')
     need('src/field_scripts/1372_pearl_eterna_route_206_gatehouse.s', 'pl_CompareVarToValue PVAR_8004, 35', page='options_page')
     need('b2tools/patches/season_choice.py', 'Jan/May/Sep spring, Feb/Jun/Oct summer, Mar/Jul/Nov', page='options_page')
     L = [HEADER, '# Start-of-game options\n',
-         'After you name your rival, Professor Rowan asks five questions, in this order. Your answers are fixed for the whole game. '
+         'After you name your rival, Professor Rowan asks six questions, in this order. Your answers are fixed for the whole game, '
+         'except the last: Rowan\'s aide in his lab switches the Pokémon from Unova on and off. '
          'The Exp. Share itself can be switched off and on in the Bag.\n',
          '| Question | Answers | What it changes |', '|---|---|---|',
          '| The Fairy type | Yes / No | Yes: the Fairy type, the Gen 6 type chart and new Fairy moves ([details](fairy-type.md)). No: Black 2\'s types. |',
@@ -786,8 +788,77 @@ def options_page():
          '| Following Pokémon | Yes / No | Yes: your first Pokémon walks behind you. No: it stays in its Poké Ball. |',
          '| Seasons | Yes / No | Yes: Black 2\'s seasons follow the month on your DS clock (spring: January, May, September; summer: February, June, '
          'October; autumn: March, July, November; winter: April, August, December). No: spring all year. The wild Pokémon are the same all year either way. |',
-         '', 'Pressing A through them all answers Yes, Sinnoh, Yes, Yes, Yes.', '']
+         '| Pokémon from Unova | Yes / No | Yes: Unova\'s Pokémon live in the wild beside Sinnoh\'s, the Gym Leaders, the Elite Four and the Champion '
+         'have Unova Pokémon in their teams, and Veilstone Dept. Store sells the evolution stones they need ([details](pokemon-from-unova.md)). '
+         'No: only the original game\'s Pokémon. |',
+         '', 'Pressing A through them all answers Yes, Sinnoh, Yes, Yes, Yes, Yes.', '',
+         'A game saved before this question existed (1.0.2 or older) starts with the Pokémon from Unova off: talk to the aide on the west side of '
+         'Professor Rowan\'s lab in Sandgem Town to switch them on, or off again. The Pokémon you caught stay with you either way.', '']
     return '\n'.join(L)
+
+def unova_page():
+    """The Pokémon from Unova (Rowan's sixth question): every area's Gen 5 Pokémon in each version, the starters, the
+    teams, the stones (b2tools/unova.py: the plan in data/unova.json as the build writes it)."""
+    import unova as U
+    need('b2tools/patches/pearl_intro.py', '(MSG_UNOVA_Q, MSG_YES, MSG_NO, FLAG_UNOVA, 1)', page='unova_page')
+    need('b2tools/unova_aide.py', "ZONE = 'MAP_SANDGEM_ROWANS_LAB'", page='unova_page')
+    need('src/include/pearl_story.inc', '#define UNOVA_SHOP_FROM 11', page='unova_page')
+    need('b2tools/patches/unova_option.py', "STONES = ('ITEM_SUN_STONE', 'ITEM_MOON_STONE', 'ITEM_SHINY_STONE', 'ITEM_DUSK_STONE', 'ITEM_FIRE_STONE',",
+         page='unova_page')
+    for v in GUIDE_VERSIONS:
+        bad, _ = U.check(v)
+        if bad or U.check_teams(v):
+            raise SystemExit(f'gen_docs: data/unova.json has findings for {v}: run b2tools/unova.py --check')
+    used = json.dumps(U.plan()['areas'])
+    pairs = [(U.name_of(U.spec(a)), U.name_of(U.spec(b))) for a, b in U.plan()['pairs'].items()
+             if ':' not in a and f'@{a}' in used]
+    starters = U.plan()['starters']
+    label = {'grass': 'Grass / cave', 'surf': 'Surfing', 'good': 'Good Rod', 'super': 'Super Rod'}
+    L = [HEADER, '# Pokémon from Unova (optional)\n',
+         'Professor Rowan\'s last start-of-game question ([options](options.md)). With Yes, Pokémon from Unova (Generation 5) '
+         'live in the wild all over Sinnoh, the Gym Leaders, the Elite Four and the Champion battle with Unova Pokémon in their teams, '
+         'and Veilstone Dept. Store sells the stones the Unova families evolve with. With No, the game is the original\'s. '
+         'A game saved before the question existed starts with them off; the aide on the west side of Professor Rowan\'s lab switches them on and off. '
+         'The Pokémon you caught stay with you either way.\n',
+         '- Every Sinnoh Pokémon is still in every place it was; where one gets rarer, it gives up part of a large share. '
+         'The new Pokémon take about a quarter of each kind of encounter where the place has room (the sea\'s surfing much less: '
+         'Tentacool and Wingull keep their share). The Old Rod never changes.',
+         f'- Version pairs, as Black and White: Lustrous Pearl has White\'s side, Adamant Diamond Black\'s: '
+         + ', '.join(f'{a} / {b}' for a, b in pairs) + ', and Basculin\'s Blue-Striped / Red-Striped Form. '
+         'After the Hall of Fame each version also gets the other\'s, in one more slot of the same places.',
+         '- Starters, 1 % each, in both versions: ' + ', '.join(f'{U.name_of(U.spec(s))} on {a.replace("_", " ").title()}'
+                                                             for s, a in starters.items()) + '.',
+         '- The Pokédex: the Sinnoh Pokédex stays as it is; the Unova Pokémon are in the National Pokédex. Their AREA page shows '
+         'their places only with the option on (the other version\'s side after the Hall of Fame), and the HABITAT list lists them with it on.',
+         '- A Unova Pokémon has no walking sprite: with one first in your party, the next one walks behind you.',
+         '- Veilstone Dept. Store 2F, the vitamins counter, with the option on: also the Sun, Moon, Shiny, Dusk, Fire, Water, Thunder and Leaf Stones.',
+         '- Karrablast and Shelmet (Eterna Forest) evolve when the other is in your party; Boldore and Gurdurr at level 35 (no trade needed).', '',
+         '## Wild Pokémon\n', 'The share of each kind of encounter. "After the Hall of Fame" marks the other version\'s side.\n']
+    for v in GUIDE_VERSIONS:
+        L += [f'### {VNAME[v]}', '', '| Place | Kind | Unova Pokémon |', '|---|---|---|']
+        cur = None
+        for zone, g, kinds in U.area_rows(v):
+            place = zone[4:].replace('_', ' ').title().replace(' Pokemon ', ' Pokémon ')
+            cells = ', '.join(f'{n.replace(" (after the Champion)", " (after the Hall of Fame)")} {p} %' for n, p, _ in kinds)
+            L.append(f'| {place if zone != cur else ""} | {label[g]} | {cells} |')
+            cur = zone
+        L.append('')
+    L += ['## Teams\n', 'With the option on, the first battle with each Gym Leader, the Elite Four and the Champion; the new Pokémon keep '
+          'the level and held item of the one they replace (rematches are the original\'s). The Champion has her team from Black and '
+          'White (Undella Town: Spiritomb, Eelektross, Milotic, Braviary, Lucario, Garchomp) with its moves, abilities and genders, '
+          'at her levels here, Garchomp highest, no held items.\n']
+    for v in GUIDE_VERSIONS:
+        L += [f'### {VNAME[v]}', '', '| Trainer | Original team | With Pokémon from Unova |', '|---|---|---|']
+        for t, (old, new) in U.teams(v).items():
+            nm = U.plan()['teams'][t]['name']
+            o = ', '.join(f"{m['species'][8:].replace('_', ' ').title()} {m['level']}" for m in old)
+            had = {m['species'] for m in old}
+            n = ', '.join((f"**{b['species'][8:].replace('_', ' ').title()}** {b['level']}" if b['species'] not in had
+                           else f"{b['species'][8:].replace('_', ' ').title()} {b['level']}") for b in new)
+            L.append(f'| {nm} | {o} | {n} |')
+        L.append('')
+    return '\n'.join(L)
+
 
 def fairy_page(names):
     import fairy
@@ -1705,7 +1776,7 @@ def known_issues_page(names):
     need('src/field_scripts/1240_global_item_balls.s', 'pl_CanFitItemFree PVAR_8004', page='known_issues_page')
     need('src/field_scripts/1241_global_hidden_items.s', 'pl_CanFitItemFree PVAR_8004', page='known_issues_page')
     need('data/underground.json', '"move:SNARL"', '"move:STRUGGLE_BUG"', '"move:SCALD"', page='known_issues_page')
-    L = [HEADER, '# Known issues in 1.0.2\n', 'Please report bugs: this is a big game, and some parts have been tested only in an emulator.\n',
+    L = [HEADER, '# Known issues in 1.1\n', 'Please report bugs: this is a big game, and some parts have been tested only in an emulator.\n',
          '## Fixed in 1.0.2\n',
          '- Barry turns round to you after he bumps into you at his door, as in the original (he kept his back to you).',
          '- A TM you already have no longer leaves its item ball, hidden item or gift saying the Bag is full: you pick it up or receive it as usual, and keep the one you have.',
@@ -1777,8 +1848,8 @@ def index_page():
         L.append(f'| {title} | ' + ' | '.join(f'[{VNAME[v]}]({stem}-{v}.md)' for v in GUIDE_VERSIONS) + ' |')
     L += ['', 'The same in both versions:', '',
           '- [The Grand Underground](underground.md)', '- [Secret Bases](secret-bases.md)', '- [Super Contests](super-contests.md)', '- [Poffins](poffins.md)',
-          '- [The Pokétch](poketch.md)', '- [Start-of-game options](options.md)', '- [Levels and the Exp. Share](levels.md)', '- [The Fairy type (optional)](fairy-type.md)',
-          '- [TMs and HMs](tms-and-hms.md)', '- [Trade evolutions](evolutions.md)', '- [Known issues in 1.0.1](known-issues.md)', '',
+          '- [The Pokétch](poketch.md)', '- [Start-of-game options](options.md)', '- [Pokémon from Unova (optional)](pokemon-from-unova.md)', '- [Levels and the Exp. Share](levels.md)', '- [The Fairy type (optional)](fairy-type.md)',
+          '- [TMs and HMs](tms-and-hms.md)', '- [Trade evolutions](evolutions.md)', '- [Known issues in 1.1](known-issues.md)', '',
           'What differs between the versions: the legendary at Spear Pillar and its Orb, some wild Pokémon, what opens some of Pal Park\'s rooms, the Pokédex text, the fossil, the title screen and the held items of Electabuzz and Magmar. '
           'After the Hall of Fame each version also gets the other\'s legendary, wild Pokémon and fossil: see the post-game pages. '
           'Learnsets are Black 2\'s, plus the Fairy moves when the Fairy type is on.', '']
@@ -1845,6 +1916,7 @@ def main():
     names = Names()
     write(out, 'levels.md', levels_page())
     write(out, 'options.md', options_page())
+    write(out, 'pokemon-from-unova.md', unova_page())
     write(out, 'fairy-type.md', fairy_page(names))
     write(out, 'evolutions.md', evolutions_page(names))
     write(out, 'tms-and-hms.md', tms_page(names))

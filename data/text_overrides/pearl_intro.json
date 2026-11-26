@@ -1,5 +1,5 @@
 {
-    "_doc": "Black 2's new-game intro (pokebw2 res/text/system/game_start.txt; the lines ov294 src/ov294/intro_script.c shows) with Professor Rowan's speech from Pearl (pokediamond narc_0341: 0, 1 without its first-adventure/advice part, 16, 19-30; converted by b2tools/gen4_text.py b2_line). The rival's default name is Pearl's Barry (seen in game 2026-10-18: Pearl's scenes said 'Hugh'). Rowan's start-of-game questions (new lines, 2026-10-18; patches/pearl_intro.py QUESTIONS) on lines Black 2 leaves blank: 26 (Empty_8) the Fairy type, YES/NO = lines 19/20; 27 (Empty_9) the music, with the answers 28 (Empty_10) SINNOH and 30 (Empty_11) UNOVA; 36 (Empty_15) the Exp. Share and 37 (Empty_16) the seasons (2026-10-19), 38 (Empty_17) the following Pokémon (2026-10-26, asked before the seasons), YES/NO; 31, 34, 35 are still blank for the sprite question (later). The packed file must stay under Black 2's own 4,684 B (pearl_intro.measure_text). Applied by patches/sinnoh_names.py.",
+    "_doc": "Black 2's new-game intro (pokebw2 res/text/system/game_start.txt; the lines ov294 src/ov294/intro_script.c shows) with Professor Rowan's speech from Pearl (pokediamond narc_0341: 0, 1 without its first-adventure/advice part, 16, 19-30; converted by b2tools/gen4_text.py b2_line). The rival's default name is Pearl's Barry (seen in game 2026-10-18: Pearl's scenes said 'Hugh'). Rowan's start-of-game questions (new lines, 2026-10-18; patches/pearl_intro.py QUESTIONS) on lines Black 2 leaves blank: 26 (Empty_8) the Fairy type, YES/NO = lines 19/20; 27 (Empty_9) the music, with the answers 28 (Empty_10) SINNOH and 30 (Empty_11) UNOVA; 36 (Empty_15) the Exp. Share and 37 (Empty_16) the seasons (2026-10-19), 38 (Empty_17) the following Pokémon (2026-10-26, asked before the seasons), YES/NO; 39 (Empty_18) the Pokémon from Unova (2026-11-23, asked last: \"six questions\", the seasons no longer \"Last\"), YES/NO; 31, 34, 35 are still blank for the sprite question (later). The packed file must stay under Black 2's own 4,684 B (pearl_intro.measure_text). Applied by patches/sinnoh_names.py.",
     "game_start": {
         "GameStart_Text_HiThereWelcomeWorld": "Hello there!\\nIt’s so very nice to meet you!{be01}\\nWelcome to the world of Pokémon!{be01}",
         "GameStart_Text_NameProfessorJuniperEveryone": "My name is Rowan.{be01}\\nHowever, everyone just calls me\\nthe Pokémon Professor.{be01}",
@@ -19,12 +19,13 @@
         "GameStart_Text_ImGoingEntrustPokemon": "All right, {0100:0}, the time\\nhas come.{be01}\\nYour very own tale of grand\\nadventure is about to unfold.{be01}",
         "GameStart_Text_MomentChoosePokemonWill": "On your journey, you will meet\\ncountless Pokémon and people.{be01}\\nI’m sure that along the way you will\\ndiscover many things, perhaps even{be00}\\nsomething about yourself.{be01}\\nNow, go on, leap into the world of\\nPokémon!{be01}",
         "GameStart_Text_Hugh": "Barry",
-        "GameStart_Text_Empty_8": "Before you go, five questions.\\nYou can’t change them later.{be01}\\nWill you meet the new Fairy type\\non your journey?{be01}",
+        "GameStart_Text_Empty_8": "Before you go, six questions.\\nYou can’t change them later.{be01}\\nWill you meet the new Fairy type\\non your journey?{be01}",
         "GameStart_Text_Empty_9": "Would you hear the songs of Sinnoh,\\nor of faraway Unova?{be01}",
         "GameStart_Text_Empty_10": "SINNOH",
         "GameStart_Text_Empty_11": "UNOVA",
         "GameStart_Text_Empty_15": "The Exp. Share gives Exp. Points\\nto your whole team.{be01}\\nWill you set out with one?{be01}",
-        "GameStart_Text_Empty_16": "Last, would you see the seasons\\nchange with the months?{be01}",
-        "GameStart_Text_Empty_17": "Will your first Pokémon walk with\\nyou wherever you go?{be01}"
+        "GameStart_Text_Empty_16": "Would you see the seasons\\nchange with the months?{be01}",
+        "GameStart_Text_Empty_17": "Will your first Pokémon walk with\\nyou wherever you go?{be01}",
+        "GameStart_Text_Empty_18": "And last, a discovery of mine.\\nPokémon of faraway Unova{be00}\\nhave been seen here in Sinnoh.{be01}\\nWill you meet them on\\nyour journey?{be01}"
     }
 }

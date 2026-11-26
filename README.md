@@ -1,7 +1,7 @@
 # Pokémon Adamant Diamond & Lustrous Pearl
 
 Sinnoh's Diamond, Pearl and Platinum rebuilt inside Pokémon Black 2, in the Gen 5 style: Lustrous Pearl and Adamant
-Diamond (version 1.0.2) and Griseous Platinum (version 1.0.1). Releases are `.bps` patches only; no ROMs are ever
+Diamond (version 1.1) and Griseous Platinum (version 1.1). Releases are `.bps` patches only; no ROMs are ever
 included.
 
 ## Playing it
@@ -10,7 +10,7 @@ included.
    computer: a 512 MB game is too much for a phone browser.
 3. Play it in melonDS or on hardware. DeSmuME hides some bugs that melonDS and hardware show.
 
-## Lustrous Pearl and Adamant Diamond: 1.0.2
+## Lustrous Pearl and Adamant Diamond: 1.1
 - **Story:** the whole story, from Twinleaf to the Hall of Fame, with Palkia in Lustrous Pearl and Dialga in Adamant
   Diamond, each with its version's wild Pokémon, Orb, title screen and Pokédex entries. Post-game: the National
   Pokédex at Champion, the Battle Zone with the Battle Tower and the PWT, Stark Mountain, Snowpoint Temple, Turnback
@@ -30,11 +30,16 @@ included.
 - **New in 1.0.2:** Barry turns round to you after he bumps into you at his door. A TM you already have no longer
   leaves its item ball or gift saying the Bag is full. The Grand Underground's Hideaways give 16 of Black 2's TMs that
   you can't find anywhere else in Sinnoh. See [Known issues](docs/known-issues.md#fixed-in-102).
+- **New in 1.1:** Professor Rowan asks a sixth question: will you meet Pokémon from Unova? With Yes, Unova's Pokémon
+  live in the wild all over Sinnoh beside its own, the Gym Leaders, the Elite Four and the Champion have Unova Pokémon
+  in their teams, and Veilstone Department Store sells the evolution stones they need. Lustrous Pearl has Black and
+  White's White-side Pokémon, Adamant Diamond the Black side. A game saved with an older version starts with them off:
+  the aide in Professor Rowan's lab switches them on. See [Pokémon from Unova](docs/pokemon-from-unova.md).
 - **Not in yet:** digging in the Underground; the Game Corner's slots; Jubilife TV's Loto, Route 222's size contest and
   Vista Lighthouse's binoculars; online features. Pal Park's migration from a GBA game is in the build but unconfirmed.
   The full list is in [Known issues](docs/known-issues.md).
 
-## Griseous Platinum: 1.0.1
+## Griseous Platinum: 1.1
 - **Story:** Platinum's story from Twinleaf to the Hall of Fame, with its changed towns, routes, Gyms and trainers,
   its own Lucas and Dawn, Giratina and the Griseous Orb.
 - **The Distortion World:** walk on its walls and ceilings, ride its moving platforms, solve the boulder puzzle with
@@ -45,6 +50,8 @@ included.
   Pokétch, Pal Park's rooms, following Pokémon and seasons.
 - **New in 1.0.1:** the same three fixes as Lustrous Pearl's 1.0.2, and Looker at the Veilstone warehouse door and the
   Croagunk in Pastoria and on Stark Mountain turn the way they do in Platinum after they walk.
+- **New in 1.1:** the Pokémon from Unova option, with both sides of each Black and White pair. Fixed: the Canalave
+  Gym no longer traps you at its entrance.
 - **Not as in Platinum:** online features and the Global Terminal's upper floors are closed, and so is the Game
   Corner (its prizes are sold at the Veilstone Department Store). The Frontier has no Vs. Recorder, and its picture
   rooms have no moving floors, lights or particles. The player guide covers Lustrous Pearl and Adamant Diamond only.

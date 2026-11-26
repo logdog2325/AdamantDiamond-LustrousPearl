@@ -21,10 +21,11 @@ The same in both versions:
 - [Poffins](poffins.md)
 - [The Pokétch](poketch.md)
 - [Start-of-game options](options.md)
+- [Pokémon from Unova (optional)](pokemon-from-unova.md)
 - [Levels and the Exp. Share](levels.md)
 - [The Fairy type (optional)](fairy-type.md)
 - [TMs and HMs](tms-and-hms.md)
 - [Trade evolutions](evolutions.md)
-- [Known issues in 1.0.1](known-issues.md)
+- [Known issues in 1.1](known-issues.md)
 
 What differs between the versions: the legendary at Spear Pillar and its Orb, some wild Pokémon, what opens some of Pal Park's rooms, the Pokédex text, the fossil, the title screen and the held items of Electabuzz and Magmar. After the Hall of Fame each version also gets the other's legendary, wild Pokémon and fossil: see the post-game pages. Learnsets are Black 2's, plus the Fairy moves when the Fairy type is on.

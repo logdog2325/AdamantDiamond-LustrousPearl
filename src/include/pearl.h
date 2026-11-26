@@ -1371,6 +1371,7 @@
 #define PFLAG_POKE_FOLLOWER 1072 // Rowan's following-Pokémon question (patches/pearl_intro.py, followers.py): set = the first
 #define PFLAG_PG_LEGEND_HIDDEN 1073 // Spear Pillar: the other version's legendary hidden (its person's flag; its zone init sets 
 #define PFLAG_PG_LEGEND_CAUGHT 1074 // Spear Pillar: the other version's legendary caught (the other Orb given)
+#define PFLAG_UNOVA 1075        // Rowan's sixth question, Pokémon from Unova (the user 2026-11-23; patches/pearl_intro.py, p
 
 #define PTRAINER_1 4            // YOUNGSTER Tristan
 #define PTRAINER_2 5            // YOUNGSTER Logan

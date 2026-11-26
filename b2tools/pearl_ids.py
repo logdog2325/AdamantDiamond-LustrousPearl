@@ -170,6 +170,10 @@ NEW_FLAGS = {                          # new saved flags Pearl NDS needs: name -
        for n in ('RAIKOU', 'ENTEI', 'SUICUNE', 'HO_OH')},
     'PFLAG_POKE_FOLLOWER': "Rowan's following-Pokémon question (patches/pearl_intro.py, followers.py): set = the first Pokémon in "
                            "the party walks behind the player everywhere; clear (old saves, NO) = no follower",
+    'PFLAG_UNOVA': "Rowan's sixth question, Pokémon from Unova (the user 2026-11-23; patches/pearl_intro.py, patches/unova.py, "
+                   "decomp resident/unova.c): set = Gen 5 Pokémon in the wild tables, the Gym Leaders', Elite Four's and "
+                   "Cynthia's Unova teams, Veilstone's stones; clear (old saves, NO) = today's game; the aide in Rowan's "
+                   "lab switches it",
 }
 if not version.PLATINUM:               # (postdex, 2026-11-09) Spear Pillar's other legendary (b2tools/postgame_legend.py;
     NEW_FLAGS.update({                 # Platinum has both of its own after its Hall of Fame)

@@ -738,8 +738,22 @@
     .macro pl_PokeMartCommon var
     pl_mart 255
     .endm
+    // (unova, 2026-11-23) Pokémon from Unova (PFLAG_UNOVA, patches/unova_option.py): Veilstone Dept. Store 2F's vitamins
+    // clerk (Pearl's SpecialMart 11) sells the vitamins and the eight stones the Unova families need (shop 72)
+#define UNOVA_SHOP_FROM 11
+#define UNOVA_SHOP 72
     .macro pl_PokeMartSpecial shop
+    .if \shop == UNOVA_SHOP_FROM
+    pl_CheckFlag PFLAG_UNOVA
+    VMJumpIf CMP_EQ, .Lpmu\@
     pl_mart \shop
+    VMJump .Lpme\@
+.Lpmu\@:
+    pl_mart UNOVA_SHOP
+.Lpme\@:
+    .else
+    pl_mart \shop
+    .endif
     .endm
     // Pearl's CheckItemIsPlate (Flame Plate 298 .. Iron Plate 313: pokediamond ItemIdIsPlate)
     .macro pl_CheckItemIsPlate item, var

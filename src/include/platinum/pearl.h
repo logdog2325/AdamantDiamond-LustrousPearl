@@ -1697,6 +1697,7 @@
 #define PFLAG_RP_CAUGHT_HO_OH 1071 // Ramanas Park (Diamond version, reserved): Ho-Oh caught
 #define PFLAG_POKE_FOLLOWER 1072 // Rowan's following-Pokémon question (patches/pearl_intro.py, followers.py): set = the first
 #define PFLAG_VILLA_VISITOR_TODAY 2798 // the Villa's visitor of the day is picked (pearl_story VILLA_VISITOR_ZONES: the Resort Area
+#define PFLAG_UNOVA 2432        // Rowan's sixth question, Pokémon from Unova (the user 2026-11-23; patches/pearl_intro.py, p
 
 #define PTRAINER_1 4            // YOUNGSTER Tristan
 #define PTRAINER_2 5            // YOUNGSTER Logan

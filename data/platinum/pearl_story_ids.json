@@ -13498,6 +13498,10 @@
   "PFLAG_VILLA_VISITOR_TODAY": {
    "b2": 2798,
    "why": "the Villa's visitor of the day is picked (pearl_story VILLA_VISITOR_ZONES: the Resort Area's and the Villa's zone init picks it once a day, as Platinum's code does when the date changes)"
+  },
+  "PFLAG_UNOVA": {
+   "b2": 2432,
+   "why": "Rowan's sixth question, Pok\u00e9mon from Unova (the user 2026-11-23; patches/pearl_intro.py, patches/unova.py, decomp resident/unova.c): set = Gen 5 Pok\u00e9mon in the wild tables, the Gym Leaders', Elite Four's and Cynthia's Unova teams, Veilstone's stones; clear (old saves, NO) = today's game; the aide in Rowan's lab switches it"
   }
  },
  "trainers": {
@@ -17985,7 +17989,7 @@
   }
  },
  "free_left": {
-  "flags": 56,
+  "flags": 55,
   "works": 61,
   "daily_flags": 5,
   "trainer_ids": 108

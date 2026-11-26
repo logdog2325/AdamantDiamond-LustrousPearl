@@ -21,7 +21,7 @@
     ScriptEntry P990_S14
     ScriptEntry W985_0389_S
     ScriptEntry PearlArrive
-    ScriptEntry PearlNoScript
+    ScriptEntry RamanasExtra_unova_aide
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
     ScriptEntry PearlNoScript
@@ -743,6 +743,46 @@ W985_0389_0395:
 
 PearlProxy_10300:                  // Pearl global script 10300 (run by this zone's events)
     VMCall T977_1_S1
+    VMHalt
+
+RamanasExtra_unova_aide:          // (unova) the aide: Pokémon from Unova on and off (b2tools/unova_aide.py)
+    pl_LockAll
+    pl_FacePlayer
+    FlagGet PFLAG_UNOVA, 0x8057
+    WorkCmpConst 0x8057, 1
+    VMJumpIf CMP_EQ, .LUA_1on
+    pl_msg_talk 109
+    YesNoWin PL_TMP
+    WorkCmpConst PL_TMP, 0
+    VMJumpIf CMP_EQ, .LUA_3start
+    pl_msg_talk 110
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LUA_3start:
+    FlagSet PFLAG_UNOVA
+    pl_msg_talk 111
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LUA_1on:
+    pl_msg_talk 112
+    YesNoWin PL_TMP
+    WorkCmpConst PL_TMP, 0
+    VMJumpIf CMP_EQ, .LUA_2stop
+    pl_msg_talk 113
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
+    VMHalt
+.LUA_2stop:
+    FlagReset PFLAG_UNOVA
+    pl_msg_talk 114
+    pl_WaitButton
+    pl_CloseMessage
+    pl_ReleaseAll
     VMHalt
 
 // ---- Pearl global script 376:1 (a subroutine here)

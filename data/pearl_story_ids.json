@@ -10654,6 +10654,10 @@
   "PFLAG_PG_LEGEND_CAUGHT": {
    "b2": 1074,
    "why": "Spear Pillar: the other version's legendary caught (the other Orb given)"
+  },
+  "PFLAG_UNOVA": {
+   "b2": 1075,
+   "why": "Rowan's sixth question, Pok\u00e9mon from Unova (the user 2026-11-23; patches/pearl_intro.py, patches/unova.py, decomp resident/unova.c): set = Gen 5 Pok\u00e9mon in the wild tables, the Gym Leaders', Elite Four's and Cynthia's Unova teams, Veilstone's stones; clear (old saves, NO) = today's game; the aide in Rowan's lab switches it"
   }
  },
  "trainers": {
@@ -14673,7 +14677,7 @@
   }
  },
  "free_left": {
-  "flags": 254,
+  "flags": 253,
   "works": 129,
   "daily_flags": 23,
   "trainer_ids": 0

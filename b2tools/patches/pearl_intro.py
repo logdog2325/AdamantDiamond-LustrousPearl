@@ -22,7 +22,8 @@ patches/sinnoh_names.py); this patch changes the code. Edits and addresses from 
   EventFieldContinue_Callback enters with transition 0 (the plain entrance), whose 5th argument must then be 1.
 - Rowan's start-of-game questions (user 2026-10-18, question 4: Fairy type, music, and later CLASSIC/NEW sprites;
   2026-10-19: the Exp. Share and the seasons too, in the order Fairy, music, Exp. Share, seasons; 2026-10-26: the
-  following Pokémon as the fourth, before the seasons: PFLAG_POKE_FOLLOWER, patches/followers.py), after the rival is
+  following Pokémon as the fourth, before the seasons: PFLAG_POKE_FOLLOWER, patches/followers.py; 2026-11-23: Pokémon
+  from Unova as the sixth, last: PFLAG_UNOVA, patches/unova.py), after the rival is
   named and before "All right, {player}, the time has come": QUESTIONS below. HoennB2 asks Birch's in its
   ASK_RIVAL_NAME script, free there because it dropped the rival naming; Pearl keeps the rival naming, and no intro
   script is unused, so the farewell script (sScripts[12], 11 entries in ov294) is rebuilt in ITCM with the questions
@@ -34,7 +35,7 @@ patches/sinnoh_names.py); this patch changes the code. Edits and addresses from 
   own "received the Exp. Share" flag (PFLAG_010B, the Route 206 north gate's gift; patches/exp_share.py then puts it
   in the new game's Bag, switched on, and the gate's scientist acts as after his gift).
   The cursor starts on the first answer: mashing A gives Fairy on, Sinnoh's music, the Exp. Share, a following
-  Pokémon (test builds ignore it unless TEST_FOLLOW=1: followers.py) and Black 2's seasons. The answers are fixed for the whole game (the Exp. Share itself is switched on and off in the Bag).
+  Pokémon (test builds ignore it unless TEST_FOLLOW=1: followers.py), Black 2's seasons and the Pokémon from Unova. The answers are fixed for the whole game (the Exp. Share itself is switched on and off in the Bag).
   Text: system file 54 (game_start), lines Black 2 leaves blank; the file stays under Black 2's own packed size
   (4,684 B: the intro holds the whole file; measure_text() below). List this patch after the patches that append to
   ITCM before it (sinnoh_encounters, sinnoh_music, pearl_rods) and before fairy (b2tools/itcm.py's order check); the
@@ -82,6 +83,7 @@ MSG_YES, MSG_NO = 19, 20                                         # GameStart_Tex
 MSG_FAIRY_Q, MSG_MUSIC_Q, MSG_SINNOH, MSG_UNOVA = 26, 27, 28, 30  # GameStart_Text_Empty_8, _9, _10, _11
 MSG_EXP_SHARE_Q, MSG_SEASONS_Q = 36, 37                          # GameStart_Text_Empty_15, _16
 MSG_FOLLOWER_Q = 38                                              # GameStart_Text_Empty_17
+MSG_UNOVA_Q = 39                                                 # GameStart_Text_Empty_18 (2026-11-23)
 TEXT_LIMIT = 4684                                                # Black 2's own packed file 54 (bytes)
 CFG_FAIRY_BIT, CFG_MUSIC_BIT, CFG_SEASONS_BIT = 11, 13, 15       # HoennB2's options bits (fairy.py, music_choice.py,
                                                                  # season_choice.py)
@@ -96,6 +98,18 @@ def pearl_flag(name):
 
 FLAG_EXP_SHARE = pearl_flag('PFLAG_010B')    # Pearl's FLAG_RECEIVED_ROUTE_206_CYCLING_ROAD_NORTH_GATE_EXP_SHARE
 FLAG_FOLLOWER = pearl_flag('PFLAG_POKE_FOLLOWER')   # set = the first Pokémon walks behind the player (followers.py)
+
+
+def version_flag(name):
+    """A flag's Black 2 id from the version's own pearl.h (Platinum's registry gives new flags other numbers)."""
+    import version
+    p = os.path.join(ROOT, 'src', 'include', 'platinum' if version.PLATINUM else '', 'pearl.h')
+    m = re.search(rf'^#define\s+{name}\s+(\d+)', open(p).read(), re.M)
+    assert m and int(m.group(1)) >= 16, f'{name} missing from {p}'
+    return int(m.group(1))
+
+
+FLAG_UNOVA = version_flag('PFLAG_UNOVA')   # set = Pokémon from Unova (patches/unova.py, decomp resident/unova.c)
 # (question, first answer, second answer, bit or flag, value of the first answer): the first answer is under the cursor
 QUESTIONS = [
     (MSG_FAIRY_Q, MSG_YES, MSG_NO, CFG_FAIRY_BIT, 1),             # Fairy type: YES = on
@@ -103,6 +117,7 @@ QUESTIONS = [
     (MSG_EXP_SHARE_Q, MSG_YES, MSG_NO, FLAG_EXP_SHARE, 1),        # Exp. Share: YES = in the Bag from the start
     (MSG_FOLLOWER_Q, MSG_YES, MSG_NO, FLAG_FOLLOWER, 1),          # following Pokémon: YES = slot 1 walks behind
     (MSG_SEASONS_Q, MSG_YES, MSG_NO, CFG_SEASONS_BIT, 1),         # seasons: YES = Black 2's by the DS clock
+    (MSG_UNOVA_Q, MSG_YES, MSG_NO, FLAG_UNOVA, 1),                # Pokémon from Unova: YES = on (the user 2026-11-23)
 ]
 
 
